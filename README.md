@@ -1,6 +1,1 @@
-# 내 깃허브 홈페이지 🚀
-이 저장소는 내 개인 홈페이지를 위한 GitHub Pages 프로젝트입니다!
-
-## 📌 사용 방법   
-1. `index.html` 파일을 수정한다.  
-2. 변경 사항을 저장하고 푸시(Push)한다.  
+## My GitHub Page: https://idlhy0218.github.io/
