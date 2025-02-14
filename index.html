@@ -46,6 +46,14 @@
             margin: 2rem auto;
         }
 
+        .content-section {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            padding: 2rem;
+            margin: 1rem auto;
+        }
+
         .profile-image {
             width: 200px;
             height: 200px;
@@ -81,6 +89,41 @@
             font-size: 1.5rem;
             color: #6c757d;
             margin-bottom: 1rem;
+        }
+
+        .research-interests {
+            color: #6c757d;
+            font-size: 1.2rem;
+            margin: 1rem 0;
+        }
+
+        .section-title {
+            color: var(--bs-primary);
+            border-bottom: 2px solid #e9ecef;
+            padding-bottom: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .publication-year {
+            color: var(--bs-primary);
+            font-weight: 500;
+            margin-top: 1.5rem;
+        }
+
+        .publication-item {
+            margin-bottom: 1rem;
+            padding-left: 1rem;
+        }
+
+        .award-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .code-block {
+            background: #f8f9fa;
+            padding: 1rem;
+            border-radius: 6px;
+            font-family: monospace;
         }
 
         .navbar-nav {
@@ -133,10 +176,11 @@
                     <img src="images/profile picture.png" alt="Heeyoung Lee" class="profile-image mb-3">
                 </div>
                 <div class="col-md-8">
-                    <h1 class="name-title">Heeyoung Lee</h1>
+                    <h1 class="name-title">👋 Hi, I'm Heeyoung Lee</h1>
                     <h2 class="korean-name">이희영</h2>
                     <p class="lead">Ph.D. Candidate in Sociology<br>
                     University at Albany, SUNY</p>
+                    <p class="research-interests">Population Health • Criminology • Life-course Analysis • Spatial Methods</p>
                     <p><i class="bi bi-envelope-fill"></i> hlee25@albany.edu</p>
                     <div class="social-links">
                         <a href="https://docs.google.com/document/d/1KRe12btQf0VpCvzcnxssxif5p3bfEB_j/edit">
@@ -154,6 +198,76 @@
                     </div>
                 </div>
             </div>
+        </div>
+
+        <div class="content-section">
+            <h2 class="section-title">Education</h2>
+            <ul class="list-unstyled">
+                <li>Ph.D. Candidate in Sociology, University at Albany, SUNY</li>
+                <li>M.A. Sociology, Chung Ang University, Korea (2020)</li>
+                <li>B.A. Sociology, Kyung Hee University, Korea (2017)</li>
+            </ul>
+        </div>
+        
+        <div class="content-section">
+            <h2 class="section-title">Selected Recent Publications</h2>
+            <div class="publication-year">2024</div>
+            <div class="publication-item">
+                <p><strong>Heeyoung Lee</strong> & Tse-Chuan Yang. "Spatial and Temporal Dimension of Black-White Mental Health Paradox in the US: Effect of Cumulative Neighborhood Disadvantage" <em>Population Research & Policy Review</em></p>
+                <p><strong>Heeyoung Lee</strong>. "State-Level Structural Sexism and Adolescent Sexual Violence Victimization in the US" <em>Child Abuse and Neglect</em></p>
+                <p><strong>Heeyoung Lee</strong>. "Delinquency During Puberty as a Biosocial Behavior" <em>Criminal Justice and Behaviors</em></p>
+                <p>Seong-Jo Jung., <strong>Heeyoung Lee</strong>, & Chan S. Suh. "Moving Apart and Coming Together" <em>Journal of Homosexuality</em></p>
+                <p><strong>Heeyoung Lee</strong> & Seong-Jo Jung. "Gender Differences in the Relationship between Coming Out as LGB to Family and Depression in South Korea" <em>Society and Mental Health</em></p>
+            </div>
+
+            <div class="publication-year">2023</div>
+            <div class="publication-item">
+                <p><strong>Heeyoung Lee</strong>, Sooyeon Moon, & Na-Young Lee. "Industry Culture Matters: Sexual Harassment in the South Korean Film Industry" <em>Violence Against Women</em></p>
+                <p>Seong-Jo Jung and <strong>Heeyoung Lee</strong>. "Open, Discreet, and Repressive Closet: Latent Class Analysis on the Patterns of LGBTQ+ Youth's Coming Out." <em>The Korean Journal of Sociology</em></p>
+            </div>
+        </div>
+
+        <div class="content-section">
+            <h2 class="section-title">Selected Awards & Recognition</h2>
+            <div class="award-item">🏆 2025: Hak-Bong Research Grant, Seoul National University</div>
+            <div class="award-item">🏆 2024: BIPOC Junior Scholar Grant, ASA Section on Aging and the Life Course</div>
+            <div class="award-item">🏆 2024: Paul Meadows Excellence in Research Award</div>
+            <div class="award-item">🏆 2024: Graduate Student Research Award, Chung-Ang University</div>
+        </div>
+
+        <div class="content-section">
+            <h2 class="section-title">Teaching Experience</h2>
+            <h5>Medical Sociology (Instructor)</h5>
+            <p>Spring 2025, Fall 2024, Summer 2024<br>
+            University at Albany, SUNY</p>
+            
+            <h5>Statistics for Sociologists (Co-Teacher)</h5>
+            <p>Spring 2023</p>
+        </div>
+
+        <div class="content-section">
+            <h2 class="section-title">Technical Skills</h2>
+            <div class="code-block">
+                # Analysis Tools
+                R | STATA | SPSS | SAS | JAMOVI
+                # Spatial Analysis
+                ArcGIS | GeoDa
+                # Network Analysis
+                UCINET (NetDraw)
+            </div>
+        </div>
+
+        <div class="content-section">
+            <h2 class="section-title">Professional Service</h2>
+            <ul class="list-unstyled">
+                <li>Peer Reviewer: Social Science and Research, Socius, Society and Mental Health, Journal of Homosexuality, Population Research and Policy Review</li>
+                <li>Founding Member: Quantitative Research Group (QRG), University at Albany, SUNY</li>
+                <li>Member: American Sociological Association, International Sociological Association, Korean Sociological Association</li>
+            </ul>
+        </div>
+
+        <div class="text-center text-muted mt-4 mb-4">
+            <i>Last updated: February 2024</i>
         </div>
     </div>
 
