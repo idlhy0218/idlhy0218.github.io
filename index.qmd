@@ -1,0 +1,27 @@
+---
+title: "Heeyoung Lee"
+---
+
+::: {.profile}
+![](Profile Picture.png)
+
+# Heeyoung Lee (이희영)
+Ph.D. Candidate in Sociology  
+University at Albany, SUNY
+
+📧 hlee25@albany.edu
+
+::: {.social-links}
+[CV](https://docs.google.com/document/d/1KRe12btQf0VpCvzcnxssxif5p3bfEB_j/edit) |
+[Google Scholar](https://scholar.google.com/citations?user=YOUR_ID) |
+[BlueSky](https://bsky.app/profile/idlhy.bsky.social) |
+[Twitter(X)](https://x.com/idlhy0218)
+:::
+:::
+
+::: {.nav-links}
+[About Me](page building/about.qmd) |
+[Research](page building/research.qmd) |
+[Publications](page building/publications.qmd) |
+[Contact](page building/contact.qmd)
+:::
