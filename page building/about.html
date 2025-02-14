@@ -11,18 +11,15 @@
             --bs-primary: #2d3748;
             --bs-link-color: #4a90e2;
         }
-
         body {
             font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
             background-color: #f8f9fa;
             color: #333;
         }
-
         .navbar {
             background-color: var(--bs-primary);
             padding: 1rem;
         }
-
         .content-section {
             background: white;
             border-radius: 12px;
@@ -30,7 +27,6 @@
             padding: 2rem;
             margin: 2rem auto;
         }
-
         .research-card {
             background: #f8f9fa;
             border-radius: 8px;
@@ -38,16 +34,13 @@
             margin-bottom: 1rem;
             transition: transform 0.3s ease;
         }
-
         .research-card:hover {
             transform: translateY(-5px);
         }
-
         .research-card h3 {
             color: var(--bs-primary);
             margin-bottom: 1rem;
         }
-
         .back-button {
             text-decoration: none;
             color: #6c757d;
@@ -55,9 +48,30 @@
             align-items: center;
             margin-bottom: 1rem;
         }
-
         .back-button:hover {
             color: var(--bs-primary);
+        }
+        .section-title {
+            color: var(--bs-primary);
+            border-bottom: 2px solid #e9ecef;
+            padding-bottom: 0.5rem;
+            margin-bottom: 1.5rem;
+        }
+        .service-item {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+        .teaching-card {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+        .teaching-card h4 {
+            color: var(--bs-primary);
+            margin-bottom: 0.5rem;
         }
     </style>
 </head>
@@ -67,38 +81,82 @@
             <span class="navbar-brand text-white">About Me</span>
         </div>
     </nav>
-
+    
     <div class="container mt-4">
         <a href="../../index.html" class="back-button">
             <i class="bi bi-arrow-left me-2"></i> Back to Home
         </a>
 
+        <!-- Introduction Section -->
         <div class="content-section">
-            <h2 class="mb-4">About Me</h2>
+            <h2 class="section-title">About Me</h2>
             <p class="lead">I am a Ph.D. Candidate in Sociology at the University at Albany, SUNY. My research focuses on population health, criminology, and life-course analysis, with particular emphasis on spatial methods and longitudinal analysis.</p>
-            
-            <div class="row mt-5">
+        </div>
+
+        <!-- Research Section -->
+        <div class="content-section">
+            <h2 class="section-title">My Research</h2>
+            <div class="row">
                 <div class="col-md-4">
                     <div class="research-card">
                         <i class="bi bi-heart-pulse fs-3 text-primary mb-3"></i>
                         <h3>Population Health</h3>
-                        <p>Investigating temporal and spatial dimensions of health inequalities.</p>
+                        <p>Investigating temporal and spatial dimensions of health inequalities. My work examines how neighborhood contexts and social determinants shape health outcomes across different populations.</p>
                     </div>
                 </div>
                 <div class="col-md-4">
                     <div class="research-card">
                         <i class="bi bi-journal-text fs-3 text-primary mb-3"></i>
                         <h3>Criminology</h3>
-                        <p>Studying adolescent behavior, sexual violence, and the effects of police interactions on youth development.</p>
+                        <p>Studying adolescent behavior, sexual violence, and the effects of police interactions on youth development. My research incorporates both quantitative and spatial approaches to understanding crime patterns.</p>
                     </div>
                 </div>
                 <div class="col-md-4">
                     <div class="research-card">
                         <i class="bi bi-graph-up fs-3 text-primary mb-3"></i>
                         <h3>Methods</h3>
-                        <p>Specializing in spatial analysis, longitudinal methods, and advanced statistical techniques using R, STATA, and ArcGIS.</p>
+                        <p>Specializing in spatial analysis, longitudinal methods, and advanced statistical techniques using R, STATA, and ArcGIS. I focus on developing innovative approaches to analyzing complex social phenomena.</p>
                     </div>
                 </div>
+            </div>
+        </div>
+
+        <!-- Teaching Section -->
+        <div class="content-section">
+            <h2 class="section-title">My Teaching</h2>
+            <p class="mb-4">My teaching philosophy emphasizes practical skills development alongside theoretical understanding. I strive to create an inclusive learning environment that encourages critical thinking and active participation.</p>
+            
+            <div class="teaching-card">
+                <h4>Medical Sociology</h4>
+                <p class="mb-2"><strong>Role:</strong> Instructor</p>
+                <p class="mb-2"><strong>Semesters:</strong> Spring 2025, Fall 2024, Summer 2024</p>
+                <p>Developed and delivered comprehensive curriculum covering social determinants of health, healthcare systems, and medical institutions.</p>
+            </div>
+
+            <div class="teaching-card">
+                <h4>Statistics for Sociologists</h4>
+                <p class="mb-2"><strong>Role:</strong> Co-Teacher</p>
+                <p class="mb-2"><strong>Semester:</strong> Spring 2023</p>
+                <p>Collaborated in teaching statistical methods, research design, and data analysis using R and STATA.</p>
+            </div>
+        </div>
+
+        <!-- Service Section -->
+        <div class="content-section">
+            <h2 class="section-title">My Service</h2>
+            <div class="service-item">
+                <h4><i class="bi bi-journal-check me-2"></i>Peer Review</h4>
+                <p>Regular reviewer for Social Science and Research, Socius, Society and Mental Health, and Journal of Homosexuality.</p>
+            </div>
+
+            <div class="service-item">
+                <h4><i class="bi bi-people me-2"></i>Academic Leadership</h4>
+                <p>Founding Member of the Quantitative Research Group (QRG) at University at Albany, SUNY, where I help organize methodology workshops and research presentations.</p>
+            </div>
+
+            <div class="service-item">
+                <h4><i class="bi bi-building me-2"></i>Professional Memberships</h4>
+                <p>Active member of the American Sociological Association, International Sociological Association, and Korean Sociological Association.</p>
             </div>
         </div>
     </div>
