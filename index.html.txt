@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>나의 깃허브 페이지</title>
+</head>
+<body>
+    <h1>안녕하세요, 000의 웹사이트입니다!</h1>
+    <p>깃허브 페이지로 호스팅 되고 있습니다.</p>
+</body>
+</html>
