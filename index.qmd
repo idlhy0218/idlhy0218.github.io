@@ -1,27 +1,37 @@
----
-title: "Heeyoung Lee"
----
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Heeyoung Lee - Sociology Researcher</title>
+    <style>
+        /* Keep your existing CSS here */
+    </style>
+</head>
+<body>
+    <div class="profile">
+        <img src="images/profile picture.png" alt="Heeyoung Lee">
+        <div class="profile-info">
+            <h1>Heeyoung Lee (이희영)</h1>
+            <p>Ph.D. Candidate in Sociology<br>
+            University at Albany, SUNY</p>
+            <p>📧 hlee25@albany.edu</p>
+            <div class="social-links">
+                <a href="https://docs.google.com/document/d/1KRe12btQf0VpCvzcnxssxif5p3bfEB_j/edit">CV</a>
+                <a href="https://scholar.google.com/citations?user=YOUR_ID">Google Scholar</a>
+                <a href="https://bsky.app/profile/idlhy.bsky.social">BlueSky</a>
+                <a href="https://x.com/idlhy0218">Twitter(X)</a>
+            </div>
+        </div>
+    </div>
 
-::: {.profile}
-![](Profile Picture.png)
+    <div class="tab">
+        <a href="about/about.html" class="tablinks">About Me</a>
+        <a href="research/research.html" class="tablinks">Research</a>
+        <a href="publications/publications.html" class="tablinks">Publications</a>
+        <a href="contact/contact.html" class="tablinks">Contact</a>
+    </div>
 
-# Heeyoung Lee (이희영)
-Ph.D. Candidate in Sociology  
-University at Albany, SUNY
-
-📧 hlee25@albany.edu
-
-::: {.social-links}
-[CV](https://docs.google.com/document/d/1KRe12btQf0VpCvzcnxssxif5p3bfEB_j/edit) |
-[Google Scholar](https://scholar.google.com/citations?user=YOUR_ID) |
-[BlueSky](https://bsky.app/profile/idlhy.bsky.social) |
-[Twitter(X)](https://x.com/idlhy0218)
-:::
-:::
-
-::: {.nav-links}
-[About Me](page building/about.qmd) |
-[Research](page building/research.qmd) |
-[Publications](page building/publications.qmd) |
-[Contact](page building/contact.qmd)
-:::
+    <!-- Remove all tabcontent divs since they're now in separate files -->
+</body>
+</html>
