@@ -4,32 +4,209 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Publications - Heeyoung Lee</title>
-    <link rel="stylesheet" href="../index.html">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <style>
+        :root {
+            --bs-primary: #2d3748;
+            --bs-link-color: #4a90e2;
+        }
+
+        body {
+            font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+            background-color: #f8f9fa;
+            color: #333;
+        }
+
+        .navbar {
+            background-color: var(--bs-primary);
+            padding: 1rem;
+        }
+
+        .content-section {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            padding: 2rem;
+            margin: 2rem auto;
+        }
+
+        .publication-card {
+            border-left: 4px solid var(--bs-primary);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            background: #f8f9fa;
+            border-radius: 0 8px 8px 0;
+            transition: transform 0.3s ease;
+        }
+
+        .publication-card:hover {
+            transform: translateX(10px);
+        }
+
+        .award {
+            color: #ff6b35;
+            font-style: italic;
+            margin-top: 0.5rem;
+            font-size: 0.9em;
+        }
+
+        .back-button {
+            text-decoration: none;
+            color: #6c757d;
+            display: inline-flex;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .back-button:hover {
+            color: var(--bs-primary);
+        }
+
+        .section-title {
+            position: relative;
+            padding-bottom: 0.5rem;
+            margin-bottom: 1.5rem;
+            color: var(--bs-primary);
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            bottom: 0;
+            width: 50px;
+            height: 3px;
+            background-color: var(--bs-primary);
+        }
+
+        .publication-doi {
+            color: var(--bs-link-color);
+            font-size: 0.9em;
+            word-break: break-all;
+        }
+    </style>
 </head>
 <body>
-    <div id="Publications" class="tabcontent">
-        <h2>Publications</h2>
-        <h3>Peer-Reviewed Journal Articles (* = 1st Author)</h3>
-        <ul class="publication-list">
-            <li>
-                <strong>Heeyoung Lee</strong>* and Tse-Chuan Yang (2024). "Spatial and Temporal Dimension of Black-White Mental Health Paradox in the US: Effect of Cumulative Neighborhood Disadvantage" <em>Population Research & Policy Review</em>.
-            </li>
-            <!-- Add rest of your publications here -->
-        </ul>
+    <nav class="navbar navbar-expand-lg">
+        <div class="container">
+            <span class="navbar-brand text-white">Publications</span>
+        </div>
+    </nav>
 
-        <h3>Papers Under Review</h3>
-        <ul class="publication-list">
-            <li>
-                <strong>Heeyoung Lee</strong> and Matt Vogel. "Exposure to Police Killing and Adolescents' Self-Concept: Diverging Effects for Black and White American Youths" (RnR at Journal of Adolescence)
-            </li>
-            <!-- Add rest of your papers under review here -->
-        </ul>
+    <div class="container mt-4">
+        <a href="../../index.html" class="back-button">
+            <i class="bi bi-arrow-left me-2"></i> Back to Home
+        </a>
 
-        <h3>Papers in Preparation</h3>
-        <ul class="publication-list">
-            <li><strong>Heeyoung Lee</strong>. "One Foot in, One Foot Out: Spatial Spillover Effects of State Policy Liberalism and Mortality Rate in The U.S."</li>
-            <!-- Add rest of your papers in preparation here -->
-        </ul>
+        <div class="content-section">
+            <h2 class="section-title">Peer-Reviewed Journal Articles (* = 1st Author)</h2>
+            
+            <div class="publication-card">
+                <p><strong>Heeyoung Lee</strong>* and Tse-Chuan Yang (2024). "Spatial and Temporal Dimension of Black-White Mental Health Paradox in the US: Effect of Cumulative Neighborhood Disadvantage" <em>Population Research & Policy Review</em></p>
+                <div class="publication-doi">https://doi.org/10.1007/s11113-024-09922-2</div>
+            </div>
+
+            <div class="publication-card">
+                <p><strong>Heeyoung Lee</strong>* (2024). "State-Level Structural Sexism and Adolescent Sexual Violence Victimization in the US." <em>Child Abuse and Neglect</em></p>
+                <div class="publication-doi">https://doi.org/10.1016/j.chiabu.2024.107096</div>
+            </div>
+
+            <div class="publication-card">
+                <p><strong>Heeyoung Lee</strong>* (2024). "Delinquency During Puberty as a Biosocial Behavior: Time-Varying Effects of Social Contexts on Girl's Delinquency in South Korea." <em>Criminal Justice and Behaviors</em></p>
+                <div class="publication-doi">https://doi.org/10.1177/00938548241276087</div>
+                <div class="award">2022 Paul Meadows, Excellence in Research Award Winner, Sociology Department, University at Albany, SUNY</div>
+            </div>
+
+            <div class="publication-card">
+                <p>Seong-Jo Jung, <strong>Heeyoung Lee</strong>, and Chan. S, Suh (2024). "Moving Apart and Coming Together: The Dynamics of Coalition Building in the Case of South Korean LGBTQ Movement." <em>Journal of Homosexuality</em></p>
+                <div class="publication-doi">https://doi.org/10.1080/00918369.2024.2378743</div>
+            </div>
+
+            <div class="publication-card">
+                <p><strong>Heeyoung Lee</strong>* and Seong-Jo Jung (2024). "Gender Differences in the Relationship between Coming Out as LGB to Family and Depression in South Korea." <em>Society and Mental Health</em></p>
+                <div class="publication-doi">https://doi.org/10.1177/21568693241242400</div>
+                <div class="award">2024 Paul Meadows, Excellence in Research Award Winner, Sociology Department, University at Albany, SUNY</div>
+            </div>
+
+            <div class="publication-card">
+                <p><strong>Heeyoung Lee</strong>*, Sooyeon Moon, and Na-Young Lee (2023). "Industry Culture Matters: Sexual Harassment in the South Korean Film Industry." <em>Violence Against Women</em></p>
+                <div class="publication-doi">https://doi.org/10.1177/10778012231203001</div>
+            </div>
+
+            <div class="publication-card">
+                <p>Seong-Jo Jung and <strong>Heeyoung Lee</strong> (2023). "Open, Discreet, and Repressive Closet: Latent Class Analysis on the Patterns of LGBTQ+ Youth's Coming Out." <em>The Korean Journal of Sociology</em>, 57(4): 1-44. [in Korean]</p>
+                <div class="award">2023 Graduate Student Research Award Winner, Sociology Department, Chung-Ang University</div>
+            </div>
+
+            <div class="publication-card">
+                <p><strong>Heeyoung Lee</strong>*, Dawool Cheong, and Seoung-Jo Jung (2021). "A Democratic Response to COVID-19 or Governance with People Without Rights." <em>Memory & Vision</em>, 0(45): 272-314. [in Korean]</p>
+                <div class="award">2021 Democracy Academic Paper Contest Winner, Korean Democracy Foundation</div>
+                <div class="award">2022 Academic Paper Award Winner, People's Solidarity for Participatory Democracy</div>
+            </div>
+
+            <div class="publication-card">
+                <p><strong>Heeyoung Lee</strong>* and Na-Young Lee (2019). "Constituting 'Premature Girls' during the 1960s-70s in South Korea: A Gendered Regime of Sexual Efficiency." <em>The Journal of Asian Women</em>, 58(3): 103-150. [in Korean]</p>
+            </div>
+
+            <div class="publication-card">
+                <p><strong>Heeyoung Lee</strong>* and Na-Young Lee (2019). "Constructing the National Body: Child Development in the Postcolonial Nation-State during the 1960s - 1970s." <em>Society and History</em>, 124: 221-264. [in Korean]</p>
+            </div>
+
+            <h2 class="section-title mt-5">Papers Under Review</h2>
+            
+            <div class="publication-card">
+                <p><strong>Heeyoung Lee</strong> and Matt Vogel, "Exposure to Police Killing and Adolescents' Self-Concept: Diverging Effects for Black and White American Youths" (RnR at Journal of Adolescence)</p>
+            </div>
+
+            <div class="publication-card">
+                <p>Tse-Chuan Yang, Carla Shoff, Kate Strully, and <strong>Heeyoung Lee</strong>, "Features of residential counties and individual health conditions for opioid use disorder among older Medicare beneficiaries" (RnR at The Journals of Gerontology, Series B: Psychological Sciences and Social Sciences)</p>
+            </div>
+
+            <div class="publication-card">
+                <p>Tse-Chuan Yang, Carla Shoff, <strong>Heeyoung Lee</strong>, and Kiwoong Park, "Research Note: Opioid Use Disorder Diagnosis during the COVID-19 Pandemic and Mortality Rates among Older Medicare Beneficiaries in the US" (Under Review at Demography)</p>
+            </div>
+
+            <div class="publication-card">
+                <p><strong>Heeyoung Lee</strong> and Tse-Chuan Yang, "Unequal spillover of human capital: longitudinal analysis of mortality among populations by college degree in US counties, 2010-2022" (Under Review at AJPM)</p>
+            </div>
+
+            <h2 class="section-title mt-5">Papers in Preparation</h2>
+            
+            <div class="publication-card">
+                <p><strong>Heeyoung Lee</strong>, "One Foot in, One Foot Out: Spatial Spillover Effects of State Policy Liberalism and Mortality Rate in The U.S."</p>
+            </div>
+
+            <div class="publication-card">
+                <p><strong>Heeyoung Lee</strong>, Matt Vogel, and Theodore Lentz, "Contested Boundary and Racial Threat"</p>
+            </div>
+
+            <div class="publication-card">
+                <p>Tse-Chuan Yang and <strong>Heeyoung Lee</strong>, "Relationship between Age Segregation and Deaths of Despair"</p>
+            </div>
+
+            <div class="publication-card">
+                <p><strong>Heeyoung Lee</strong> and Scott Schieman, "Working at Home and Work Stress"</p>
+            </div>
+
+            <div class="publication-card">
+                <p><strong>Heeyoung Lee</strong> and Patricia Homan, "Long-Term Effect of Structural Racism"</p>
+            </div>
+
+            <div class="publication-card">
+                <p><strong>Heeyoung Lee</strong> and Tse-Chuan Yang, "Effect of Legalization of Marijuana on Drug Overdose Deaths"</p>
+            </div>
+
+            <div class="publication-card">
+                <p>Jonathan Dirlam and <strong>Heeyoung Lee</strong>, "Longitudinal Trends of Occupational Gender Segregation in the United States"</p>
+            </div>
+
+            <div class="publication-card">
+                <p><strong>Heeyoung Lee</strong>, Jungmin Shin, and Jonathan Dirlam, "Structural Sexism and Sexual Harassment"</p>
+            </div>
+        </div>
     </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
