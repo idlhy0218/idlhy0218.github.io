@@ -4,175 +4,146 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Heeyoung Lee - Sociology Researcher</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <style>
         :root {
-            --primary-color: #2d3748;
-            --accent-color: #4a90e2;
-            --background-color: #f7fafc;
-            --text-color: #2d3748;
-            --link-hover-color: #2b6cb0;
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+            --bs-primary: #2d3748;
+            --bs-link-color: #4a90e2;
+            --bs-link-hover-color: #2b6cb0;
         }
 
         body {
-            font-family: 'Inter', sans-serif;
-            line-height: 1.6;
-            background-color: var(--background-color);
-            color: var(--text-color);
-            padding: 2rem;
-            max-width: 1200px;
-            margin: 0 auto;
+            font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+            background-color: #f8f9fa;
         }
 
-        .container {
+        .navbar {
+            background-color: var(--bs-primary);
+            padding: 1rem;
+        }
+
+        .navbar-brand {
+            color: white;
+            font-weight: 500;
+        }
+
+        .nav-link {
+            color: rgba(255, 255, 255, 0.85);
+            transition: color 0.3s ease;
+        }
+
+        .nav-link:hover {
+            color: white;
+        }
+
+        .profile-section {
             background: white;
-            border-radius: 20px;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
-            padding: 3rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            padding: 2rem;
             margin: 2rem auto;
         }
 
-        .profile {
-            display: flex;
-            align-items: center;
-            gap: 3rem;
-            margin-bottom: 2rem;
-        }
-
-        .profile img {
+        .profile-image {
             width: 200px;
             height: 200px;
-            border-radius: 15px;
+            border-radius: 12px;
             object-fit: cover;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-        }
-
-        .profile-info {
-            flex-grow: 1;
-        }
-
-        h1 {
-            font-size: 2.5rem;
-            font-weight: 600;
-            color: var(--primary-color);
-            margin-bottom: 0.5rem;
-            line-height: 1.2;
-        }
-
-        .profile-info p {
-            font-size: 1.1rem;
-            color: #4a5568;
-            margin-bottom: 0.5rem;
-        }
-
-        .social-links {
-            display: flex;
-            gap: 1rem;
-            margin-top: 1.5rem;
         }
 
         .social-links a {
-            padding: 0.5rem 1rem;
-            background-color: white;
-            color: var(--primary-color);
             text-decoration: none;
-            border-radius: 8px;
-            font-weight: 500;
-            border: 1px solid #e2e8f0;
+            padding: 0.5rem 1rem;
+            margin: 0.25rem;
+            border-radius: 6px;
+            display: inline-block;
+            background-color: #f8f9fa;
+            color: var(--bs-primary);
             transition: all 0.3s ease;
+            border: 1px solid #dee2e6;
         }
 
         .social-links a:hover {
-            background-color: var(--accent-color);
+            background-color: var(--bs-link-color);
             color: white;
             transform: translateY(-2px);
         }
 
-        .navigation {
-            display: flex;
-            justify-content: center;
-            gap: 1rem;
-            margin-top: 2rem;
+        .name-title {
+            font-size: 2.5rem;
+            color: var(--bs-primary);
+            margin-bottom: 0.5rem;
         }
 
-        .navigation a {
-            padding: 0.75rem 1.5rem;
-            color: var(--primary-color);
-            text-decoration: none;
-            font-weight: 500;
-            border-radius: 8px;
-            transition: all 0.3s ease;
-        }
-
-        .navigation a:hover {
-            background-color: var(--accent-color);
-            color: white;
-        }
-
-        @media (max-width: 768px) {
-            body {
-                padding: 1rem;
-            }
-
-            .container {
-                padding: 1.5rem;
-            }
-
-            .profile {
-                flex-direction: column;
-                text-align: center;
-                gap: 1.5rem;
-            }
-
-            .social-links {
-                justify-content: center;
-                flex-wrap: wrap;
-            }
-
-            .navigation {
-                flex-direction: column;
-                align-items: stretch;
-            }
-
-            .navigation a {
-                text-align: center;
-            }
+        .korean-name {
+            font-size: 1.5rem;
+            color: #6c757d;
+            margin-bottom: 1rem;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="profile">
-            <img src="images/profile picture.png" alt="Heeyoung Lee">
-            <div class="profile-info">
-                <h1>Heeyoung Lee</h1>
-                <h2 style="font-size: 1.5rem; color: #4a5568; font-weight: 400; margin-bottom: 1rem;">이희영</h2>
-                <p>Ph.D. Candidate in Sociology<br>
-                University at Albany, SUNY</p>
-                <p>📧 hlee25@albany.edu</p>
-                <div class="social-links">
-                    <a href="https://docs.google.com/document/d/1KRe12btQf0VpCvzcnxssxif5p3bfEB_j/edit">CV</a>
-                    <a href="https://scholar.google.com/citations?user=YOUR_ID">Google Scholar</a>
-                    <a href="https://bsky.app/profile/idlhy.bsky.social">BlueSky</a>
-                    <a href="https://x.com/idlhy0218">Twitter(X)</a>
+    <nav class="navbar navbar-expand-lg">
+        <div class="container">
+            <span class="navbar-brand">Heeyoung Lee</span>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <div class="profile-section">
+            <div class="row align-items-center">
+                <div class="col-md-4 text-center">
+                    <img src="images/profile picture.png" alt="Heeyoung Lee" class="profile-image mb-3">
+                </div>
+                <div class="col-md-8">
+                    <h1 class="name-title">Heeyoung Lee</h1>
+                    <h2 class="korean-name">이희영</h2>
+                    <p class="lead">Ph.D. Candidate in Sociology<br>
+                    University at Albany, SUNY</p>
+                    <p><i class="bi bi-envelope-fill"></i> hlee25@albany.edu</p>
+                    <div class="social-links">
+                        <a href="https://docs.google.com/document/d/1KRe12btQf0VpCvzcnxssxif5p3bfEB_j/edit">
+                            <i class="bi bi-file-text"></i> CV
+                        </a>
+                        <a href="https://scholar.google.com/citations?user=YOUR_ID">
+                            <i class="bi bi-google"></i> Google Scholar
+                        </a>
+                        <a href="https://bsky.app/profile/idlhy.bsky.social">
+                            <i class="bi bi-cloud"></i> BlueSky
+                        </a>
+                        <a href="https://x.com/idlhy0218">
+                            <i class="bi bi-twitter-x"></i> Twitter(X)
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>
-        
-        <nav class="navigation">
-            <a href="page building/about.html">About Me</a>
-            <a href="page building/research.html">Research</a>
-            <a href="page building/publications.html">Publications</a>
-            <a href="page building/contact.html">Contact</a>
-        </nav>
+
+        <div class="row mt-4 g-4">
+            <div class="col-md-3">
+                <a href="page building/about.html" class="btn btn-light w-100 p-3 text-start">
+                    <i class="bi bi-person-lines-fill me-2"></i> About Me
+                </a>
+            </div>
+            <div class="col-md-3">
+                <a href="page building/research.html" class="btn btn-light w-100 p-3 text-start">
+                    <i class="bi bi-journal-text me-2"></i> Research
+                </a>
+            </div>
+            <div class="col-md-3">
+                <a href="page building/publications.html" class="btn btn-light w-100 p-3 text-start">
+                    <i class="bi bi-file-earmark-text me-2"></i> Publications
+                </a>
+            </div>
+            <div class="col-md-3">
+                <a href="page building/contact.html" class="btn btn-light w-100 p-3 text-start">
+                    <i class="bi bi-envelope me-2"></i> Contact
+                </a>
+            </div>
+        </div>
     </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
