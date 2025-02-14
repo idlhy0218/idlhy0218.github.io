@@ -4,34 +4,175 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Heeyoung Lee - Sociology Researcher</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
     <style>
-        /* Keep your existing CSS here */
+        :root {
+            --primary-color: #2d3748;
+            --accent-color: #4a90e2;
+            --background-color: #f7fafc;
+            --text-color: #2d3748;
+            --link-hover-color: #2b6cb0;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            line-height: 1.6;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            padding: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+            padding: 3rem;
+            margin: 2rem auto;
+        }
+
+        .profile {
+            display: flex;
+            align-items: center;
+            gap: 3rem;
+            margin-bottom: 2rem;
+        }
+
+        .profile img {
+            width: 200px;
+            height: 200px;
+            border-radius: 15px;
+            object-fit: cover;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .profile-info {
+            flex-grow: 1;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 600;
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+            line-height: 1.2;
+        }
+
+        .profile-info p {
+            font-size: 1.1rem;
+            color: #4a5568;
+            margin-bottom: 0.5rem;
+        }
+
+        .social-links {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        .social-links a {
+            padding: 0.5rem 1rem;
+            background-color: white;
+            color: var(--primary-color);
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 500;
+            border: 1px solid #e2e8f0;
+            transition: all 0.3s ease;
+        }
+
+        .social-links a:hover {
+            background-color: var(--accent-color);
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        .navigation {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        .navigation a {
+            padding: 0.75rem 1.5rem;
+            color: var(--primary-color);
+            text-decoration: none;
+            font-weight: 500;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .navigation a:hover {
+            background-color: var(--accent-color);
+            color: white;
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            .container {
+                padding: 1.5rem;
+            }
+
+            .profile {
+                flex-direction: column;
+                text-align: center;
+                gap: 1.5rem;
+            }
+
+            .social-links {
+                justify-content: center;
+                flex-wrap: wrap;
+            }
+
+            .navigation {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .navigation a {
+                text-align: center;
+            }
+        }
     </style>
 </head>
 <body>
-    <div class="profile">
-        <img src="images/profile picture.png" alt="Heeyoung Lee">
-        <div class="profile-info">
-            <h1>Heeyoung Lee (이희영)</h1>
-            <p>Ph.D. Candidate in Sociology<br>
-            University at Albany, SUNY</p>
-            <p>📧 hlee25@albany.edu</p>
-            <div class="social-links">
-                <a href="https://docs.google.com/document/d/1KRe12btQf0VpCvzcnxssxif5p3bfEB_j/edit">CV</a>
-                <a href="https://scholar.google.com/citations?user=YOUR_ID">Google Scholar</a>
-                <a href="https://bsky.app/profile/idlhy.bsky.social">BlueSky</a>
-                <a href="https://x.com/idlhy0218">Twitter(X)</a>
+    <div class="container">
+        <div class="profile">
+            <img src="images/profile picture.png" alt="Heeyoung Lee">
+            <div class="profile-info">
+                <h1>Heeyoung Lee</h1>
+                <h2 style="font-size: 1.5rem; color: #4a5568; font-weight: 400; margin-bottom: 1rem;">이희영</h2>
+                <p>Ph.D. Candidate in Sociology<br>
+                University at Albany, SUNY</p>
+                <p>📧 hlee25@albany.edu</p>
+                <div class="social-links">
+                    <a href="https://docs.google.com/document/d/1KRe12btQf0VpCvzcnxssxif5p3bfEB_j/edit">CV</a>
+                    <a href="https://scholar.google.com/citations?user=YOUR_ID">Google Scholar</a>
+                    <a href="https://bsky.app/profile/idlhy.bsky.social">BlueSky</a>
+                    <a href="https://x.com/idlhy0218">Twitter(X)</a>
+                </div>
             </div>
         </div>
+        
+        <nav class="navigation">
+            <a href="page building/about.html">About Me</a>
+            <a href="page building/research.html">Research</a>
+            <a href="page building/publications.html">Publications</a>
+            <a href="page building/contact.html">Contact</a>
+        </nav>
     </div>
-
-    <div class="tab">
-        <a href="page building/about.html" class="tablinks">About Me</a>
-        <a href="page building/research.html" class="tablinks">Research</a>
-        <a href="page building/publications.html" class="tablinks">Publications</a>
-        <a href="page building/contact.html" class="tablinks">Contact</a>
-    </div>
-
-    <!-- Remove all tabcontent divs since they're now in separate files -->
 </body>
 </html>
