@@ -22,31 +22,104 @@
         a:hover {
             text-decoration: underline;
         }
+        .profile {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .profile img {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            margin-right: 20px;
+        }
+        .tab {
+            overflow: hidden;
+            border-bottom: 1px solid #ccc;
+            margin-bottom: 20px;
+        }
+        .tab button {
+            background-color: inherit;
+            float: left;
+            border: none;
+            outline: none;
+            cursor: pointer;
+            padding: 14px 16px;
+            transition: 0.3s;
+            font-size: 17px;
+        }
+        .tab button:hover {
+            background-color: #ddd;
+        }
+        .tab button.active {
+            background-color: #ccc;
+        }
+        .tabcontent {
+            display: none;
+            padding: 6px 12px;
+            border-top: none;
+        }
     </style>
 </head>
 <body>
-    <h1>Your Name</h1>
-    <p><strong>Affiliation:</strong> Your University / Institution</p>
-    <p><strong>Email:</strong> your.email@example.com</p>
+    <div class="profile">
+        <img src="/api/placeholder/150/150" alt="Your Name">
+        <div>
+            <h1>Your Name</h1>
+            <p><strong>Affiliation:</strong> Your University / Institution</p>
+            <p><strong>Email:</strong> your.email@example.com</p>
+        </div>
+    </div>
 
-    <h2>About Me</h2>
-    <p>I am a researcher in [Your Field], currently working on [Research Topics]. My work focuses on [Brief Research Interests].</p>
+    <div class="tab">
+        <button class="tablinks active" onclick="openTab(event, 'About')">About Me</button>
+        <button class="tablinks" onclick="openTab(event, 'Research')">Research Interests</button>
+        <button class="tablinks" onclick="openTab(event, 'Publications')">Publications</button>
+        <button class="tablinks" onclick="openTab(event, 'Contact')">Contact</button>
+    </div>
 
-    <h2>Research Interests</h2>
-    <ul>
-        <li>Topic 1</li>
-        <li>Topic 2</li>
-        <li>Topic 3</li>
-    </ul>
+    <div id="About" class="tabcontent" style="display: block;">
+        <h2>About Me</h2>
+        <p>I am a researcher in [Your Field], currently working on [Research Topics]. My work focuses on [Brief Research Interests].</p>
+    </div>
 
-    <h2>Publications</h2>
-    <p>Selected publications:</p>
-    <ul>
-        <li><strong>Paper Title 1</strong> - Journal Name, Year. <a href="#">[Link]</a></li>
-        <li><strong>Paper Title 2</strong> - Conference Name, Year. <a href="#">[Link]</a></li>
-    </ul>
+    <div id="Research" class="tabcontent">
+        <h2>Research Interests</h2>
+        <ul>
+            <li>Topic 1</li>
+            <li>Topic 2</li>
+            <li>Topic 3</li>
+        </ul>
+    </div>
 
-    <h2>Contact</h2>
-    <p>For inquiries, feel free to reach out via email or visit my <a href="#">Google Scholar</a> / <a href="#">LinkedIn</a> profile.</p>
+    <div id="Publications" class="tabcontent">
+        <h2>Publications</h2>
+        <p>Selected publications:</p>
+        <ul>
+            <li><strong>Paper Title 1</strong> - Journal Name, Year. <a href="#">[Link]</a></li>
+            <li><strong>Paper Title 2</strong> - Conference Name, Year. <a href="#">[Link]</a></li>
+        </ul>
+    </div>
+
+    <div id="Contact" class="tabcontent">
+        <h2>Contact</h2>
+        <p>For inquiries, feel free to reach out via email or visit my <a href="#">Google Scholar</a> / <a href="#">LinkedIn</a> profile.</p>
+    </div>
+
+    <script>
+        function openTab(evt, tabName) {
+            var i, tabcontent, tablinks;
+            tabcontent = document.getElementsByClassName("tabcontent");
+            for (i = 0; i < tabcontent.length; i++) {
+                tabcontent[i].style.display = "none";
+            }
+            tablinks = document.getElementsByClassName("tablinks");
+            for (i = 0; i < tablinks.length; i++) {
+                tablinks[i].className = tablinks[i].className.replace(" active", "");
+            }
+            document.getElementById(tabName).style.display = "block";
+            evt.currentTarget.className += " active";
+        }
+    </script>
 </body>
 </html>
