@@ -4,21 +4,173 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Contact - Heeyoung Lee</title>
-    <link rel="stylesheet" href="../index.html">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <style>
+        :root {
+            --bs-primary: #2d3748;
+            --bs-link-color: #4a90e2;
+        }
+
+        body {
+            font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+            background-color: #f8f9fa;
+            color: #333;
+        }
+
+        .navbar {
+            background-color: var(--bs-primary);
+            padding: 1rem;
+        }
+
+        .content-section {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            padding: 2rem;
+            margin: 2rem auto;
+        }
+
+        .contact-card {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            transition: transform 0.3s ease;
+        }
+
+        .contact-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .contact-icon {
+            font-size: 2rem;
+            color: var(--bs-primary);
+            margin-bottom: 1rem;
+        }
+
+        .social-links {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .social-link {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem 1.5rem;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            text-decoration: none;
+            color: var(--bs-primary);
+            transition: all 0.3s ease;
+            border: 1px solid #dee2e6;
+        }
+
+        .social-link:hover {
+            background-color: var(--bs-primary);
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        .social-link i {
+            margin-right: 0.5rem;
+            font-size: 1.2rem;
+        }
+
+        .back-button {
+            text-decoration: none;
+            color: #6c757d;
+            display: inline-flex;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .back-button:hover {
+            color: var(--bs-primary);
+        }
+
+        .section-title {
+            position: relative;
+            padding-bottom: 0.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            bottom: 0;
+            width: 50px;
+            height: 3px;
+            background-color: var(--bs-primary);
+        }
+    </style>
 </head>
 <body>
-    <div id="Contact" class="tabcontent">
-        <h2>Contact</h2>
-        <p>📧 Email: hlee25@albany.edu</p>
-        <p>📍 Department of Sociology<br>
-        University at Albany, SUNY<br>
-        United States</p>
-        
-        <h3>Professional Profiles</h3>
-        <p>
-            <a href="https://scholar.google.com/citations?user=YOUR_ID">Google Scholar</a> |
-            <a href="https://x.com/idlhy0218">Twitter</a>
-        </p>
+    <nav class="navbar navbar-expand-lg">
+        <div class="container">
+            <span class="navbar-brand text-white">Contact</span>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <a href="../../index.html" class="back-button">
+            <i class="bi bi-arrow-left me-2"></i> Back to Home
+        </a>
+
+        <div class="content-section">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="contact-card">
+                        <div class="contact-icon">
+                            <i class="bi bi-envelope-fill"></i>
+                        </div>
+                        <h3>Email</h3>
+                        <p class="mb-0">hlee25@albany.edu</p>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="contact-card">
+                        <div class="contact-icon">
+                            <i class="bi bi-geo-alt-fill"></i>
+                        </div>
+                        <h3>Office</h3>
+                        <p class="mb-0">Department of Sociology<br>
+                        University at Albany, SUNY<br>
+                        United States</p>
+                    </div>
+                </div>
+            </div>
+
+            <h2 class="section-title mt-5">Professional Profiles</h2>
+            <div class="social-links">
+                <a href="https://docs.google.com/document/d/1KRe12btQf0VpCvzcnxssxif5p3bfEB_j/edit" class="social-link">
+                    <i class="bi bi-file-text"></i>
+                    CV
+                </a>
+                <a href="https://scholar.google.com/citations?user=YOUR_ID" class="social-link">
+                    <i class="bi bi-google"></i>
+                    Google Scholar
+                </a>
+                <a href="https://bsky.app/profile/idlhy.bsky.social" class="social-link">
+                    <i class="bi bi-cloud"></i>
+                    BlueSky
+                </a>
+                <a href="https://x.com/idlhy0218" class="social-link">
+                    <i class="bi bi-twitter-x"></i>
+                    Twitter(X)
+                </a>
+            </div>
+
+            <h2 class="section-title mt-5">Office Hours</h2>
+            <div class="contact-card">
+                <p class="mb-0">Available by appointment<br>
+                Please email to schedule a meeting</p>
+            </div>
+        </div>
     </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
