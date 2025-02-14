@@ -4,27 +4,105 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>About - Heeyoung Lee</title>
-    <link rel="stylesheet" href="../index.html">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <style>
+        :root {
+            --bs-primary: #2d3748;
+            --bs-link-color: #4a90e2;
+        }
+
+        body {
+            font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+            background-color: #f8f9fa;
+            color: #333;
+        }
+
+        .navbar {
+            background-color: var(--bs-primary);
+            padding: 1rem;
+        }
+
+        .content-section {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            padding: 2rem;
+            margin: 2rem auto;
+        }
+
+        .research-card {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            transition: transform 0.3s ease;
+        }
+
+        .research-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .research-card h3 {
+            color: var(--bs-primary);
+            margin-bottom: 1rem;
+        }
+
+        .back-button {
+            text-decoration: none;
+            color: #6c757d;
+            display: inline-flex;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .back-button:hover {
+            color: var(--bs-primary);
+        }
+    </style>
 </head>
 <body>
-    <div id="About" class="tabcontent">
-        <h2>About Me</h2>
-        <p>I am a Ph.D. Candidate in Sociology at the University at Albany, SUNY. My research focuses on population health, criminology, and life-course analysis, with particular emphasis on spatial methods and longitudinal analysis.</p>
-        
-        <div class="research-interests">
-            <div class="research-topic">
-                <h3>Population Health</h3>
-                <p>Investigating temporal and spatial dimensions of health inequalities.</p>
-            </div>
-            <div class="research-topic">
-                <h3>Criminology</h3>
-                <p>Studying adolescent behavior, sexual violence, and the effects of police interactions on youth development.</p>
-            </div>
-            <div class="research-topic">
-                <h3>Methods</h3>
-                <p>Specializing in spatial analysis, longitudinal methods, and advanced statistical techniques using R, STATA, and ArcGIS.</p>
+    <nav class="navbar navbar-expand-lg">
+        <div class="container">
+            <span class="navbar-brand text-white">About Me</span>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <a href="../../index.html" class="back-button">
+            <i class="bi bi-arrow-left me-2"></i> Back to Home
+        </a>
+
+        <div class="content-section">
+            <h2 class="mb-4">About Me</h2>
+            <p class="lead">I am a Ph.D. Candidate in Sociology at the University at Albany, SUNY. My research focuses on population health, criminology, and life-course analysis, with particular emphasis on spatial methods and longitudinal analysis.</p>
+            
+            <div class="row mt-5">
+                <div class="col-md-4">
+                    <div class="research-card">
+                        <i class="bi bi-heart-pulse fs-3 text-primary mb-3"></i>
+                        <h3>Population Health</h3>
+                        <p>Investigating temporal and spatial dimensions of health inequalities.</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="research-card">
+                        <i class="bi bi-journal-text fs-3 text-primary mb-3"></i>
+                        <h3>Criminology</h3>
+                        <p>Studying adolescent behavior, sexual violence, and the effects of police interactions on youth development.</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="research-card">
+                        <i class="bi bi-graph-up fs-3 text-primary mb-3"></i>
+                        <h3>Methods</h3>
+                        <p>Specializing in spatial analysis, longitudinal methods, and advanced statistical techniques using R, STATA, and ArcGIS.</p>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
