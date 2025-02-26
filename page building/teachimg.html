@@ -1,0 +1,168 @@
+import React, { useState } from 'react';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+
+const CourseEvaluationDashboard = () => {
+  const [activeTab, setActiveTab] = useState('fall2024');
+
+  // Fall 2024 Medical Sociology Evaluation Data
+  const fall2024Data = [
+    { name: 'Well-prepared for class', score: 4.93, dept: 4.71 },
+    { name: 'Communicated effectively', score: 4.68, dept: 4.30 },
+    { name: 'Stimulated interest', score: 4.34, dept: 4.09 },
+    { name: 'Challenged intellectually', score: 4.35, dept: 4.29 },
+    { name: 'Receptive to ideas', score: 4.88, dept: 4.52 },
+    { name: 'Available outside class', score: 4.82, dept: 4.52 },
+    { name: 'High standards', score: 4.63, dept: 4.53 },
+    { name: 'Instructor Overall', score: 4.78, dept: 4.10 },
+    { name: 'Course Overall', score: 4.49, dept: 4.01 }
+  ];
+
+  // Spring 2025 Medical Sociology Evaluation Data (placeholder - adjust when you have real data)
+  const spring2025Data = [
+    { name: 'Well-prepared for class', score: 4.95, dept: 4.71 },
+    { name: 'Communicated effectively', score: 4.75, dept: 4.30 },
+    { name: 'Stimulated interest', score: 4.45, dept: 4.09 },
+    { name: 'Challenged intellectually', score: 4.40, dept: 4.29 },
+    { name: 'Receptive to ideas', score: 4.90, dept: 4.52 },
+    { name: 'Available outside class', score: 4.85, dept: 4.52 },
+    { name: 'High standards', score: 4.70, dept: 4.53 },
+    { name: 'Instructor Overall', score: 4.85, dept: 4.10 },
+    { name: 'Course Overall', score: 4.60, dept: 4.01 }
+  ];
+
+  // Fall 2024 Student Comments
+  const fall2024Comments = [
+    "Professor Lee was so caring for every student in his class, always came to class ready to teach, and you can tell he was excited to teach. He truly cares about sociology and educating the next generation.",
+    "Amazing, understanding, challenging but doable, and overall a great class.",
+    "Professor Lee is very nice and always available to help his students. He is also a great Professor who loves the material he teaches and is very helpful when you don't understand the concepts.",
+    "He is a great professor and very receptive to students ideas. I love how much he opens discussion. He is also the first professor who has explained how to read a graph to me and has backed up what he is saying with statistics for almost all the course content.",
+    "I had a great time in your class, and it furthered my interest in sociology!!",
+    "Professor Lee was a great professor and made the lectures very fun and interactive to the point that difficult topics were understood well."
+  ];
+
+  // Spring 2025 Student Comments (placeholder - adjust when you have real data)
+  const spring2025Comments = [
+    "Professor Lee created a welcoming environment where we could discuss complex health topics. Her expertise in population health was evident throughout the course.",
+    "The course materials were always up-to-date with recent research. I appreciated how she connected sociological theories to current healthcare issues.",
+    "This class challenged me to think critically about healthcare systems and social determinants of health.",
+    "One of the most engaging professors I've had. Always prepared and enthusiastic about the material."
+  ];
+
+  // Response rate information
+  const responseInfo = {
+    fall2024: {
+      rate: "56.16%",
+      count: "41/73",
+      semester: "Fall 2024",
+      course: "ASOC359-9027: Medical Sociology"
+    },
+    spring2025: {
+      rate: "62.5%", // Placeholder
+      count: "45/72", // Placeholder
+      semester: "Spring 2025",
+      course: "ASOC359: Medical Sociology"
+    }
+  };
+
+  return (
+    <div className="bg-gray-50 p-6 rounded-lg">
+      <h2 className="text-2xl font-bold mb-6 text-gray-800">Teaching Evaluation Results</h2>
+      
+      {/* Tab Navigation */}
+      <div className="flex mb-6 border-b">
+        <button 
+          className={`py-2 px-4 font-medium ${activeTab === 'fall2024' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
+          onClick={() => setActiveTab('fall2024')}
+        >
+          Fall 2024 - Medical Sociology
+        </button>
+        <button 
+          className={`py-2 px-4 font-medium ${activeTab === 'spring2025' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
+          onClick={() => setActiveTab('spring2025')}
+        >
+          Spring 2025 - Medical Sociology
+        </button>
+      </div>
+
+      {/* Course and Response Rate Info */}
+      <div className="bg-white p-4 rounded-lg shadow-sm mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div>
+            <p className="text-sm text-gray-500">Course</p>
+            <p className="font-medium">{responseInfo[activeTab].course}</p>
+          </div>
+          <div>
+            <p className="text-sm text-gray-500">Semester</p>
+            <p className="font-medium">{responseInfo[activeTab].semester}</p>
+          </div>
+          <div>
+            <p className="text-sm text-gray-500">Response Rate</p>
+            <p className="font-medium">{responseInfo[activeTab].count} ({responseInfo[activeTab].rate})</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Chart */}
+      <div className="bg-white p-4 rounded-lg shadow-sm mb-6">
+        <h3 className="text-lg font-semibold mb-4">Evaluation Scores (Scale: 1-5)</h3>
+        <div className="h-96">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart
+              data={activeTab === 'fall2024' ? fall2024Data : spring2025Data}
+              margin={{ top: 20, right: 30, left: 20, bottom: 120 }}
+            >
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="name" angle={-45} textAnchor="end" height={120} />
+              <YAxis domain={[0, 5]} />
+              <Tooltip formatter={(value) => [value.toFixed(2), 'Score']} />
+              <Legend />
+              <Bar dataKey="score" name="Your Score" fill="#3b82f6" />
+              <Bar dataKey="dept" name="Department Average" fill="#9ca3af" />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
+
+      {/* Comments */}
+      <div className="bg-white p-4 rounded-lg shadow-sm">
+        <h3 className="text-lg font-semibold mb-4">Student Comments</h3>
+        <div className="space-y-4">
+          {(activeTab === 'fall2024' ? fall2024Comments : spring2025Comments).map((comment, index) => (
+            <div key={index} className="p-3 bg-blue-50 rounded-lg">
+              <p className="text-gray-700 italic">"{comment}"</p>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Summary of Key Metrics */}
+      <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="bg-white p-4 rounded-lg shadow-sm">
+          <h4 className="text-md font-medium text-gray-700 mb-2">Overall Instructor Rating</h4>
+          <p className="text-3xl font-bold text-blue-600">
+            {activeTab === 'fall2024' ? "4.78" : "4.85"} <span className="text-sm text-gray-500">/ 5.0</span>
+          </p>
+          <p className="text-sm text-gray-500 mt-1">Department Average: {activeTab === 'fall2024' ? "4.10" : "4.10"}</p>
+        </div>
+        
+        <div className="bg-white p-4 rounded-lg shadow-sm">
+          <h4 className="text-md font-medium text-gray-700 mb-2">Course Quality Rating</h4>
+          <p className="text-3xl font-bold text-blue-600">
+            {activeTab === 'fall2024' ? "4.49" : "4.60"} <span className="text-sm text-gray-500">/ 5.0</span>
+          </p>
+          <p className="text-sm text-gray-500 mt-1">Department Average: {activeTab === 'fall2024' ? "4.01" : "4.01"}</p>
+        </div>
+        
+        <div className="bg-white p-4 rounded-lg shadow-sm">
+          <h4 className="text-md font-medium text-gray-700 mb-2">Highest Rated Area</h4>
+          <p className="text-xl font-bold text-blue-600">
+            {activeTab === 'fall2024' ? "Preparation" : "Preparation"}
+          </p>
+          <p className="text-sm text-gray-500 mt-1">Score: {activeTab === 'fall2024' ? "4.93" : "4.95"} / 5.0</p>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default CourseEvaluationDashboard;
