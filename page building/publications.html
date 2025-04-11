@@ -57,6 +57,17 @@
             word-break: break-all;
         }
 
+        .publication-doi a {
+            color: var(--bs-link-color);
+            text-decoration: none;
+            transition: color 0.2s ease, text-decoration 0.2s ease;
+        }
+
+        .publication-doi a:hover {
+            color: var(--bs-primary);
+            text-decoration: underline;
+        }
+
         .nav-pills .nav-link {
             color: var(--bs-primary);
             margin: 0.25rem;
@@ -119,41 +130,63 @@
             <div class="tab-content" id="publicationTabsContent">
                 <!-- Published Papers -->
                 <div class="tab-pane fade show active" id="published" role="tabpanel">
+
+                    <div class="publication-card">
+                        <p>Tse-Chuan Yang, Carla Shoff, Kate Strully, and <strong>Heeyoung Lee</strong>* (2025). "Features of residential counties and individual health conditions for opioid use disorder among older Medicare beneficiaries" <em>The Journals of Gerontology, Series B: Psychological Sciences and Social Sciences</em></p>
+                        <div class="publication-doi">
+                            <i class="bi bi-link-45deg"></i> DOI: <a href="https://doi.org/10.1093/geronb/gbaf069" target="_blank">https://doi.org/10.1093/geronb/gbaf069</a>
+                        </div>
+                    </div>
+                    
                     <div class="publication-card">
                         <p><strong>Heeyoung Lee</strong>* and Matt Vogel (2025). "Exposure to Police Killings and Adolescents' Self-Concept: Diverging Impact for Black and White American Youth" <em>Journal of Adolescence</em></p>
-                        <div class="publication-doi">https://doi.org/10.1002/jad.12490</div>
+                        <div class="publication-doi">
+                            <i class="bi bi-link-45deg"></i> DOI: <a href="https://doi.org/10.1002/jad.12490" target="_blank">https://doi.org/10.1002/jad.12490</a>
+                        </div>
                     </div>
                     
                     <div class="publication-card">
                         <p><strong>Heeyoung Lee</strong>* and Tse-Chuan Yang (2024). "Spatial and Temporal Dimension of Black-White Mental Health Paradox in the US: Effect of Cumulative Neighborhood Disadvantage" <em>Population Research & Policy Review</em></p>
-                        <div class="publication-doi">https://doi.org/10.1007/s11113-024-09922-2</div>
+                        <div class="publication-doi">
+                            <i class="bi bi-link-45deg"></i> DOI: <a href="https://doi.org/10.1007/s11113-024-09922-2" target="_blank">https://doi.org/10.1007/s11113-024-09922-2</a>
+                        </div>
                     </div>
 
                     <div class="publication-card">
                         <p><strong>Heeyoung Lee</strong>* (2024). "State-Level Structural Sexism and Adolescent Sexual Violence Victimization in the US." <em>Child Abuse and Neglect</em></p>
-                        <div class="publication-doi">https://doi.org/10.1016/j.chiabu.2024.107096</div>
+                        <div class="publication-doi">
+                            <i class="bi bi-link-45deg"></i> DOI: <a href="https://doi.org/10.1016/j.chiabu.2024.107096" target="_blank">https://doi.org/10.1016/j.chiabu.2024.107096</a>
+                        </div>
                     </div>
 
                     <div class="publication-card">
                         <p><strong>Heeyoung Lee</strong>* (2024). "Delinquency During Puberty as a Biosocial Behavior: Time-Varying Effects of Social Contexts on Girl's Delinquency in South Korea." <em>Criminal Justice and Behaviors</em></p>
-                        <div class="publication-doi">https://doi.org/10.1177/00938548241276087</div>
+                        <div class="publication-doi">
+                            <i class="bi bi-link-45deg"></i> DOI: <a href="https://doi.org/10.1177/00938548241276087" target="_blank">https://doi.org/10.1177/00938548241276087</a>
+                        </div>
                         <div class="award">2022 Paul Meadows, Excellence in Research Award Winner, Sociology Department, University at Albany, SUNY</div>
                     </div>
 
                     <div class="publication-card">
                         <p>Seong-Jo Jung, <strong>Heeyoung Lee</strong>, and Chan. S, Suh (2024). "Moving Apart and Coming Together: The Dynamics of Coalition Building in the Case of South Korean LGBTQ Movement." <em>Journal of Homosexuality</em></p>
-                        <div class="publication-doi">https://doi.org/10.1080/00918369.2024.2378743</div>
+                        <div class="publication-doi">
+                            <i class="bi bi-link-45deg"></i> DOI: <a href="https://doi.org/10.1080/00918369.2024.2378743" target="_blank">https://doi.org/10.1080/00918369.2024.2378743</a>
+                        </div>
                     </div>
 
                     <div class="publication-card">
                         <p><strong>Heeyoung Lee</strong>* and Seong-Jo Jung (2024). "Gender Differences in the Relationship between Coming Out as LGB to Family and Depression in South Korea." <em>Society and Mental Health</em></p>
-                        <div class="publication-doi">https://doi.org/10.1177/21568693241242400</div>
+                        <div class="publication-doi">
+                            <i class="bi bi-link-45deg"></i> DOI: <a href="https://doi.org/10.1177/21568693241242400" target="_blank">https://doi.org/10.1177/21568693241242400</a>
+                        </div>
                         <div class="award">2024 Paul Meadows, Excellence in Research Award Winner, Sociology Department, University at Albany, SUNY</div>
                     </div>
 
                     <div class="publication-card">
                         <p><strong>Heeyoung Lee</strong>*, Sooyeon Moon, and Na-Young Lee (2023). "Industry Culture Matters: Sexual Harassment in the South Korean Film Industry." <em>Violence Against Women</em></p>
-                        <div class="publication-doi">https://doi.org/10.1177/10778012231203001</div>
+                        <div class="publication-doi">
+                            <i class="bi bi-link-45deg"></i> DOI: <a href="https://doi.org/10.1177/10778012231203001" target="_blank">https://doi.org/10.1177/10778012231203001</a>
+                        </div>
                     </div>
 
                     <div class="publication-card">
@@ -178,11 +211,7 @@
 
                 <!-- Papers Under Review -->
                 <div class="tab-pane fade" id="review" role="tabpanel">
-
-                    <div class="publication-card">
-                        <p>Tse-Chuan Yang, Carla Shoff, Kate Strully, and <strong>Heeyoung Lee</strong>, "Features of residential counties and individual health conditions for opioid use disorder among older Medicare beneficiaries" (RnR at The Journals of Gerontology, Series B: Psychological Sciences and Social Sciences)</p>
-                    </div>
-
+                    
                     <div class="publication-card">
                         <p><strong>Heeyoung Lee</strong> and Tse-Chuan Yang, "Unequal spillover of human capital: longitudinal analysis of mortality among populations by college degree in US counties, 2010-2022" (RnR at American Journal of Preventive Medicine)</p>
                     </div>
