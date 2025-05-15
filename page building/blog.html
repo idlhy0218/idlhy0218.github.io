@@ -37,11 +37,21 @@
             margin: 2rem auto;
         }
 
+        .blog-sidebar {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            padding: 1.5rem;
+            position: sticky;
+            top: 2rem;
+        }
+
         .blog-content {
             width: 100%;
-            height: 800px;
+            min-height: 800px;
             border: none;
             background-color: white;
+            border-radius: 8px;
         }
 
         .blog-list-title {
@@ -73,10 +83,20 @@
             font-weight: 500;
             font-size: 1.1rem;
             display: block;
+            padding: 0.5rem;
+            border-radius: 6px;
+            transition: all 0.2s ease;
         }
 
         .blog-list-link:hover {
             color: var(--bs-link-hover-color);
+            background-color: #f8f9fa;
+        }
+
+        .blog-list-link.active {
+            color: var(--bs-primary);
+            background-color: #e9ecef;
+            font-weight: 600;
         }
 
         .blog-date {
@@ -89,6 +109,13 @@
         .blog-description {
             margin-top: 0.5rem;
             color: #495057;
+        }
+
+        .blog-content-container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            padding: 1.5rem;
         }
 
         .back-button {
@@ -104,8 +131,13 @@
         }
 
         @media (max-width: 991.98px) {
+            .blog-sidebar {
+                position: static;
+                margin-bottom: 2rem;
+            }
+
             .blog-content {
-                height: 600px;
+                min-height: 600px;
             }
         }
     </style>
@@ -122,17 +154,27 @@
             <i class="bi bi-arrow-left me-2"></i> Back to Home
         </a>
 
-        <div class="content-section">
-            <h2 class="blog-list-title">Blog Posts</h2>
-            
-            <ul class="blog-list" id="blogList">
-                <!-- Blog posts will be dynamically loaded here -->
-            </ul>
-            
-            <div id="blogContent">
-                <!-- Selected blog post will be displayed here -->
-                <div class="text-center p-5">
-                    <p class="lead">Select a blog post from the list above to read it.</p>
+        <div class="row">
+            <!-- Left sidebar with blog posts list -->
+            <div class="col-lg-3">
+                <div class="blog-sidebar">
+                    <h2 class="blog-list-title">Blog Posts</h2>
+                    
+                    <ul class="blog-list" id="blogList">
+                        <!-- Blog posts will be dynamically loaded here -->
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Main content area -->
+            <div class="col-lg-9">
+                <div class="blog-content-container">
+                    <div id="blogContent">
+                        <!-- Selected blog post will be displayed here -->
+                        <div class="text-center p-5">
+                            <p class="lead">Select a blog post from the list to read it.</p>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -174,7 +216,7 @@
                 listItem.className = 'blog-list-item';
                 
                 listItem.innerHTML = `
-                    <a href="#${post.id}" class="blog-list-link" onclick="loadBlogPost('${post.id}'); return false;">
+                    <a href="#${post.id}" class="blog-list-link" id="${post.id}-link" onclick="loadBlogPost('${post.id}'); return false;">
                         ${post.title}
                         <span class="blog-date">${post.date}</span>
                     </a>
@@ -190,6 +232,17 @@
             const post = blogConfig.posts.find(p => p.id === postId);
             
             if (!post) return;
+            
+            // Remove active class from all links
+            document.querySelectorAll('.blog-list-link').forEach(link => {
+                link.classList.remove('active');
+            });
+            
+            // Add active class to selected post link
+            const activeLink = document.getElementById(`${postId}-link`);
+            if (activeLink) {
+                activeLink.classList.add('active');
+            }
             
             const blogContent = document.getElementById('blogContent');
             
