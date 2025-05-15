@@ -1,0 +1,193 @@
+/* CSS styles for R Quarto blog page */
+
+/* Add Bootstrap icons */
+@import url("https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css");
+
+/* Add Animate.css for animations */
+@import url("https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css");
+
+/* General styling */
+body {
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+  line-height: 1.6;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  color: #2d3748;
+}
+
+/* Make the TOC sticky on scroll */
+#TOC {
+  position: sticky;
+  top: 2rem;
+  max-height: calc(100vh - 4rem);
+  overflow-y: auto;
+}
+
+/* Methodology cards */
+.methodology {
+  margin: 2rem 0;
+}
+
+.methodology-card {
+  background: linear-gradient(135deg, #f5f7fa 0%, #e4e7eb 100%);
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin: 1rem 0;
+  transition: transform 0.3s ease;
+  text-align: center;
+}
+
+.methodology-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.methodology-card i {
+  font-size: 2rem;
+  color: #2d3748;
+  margin-bottom: 1rem;
+}
+
+/* Key findings highlight */
+.key-finding {
+  background-color: #f8f9fa;
+  padding: 1.25rem;
+  border-radius: 8px;
+  margin: 1.5rem 0;
+  border-left: 4px solid #2d3748;
+  display: flex;
+  align-items: center;
+}
+
+.finding-number {
+  font-size: 2.5rem;
+  font-weight: bold;
+  color: #2d3748;
+  line-height: 1;
+  margin-right: 1rem;
+}
+
+/* Timeline styling */
+.timeline-container {
+  margin: 2rem 0;
+}
+
+.timeline {
+  position: relative;
+  max-width: 1200px;
+  margin: 2rem auto;
+}
+
+.timeline::after {
+  content: '';
+  position: absolute;
+  width: 6px;
+  background-color: #e9ecef;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  margin-left: -3px;
+}
+
+.timeline-item {
+  padding: 10px 40px;
+  position: relative;
+  width: 50%;
+  box-sizing: border-box;
+}
+
+.timeline-item-left {
+  left: 0;
+}
+
+.timeline-item-right {
+  left: 50%;
+}
+
+.timeline-content {
+  padding: 1.25rem;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.timeline-item::after {
+  content: '';
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  right: -10px;
+  top: 15px;
+  border-radius: 50%;
+  background-color: white;
+  border: 4px solid #2d3748;
+  z-index: 1;
+}
+
+.timeline-item-right::after {
+  left: -10px;
+}
+
+/* Style for plotly charts */
+.plotly {
+  width: 100%;
+  height: auto;
+  margin: 1.5rem 0;
+}
+
+/* Style for leaflet maps */
+.leaflet {
+  width: 100% !important;
+  height: 500px !important;
+  margin: 1.5rem 0;
+}
+
+/* Style for data tables */
+.dataTables_wrapper {
+  margin: 2rem 0;
+}
+
+/* Animate elements as they come into view with IntersectionObserver */
+/* This will be initialized by JavaScript at the end of the document */
+.reveal {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.6s, transform 0.6s;
+}
+
+.reveal.active {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Responsive adjustments */
+@media screen and (max-width: 768px) {
+  .timeline::after {
+    left: 31px;
+  }
+
+  .timeline-item {
+    width: 100%;
+    padding-left: 70px;
+    padding-right: 25px;
+  }
+
+  .timeline-item-right {
+    left: 0;
+  }
+
+  .timeline-item::after {
+    left: 21px;
+    right: auto;
+  }
+  
+  /* Adjust TOC for mobile */
+  #TOC {
+    position: relative;
+    margin-bottom: 2rem;
+  }
+}
+
+/* Add this script to the document to initialize animations */
+/* This will be added via a script tag at the end of the document */
