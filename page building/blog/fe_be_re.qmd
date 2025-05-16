@@ -1,0 +1,479 @@
+---
+title: "Understanding Panel Data Models in Depth"
+author: "Heeyoung Lee"
+date: "May 15, 2025"
+format: 
+  html:
+    theme: cosmo
+    css: custom.css
+    code-fold: true
+    code-tools: true
+    toc: true
+    toc-location: left
+    self-contained: true
+    fig-width: 8
+    fig-height: 6
+    fig-dpi: 300
+    smooth-scroll: true
+    highlight-style: github
+---
+
+## Understanding Panel Data Models in Depth
+
+### Conceptual Framework for Panel Data Effects
+
+Panel data contains observations across two dimensions: entities (cross-sectional) and time (temporal). This structure allows us to decompose the variation in our data into different components, each addressed by a different modeling approach.
+
+```{r library-imports, message=FALSE, warning=FALSE}
+# Load all required packages 
+library(plm)
+library(dplyr)
+library(ggplot2)
+library(kableExtra)
+library(patchwork)
+library(lmtest)     # For coeftest function
+library(sandwich)   # For vcovHC function
+library(fixest)     # For advanced fixed effects
+library(texreg)     # For HTML regression tables
+```
+
+#### The General Panel Data Model
+
+We can express a general panel data model as:
+
+$$y_{it} = \alpha + \beta X_{it} + u_i + \epsilon_{it}$$
+
+Where:
+- $y_{it}$ is the dependent variable for entity $i$ at time $t$
+- $\alpha$ is the global intercept
+- $X_{it}$ represents the independent variables
+- $\beta$ represents the coefficients of interest
+- $u_i$ is the entity-specific effect (unobserved heterogeneity)
+- $\epsilon_{it}$ is the idiosyncratic error term
+
+The key question in panel data analysis is how to handle the entity-specific effect $u_i$.
+
+### Fixed Effects Model: Within Variation
+
+#### What Are Fixed Effects?
+
+The fixed effects model treats $u_i$ as a parameter to be estimated for each entity. This approach effectively gives each entity its own intercept, allowing us to control for all time-invariant characteristics of that entity, whether observed or unobserved.
+
+#### Intuition:
+
+- Fixed effects ask: "How does a change in X **within** an entity affect Y?"
+- Fixed effects remove all between-entity variation and focus only on within-entity changes
+- Each entity serves as its own control, neutralizing the impact of stable characteristics
+
+#### Mathematical Representation:
+
+The fixed effects transformation subtracts the entity-specific means from each observation:
+
+$$y_{it} - \bar{y}_i = \beta(X_{it} - \bar{X}_i) + (\epsilon_{it} - \bar{\epsilon}_i)$$
+
+Note that $u_i$ disappears in this transformation, as $u_i - \bar{u}_i = 0$ for all entities.
+
+```{r fe-detailed-viz, fig.width=10, fig.height=6}
+# Create more intuitive visualization for fixed effects
+
+# First, let's generate simulated data with clear entity effects
+set.seed(123)
+n_entities <- 5
+n_periods <- 8
+entity_effects <- rep(rnorm(n_entities, mean = 0, sd = 15), each = n_periods)
+time_periods <- rep(1:n_periods, times = n_entities)
+entities <- rep(LETTERS[1:n_entities], each = n_periods)
+
+# Create X variable with both between and within variation
+x_var <- rep(rnorm(n_entities, mean = 10, sd = 5), each = n_periods) + 
+         rnorm(n_entities * n_periods, mean = 0, sd = 3)
+
+# True effect of X on Y is 2
+true_beta <- 2
+y_var <- 50 + true_beta * x_var + entity_effects + rnorm(n_entities * n_periods, mean = 0, sd = 5)
+
+# Create dataframe
+panel_df <- data.frame(
+  entity = entities,
+  period = time_periods,
+  entity_effect = entity_effects,
+  x = x_var,
+  y = y_var
+)
+
+# Create panel data object
+panel_obj <- pdata.frame(panel_df, index = c("entity", "period"))
+
+# Estimate fixed effects model
+fe_model_viz <- plm(y ~ x, data = panel_obj, model = "within")
+fe_coef <- coef(fe_model_viz)[1]
+
+# Add entity means and calculate within deviations
+panel_df <- panel_df %>%
+  group_by(entity) %>%
+  mutate(
+    mean_x = mean(x),
+    mean_y = mean(y),
+    x_centered = x - mean_x,
+    y_centered = y - mean_y,
+    # Calculate FE predictions with true entity intercepts
+    fe_intercept = mean_y - fe_coef * mean_x,
+    fe_pred = fe_intercept + fe_coef * x
+  ) %>%
+  ungroup()
+
+# Plot 1: Raw data with entity-specific lines
+p1 <- ggplot(panel_df, aes(x = x, y = y, color = entity)) +
+  geom_point(size = 3, alpha = 0.7) +
+  geom_line(aes(y = fe_pred), linewidth = 1) +
+  geom_hline(aes(yintercept = fe_intercept, color = entity), 
+             linetype = "dashed", show.legend = FALSE) +
+  labs(title = "Fixed Effects Model",
+       subtitle = paste0("All entities share the same slope (β = ", round(fe_coef, 2), 
+                         ") but have different intercepts"),
+       x = "X Variable", 
+       y = "Y Variable") +
+  theme_minimal() +
+  theme(legend.position = "right",
+        plot.title = element_text(face = "bold", size = 14),
+        plot.subtitle = element_text(size = 11))
+
+# Plot 2: Centered data (demeaned within entities)
+p2 <- ggplot(panel_df, aes(x = x_centered, y = y_centered, color = entity)) +
+  geom_point(size = 3, alpha = 0.7) +
+  geom_smooth(method = "lm", se = FALSE, color = "black", linewidth = 1.2, formula = y ~ x) +
+  labs(title = "Within-Entity Transformation",
+       subtitle = "After subtracting entity means (demeaning), the common slope is revealed",
+       x = "X - Entity Mean X", 
+       y = "Y - Entity Mean Y") +
+  theme_minimal() +
+  theme(legend.position = "right",
+        plot.title = element_text(face = "bold", size = 14),
+        plot.subtitle = element_text(size = 11))
+
+# Combine plots
+library(patchwork)
+p1 + p2
+```
+
+#### Key Characteristics of Fixed Effects:
+
+- **Advantages**:
+  - Controls for all time-invariant omitted variables (observed and unobserved)
+  - Reduces omitted variable bias
+  - No need to assume entity effects are uncorrelated with regressors
+  
+- **Limitations**:
+  - Cannot estimate the effect of time-invariant variables
+  - Less efficient than random effects if its assumptions are met
+  - Uses only within-entity variation, potentially losing information
+
+### Between Effects Model: Cross-Sectional Variation
+
+#### What Are Between Effects?
+
+The between effects model averages observations for each entity over time and estimates a regression using only these entity averages. This approach focuses exclusively on differences between entities, ignoring within-entity variation entirely.
+
+#### Intuition:
+
+- Between effects ask: "How do differences in average X **between** entities relate to differences in average Y?"
+- Between effects examine only cross-sectional relationships using entity averages
+- Time variation within entities is treated as noise and averaged out
+
+#### Mathematical Representation:
+
+$$\bar{y}_i = \alpha + \beta \bar{X}_i + u_i + \bar{\epsilon}_i$$
+
+Where $\bar{y}_i$ and $\bar{X}_i$ are the averages of $y$ and $X$ for entity $i$ across all time periods.
+
+```{r be-detailed-viz, fig.width=10, fig.height=6}
+# Create visualization for between effects
+
+# Calculate entity averages for between effects
+entity_means <- panel_df %>%
+  group_by(entity) %>%
+  summarize(
+    mean_x = mean(x),
+    mean_y = mean(y)
+  )
+
+# Fit between effects model
+be_model_viz <- lm(mean_y ~ mean_x, data = entity_means)
+be_coef <- coef(be_model_viz)[2]
+be_intercept <- coef(be_model_viz)[1]
+
+# Add predictions
+entity_means$be_pred <- predict(be_model_viz)
+
+# Plot 1: Raw data with entity means highlighted
+p3 <- ggplot() +
+  # Add individual observations with reduced opacity
+  geom_point(data = panel_df, aes(x = x, y = y, color = entity), alpha = 0.3) +
+  # Add entity means as larger points
+  geom_point(data = entity_means, aes(x = mean_x, y = mean_y, color = entity), size = 5) +
+  # Add between effects regression line
+  geom_abline(intercept = be_intercept, slope = be_coef, color = "black", 
+              linewidth = 1.2) +
+  labs(title = "Between Effects Model",
+       subtitle = "Focuses on differences between entity averages, ignoring within-entity variation",
+       x = "X Variable", 
+       y = "Y Variable") +
+  theme_minimal() +
+  theme(legend.position = "right",
+        plot.title = element_text(face = "bold", size = 14),
+        plot.subtitle = element_text(size = 11))
+
+# Plot 2: Between-only visualization with entity means
+p4 <- ggplot(entity_means, aes(x = mean_x, y = mean_y, color = entity)) +
+  geom_point(size = 5) +
+  geom_smooth(method = "lm", se = TRUE, color = "black", formula = y ~ x) +
+  geom_text(aes(label = entity), vjust = -1, fontface = "bold") +
+  labs(title = "Between Effects: Entity Averages Only",
+       subtitle = paste0("Estimated slope (β = ", round(be_coef, 2), 
+                       ") reflects cross-sectional relationships"),
+       x = "Entity Mean X", 
+       y = "Entity Mean Y") +
+  theme_minimal() +
+  theme(legend.position = "none",
+        plot.title = element_text(face = "bold", size = 14),
+        plot.subtitle = element_text(size = 11))
+
+# Combine plots
+p3 + p4
+```
+
+#### Key Characteristics of Between Effects:
+
+- **Advantages**:
+  - Can estimate the effect of time-invariant variables
+  - Focuses on long-run equilibrium relationships
+  - Reduced computational burden with large N, small T datasets
+  
+- **Limitations**:
+  - Highly susceptible to omitted variable bias
+  - Doesn't control for unobserved entity heterogeneity
+  - Loses all information about within-entity dynamics
+  - Small sample size (only one observation per entity)
+
+### Random Effects Model: Weighted Combination
+
+#### What Are Random Effects?
+
+The random effects model treats $u_i$ as a random variable with a specified distribution, typically assumed to be normally distributed. This approach forms a weighted average of fixed and between effects estimators.
+
+#### Intuition:
+
+- Random effects ask: "What is the effect of X on Y, considering both within-entity and between-entity variation?"
+- Random effects use a weighted combination of within and between variation
+- The weights depend on the relative variances of the entity-specific and idiosyncratic error terms
+
+#### Mathematical Representation:
+
+$$y_{it} = \alpha + \beta X_{it} + u_i + \epsilon_{it}$$
+
+Where $u_i \sim N(0, \sigma_u^2)$ is assumed to be random and uncorrelated with $X_{it}$.
+
+```{r re-detailed-viz, fig.width=10, fig.height=6}
+# Create visualization for random effects
+
+# Estimate random effects model
+re_model_viz <- plm(y ~ x, data = panel_obj, model = "random")
+re_coef <- coef(re_model_viz)[2]  # Index 2 because intercept is at index 1
+re_intercept <- coef(re_model_viz)[1]
+
+# Extract entity-specific random effects
+re_effects <- as.numeric(ranef(re_model_viz))
+
+# Add to entity means dataframe
+entity_means$re_effect <- re_effects
+entity_means$re_intercept <- re_intercept + re_effects
+
+# Add RE predictions to panel dataframe
+panel_df <- panel_df %>%
+  left_join(entity_means %>% select(entity, re_intercept), by = "entity") %>%
+  mutate(re_pred = re_intercept + re_coef * x)
+
+# Choose one entity for clear visualization (entity A)
+entity_A <- panel_df %>% filter(entity == "A")
+entity_A_mean <- entity_means %>% filter(entity == "A")
+
+# Calculate combined predictions for entity A
+entity_A$fe_pred_full <- entity_A$fe_intercept + fe_coef * entity_A$x
+entity_A$be_pred_full <- be_intercept + be_coef * entity_A$x
+entity_A$re_pred_full <- entity_A$re_intercept + re_coef * entity_A$x
+
+# Plot 1: Random Effects as weighted average (for entity A)
+p5 <- ggplot(entity_A, aes(x = x, y = y)) +
+  geom_point(size = 3, color = "purple") +
+  geom_line(aes(y = fe_pred_full, color = "Fixed Effects"), linewidth = 1.2) +
+  geom_line(aes(y = be_pred_full, color = "Between Effects"), linewidth = 1.2) +
+  geom_line(aes(y = re_pred_full, color = "Random Effects"), linewidth = 1.5, linetype = "dashed") +
+  geom_vline(xintercept = entity_A_mean$mean_x, linetype = "dotted", color = "gray40") +
+  geom_hline(yintercept = entity_A_mean$mean_y, linetype = "dotted", color = "gray40") +
+  geom_point(data = entity_A_mean, aes(x = mean_x, y = mean_y), size = 5, shape = 23, fill = "yellow") +
+  scale_color_manual(values = c("Fixed Effects" = "blue", 
+                               "Between Effects" = "red",
+                               "Random Effects" = "purple")) +
+  labs(title = "Random Effects as Weighted Average (Entity A)",
+       subtitle = "Random effects balance between fixed and between effects",
+       x = "X Variable", 
+       y = "Y Variable",
+       color = "Model") +
+  theme_minimal() +
+  theme(legend.position = "bottom",
+        plot.title = element_text(face = "bold", size = 14),
+        plot.subtitle = element_text(size = 11))
+
+# Plot 2: All entities with random effects lines
+p6 <- ggplot(panel_df, aes(x = x, y = y, color = entity)) +
+  geom_point(alpha = 0.7) +
+  geom_line(aes(y = re_pred), linewidth = 1) +
+  labs(title = "Random Effects Model",
+       subtitle = paste0("Partial pooling: entity intercepts are 'shrunk' toward global mean"),
+       x = "X Variable", 
+       y = "Y Variable") +
+  theme_minimal() +
+  theme(legend.position = "right",
+        plot.title = element_text(face = "bold", size = 14),
+        plot.subtitle = element_text(size = 11))
+
+# Combine plots
+p5 + p6
+```
+
+#### Interpreting the Random Effects Visualization:
+The first plot (left panel) provides a crucial insight into how random effects work as a weighted average of fixed effects and between effects models:
+
+1. The blue line (Fixed Effects) shows Entity A's fitted line using only within variation. Notice how it has the same slope as all other entities in the fixed effects model but a unique intercept.
+2. The red line (Between Effects) shows the prediction based on cross-sectional variation between entities. This line has the same slope and intercept for all entities as it ignores entity-specific effects.
+3. The purple dashed line (Random Effects) represents the compromise between these two approaches:
+  - It has a slope that's a weighted average of the fixed and between effects slopes
+  - Its intercept is "shrunk" toward the global mean (partial pooling)
+  - The amount of shrinkage depends on:
+    - The relative variation within vs. between entities
+    - The reliability of the entity's individual estimate
+4. The yellow diamond marks Entity A's mean value (both X and Y), which is the basis for the between effects estimate.
+5. The dotted lines show the entity's mean values of X and Y, which are used in both fixed effects and between effects calculations.
+
+This visualization demonstrates why random effects are often described as a "compromise" or "middle ground" between fixed and between effects. When entity-specific effects show high variance relative to the idiosyncratic error, the random effects estimator will be closer to the fixed effects estimator. Conversely, when the entity effects have low variance, random effects will more closely resemble between effects.
+
+#### Key Characteristics of Random Effects:
+
+- **Advantages**:
+  - More efficient than fixed effects when assumptions are met
+  - Can estimate time-invariant variables
+  - Uses both within and between variation (more information)
+  
+- **Limitations**:
+  - Assumes entity effects are uncorrelated with regressors (strict exogeneity)
+  - This assumption is often violated in practice
+  - Can lead to inconsistent estimates if assumption is violated
+
+### Model Selection: When to Use Each Approach
+
+```{r model-comparison-table}
+# Create a comparison table of all models with enhanced insights
+comparison_df <- data.frame(
+  Feature = c(
+    "Focus", 
+    "Handles unobserved heterogeneity", 
+    "Can estimate time-invariant variables",
+    "Efficiency",
+    "Consistency when u_i correlated with X",
+    "Key assumption",
+    "Appropriate when",
+    "Estimated coefficients in our example"
+  ),
+  
+  `Fixed Effects` = c(
+    "Within-entity variation (changes over time)", 
+    "Yes - controls for all time-invariant effects",
+    "No",
+    "Lower",
+    "Yes",
+    "No assumptions about correlation between u_i and X_it",
+    "Entity-specific effects correlate with regressors (common case)",
+    paste0("β = ", round(fe_coef, 3))
+  ),
+  
+  `Between Effects` = c(
+    "Between-entity variation (cross-sectional differences)",
+    "No",
+    "Yes",
+    "Depends on between variation",
+    "No",
+    "Between variation is not contaminated by omitted variables",
+    "Interest is in long-run equilibrium between entities",
+    paste0("β = ", round(be_coef, 3))
+  ),
+  
+  `Random Effects` = c(
+    "Weighted combination of within and between variation",
+    "Partially",
+    "Yes",
+    "Higher (if assumptions met)",
+    "No",
+    "Entity effects uncorrelated with regressors",
+    "Entity effects are random and uncorrelated with X_it",
+    paste0("β = ", round(re_coef, 3))
+  )
+)
+
+# Display the table with kable for nice formatting
+kable(comparison_df, caption = "Comparison of Panel Data Models") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive")) %>%
+  column_spec(1, bold = TRUE) %>%
+  row_spec(0, bold = TRUE, background = "#f2f2f2")
+```
+
+### Hausman Test: Choosing Between Fixed and Random Effects
+
+The Hausman test compares the fixed effects and random effects models to determine if the key random effects assumption (that entity effects are uncorrelated with regressors) holds.
+
+```{r enhanced-hausman}
+# Perform Hausman test with better explanation
+hausman_test <- phtest(fe_model_viz, re_model_viz)
+
+# Extract test statistics
+hausman_stat <- round(hausman_test$statistic, 3)
+hausman_pval <- round(hausman_test$p.value, 4)
+hausman_df <- hausman_test$parameter
+
+# Create dataframe for nice output
+hausman_df <- data.frame(
+  Metric = c("Chi-squared statistic", "Degrees of freedom", "p-value", "Decision at α = 0.05"),
+  Value = c(
+    hausman_stat,
+    hausman_df,
+    hausman_pval,
+    ifelse(hausman_pval < 0.05, "Reject H₀: Use Fixed Effects", "Fail to reject H₀: Random Effects OK")
+  )
+)
+
+# Display the Hausman test results
+kable(hausman_df, caption = "Hausman Test Results") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed")) %>%
+  column_spec(1, bold = TRUE)
+```
+
+#### Intuition Behind the Hausman Test:
+- **Null hypothesis** (H₀): Random effects assumptions are valid (entity effects uncorrelated with regressors)
+- **Alternative hypothesis** (H₁): Fixed effects should be used (correlation present)
+- If the test statistic is significant (p < 0.05), we should use fixed effects
+- If not significant, we can use random effects for greater efficiency
+
+### Conclusion: Key Takeaways
+
+1. **Fixed Effects** tackle the omitted variable bias problem for time-invariant characteristics. They effectively give each entity its own intercept, allowing you to control for all stable differences between entities. This approach is most appropriate when you believe that unobserved entity characteristics might correlate with your regressors.
+
+2. **Between Effects** focus exclusively on cross-sectional relationships, averaging out time variation. This approach is useful for understanding long-run equilibrium relationships between entities but doesn't address potential omitted variable bias.
+
+3. **Random Effects** provide a middle ground, using both within and between variation. This approach is more efficient when its key assumption holds: that entity-specific effects are uncorrelated with the regressors. The Hausman test helps determine if this assumption is reasonable.
+
+4. When choosing between models, consider:
+   - Your research question (within-entity dynamics vs. between-entity comparisons)
+   - The potential for omitted variable bias
+   - Whether you need to estimate the effects of time-invariant variables
+   - Results of specification tests like the Hausman test
+
+Remember that panel data analysis isn't just about choosing the "best" model—it's about understanding the different types of variation in your data and selecting the approach that best addresses your specific research question.
