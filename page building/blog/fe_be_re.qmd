@@ -11,8 +11,8 @@ format:
     toc: true
     toc-location: left
     self-contained: true
-    fig-width: 8
-    fig-height: 6
+    fig-width: 10
+    fig-height: 8
     fig-dpi: 300
     smooth-scroll: true
     highlight-style: github
@@ -129,7 +129,7 @@ p1 <- ggplot(panel_df, aes(x = x, y = y, color = entity)) +
   geom_hline(aes(yintercept = fe_intercept, color = entity), 
              linetype = "dashed", show.legend = FALSE) +
   labs(title = "Fixed Effects Model",
-       subtitle = paste0("All entities share the same slope (β = ", round(fe_coef, 2), 
+       subtitle = paste0("All entities share the same slope \n (β = ", round(fe_coef, 2), 
                          ") but have different intercepts"),
        x = "X Variable", 
        y = "Y Variable") +
@@ -143,7 +143,7 @@ p2 <- ggplot(panel_df, aes(x = x_centered, y = y_centered, color = entity)) +
   geom_point(size = 3, alpha = 0.7) +
   geom_smooth(method = "lm", se = FALSE, color = "black", linewidth = 1.2, formula = y ~ x) +
   labs(title = "Within-Entity Transformation",
-       subtitle = "After subtracting entity means (demeaning), the common slope is revealed",
+       subtitle = "After subtracting entity means (demeaning),\n the common slope is revealed",
        x = "X - Entity Mean X", 
        y = "Y - Entity Mean Y") +
   theme_minimal() +
@@ -215,7 +215,7 @@ p3 <- ggplot() +
   geom_abline(intercept = be_intercept, slope = be_coef, color = "black", 
               linewidth = 1.2) +
   labs(title = "Between Effects Model",
-       subtitle = "Focuses on differences between entity averages, ignoring within-entity variation",
+       subtitle = "Focuses on differences between entity averages,\n ignoring within-entity variation",
        x = "X Variable", 
        y = "Y Variable") +
   theme_minimal() +
@@ -230,7 +230,7 @@ p4 <- ggplot(entity_means, aes(x = mean_x, y = mean_y, color = entity)) +
   geom_text(aes(label = entity), vjust = -1, fontface = "bold") +
   labs(title = "Between Effects: Entity Averages Only",
        subtitle = paste0("Estimated slope (β = ", round(be_coef, 2), 
-                       ") reflects cross-sectional relationships"),
+                       ")\n reflects cross-sectional relationships"),
        x = "Entity Mean X", 
        y = "Entity Mean Y") +
   theme_minimal() +
