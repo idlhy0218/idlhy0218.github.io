@@ -643,14 +643,17 @@ p6
 The visualization above provides crucial insights into how random effects work with our health data:
 
 **County Mean Points**
+
 - Diamond Shapes: Each county's average income and mortality; color-coded by county
 
 **Model Lines**
+
 - Solid Lines: Fixed effects with same slope but county-specific intercepts
 - Dashed Lines: Between effects showing cross-sectional relationships
 - Dotted Lines: Random effects demonstrating partial pooling; positioned between the other two
 
 **Statistical Implications**
+
 - Random effects "shrink" county estimates toward the global relationship when data is sparse or noisy
 - Provides optimal balance between preserving local patterns and leveraging information from all counties
 - The degree of shrinkage depends on within-county vs. between-county variance components
@@ -679,17 +682,61 @@ A crucial but often overlooked aspect of panel data analysis is quantifying how 
 
 ##### What is ICC?
 
-The ICC measures the proportion of total variance in mortality rates that is due to differences between counties (between-county variance). Mathematically:
+The ICC measures the proportion of total variance in mortality rates that is due to differences between counties (between-county variance). 
+
+Mathematically:
 
 $$ICC = \frac{\sigma^2_{\text{between}}}{\sigma^2_{\text{between}} + \sigma^2_{\text{within}}}$$
 
 Where:
+
 - $\sigma^2_{\text{between}}$ is the variance between counties
 - $\sigma^2_{\text{within}}$ is the variance within counties over time
 
 The ICC ranges from 0 to 1:
+
 - ICC ≈ 0: Almost all variation in mortality occurs within counties over time
 - ICC ≈ 1: Almost all variation in mortality occurs between counties (stable county differences)
+
+Figure below shows the distribution of data across three different values of ICC
+```{r}
+show_icc <- function(icc = 0.5) {
+  
+  # These could be function parameters rather than constants if preferred.
+  group_mean    <- 5  # This is arbitrary as there are no numbers on y axis
+  group_sd      <- 1  # This is also arbitrary
+  n_groups      <- 10 # Number of groups along x axis
+  obs_per_group <- 10 # Number of points per group
+  
+  # This gives us a vector of means, one for each group
+  mu <- rnorm(n_groups, group_mean, group_sd)
+  
+  dat <- lapply(icc, function(icc) {
+    # Calculate sd within group from icc then generate group samples
+    sigma <- group_sd^2/icc - group_sd^2
+    replicate(obs_per_group, rnorm(n_groups, mu, sigma)) |>
+    t() |>
+    as.data.frame() |>
+    stack() |>
+    setNames(c('value', 'group')) |>
+    within(icc <- paste('ICC = ', icc))
+  })
+  
+  do.call('rbind', dat) |>
+    ggplot(aes(group, value)) +
+    geom_point(color = 'gray') +
+    stat_summary(fun = mean, geom = 'point', 
+                 shape = 24, fill = 'red', size = 4) +
+    facet_wrap(.~icc, scales = 'free_y') +
+    theme_classic() +
+    theme(strip.background = element_blank(),
+          strip.text = element_text(size = 14, face = 2),
+          axis.text.y = element_blank())
+}
+
+show_icc(c(0.1, 0.9))
+
+```
 
 ##### Why ICC Matters?
 
@@ -869,6 +916,8 @@ p_weight <- ggplot(weight_df, aes(x = ICC, y = RE_Weight)) +
 # Combine the plots using patchwork
 p_icc / p_weight
 ```
+
+
 
 ##### Interpreting the ICC Visualization
 
