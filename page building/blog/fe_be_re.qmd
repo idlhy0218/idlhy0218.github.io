@@ -67,7 +67,7 @@ Where:
 
 The key question in panel data analysis is how to handle the county-specific effect $u_i$. Different approaches to this question lead to our three main panel data models: fixed effects, between effects, and random effects. Each model makes different assumptions about $u_i$ and extracts different types of information from the data.
 
-Let's simulate some county health data to demonstrate these concepts:
+Let's simulate some county health data to demonstrate these concepts. I made a simulated data with 100 counties over 10 years. I've picked two counties here. You can see there are both time varying and time invariant variables here. My research is to estimate the relationship between counties' income level (X) and mortality rate (Y):
 
 ```{r simulate-data}
 # Create simulated county health data
@@ -168,7 +168,7 @@ head(county_health_df, n = 20) %>%
 
 #### What Are Fixed Effects?
 
-The fixed effects model treats the county-specific effect $u_i$ as a parameter to be estimated for each county. This approach is analogous to including a dummy variable for each county in our model, effectively giving each county its own intercept. By doing so, we control for all time-invariant characteristics of counties, whether these characteristics are observed or unobserved.
+The fixed effects model treats the county-specific effect $u_i$ as a parameter to be estimated for each county. This approach is analogous to including a dummy variable for each county in our model, effectively giving each county its own intercept. By doing so, **we control for all time-invariant characteristics of counties**, whether these characteristics are observed or unobserved.
 
 #### Intuition Behind Fixed Effects:
 
@@ -178,9 +178,9 @@ To understand the intuition more concretely:
 
 - Fixed effects remove all between-county variation and focus only on within-county changes over time
 - Each county serves as its own control, neutralizing the impact of stable characteristics
-- This approach eliminates omitted variable bias from time-invariant factors, even if we can't measure them
+- This approach eliminates omitted variable bias from **time-invariant factors**, even if we can't measure them
 
-Consider the effect of income on mortality rates across counties. Counties differ in many stable ways (geography, historical development, demographic composition) that might correlate with both income and mortality. Fixed effects would control for these county-specific characteristics by focusing only on how changes in a county's income relate to changes in that same county's mortality rates.
+Consider the effect of income on mortality rates across counties. Counties differ in many stable ways (geography, historical development, demographic composition) that might correlate with both income and mortality. These characteristics are confounding variables. Fixed effects would control for these county-specific characteristics by focusing only on how changes in a county's income relate to changes in that same county's mortality rates.
 
 #### Mathematical Representation:
 
@@ -190,11 +190,11 @@ $$Mortality_{it} - \overline{Mortality}_i = \beta(Income_{it} - \overline{Income
 
 Where $\overline{Mortality}_i$, $\overline{Income}_i$, $\overline{Z}_i$, and $\overline{\epsilon}_i$ represent the means of $Mortality$, $Income$, $Z$, and $\epsilon$ for county $i$ across all time periods.
 
-Notice that the county-specific effect $u_i$ disappears in this transformation, as $u_i - \overline{u}_i = 0$ for all counties (since $u_i$ is constant over time for each county). This "demeaning" process is what enables fixed effects to control for all time-invariant characteristics.
+Notice that the county-specific effect $u_i$ disappears in this transformation, as $u_i - \overline{u}_i = 0$ for all counties (since $u_i$ is constant over time (like area size) for each county). This "demeaning" process is what enables fixed effects to control for all time-invariant characteristics.
 
-To visualize how fixed effects work in our health data, let's create a simulation that clearly demonstrates the concept:
-
-```{r fe-detailed-viz, fig.width=10, fig.height=6}
+```{r}
+#| message: false
+#| warning: false
 # First, let's subset data to make visualization clearer
 set.seed(42)
 selected_counties <- sample(1:n_counties, 5)
@@ -208,7 +208,7 @@ selected_panel <- pdata.frame(selected_data, index = c("county_id", "year"))
 fe_model_viz <- plm(mortality_rate ~ median_income, data = selected_panel, model = "within")
 fe_coef <- coef(fe_model_viz)[1]
 
-# Add county means and calculate within deviations
+# Add county means and calculate within deviations and predicted values
 selected_data <- selected_data %>%
   group_by(county_id) %>%
   mutate(
@@ -222,15 +222,12 @@ selected_data <- selected_data %>%
   ) %>%
   ungroup()
 
-# Plot 1: Raw data with county-specific lines
+# First visualization should show raw data with county-specific trends
 p1 <- ggplot(selected_data, aes(x = median_income, y = mortality_rate, color = factor(county_id))) +
   geom_point(size = 3, alpha = 0.7) +
-  geom_line(aes(y = fe_pred), linewidth = 1) +
-  geom_hline(aes(yintercept = fe_intercept, color = factor(county_id)), 
-             linetype = "dashed", show.legend = FALSE) +
-  labs(title = "Fixed Effects Model for County Health Data",
-       subtitle = paste0("All counties share the same slope \n (β = ", round(fe_coef, 2), 
-                         ") but have different intercepts"),
+  geom_smooth(method = "lm", se = FALSE, aes(group = factor(county_id)), linewidth = 1) +
+  labs(title = "Raw County-Specific Trends",
+       subtitle = "Each county may have a different relationship\nbetween income and mortality",
        x = "Median Household Income ($1000s)", 
        y = "Mortality Rate (per 100,000)") +
   theme_minimal() +
@@ -239,10 +236,29 @@ p1 <- ggplot(selected_data, aes(x = median_income, y = mortality_rate, color = f
         plot.subtitle = element_text(size = 11)) +
   scale_color_discrete(name = "County ID")
 
-# Plot 2: Centered data (demeaned within counties)
-p2 <- ggplot(selected_data, aes(x = income_centered, y = mortality_centered, color = factor(county_id))) +
+# Second visualization shows the fixed effects model with parallel lines
+p2 <- ggplot(selected_data, aes(x = median_income, y = mortality_rate, color = factor(county_id))) +
+  geom_point(size = 3, alpha = 0.7) +
+  geom_line(aes(y = fe_pred), linewidth = 1) +
+  geom_hline(aes(yintercept = fe_intercept, color = factor(county_id)), 
+             linetype = "dashed", show.legend = FALSE) +
+  labs(title = "Fixed Effects Model Fitted Values",
+       subtitle = paste0("Fixed effects constrains all counties to share the same slope \n (β = ", 
+                      round(fe_coef, 2), ") with different intercepts"),
+       x = "Median Household Income ($1000s)", 
+       y = "Mortality Rate (per 100,000)") +
+  theme_minimal() +
+  theme(legend.position = "right",
+        plot.title = element_text(face = "bold", size = 14),
+        plot.subtitle = element_text(size = 11)) +
+  scale_color_discrete(name = "County ID")
+
+# Third visualization shows the demeaned data (centered)
+p3 <- ggplot(selected_data, aes(x = income_centered, y = mortality_centered, color = factor(county_id))) +
   geom_point(size = 3, alpha = 0.7) +
   geom_smooth(method = "lm", se = FALSE, color = "black", linewidth = 1.2, formula = y ~ x) +
+  geom_vline(xintercept = 0, color = "red", lty = "dashed") +
+  geom_hline(yintercept = 0, color = "red", lty = "dashed") +
   labs(title = "Within-County Transformation",
        subtitle = "After subtracting county means (demeaning),\n the common slope reveals the effect of income changes",
        x = "Income - County Mean Income", 
@@ -253,27 +269,32 @@ p2 <- ggplot(selected_data, aes(x = income_centered, y = mortality_centered, col
         plot.subtitle = element_text(size = 11)) +
   scale_color_discrete(name = "County ID")
 
-# Combine plots
-p1 + p2
+# Combine first two plots for comparison, keep third plot separate
+(p1 + p2) / p3
 ```
 
 #### Interpreting the Fixed Effects Visualization:
 
-The visualization above illustrates two crucial aspects of fixed effects modeling with our health data:
+The visualizations above illustrate three crucial aspects of fixed effects modeling with our health data:
 
-1. **Left panel**: Shows the raw data with county-specific regression lines. Notice how:
-   - Each county (color) has its own intercept (dashed horizontal line)
-   - All counties share a common slope coefficient (the effect of income on mortality)
-   - The lines are parallel, indicating the same relationship between income and mortality across counties, just shifted up or down by the county effect
-   - Counties with higher baseline mortality rates have higher intercepts
+1. **Top Left Panel**: Shows the raw data with county-specific trend lines fitted individually:
+   - Each county (color) has its own independently fitted regression line
+   - These lines may have different slopes, suggesting potentially heterogeneous relationships between income and mortality across counties
+   - This highlights why simply pooling all observations might be misleading
 
-2. **Right panel**: Shows the data after the "demeaning" transformation:
-   - Each county's observations are centered around their own means (0,0)
-   - The county-specific effects are removed
-   - The common slope becomes apparent
-   - All points now cluster around a single regression line showing how deviations in income from county averages relate to deviations in mortality from county averages
+2. **Top Right Panel**: Shows the same data with fixed effects model fitted values:
+   - The fixed effects model constrains all counties to share the **same slope coefficient**
+   - Each county has its own intercept (shown by dashed horizontal lines)
+   - The resulting parallel lines reflect the assumption that income changes affect mortality **equally** across all counties
+   - The vertical distance between lines represents the county fixed effects
 
-This transformation is the mathematical essence of fixed effects: by subtracting county means, we eliminate county-specific effects and isolate the within-county relationship between income and mortality.
+3. **Bottom Panel**: Shows the data after the **"demeaning"** transformation:
+   - Each county's observations are centered around their own means (at point 0,0)
+   - The county-specific effects are removed through this transformation
+   - The common slope becomes apparent with all counties' data now aligned
+   - All points cluster around a single regression line showing how deviations in income from county averages relate to deviations in mortality from county averages
+
+This three-part visualization demonstrates how fixed effects modeling works: by imposing a common slope across heterogeneous counties and using the "demeaning" transformation to eliminate county-specific effects, thereby isolating the within-county relationship between income and mortality.
 
 #### Key Characteristics of Fixed Effects:
 
@@ -307,7 +328,7 @@ The fixed effects estimates show how changes in county income and health factors
 
 #### What Are Between Effects?
 
-The between effects model takes a completely different approach. Instead of focusing on within-county variation, it averages observations for each county over time and estimates a regression using only these county averages. This approach focuses exclusively on differences between counties, treating time variation within counties as noise to be averaged out.
+The between effects model takes a completely different approach. Instead of focusing on within-county variation, it averages observations for each county over time and estimates a regression using only these **county averages**. This approach focuses exclusively on differences between counties, treating time variation within counties as noise to be averaged out.
 
 #### Intuition Behind Between Effects:
 
@@ -443,7 +464,7 @@ The random effects model takes a middle-ground approach that combines elements o
 
 #### Intuition Behind Random Effects:
 
-Random effects answer yet a third type of question: "What is the effect of income on mortality rates, considering both within-county and between-county variation?" This balanced approach makes random effects potentially more efficient and informative when its assumptions are met.
+Random effects answer yet a third type of question: "What is the effect of income on mortality rates, considering **both** within-county and between-county variation?" This balanced approach makes random effects potentially more efficient and informative when its assumptions are met.
 
 To understand the intuition:
 
@@ -452,91 +473,34 @@ To understand the intuition:
 - Random effects "shrink" county-specific estimates toward the global mean (partial pooling)
 - This approach can be viewed as a compromise between complete pooling (ignoring county differences) and no pooling (treating each county separately)
 
-In our health example, random effects would use both the variation in income within each county over time and the variation between different counties to estimate the relationship between income and mortality rates. This combines information from both sources.
+In our example, random effects would use both the variation in income within each county over time and the variation between different counties to estimate the relationship between income and mortality rates. This combines information from both sources.
 
 #### Mathematical Representation:
 
 The random effects model is expressed as:
 
-$$Mortality_{it} = \alpha + \beta Income_{it} + \gamma Z_{it} + u_i + \epsilon_{it}$$
+$$Mortality_{it} = \alpha + \beta Income_{it} + \gamma \mathbf{Z}_{it} + u_i + \epsilon_{it}$$
 
-Where $u_i \sim N(0, \sigma_u^2)$ is assumed to be random and uncorrelated with $Income_{it}$ and $Z_{it}$.
+Where:
 
-The random effects estimator is effectively a matrix-weighted average of the fixed effects and between effects estimators:
+- $Mortality_{it}$ is the mortality rate for county $i$ in year $t$
+- $\alpha$ is the global intercept term
+- $Income_{it}$ represents median household income with coefficient $\beta$
+- $\mathbf{Z}_{it}$ is a vector of control variables with coefficient vector $\gamma$
+- $u_i$ is the county-specific random effect, where $u_i \sim N(0, \sigma_u^2)$
+- $\epsilon_{it}$ is the idiosyncratic error term, where $\epsilon_{it} \sim N(0, \sigma_\epsilon^2)$
+
+The critical assumption in random effects modeling is that the county-specific effects $u_i$ are uncorrelated with the explanatory variables $Income_{it}$ and $\mathbf{Z}_{it}$.
+
+The random effects estimator can be mathematically represented as a precision-weighted average of the fixed effects and between effects estimators:
 
 $$\hat{\beta}_{RE} = \hat{\beta}_{FE} \times W + \hat{\beta}_{BE} \times (I - W)$$
 
-Where $W$ is a weight matrix that depends on the variance components $\sigma_u^2$ and $\sigma_\epsilon^2$.
+Where $W$ is a weight matrix that depends on the variance components:
 
-Let's visualize the random effects approach using our simulated health data:
+$$W = \left(\sigma_u^2 \mathbf{J}_T\mathbf{J}_T' + \sigma_\epsilon^2 \mathbf{I}_T \right)^{-1} \sigma_\epsilon^2 \mathbf{I}_T$$
 
-```{r re-detailed-viz, fig.width=10, fig.height=6}
-# Estimate random effects model
-re_model_viz <- plm(mortality_rate ~ median_income, data = selected_panel, model = "random")
-re_coef <- coef(re_model_viz)[2]  # Index 2 because intercept is at index 1
-re_intercept <- coef(re_model_viz)[1]
-
-# Extract county-specific random effects
-re_effects <- as.numeric(ranef(re_model_viz))
-
-# Add to county means dataframe
-county_means$re_effect <- re_effects
-county_means$re_intercept <- re_intercept + re_effects
-
-# Add RE predictions to selected dataframe
-selected_data <- selected_data %>%
-  left_join(county_means %>% select(county_id, re_intercept), by = "county_id") %>%
-  mutate(re_pred = re_intercept + re_coef * median_income)
-
-# Choose one county for clear visualization (county id 74)
-selected_counties[4]
-county_1 <- selected_data %>% filter(county_id == selected_counties[4])
-county_1_mean <- county_means %>% filter(county_id == selected_counties[4])
-
-# Calculate combined predictions for county id 74
-county_1$fe_pred_full <- county_1$fe_intercept + fe_coef * county_1$median_income
-county_1$be_pred_full <- be_intercept + be_coef * county_1$median_income
-county_1$re_pred_full <- county_1$re_intercept + re_coef * county_1$median_income
-
-# Plot 1: Random Effects as weighted average (for county id 74)
-p5 <- ggplot(county_1, aes(x = median_income, y = mortality_rate)) +
-  geom_point(size = 3, color = "purple") +
-  geom_line(aes(y = fe_pred_full, color = "Fixed Effects"), linewidth = 1.2) +
-  geom_line(aes(y = be_pred_full, color = "Between Effects"), linewidth = 1.2) +
-  geom_line(aes(y = re_pred_full, color = "Random Effects"), linewidth = 1.5, linetype = "dashed") +
-  geom_vline(xintercept = county_1_mean$mean_income, linetype = "dotted", color = "gray40") +
-  geom_hline(yintercept = county_1_mean$mean_mortality, linetype = "dotted", color = "gray40") +
-  geom_point(data = county_1_mean, aes(x = mean_income, y = mean_mortality), size = 5, shape = 23, fill = "yellow") +
-  scale_color_manual(values = c("Fixed Effects" = "blue", 
-                               "Between Effects" = "red",
-                               "Random Effects" = "purple")) +
-  labs(title = "Random Effects as Weighted Average\n(County ID = 74)",
-       subtitle = "Random effects balance between fixed and between effects\nfor optimal use of health data",
-       x = "Median Household Income ($1000s)", 
-       y = "Mortality Rate (per 100,000)",
-       color = "Model") +
-  theme_minimal() +
-  theme(legend.position = "bottom",
-        plot.title = element_text(face = "bold", size = 14),
-        plot.subtitle = element_text(size = 11))
-
-# Plot 2: All counties with random effects lines
-p6 <- ggplot(selected_data, aes(x = median_income, y = mortality_rate, color = factor(county_id))) +
-  geom_point(alpha = 0.7) +
-  geom_line(aes(y = re_pred), linewidth = 1) +
-  labs(title = "Random Effects Model for County Health",
-       subtitle = paste0("Partial pooling: county intercepts are 'shrunk' toward global mean"),
-       x = "Median Household Income ($1000s)", 
-       y = "Mortality Rate (per 100,000)") +
-  theme_minimal() +
-  theme(legend.position = "right",
-        plot.title = element_text(face = "bold", size = 14),
-        plot.subtitle = element_text(size = 11)) +
-  scale_color_discrete(name = "County ID")
-
-# Combine plots
-p5 + p6
-```
+The weight given to the between estimator increases as the between-county variance $\sigma_u^2$ increases relative to the within-county variance $\sigma_\epsilon^2$, demonstrating how random effects optimally balances information from both sources.
 
 Let's estimate a complete random effects model with our health controls:
 
@@ -550,23 +514,148 @@ re_health <- plm(mortality_rate ~ median_income + uninsured_rate + physician_den
 summary(re_health)
 ```
 
+Let's visualize the random effects approach using our simulated health data:
+
+```{r re-detailed-viz, fig.width=10, fig.height=6}
+set.seed(42)
+selected_counties <- sample(1:n_counties, 9)
+selected_data <- county_health_df %>%
+  filter(county_id %in% selected_counties)
+
+# Create panel data object for selected counties
+selected_panel <- pdata.frame(selected_data, index = c("county_id", "year"))
+
+# Diagnostic and corrected code
+# Estimate models
+fe_model_viz <- plm(mortality_rate ~ median_income, data = selected_panel, model = "within")
+be_model_viz <- plm(mortality_rate ~ median_income, data = selected_panel, model = "between")
+re_model_viz <- plm(mortality_rate ~ median_income, data = selected_panel, model = "random")
+
+# Extract coefficients
+fe_coef <- coef(fe_model_viz)
+be_coef <- coef(be_model_viz)
+re_coef <- coef(re_model_viz)
+
+# Calculate predictions for each county
+county_predictions <- selected_data %>%
+  filter(county_id %in% selected_counties) %>%
+  group_by(county_id) %>%
+  mutate(
+    # Fixed Effects Prediction (centered around county mean)
+    fe_pred_full = mean(mortality_rate) + 
+                   fe_coef * (median_income - mean(median_income)),
+    
+    # Between Effects Prediction
+    be_pred_full = re_coef[1] + be_coef[2] * median_income,
+    
+    # Random Effects Prediction
+    re_pred_full = re_coef[1] + re_coef[2] * median_income
+  )
+
+# Calculate county means
+county_means <- county_predictions %>%
+  group_by(county_id) %>%
+  summarize(
+    mean_income = mean(median_income),
+    mean_mortality = mean(mortality_rate)
+  )
+
+# Create a more informative plot with annotations
+p6 <- ggplot() +
+  # Raw data points with transparency
+  geom_point(data = county_predictions, 
+             aes(x = median_income, y = mortality_rate, color = factor(county_id)), 
+             alpha = 0.5, 
+             size = 1) +
+  
+  # Fixed Effects lines with distinct styling
+  geom_line(data = county_predictions, 
+            aes(x = median_income, y = fe_pred_full, color = factor(county_id)), 
+            linewidth = 1.2,
+            linetype = "solid") +  # Fixed Effects
+  
+  # Between Effects lines with distinct styling
+  geom_line(data = county_predictions, 
+            aes(x = median_income, y = be_pred_full, color = factor(county_id)), 
+            linewidth = 1.2, 
+            linetype = "dashed") +  # Between Effects
+  
+  # Random Effects lines with distinct styling
+  geom_line(data = county_predictions, 
+            aes(x = median_income, y = re_pred_full, color = factor(county_id)), 
+            linewidth = 1.5, 
+            linetype = "dotted") +  # Random Effects
+  
+  # Mean points for each county with white border
+  geom_point(data = county_means, 
+             aes(x = mean_income, y = mean_mortality, fill = factor(county_id)), 
+             size = 4, 
+             shape = 23, 
+             color = "white",
+             stroke = 1) +
+  
+# Create a legend box starting from x = 25
+  annotate("rect", xmin = 25, xmax = 45, ymin = 910, ymax = 950,
+           fill = "white", color = "gray", alpha = 0.7) +
+  
+  # Add annotations inside the box with proper spacing
+  annotate("segment", x = 27, y = 945, xend = 31, yend = 945,
+           linewidth = 1.2, linetype = "solid", color = "black") +
+  annotate("text", x = 32, y = 945, label = "Fixed Effects", hjust = 0, size = 3) +
+  
+  annotate("segment", x = 27, y = 935, xend = 31, yend = 935,
+           linewidth = 1.2, linetype = "dashed", color = "black") +
+  annotate("text", x = 32, y = 935, label = "Between Effects", hjust = 0, size = 3) +
+  
+  annotate("segment", x = 27, y = 925, xend = 31, yend = 925,
+           linewidth = 1.5, linetype = "dotted", color = "black") +
+  annotate("text", x = 32, y = 925, label = "Random Effects", hjust = 0, size = 3) +
+  
+  # Add diamond symbol explanation
+  annotate("point", x = 29, y = 915, size = 4, shape = 23, 
+           fill = "black", color = "white") +
+  annotate("text", x = 32, y = 915, label = "County Mean", hjust = 0, size = 3) +
+  
+  # Improve color palette and aesthetics
+  scale_color_brewer(palette = "Set1", name = "County ID") +
+  scale_fill_brewer(palette = "Set1", name = "County ID") +
+  
+  labs(title = "Model Predictions Across Selected Counties",
+       subtitle = "Comparing Fixed, Between, and Random Effects",
+       x = "Median Household Income ($1000s)", 
+       y = "Mortality Rate (per 100,000)",
+       caption = "Random effects 'shrink' county estimates toward the global relationship,\nbalancing between preserving county-specific patterns and avoiding overfitting.") +
+  
+  theme_minimal() +
+  theme(
+    legend.position = "right",
+    plot.title = element_text(face = "bold"),
+    plot.subtitle = element_text(face = "italic"),
+    plot.caption = element_text(hjust = 0, face = "italic")
+  )
+
+# Print the plot
+p6
+```
+
 #### Interpreting the Random Effects Visualization:
 
 The visualization above provides crucial insights into how random effects work with our health data:
 
-1. **Left panel**: Shows how random effects act as a weighted average for County 1:
-   - The blue line (Fixed Effects) shows County 1's fitted line using only within-county variation
-   - The red line (Between Effects) shows the prediction based on cross-county variation 
-   - The purple dashed line (Random Effects) represents the compromise between these approaches
-   - Notice how the random effects line falls between the fixed and between effects lines
-   - The yellow diamond marks County 1's mean values, which anchor the between effects estimate
+**County Mean Points**
+- Diamond Shapes: Each county's average income and mortality; color-coded by county
 
-2. **Right panel**: Shows all counties with their random effects fitted lines:
-   - Each county has its own intercept, but these are "shrunk" toward the global mean
-   - The amount of shrinkage depends on:
-     - The relative variation within vs. between counties
-     - The reliability of each county's individual estimate
-   - Counties with more observations or less internal variation get less shrinkage
+**Model Lines**
+- Solid Lines: Fixed effects with same slope but county-specific intercepts
+- Dashed Lines: Between effects showing cross-sectional relationships
+- Dotted Lines: Random effects demonstrating partial pooling; positioned between the other two
+
+**Statistical Implications**
+- Random effects "shrink" county estimates toward the global relationship when data is sparse or noisy
+- Provides optimal balance between preserving local patterns and leveraging information from all counties
+- The degree of shrinkage depends on within-county vs. between-county variance components
+- Distance between fixed and random effects lines visually represents the amount of shrinkage applied
+- Counties with more reliable data experience less shrinkage (random effects lines closer to fixed effects)
 
 This "partial pooling" approach is what makes random effects a middle ground between fixed effects (separate intercepts for each county) and pooled OLS (one common intercept for all counties).
 
@@ -574,47 +663,31 @@ This "partial pooling" approach is what makes random effects a middle ground bet
 
 The degree of shrinkage in random effects depends on the variance components. If we define the "reliability" of county means as:
 
-$\theta = \frac{\sigma_u^2}{\sigma_u^2 + \sigma_\epsilon^2/T_i}$
+$$\theta = \frac{\sigma_u^2}{\sigma_u^2 + \sigma_\epsilon^2/T_i}$$
 
 Where $T_i$ is the number of observations for county $i$, then the random effects estimator for the county-specific effect $u_i$ is:
 
-$\hat{u}_i^{RE} = \theta \times \hat{u}_i^{FE}$
+$$\hat{u}_i^{RE} = \theta \times \hat{u}_i^{FE}$$
 
 When the between-county variance $\sigma_u^2$ is large relative to the within-county variance $\sigma_\epsilon^2$, or when $T_i$ is large, $\theta$ approaches 1, and the random effects estimator approaches the fixed effects estimator. Conversely, when $\sigma_u^2$ is small or $T_i$ is small, $\theta$ approaches 0, and the estimator shrinks toward the global mean.
 
 In our health context, this means counties with health metrics that vary greatly from the national average but have consistent measurements over time will have estimates closer to their own fixed effects. Counties with measurements close to national averages or with inconsistent data will be pulled toward the population average.
 
-#### Key Characteristics of Random Effects:
-
-- **Advantages**:
-  - More efficient than fixed effects when assumptions are met
-  - Can estimate time-invariant variables (rural/urban status, region) unlike fixed effects
-  - Uses both within and between variation (more information about health disparities)
-  - Often produces smaller standard errors than fixed effects, which can be valuable for health policy research
-  
-- **Limitations**:
-  - Assumes county effects are uncorrelated with regressors (strict exogeneity)
-  - This assumption is often violated in health economics (e.g., unobserved health infrastructure may correlate with income)
-  - Can lead to inconsistent estimates if the assumption is violated
-  - More complex interpretation than fixed or between effects
-
 #### Intraclass Correlation Coefficient (ICC): Understanding Between vs. Within Variation
 
-A crucial but often overlooked aspect of panel data analysis in health economics is quantifying how much variation exists between counties versus within counties over time. The Intraclass Correlation Coefficient (ICC) provides precisely this information, making it an essential diagnostic tool when working with county health data.
+A crucial but often overlooked aspect of panel data analysis is quantifying how much variation exists between counties versus within counties over time. The Intraclass Correlation Coefficient (ICC) provides precisely this information, making it an essential diagnostic tool when working with county health data.
 
 ##### What is ICC?
 
 The ICC measures the proportion of total variance in mortality rates that is due to differences between counties (between-county variance). Mathematically:
 
-$ICC = \frac{\sigma^2_{\text{between}}}{\sigma^2_{\text{between}} + \sigma^2_{\text{within}}}$
+$$ICC = \frac{\sigma^2_{\text{between}}}{\sigma^2_{\text{between}} + \sigma^2_{\text{within}}}$$
 
 Where:
-
 - $\sigma^2_{\text{between}}$ is the variance between counties
 - $\sigma^2_{\text{within}}$ is the variance within counties over time
 
 The ICC ranges from 0 to 1:
-
 - ICC ≈ 0: Almost all variation in mortality occurs within counties over time
 - ICC ≈ 1: Almost all variation in mortality occurs between counties (stable county differences)
 
@@ -629,6 +702,24 @@ The ICC has several important implications for research using random effects mod
 3. **Effect of Fixed Effects**: The ICC indicates how much variation is "removed" when applying fixed effects. A high ICC means fixed effects controls for a large portion of the total variation in mortality.
 
 4. **Design Efficiency**: For research design, the ICC helps determine whether to sample more counties or more time periods per county in future health studies.
+
+##### Connection Between ICC and Shrinkage Parameter $\theta$
+
+The ICC and the shrinkage parameter $\theta$ are intimately connected. Notice that the ICC formula closely resembles the $\theta$ formula:
+
+$$ICC = \frac{\sigma^2_{\text{between}}}{\sigma^2_{\text{between}} + \sigma^2_{\text{within}}}$$
+
+$$\theta = \frac{\sigma_u^2}{\sigma_u^2 + \sigma_\epsilon^2/T_i}$$
+
+The key difference is that $\theta$ incorporates the number of observations per county ($T_i$), making it county-specific, while ICC is a global measure. When all counties have the same number of observations, the average $\theta$ approaches the ICC as $T_i$ increases.
+
+This connection explains why:
+
+1. With high ICC values, between-county differences dominate, so random effects estimates give more weight to the between estimator
+2. With low ICC values, within-county variation dominates, so random effects estimates more closely resemble fixed effects estimates
+3. The visualization shows this relationship - counties with more observations or less internal variance (higher $\theta$) have random effects lines closer to their fixed effects lines
+
+Understanding this relationship helps us interpret our health data more effectively - we can see which counties' estimates are more heavily influenced by their own data versus the pooled data from all counties.
 
 Let's calculate and visualize the ICC using our simulated health data:
 
@@ -659,6 +750,11 @@ kable(variance_df, caption = "Variance Components and ICC in Mortality Rates") %
 ```
 
 ```{r icc-visualization, fig.width=10, fig.height=8}
+set.seed(42)
+selected_counties <- sample(1:n_counties, 7)
+selected_data <- county_health_df %>%
+  filter(county_id %in% selected_counties)
+
 # Visualize the ICC
 
 # Create a dataset for visualization
@@ -728,9 +824,8 @@ p_icc <- ggplot() +
         plot.subtitle = element_text(size = 12),
         axis.text.x = element_text(face = "bold"),
         panel.grid.minor = element_blank()) +
-  scale_x_continuous(breaks = 1:5, labels = selected_counties) +
-  scale_color_discrete(name = "County ID") +
-  coord_cartesian(xlim = c(0.5, 5.5))
+  scale_x_continuous(breaks = 1:7, labels = selected_counties) +
+  scale_color_discrete(name = "County ID") 
 
 # Create a second plot demonstrating how ICC affects random effects weighting
 weight_theta <- sigma2_between / (sigma2_between + sigma2_within/10)  # 10 is our n_years
@@ -801,6 +896,20 @@ The ICC in health data has important policy implications:
 2. Low ICC values (<0.3) indicate that health outcomes vary more over time within counties than between them, suggesting that temporal factors (policy changes, economic fluctuations) have stronger effects than structural county differences.
 
 3. Moderate ICC values suggest both structural differences and temporal effects matter for health outcomes.
+
+#### Key Characteristics of Random Effects:
+
+- **Advantages**:
+  - More efficient than fixed effects when assumptions are met
+  - Can estimate time-invariant variables (rural/urban status, region) unlike fixed effects
+  - Uses both within and between variation (more information about health disparities)
+  - Often produces smaller standard errors than fixed effects, which can be valuable for health policy research
+  
+- **Limitations**:
+  - Assumes county effects are uncorrelated with regressors (strict exogeneity)
+  - This assumption is often violated in health economics (e.g., unobserved health infrastructure may correlate with income)
+  - Can lead to inconsistent estimates if the assumption is violated
+  - More complex interpretation than fixed or between effects
 
 ### Model Selection: When to Use Each Approach in Health Economics
 
