@@ -1,5 +1,5 @@
 ---
-title: "Understanding Panel Data Models in Health Economics"
+title: "Understanding Panel Data Models"
 author: "Heeyoung Lee"
 date: "May 15, 2025"
 format: 
@@ -56,6 +56,7 @@ The fundamental challenge in panel data analysis lies in properly accounting for
 $$Mortality_{it} = \alpha + \beta Income_{it} + \gamma Z_{it} + u_i + \epsilon_{it}$$
 
 Where:
+
 - $Mortality_{it}$ is the mortality rate (per 100,000 population) for county $i$ in year $t$
 - $\alpha$ is the global intercept (common to all counties)
 - $Income_{it}$ represents the median household income (in thousands of dollars)
@@ -608,10 +609,12 @@ The ICC measures the proportion of total variance in mortality rates that is due
 $ICC = \frac{\sigma^2_{\text{between}}}{\sigma^2_{\text{between}} + \sigma^2_{\text{within}}}$
 
 Where:
+
 - $\sigma^2_{\text{between}}$ is the variance between counties
 - $\sigma^2_{\text{within}}$ is the variance within counties over time
 
 The ICC ranges from 0 to 1:
+
 - ICC ≈ 0: Almost all variation in mortality occurs within counties over time
 - ICC ≈ 1: Almost all variation in mortality occurs between counties (stable county differences)
 
@@ -1035,19 +1038,3 @@ Panel data analysis provides health economists and policymakers with powerful to
 By understanding the conceptual foundations of different panel data models and their appropriate applications, health economists can leverage the rich information contained in county-level panel data to answer important health policy questions and address persistent health disparities.
 
 Remember that panel data analysis in health economics isn't just about choosing the "best" model—it's about understanding the different types of variation in your health data and selecting the approach that best addresses your specific health policy research question.
-
-### References
-
-Baltagi, B. H. (2021). *Econometric Analysis of Panel Data* (6th ed.). Springer.
-
-Wooldridge, J. M. (2010). *Econometric Analysis of Cross Section and Panel Data* (2nd ed.). MIT Press.
-
-Currie, J., & Duque, V. (2019). Medicaid: What Does It Do, and Can We Do Better? *Annual Review of Economics, 11*, 171-190.
-
-Chetty, R., Stepner, M., Abraham, S., Lin, S., Scuderi, B., Turner, N., Bergeron, A., & Cutler, D. (2016). The Association Between Income and Life Expectancy in the United States, 2001-2014. *JAMA, 315*(16), 1750-1766.
-
-Case, A., & Deaton, A. (2020). *Deaths of Despair and the Future of Capitalism*. Princeton University Press.
-
-Marmot, M. (2015). The Health Gap: The Challenge of an Unequal World. *The Lancet, 386*(10011), 2442-2444.
-
-Croissant, Y., & Millo, G. (2008). Panel Data Econometrics in R: The plm Package. *Journal of Statistical Software, 27*(2), 1-43.
