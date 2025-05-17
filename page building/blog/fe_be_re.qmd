@@ -22,7 +22,7 @@ format:
 
 Panel data analysis represents one of the most powerful and versatile approaches in modern social science. By combining cross-sectional and time-series dimensions, panel data provides researchers with a multifaceted view of phenomena that would be impossible to obtain with either dimension alone. This document explores the theoretical foundations, practical applications, and interpretative nuances of the three primary panel data models: fixed effects, between effects, and random effects, with applications to county-level health research.
 
-### Conceptual Framework for Panel Data Effects
+### 1. Conceptual Framework for Panel Data Effects
 
 Panel data contains observations across two dimensions: entities (cross-sectional) and time (temporal). In our health economics context, the entities are counties and the time periods are years. This dual structure offers several analytical advantages:
 
@@ -164,7 +164,7 @@ head(county_health_df, n = 20) %>%
   kable_styling(bootstrap_options = c("striped", "hover", "condensed"))
 ```
 
-### Fixed Effects Model: Within Variation in County Health
+### 2. Fixed Effects Model: Within Variation
 
 #### What Are Fixed Effects?
 
@@ -250,7 +250,8 @@ p2 <- ggplot(selected_data, aes(x = median_income, y = mortality_rate, color = f
   scale_color_discrete(name = "County ID")
 
 # Third visualization shows the demeaned data (centered)
-p3 <- ggplot(selected_data, aes(x = income_centered, y = mortality_centered, color = factor(county_id))) +
+p3 <- ggplot(selected_data, 
+             aes(x = income_centered, y = mortality_centered, color = factor(county_id))) +
   geom_point(size = 3, alpha = 0.7) +
   geom_smooth(method = "lm", se = FALSE, color = "black", linewidth = 1.2, formula = y ~ x) +
   geom_vline(xintercept = 0, color = "red", lty = "dashed") +
@@ -323,7 +324,7 @@ summary(fe_health)
 - The fixed effects estimates show how changes in county income and health factors affect mortality rates over time, controlling for all time-invariant county characteristics.
 - With an R-squared of 0.207, this model explains about 21% of within-county mortality variation, indicating temporal changes in these factors account for meaningful mortality fluctuations after controlling for stable county characteristics.
 
-### Between Effects Model: Cross-Sectional Variation
+### 3. Between Effects Model: Cross-Sectional Variation
 
 #### What Are Between Effects?
 
@@ -457,7 +458,7 @@ summary(be_health)
   - Loses all information about within-county dynamics and temporal changes
   - Small sample size (only one observation per county) reduces statistical power
 
-### Random Effects Model: Weighted Combination
+### 4. Random Effects Model: Weighted Combination
 
 #### What Are Random Effects?
 
@@ -610,20 +611,20 @@ p3 <- ggplot() +
              aes(x = mean_income, y = mean_mortality, fill = factor(county_id)), 
              size = 4, shape = 23, color = "white", stroke = 1) +
   # Legend
-  annotate("rect", xmin = 25, xmax = 45, ymin = 910, ymax = 950,
-           fill = "white", color = "gray", alpha = 0.7) +
-  annotate("segment", x = 27, y = 945, xend = 31, yend = 945,
-           linewidth = 1.2, linetype = "solid", color = "black") +
-  annotate("text", x = 32, y = 945, label = "Fixed Effects", hjust = 0, size = 3) +
-  annotate("segment", x = 27, y = 935, xend = 31, yend = 935,
-           linewidth = 1.2, linetype = "dashed", color = "black") +
-  annotate("text", x = 32, y = 935, label = "Between Effects", hjust = 0, size = 3) +
-  annotate("segment", x = 27, y = 925, xend = 31, yend = 925,
-           linewidth = 1.5, linetype = "dotted", color = "black") +
-  annotate("text", x = 32, y = 925, label = "Random Effects", hjust = 0, size = 3) +
-  annotate("point", x = 29, y = 915, size = 4, shape = 23, 
-           fill = "black", color = "white") +
-  annotate("text", x = 32, y = 915, label = "County Mean", hjust = 0, size = 3) +
+  # annotate("rect", xmin = 25, xmax = 45, ymin = 910, ymax = 950,
+  #          fill = "white", color = "gray", alpha = 0.7) +
+  # annotate("segment", x = 27, y = 945, xend = 31, yend = 945,
+  #          linewidth = 1.2, linetype = "solid", color = "black") +
+  # annotate("text", x = 32, y = 945, label = "Fixed Effects", hjust = 0, size = 3) +
+  # annotate("segment", x = 27, y = 935, xend = 31, yend = 935,
+  #          linewidth = 1.2, linetype = "dashed", color = "black") +
+  # annotate("text", x = 32, y = 935, label = "Between Effects", hjust = 0, size = 3) +
+  # annotate("segment", x = 27, y = 925, xend = 31, yend = 925,
+  #          linewidth = 1.5, linetype = "dotted", color = "black") +
+  # annotate("text", x = 32, y = 925, label = "Random Effects", hjust = 0, size = 3) +
+  # annotate("point", x = 29, y = 915, size = 4, shape = 23, 
+  #          fill = "black", color = "white") +
+  # annotate("text", x = 32, y = 915, label = "County Mean", hjust = 0, size = 3) +
   scale_color_manual(values = many_colors, name = "County ID") +
   scale_fill_manual(values = many_colors, name = "County ID") +
   labs(title = "Model Predictions Across Selected Counties",
@@ -720,12 +721,12 @@ The ICC measures the proportion of total variance in mortality rates that is due
 
 Mathematically:
 
-$$ICC = \frac{\sigma^2_{\text{between}}}{\sigma^2_{\text{between}} + \sigma^2_{\text{within}}}$$
+$$ICC = \frac{\sigma_u^2}{\sigma_u^2 + \sigma_\epsilon^2}$$
 
 Where:
 
-- $\sigma^2_{\text{between}}$ is the variance between counties
-- $\sigma^2_{\text{within}}$ is the variance within counties over time
+- $\sigma_u^2$ is the variance between counties (between-county variance)
+- $\sigma_\epsilon^2$ is the variance within counties over time (within-county variance)
 
 The ICC ranges from 0 to 1:
 
@@ -748,11 +749,11 @@ show_icc <- function(icc = 0.5) {
  dat <- lapply(icc, function(icc) {
    # Calculate sd within group from icc then generate group samples
    sigma <- group_sd^2/icc - group_sd^2
-   replicate(obs_per_group, rnorm(n_groups, mu, sigma)) |>
-   t() |>
-   as.data.frame() |>
-   stack() |>
-   setNames(c('value', 'group')) |>
+   replicate(obs_per_group, rnorm(n_groups, mu, sigma)) %>%
+   t() %>%
+   as.data.frame() %>%
+   stack() %>%
+   setNames(c('value', 'group')) %>%
    within(icc <- paste('ICC = ', icc))
  })
  
@@ -861,7 +862,7 @@ The ICC has several important implications for research using random effects mod
 
 The ICC and shrinkage parameter $\theta$ are mathematically linked, with similar formulas:
 
-$$ICC = \frac{\sigma^2_{\text{between}}}{\sigma^2_{\text{between}} + \sigma^2_{\text{within}}}$$
+$$ICC = \frac{\sigma_u^2}{\sigma_u^2 + \sigma_\epsilon^2}$$
 
 $$\theta = \frac{\sigma_u^2}{\sigma_u^2 + \sigma_\epsilon^2/T_i}$$
 
@@ -880,29 +881,72 @@ This mathematical relationship is visualized in our mortality plot, where the va
 Let's calculate and visualize the ICC using our simulated health data:
 
 ```{r icc-calculation}
-# Calculate variance components and ICC
-re_model_components <- plm(mortality_rate ~ median_income, data = county_panel, model = "random")
+# Calculate variance components and ICC for the full model
+re_model_components <- plm(formula = mortality_rate ~ median_income + uninsured_rate + 
+    physician_density + hospital_beds + obesity_rate + smoking_rate, 
+    data = county_panel, model = "random")
 variance_components <- ercomp(re_model_components)
 
 # Extract the variance components
-sigma2_between <- variance_components$sigma2[1]  # Between variance
-sigma2_within <- variance_components$sigma2[2]   # Within variance
+sigma2_within <- variance_components$sigma2[1]  # Idiosyncratic (within) variance
+sigma2_between <- variance_components$sigma2[2]  # Individual (between) variance
 total_variance <- sigma2_between + sigma2_within
 icc <- sigma2_between / total_variance
 
-# Create a dataframe for the variance components
+# Calculate theta (with n_years = 10)
+n_years <- 10  # Assuming 10 time periods per county
+theta <- sigma2_between / (sigma2_between + sigma2_within/n_years)
+
+# Create expanded dataframe with descriptions and formulas
 variance_df <- data.frame(
-  Component = c("Between-County Variance", "Within-County Variance", "Total Variance"),
-  Value = c(sigma2_between, sigma2_within, total_variance),
-  Percentage = c(sigma2_between/total_variance, sigma2_within/total_variance, 1) * 100
+  Metric = c(
+    "Between-County Variance (σ²ᵦ)", 
+    "Within-County Variance (σ²ᵥ)", 
+    "Total Variance",
+    "Intraclass Correlation (ICC)",
+    "Shrinkage Parameter (θ)"
+  ),
+  Value = c(
+    round(sigma2_between, 1),
+    round(sigma2_within, 1),
+    round(total_variance, 1),
+    round(icc, 3),
+    round(theta, 3)
+  ),
+  Formula = c(
+    "Var(u_i)",
+    "Var(ε_it)",
+    "σ²ᵦ + σ²ᵥ",
+    "σ²ᵦ / (σ²ᵦ + σ²ᵥ)",
+    "σ²ᵦ / (σ²ᵦ + σ²ᵥ/T)"
+  ),
+  Interpretation = c(
+    paste0(round(sigma2_between/total_variance*100, 1), "% of total variation is between counties"),
+    paste0(round(sigma2_within/total_variance*100, 1), "% of total variation is within counties over time"),
+    "Sum of between and within variance components",
+    "Proportion of variance due to differences between counties",
+    paste0("Weight given to between variation with T = ", n_years, " observations per county")
+  )
 )
 
-# Display the variance components
-kable(variance_df, caption = "Variance Components and ICC in Mortality Rates") %>%
-  kable_styling(bootstrap_options = c("striped", "hover", "condensed")) %>%
+# Display the enhanced table with compatible styling
+kable(variance_df, 
+      caption = "Understanding Random Effects Components: Variance Decomposition, ICC, and Theta",
+      align = c("l", "c", "c", "l")) %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), 
+                full_width = TRUE) %>%
+  # Simplified header styling
+  row_spec(0, bold = TRUE, background = "#E6E6E6") %>%
+  # Highlight ICC and theta rows with light gray
+  row_spec(4:5, background = "#F5F5F5") %>%
+  # Bold all metric names
   column_spec(1, bold = TRUE) %>%
-  column_spec(3, background = ifelse(variance_df$Component == "Between-County Variance", 
-                                    "#e6f7ff", "#ffffff"))
+  # Bold important values (ICC and theta)
+  column_spec(2, bold = ifelse(variance_df$Metric %in% c("Intraclass Correlation (ICC)", 
+                                                      "Shrinkage Parameter (θ)"), 
+                                                      TRUE, FALSE)) %>%
+  # Add simple header row
+  add_header_above(c(" " = 1, "Values" = 1, "Mathematical Expression" = 1, "Meaning in Panel Data" = 1))
 ```
 
 
@@ -931,10 +975,17 @@ panel_long <- panel_long %>%
     county_pos = county_numeric + 0.1 * (as.numeric(factor(year)) - mean(as.numeric(factor(unique(year)))))
   )
 
-# Calculate variance components from the random effects model
-sigma2_between <- 6091.90  # From random effects model output (individual var)
-sigma2_within <- 408.59    # From random effects model output (idiosyncratic var)
-icc <- 0.937               # From random effects model output (individual share)
+# Extract variance components directly from the FULL model
+re_model_full <- plm(formula = mortality_rate ~ median_income + uninsured_rate + 
+    physician_density + hospital_beds + obesity_rate + smoking_rate, 
+    data = county_panel, model = "random")
+variance_components <- ercomp(re_model_full)
+
+# CORRECTED: Extract variance components with correct indices
+sigma2_within <- variance_components$sigma2[1]  # idios = within variance
+sigma2_between <- variance_components$sigma2[2]  # id = between variance
+icc <- sigma2_between / (sigma2_between + sigma2_within)  # Calculate ICC
+n_years <- length(unique(panel_long$year))  # Extract number of years dynamically
 
 # First plot showing variance decomposition
 p_icc <- ggplot() +
@@ -955,7 +1006,7 @@ p_icc <- ggplot() +
   annotate("text", x = 5.5, y = global_mean + 20, 
            label = "Global Mean Mortality", fontface = "bold") +
   annotate("text", x = 5.5, y = global_mean - 20, 
-           label = paste0("ICC = ", round(icc, 3)), fontface = "bold") +
+           label = paste0("ICC = ", round(icc, 3), " (full model)"), fontface = "bold") +
   labs(title = "Understanding ICC in County Health Panel Data",
        subtitle = paste0("Between-County Variance: ", round(sigma2_between, 1), 
                          " (", round(100*icc, 1), "% of total)\n",
@@ -963,14 +1014,16 @@ p_icc <- ggplot() +
                          " (", round(100*(1-icc), 1), "% of total)"),
        x = "County", 
        y = "Mortality Rate (per 100,000)") +
-  theme_minimal()
+  theme_minimal() +
+  theme(legend.position = "right",
+        plot.title = element_text(face = "bold"))
 
-# Calculate theta for second plot
-weight_theta <- sigma2_between / (sigma2_between + sigma2_within/10)  # 10 is n_years
+# Calculate theta for second plot (using dynamic n_years)
+weight_theta <- sigma2_between / (sigma2_between + sigma2_within/n_years)
 
 # Create ICC sequence
 icc_seq <- seq(0, 1, by = 0.01)
-weight_seq <- icc_seq / (icc_seq + (1-icc_seq)/10)
+weight_seq <- icc_seq / (icc_seq + (1-icc_seq)/n_years)  # Use dynamic n_years
 
 # Create weight dataframe
 weight_df <- data.frame(
@@ -989,9 +1042,9 @@ p_weight <- ggplot(weight_df, aes(x = ICC, y = RE_Weight)) +
   geom_line(color = "purple", linewidth = 1.2) +
   geom_point(data = current_weight, size = 4, color = "red") +
   geom_text(data = current_weight, 
-            aes(label = paste0("Our health data: ICC = ", round(ICC, 3), 
-                              "\nRE Weight = ", round(RE_Weight, 3))),
-            hjust = 1, vjust = 1.5, fontface = "bold") +
+            aes(label = paste0("Full model: ICC = ", round(ICC, 2), 
+                              "\nRE Weight = ", round(RE_Weight, 2))),
+            hjust = 0.5, vjust = 1.5, fontface = "bold") +
   geom_hline(yintercept = c(0, 1), linetype = "dotted", color = "gray50") +
   geom_vline(xintercept = c(0, 1), linetype = "dotted", color = "gray50") +
   labs(title = "How ICC Affects Random Effects Weights in Health Research",
@@ -1039,7 +1092,7 @@ The visualization illustrates several key aspects of the ICC:
   - Can lead to inconsistent estimates if the assumption is violated
   - More complex interpretation than fixed or between effects
 
-### Model Selection: When to Use Each Approach in Health Economics
+### 5. Model Selection: When to Use Each Approach in Research
 
 Choosing the appropriate panel data model depends on both statistical considerations and the health policy research question at hand. The following table summarizes the key differences between the three approaches in the context of health economics:
 
@@ -1103,7 +1156,7 @@ kable(comparison_df, caption = "Comparison of Panel Data Models in Health Econom
   row_spec(0, bold = TRUE, background = "#f2f2f2")
 ```
 
-### Hausman Test: Choosing Between Fixed and Random Effects
+#### Hausman Test: Choosing Between Fixed and Random Effects
 
 While theoretical considerations should guide your model choice, statistical tests can help inform the decision between fixed and random effects. The most common test for this purpose is the Hausman test, which compares the fixed effects and random effects models to determine if the key random effects assumption (that county effects are uncorrelated with regressors) holds.
 
@@ -1153,10 +1206,9 @@ While the Hausman test is widely used, it's important to note its limitations in
 2. It can be sensitive to violations of other assumptions (e.g., homoskedasticity in health variables)
 3. With large numbers of counties and few time periods, the test may have high power, detecting even minor violations
 4. The test doesn't consider the substantive significance of any differences for health policy
+5. A rejection may not only indicate correlation between county effects and regressors but could also suggest other forms of model misspecification, such as dynamic effects or nonlinearities
 
-For these reasons, the Hausman test should be considered one piece of evidence in your model selection process, not the sole determining factor for health policy research.
-
-### Conclusion: Key Takeaways and Best Practices for Health Economics Research
+### 6. Conclusion: Key Takeaways and Best Practices for Health Research
 
 Panel data analysis provides health economists and policymakers with powerful tools to address complex causal questions by leveraging both cross-sectional and temporal variation. The three core models - fixed effects, between effects, and random effects - each extract different information from health data and answer fundamentally different questions:
 
@@ -1164,9 +1216,9 @@ Panel data analysis provides health economists and policymakers with powerful to
 
 2. **Between Effects** focus exclusively on cross-sectional relationships between counties, averaging out temporal variation. This approach reveals long-run structural health disparities but doesn't address potential omitted variable bias from unobserved county characteristics. The key question answered is "How do differences in average income between counties relate to differences in their average mortality rates?"
 
-3. **Random Effects** provide a middle ground, using both within and between variation through a weighted average approach. This method is more efficient when its key assumption holds: that county-specific effects are uncorrelated with the regressors. The key question answered is "What is the effect of income on mortality rates, considering both within-county and between-county information?"
+3. **Random Effects** provide a middle ground, using both within and between variation through a weighted average approach. This method is more efficient when its key assumption holds: that county-specific effects are uncorrelated with the regressors. When this assumption is satisfied, random effects can estimate coefficients for time-invariant variables, unlike fixed effects. The key question answered is "What is the effect of income on mortality rates, considering both within-county and between-county information?"
 
-#### Best Practices for Applied Health Economics Researchers:
+#### Best Practices for Researchers:
 
 1. **Let your health policy research question guide model selection** - Different models answer different questions about health determinants
 
