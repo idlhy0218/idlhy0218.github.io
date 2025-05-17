@@ -67,12 +67,12 @@ Where:
 
 The key question in panel data analysis is how to handle the county-specific effect $u_i$. Different approaches to this question lead to our three main panel data models: fixed effects, between effects, and random effects. Each model makes different assumptions about $u_i$ and extracts different types of information from the data.
 
-Let's simulate some county health data to demonstrate these concepts. I made a simulated data with 100 counties over 10 years. I've picked two counties here. You can see there are both time varying and time invariant variables here. My research is to estimate the relationship between counties' income level (X) and mortality rate (Y):
+Let's simulate some county health data to demonstrate these concepts. I made a simulated data with 10 counties over 10 years. I've picked two counties here. You can see there are both time varying and time invariant variables here. My research is to estimate the relationship between counties' income level (X) and mortality rate (Y):
 
 ```{r simulate-data}
 # Create simulated county health data
-set.seed(123)
-n_counties <- 100
+set.seed(12)
+n_counties <- 10
 n_years <- 10
 total_obs <- n_counties * n_years
 
@@ -125,7 +125,7 @@ smoking_rate <- rep(rnorm(n_counties, mean = 18, sd = 6), each = n_years) +
                rep(1:n_years, times = n_counties) * 0.2  # Declining trend
 
 # Generate mortality rate (Y) with income effect (negative), controlling effects, and trends
-income_effect <- -0.8  # Higher income reduces mortality rate
+income_effect <- -1  # Higher income reduces mortality rate
 base_mortality <- 800  # Base mortality rate
 
 mortality_rate <- base_mortality + 
@@ -195,11 +195,7 @@ Notice that the county-specific effect $u_i$ disappears in this transformation, 
 ```{r}
 #| message: false
 #| warning: false
-# First, let's subset data to make visualization clearer
-set.seed(42)
-selected_counties <- sample(1:n_counties, 5)
-selected_data <- county_health_df %>%
-  filter(county_id %in% selected_counties)
+selected_data <- county_health_df
 
 # Create panel data object for selected counties
 selected_panel <- pdata.frame(selected_data, index = c("county_id", "year"))
@@ -270,25 +266,27 @@ p3 <- ggplot(selected_data, aes(x = income_centered, y = mortality_centered, col
   scale_color_discrete(name = "County ID")
 
 # Combine first two plots for comparison, keep third plot separate
-(p1 + p2) / p3
+p1
+p2
+p3
 ```
 
 #### Interpreting the Fixed Effects Visualization:
 
 The visualizations above illustrate three crucial aspects of fixed effects modeling with our health data:
 
-1. **Top Left Panel**: Shows the raw data with county-specific trend lines fitted individually:
+1. **1st Figure**: Shows the raw data with county-specific trend lines fitted individually:
    - Each county (color) has its own independently fitted regression line
    - These lines may have different slopes, suggesting potentially heterogeneous relationships between income and mortality across counties
    - This highlights why simply pooling all observations might be misleading
 
-2. **Top Right Panel**: Shows the same data with fixed effects model fitted values:
+2. **2st Figure**: Shows the same data with fixed effects model fitted values:
    - The fixed effects model constrains all counties to share the **same slope coefficient**
    - Each county has its own intercept (shown by dashed horizontal lines)
    - The resulting parallel lines reflect the assumption that income changes affect mortality **equally** across all counties
    - The vertical distance between lines represents the county fixed effects
 
-3. **Bottom Panel**: Shows the data after the **"demeaning"** transformation:
+3. **3rd Figure**: Shows the data after the **"demeaning"** transformation:
    - Each county's observations are centered around their own means (at point 0,0)
    - The county-specific effects are removed through this transformation
    - The common slope becomes apparent with all counties' data now aligned
@@ -322,7 +320,8 @@ fe_health <- plm(mortality_rate ~ median_income + uninsured_rate + physician_den
 summary(fe_health)
 ```
 
-The fixed effects estimates show how changes in county income and health factors affect mortality rates over time, controlling for all time-invariant county characteristics.
+- The fixed effects estimates show how changes in county income and health factors affect mortality rates over time, controlling for all time-invariant county characteristics.
+- With an R-squared of 0.207, this model explains about 21% of within-county mortality variation, indicating temporal changes in these factors account for meaningful mortality fluctuations after controlling for stable county characteristics.
 
 ### Between Effects Model: Cross-Sectional Variation
 
@@ -426,7 +425,7 @@ The visualization above illustrates the between effects approach with our health
    - Labels identify each county
    - This plot illustrates structural health disparities between counties
 
-Notice how the between effects slope (negative relationship between income and mortality) may differ from the fixed effects slope. This difference highlights how the two approaches extract different information from the same health dataset.
+*Notice how the between effects slope (positive relationship between income and mortality) may differ from the fixed effects slope.* This difference highlights how the two approaches extract different information from the same health dataset.
 
 Let's estimate a complete between effects model with our health controls:
 
@@ -440,7 +439,9 @@ be_health <- plm(mortality_rate ~ median_income + uninsured_rate + physician_den
 summary(be_health)
 ```
 
-The between effects estimates show how differences in average income and health factors across counties relate to differences in their average mortality rates, focusing on structural cross-sectional health disparities.
+- The between effects model analyzes cross-sectional differences between counties, using only county averages over time. Unlike fixed effects (which examines within-county changes), this approach reveals only structural differences between counties.
+- With an R-squared of 0.447, this model explains nearly 45% of the between-county mortality variation.
+
 
 #### Key Characteristics of Between Effects:
 
@@ -502,6 +503,176 @@ $$W = \left(\sigma_u^2 \mathbf{J}_T\mathbf{J}_T' + \sigma_\epsilon^2 \mathbf{I}_
 
 The weight given to the between estimator increases as the between-county variance $\sigma_u^2$ increases relative to the within-county variance $\sigma_\epsilon^2$, demonstrating how random effects optimally balances information from both sources.
 
+#### Interpreting the Random Effects Visualization:
+
+Let's visualize the random effects approach:
+
+```{r re-detailed-viz, fig.height=6, fig.width=10}
+#| message: false
+#| warning: false
+# Estimate models
+fe_model_viz <- plm(mortality_rate ~ median_income, data = selected_panel, model = "within")
+be_model_viz <- plm(mortality_rate ~ median_income, data = selected_panel, model = "between")
+re_model_viz <- plm(mortality_rate ~ median_income, data = selected_panel, model = "random")
+
+# Extract coefficients
+fe_coef <- coef(fe_model_viz)
+be_coef <- coef(be_model_viz)
+re_coef <- coef(re_model_viz)
+
+# Calculate predictions and county means
+county_predictions <- selected_data %>%
+  group_by(county_id) %>%
+  mutate(
+    # Fixed Effects (county-specific intercepts)
+    fe_intercept = mean(mortality_rate) - fe_coef * mean(median_income),
+    fe_pred_full = fe_intercept + fe_coef * median_income,
+    
+    # Between Effects
+    be_intercept = coef(be_model_viz)[1],
+    be_pred_full = be_intercept + be_coef[2] * median_income,
+    
+    # Random Effects
+    re_pred_full = re_coef[1] + re_coef[2] * median_income
+  )
+
+county_means <- county_predictions %>%
+  group_by(county_id) %>%
+  summarize(
+    mean_income = mean(median_income),
+    mean_mortality = mean(mortality_rate)
+  )
+
+# Create color palette
+library(RColorBrewer)
+many_colors <- colorRampPalette(brewer.pal(8, "Set1"))(20)
+
+# 1. FIXED EFFECTS PLOT
+p1 <- ggplot() +
+  # Raw data points
+  geom_point(data = county_predictions, 
+             aes(x = median_income, y = mortality_rate, color = factor(county_id)), 
+             alpha = 0.6, size = 2) +
+  # Fixed Effects lines (parallel slopes)
+  geom_line(data = county_predictions, 
+            aes(x = median_income, y = fe_pred_full, color = factor(county_id)), 
+            linewidth = 1.2) +
+  scale_color_manual(values = many_colors) +
+  labs(title = "Fixed Effects Model",
+       subtitle = "Same slope but different intercepts for each county",
+       x = "Median Household Income ($1000s)", 
+       y = "Mortality Rate (per 100,000)") +
+  theme_minimal() +
+  theme(legend.position = "none")
+
+# 2. BETWEEN EFFECTS PLOT
+p2 <- ggplot() +
+  # County means as points
+  geom_point(data = county_means, 
+             aes(x = mean_income, y = mean_mortality, color = factor(county_id), fill = factor(county_id)), size = 3, shape = 23) +
+  # Between Effects regression line
+  geom_abline(intercept = be_model_viz$coefficients[1], 
+              slope = be_model_viz$coefficients[2], 
+              color = "black", linewidth = 1.2) +
+  # Add faded individual observations
+  geom_point(data = county_predictions, 
+             aes(x = median_income, y = mortality_rate, color = factor(county_id)), 
+             alpha = 0.2, size = 1) +
+  scale_color_manual(values = many_colors) +
+  scale_fill_manual(values = many_colors) +
+  labs(title = "Between Effects Model",
+       subtitle = "Focuses on differences between county averages",
+       x = "Median Household Income ($1000s)", 
+       y = "Mortality Rate (per 100,000)") +
+  theme_minimal() +
+  theme(legend.position = "none")
+
+# 3. COMBINED COMPARISON PLOT (your original)
+p3 <- ggplot() +
+  # Raw data points
+  geom_point(data = county_predictions, 
+             aes(x = median_income, y = mortality_rate, color = factor(county_id)), 
+             alpha = 0.5, size = 1) +
+  # Fixed Effects lines
+  geom_line(data = county_predictions, 
+            aes(x = median_income, y = fe_pred_full, color = factor(county_id)), 
+            linewidth = 1.2, alpha = 0.7, linetype = "solid") +
+  # Between Effects lines
+  geom_line(data = county_predictions, 
+            aes(x = median_income, y = be_pred_full, group = factor(county_id)), 
+            color = "black", linewidth = 1.2, alpha = 0.7, linetype = "solid") +
+  # Random Effects lines
+  geom_line(data = county_predictions, 
+            aes(x = median_income, y = re_pred_full, color = factor(county_id)), 
+            linewidth = 1.5, linetype = "dotted") +
+  # County means
+  geom_point(data = county_means, 
+             aes(x = mean_income, y = mean_mortality, fill = factor(county_id)), 
+             size = 4, shape = 23, color = "white", stroke = 1) +
+  # Legend
+  annotate("rect", xmin = 25, xmax = 45, ymin = 910, ymax = 950,
+           fill = "white", color = "gray", alpha = 0.7) +
+  annotate("segment", x = 27, y = 945, xend = 31, yend = 945,
+           linewidth = 1.2, linetype = "solid", color = "black") +
+  annotate("text", x = 32, y = 945, label = "Fixed Effects", hjust = 0, size = 3) +
+  annotate("segment", x = 27, y = 935, xend = 31, yend = 935,
+           linewidth = 1.2, linetype = "dashed", color = "black") +
+  annotate("text", x = 32, y = 935, label = "Between Effects", hjust = 0, size = 3) +
+  annotate("segment", x = 27, y = 925, xend = 31, yend = 925,
+           linewidth = 1.5, linetype = "dotted", color = "black") +
+  annotate("text", x = 32, y = 925, label = "Random Effects", hjust = 0, size = 3) +
+  annotate("point", x = 29, y = 915, size = 4, shape = 23, 
+           fill = "black", color = "white") +
+  annotate("text", x = 32, y = 915, label = "County Mean", hjust = 0, size = 3) +
+  scale_color_manual(values = many_colors, name = "County ID") +
+  scale_fill_manual(values = many_colors, name = "County ID") +
+  labs(title = "Model Predictions Across Selected Counties",
+       subtitle = "Comparing Fixed, Between, and Random Effects",
+       x = "Median Household Income ($1000s)", 
+       y = "Mortality Rate (per 100,000)",
+       caption = "Random effects 'shrink' county estimates toward the global relationship,\nbalancing between preserving county-specific patterns and avoiding overfitting.") +
+  theme_minimal() +
+  theme(legend.position = "right",
+        plot.title = element_text(face = "bold"),
+        plot.subtitle = element_text(face = "italic"),
+        plot.caption = element_text(hjust = 0, face = "italic"))
+
+# Arrange plots in logical sequence
+p1  
+p2 
+p3
+```
+
+Our visualization of 10 counties illustrates key differences between fixed effects, between effects, and random effects models:
+
+**Fixed Effects (Colored Solid Lines)**
+
+- Shows parallel lines with same negative slope but different intercepts for each county
+- Captures within-county relationships over time
+- Controls for time-invariant county characteristics
+- Consistently shows negative relationship between income and mortality within counties
+
+**Between Effects (Single Black Solid Line)**
+
+- Shows positive slope across county averages
+- Reveals surprising cross-sectional relationship: counties with higher average income tend to have higher average mortality
+- This positive between-county relationship contrasts with the negative within-county relationship
+- Suggests important omitted variables at the county level
+
+**Random Effects (Dotted Lines)**
+
+- Provides a middle ground, balancing within-county and between-county variation
+- "Shrinks" county-specific estimates toward the global relationship based on relative reliability
+- The degree of shrinkage depends on within-county vs. between-county variance components
+- Counties with more reliable data (less noise, more observations) experience less shrinkage
+- Shows how some counties' random effects lines pull strongly toward their fixed effects lines, while others pull more toward the between effects trend
+- Demonstrates *Simpson's paradox*: relationships can differ or even reverse when examined within vs. between units
+- The distance between fixed and random effects lines visually represents the amount of shrinkage applied
+- Particularly valuable when the research question concerns both time-varying effects and structural differences
+
+The contrasting slopes (negative within counties, positive between counties) highlight why model selection matters fundamentally for interpretation. This paradoxical pattern suggests structural factors affecting county-level mortality operate differently than factors driving changes within counties over time.
+
+
 Let's estimate a complete random effects model with our health controls:
 
 ```{r re-model-full}
@@ -514,153 +685,15 @@ re_health <- plm(mortality_rate ~ median_income + uninsured_rate + physician_den
 summary(re_health)
 ```
 
-Let's visualize the random effects approach using our simulated health data:
-
-```{r re-detailed-viz, fig.width=10, fig.height=6}
-set.seed(42)
-selected_counties <- sample(1:n_counties, 9)
-selected_data <- county_health_df %>%
-  filter(county_id %in% selected_counties)
-
-# Create panel data object for selected counties
-selected_panel <- pdata.frame(selected_data, index = c("county_id", "year"))
-
-# Diagnostic and corrected code
-# Estimate models
-fe_model_viz <- plm(mortality_rate ~ median_income, data = selected_panel, model = "within")
-be_model_viz <- plm(mortality_rate ~ median_income, data = selected_panel, model = "between")
-re_model_viz <- plm(mortality_rate ~ median_income, data = selected_panel, model = "random")
-
-# Extract coefficients
-fe_coef <- coef(fe_model_viz)
-be_coef <- coef(be_model_viz)
-re_coef <- coef(re_model_viz)
-
-# Calculate predictions for each county
-county_predictions <- selected_data %>%
-  filter(county_id %in% selected_counties) %>%
-  group_by(county_id) %>%
-  mutate(
-    # Fixed Effects Prediction (centered around county mean)
-    fe_pred_full = mean(mortality_rate) + 
-                   fe_coef * (median_income - mean(median_income)),
-    
-    # Between Effects Prediction
-    be_pred_full = re_coef[1] + be_coef[2] * median_income,
-    
-    # Random Effects Prediction
-    re_pred_full = re_coef[1] + re_coef[2] * median_income
-  )
-
-# Calculate county means
-county_means <- county_predictions %>%
-  group_by(county_id) %>%
-  summarize(
-    mean_income = mean(median_income),
-    mean_mortality = mean(mortality_rate)
-  )
-
-# Create a more informative plot with annotations
-p6 <- ggplot() +
-  # Raw data points with transparency
-  geom_point(data = county_predictions, 
-             aes(x = median_income, y = mortality_rate, color = factor(county_id)), 
-             alpha = 0.5, 
-             size = 1) +
-  
-  # Fixed Effects lines with distinct styling
-  geom_line(data = county_predictions, 
-            aes(x = median_income, y = fe_pred_full, color = factor(county_id)), 
-            linewidth = 1.2,
-            linetype = "solid") +  # Fixed Effects
-  
-  # Between Effects lines with distinct styling
-  geom_line(data = county_predictions, 
-            aes(x = median_income, y = be_pred_full, color = factor(county_id)), 
-            linewidth = 1.2, 
-            linetype = "dashed") +  # Between Effects
-  
-  # Random Effects lines with distinct styling
-  geom_line(data = county_predictions, 
-            aes(x = median_income, y = re_pred_full, color = factor(county_id)), 
-            linewidth = 1.5, 
-            linetype = "dotted") +  # Random Effects
-  
-  # Mean points for each county with white border
-  geom_point(data = county_means, 
-             aes(x = mean_income, y = mean_mortality, fill = factor(county_id)), 
-             size = 4, 
-             shape = 23, 
-             color = "white",
-             stroke = 1) +
-  
-# Create a legend box starting from x = 25
-  annotate("rect", xmin = 25, xmax = 45, ymin = 910, ymax = 950,
-           fill = "white", color = "gray", alpha = 0.7) +
-  
-  # Add annotations inside the box with proper spacing
-  annotate("segment", x = 27, y = 945, xend = 31, yend = 945,
-           linewidth = 1.2, linetype = "solid", color = "black") +
-  annotate("text", x = 32, y = 945, label = "Fixed Effects", hjust = 0, size = 3) +
-  
-  annotate("segment", x = 27, y = 935, xend = 31, yend = 935,
-           linewidth = 1.2, linetype = "dashed", color = "black") +
-  annotate("text", x = 32, y = 935, label = "Between Effects", hjust = 0, size = 3) +
-  
-  annotate("segment", x = 27, y = 925, xend = 31, yend = 925,
-           linewidth = 1.5, linetype = "dotted", color = "black") +
-  annotate("text", x = 32, y = 925, label = "Random Effects", hjust = 0, size = 3) +
-  
-  # Add diamond symbol explanation
-  annotate("point", x = 29, y = 915, size = 4, shape = 23, 
-           fill = "black", color = "white") +
-  annotate("text", x = 32, y = 915, label = "County Mean", hjust = 0, size = 3) +
-  
-  # Improve color palette and aesthetics
-  scale_color_brewer(palette = "Set1", name = "County ID") +
-  scale_fill_brewer(palette = "Set1", name = "County ID") +
-  
-  labs(title = "Model Predictions Across Selected Counties",
-       subtitle = "Comparing Fixed, Between, and Random Effects",
-       x = "Median Household Income ($1000s)", 
-       y = "Mortality Rate (per 100,000)",
-       caption = "Random effects 'shrink' county estimates toward the global relationship,\nbalancing between preserving county-specific patterns and avoiding overfitting.") +
-  
-  theme_minimal() +
-  theme(
-    legend.position = "right",
-    plot.title = element_text(face = "bold"),
-    plot.subtitle = element_text(face = "italic"),
-    plot.caption = element_text(hjust = 0, face = "italic")
-  )
-
-# Print the plot
-p6
-```
-
-#### Interpreting the Random Effects Visualization:
-
-The visualization above provides crucial insights into how random effects work with our health data:
-
-**County Mean Points**
-
-- Diamond Shapes: Each county's average income and mortality; color-coded by county
-
-**Model Lines**
-
-- Solid Lines: Fixed effects with same slope but county-specific intercepts
-- Dashed Lines: Between effects showing cross-sectional relationships
-- Dotted Lines: Random effects demonstrating partial pooling; positioned between the other two
-
-**Statistical Implications**
-
-- Random effects "shrink" county estimates toward the global relationship when data is sparse or noisy
-- Provides optimal balance between preserving local patterns and leveraging information from all counties
-- The degree of shrinkage depends on within-county vs. between-county variance components
-- Distance between fixed and random effects lines visually represents the amount of shrinkage applied
-- Counties with more reliable data experience less shrinkage (random effects lines closer to fixed effects)
-
-This "partial pooling" approach is what makes random effects a middle ground between fixed effects (separate intercepts for each county) and pooled OLS (one common intercept for all counties).
+The random effects model shows significant associations between county characteristics and mortality rates. Key findings:
+- The ICC value is 0.937 (from the output's "share" for individual effects), indicating 93.7% of variance comes from between-county differences
+- Significant negative association with median income (-1.50 per $1000, p<0.001)
+- Significant positive association with obesity rate (4.13 per percentage point, p<0.05)
+- Non-significant relationships with uninsured rate, physician density, hospital beds, and smoking rate
+- The model explains 20.5% of mortality variation (R-squared = 0.20527)
+- Random effects approach incorporates both within and between county variation
+- Theta of 0.9184 indicates model weights heavily toward between-county differences
+- The model assumes county-specific effects are uncorrelated with predictors
 
 #### The Mathematics of Shrinkage in Random Effects:
 
@@ -701,42 +734,115 @@ The ICC ranges from 0 to 1:
 Figure below shows the distribution of data across three different values of ICC
 ```{r}
 show_icc <- function(icc = 0.5) {
-  
-  # These could be function parameters rather than constants if preferred.
-  group_mean    <- 5  # This is arbitrary as there are no numbers on y axis
-  group_sd      <- 1  # This is also arbitrary
-  n_groups      <- 10 # Number of groups along x axis
-  obs_per_group <- 10 # Number of points per group
-  
-  # This gives us a vector of means, one for each group
-  mu <- rnorm(n_groups, group_mean, group_sd)
-  
-  dat <- lapply(icc, function(icc) {
-    # Calculate sd within group from icc then generate group samples
-    sigma <- group_sd^2/icc - group_sd^2
-    replicate(obs_per_group, rnorm(n_groups, mu, sigma)) |>
-    t() |>
-    as.data.frame() |>
-    stack() |>
-    setNames(c('value', 'group')) |>
-    within(icc <- paste('ICC = ', icc))
-  })
-  
-  do.call('rbind', dat) |>
-    ggplot(aes(group, value)) +
-    geom_point(color = 'gray') +
-    stat_summary(fun = mean, geom = 'point', 
-                 shape = 24, fill = 'red', size = 4) +
-    facet_wrap(.~icc, scales = 'free_y') +
-    theme_classic() +
-    theme(strip.background = element_blank(),
-          strip.text = element_text(size = 14, face = 2),
-          axis.text.y = element_blank())
+ 
+ # These could be function parameters rather than constants if preferred.
+ group_mean    <- 5  # This is arbitrary as there are no numbers on y axis
+ group_sd      <- 1  # This is also arbitrary
+ n_groups      <- 10 # Number of groups along x axis
+ obs_per_group <- 10 # Number of points per group
+ 
+ # This gives us a vector of means, one for each group
+ mu <- rnorm(n_groups, group_mean, group_sd)
+ 
+ dat <- lapply(icc, function(icc) {
+   # Calculate sd within group from icc then generate group samples
+   sigma <- group_sd^2/icc - group_sd^2
+   replicate(obs_per_group, rnorm(n_groups, mu, sigma)) |>
+   t() |>
+   as.data.frame() |>
+   stack() |>
+   setNames(c('value', 'group')) |>
+   within(icc <- paste('ICC = ', icc))
+ })
+ 
+ do.call('rbind', dat) |>
+   ggplot(aes(group, value)) +
+   geom_point(color = 'gray') +
+   stat_summary(fun = mean, geom = 'point', 
+                shape = 24, fill = 'red', size = 4) +
+   facet_wrap(.~icc, scales = 'free_y') +
+   theme_classic() +
+   # Change x-axis labels to "County1", "County2", etc.
+   scale_x_discrete(labels = paste0("Cty", 1:n_groups)) +
+   theme(strip.background = element_blank(),
+         strip.text = element_text(size = 14, face = 2),
+         axis.text.y = element_blank())
 }
 
+# Display ICC visualization
 show_icc(c(0.1, 0.9))
 
 ```
+
+**Left Panel (ICC = 0.1):**
+
+- Most variation occurs within groups (wide vertical spread within each group)
+- Group means (red diamonds) differ only slightly from each other
+- With low ICC, fixed effects models remove very little overall variation
+- Random effects estimates will be closer to fixed effects estimates
+- Suggests temporal factors dominate over structural differences
+
+**Right Panel (ICC = 0.9):**
+
+- Most variation exists between groups (large differences in group means)
+- Little variation within each group (points cluster tightly)
+- With high ICC, fixed effects remove most of the total variation
+- Random effects estimates will be pulled strongly toward between effects
+- Suggests structural differences between units are the dominant source of variation
+
+Now, let's calculate ICC value across each county based the result of random effect analysis.
+```{r}
+#| message: false
+#| warning: false
+# Calculate ICC for each county
+county_stats <- county_panel %>%
+  group_by(county_id) %>%
+  summarize(
+    county_mean = mean(mortality_rate, na.rm = TRUE),
+    within_var = var(mortality_rate, na.rm = TRUE),
+    n_obs = n()
+  )
+
+# Use variance components from random effects model
+global_between_var <- 6091.90  # individual var from model
+global_within_var <- 408.59    # idiosyncratic var from model
+global_icc <- 0.937            # share value from model
+
+# Calculate county-specific ICCs
+county_stats <- county_stats %>%
+  mutate(
+    between_var = global_between_var,
+    icc = between_var/(between_var + within_var),
+    se_icc = sqrt((1-icc)^2/(n_obs-1))
+  )
+
+# Plot ranked ICCs
+ggplot(county_stats %>% 
+         arrange(icc) %>% 
+         mutate(rank = row_number())) +
+  geom_hline(yintercept = global_icc, linetype = "dashed", color = "red", size = 0.7) +
+  geom_errorbar(aes(x = rank, 
+                   ymin = icc - 1.96*se_icc,
+                   ymax = icc + 1.96*se_icc),
+               width = 0.5, alpha = 0.3) +
+  geom_point(aes(x = rank, y = icc), color = "black", size = 1.2) +
+  labs(title = "Ranked County-Specific ICCs with 95% Confidence Intervals",
+       subtitle = paste0("Global ICC = ", round(global_icc, 3)),
+       x = "County Rank",
+       y = "Intraclass Correlation (ICC)") +
+  theme_minimal() +
+  theme(panel.grid.minor = element_blank(),
+        panel.grid.major.x = element_blank())
+```
+
+This graph shows county-specific ICC values from the random effects model (global ICC = 0.937, red dashed line). The plot reveals:
+
+- Most counties have ICCs between 0.86-0.97, showing the proportion of variance attributable to between-county differences
+- Counties on the right have higher ICCs (≈0.97), indicating more consistent mortality patterns over time
+- Counties on the left have lower ICCs (≈0.86), showing relatively more within-county variation
+- Wider confidence intervals for lower-ICC counties reflect greater uncertainty
+- All counties show high ICCs overall (>0.85), confirming that between-county differences dominate the variation in mortality rates
+- The values above the global average suggest some counties have even more consistent patterns than the overall model indicates
 
 ##### Why ICC Matters?
 
@@ -752,21 +858,23 @@ The ICC has several important implications for research using random effects mod
 
 ##### Connection Between ICC and Shrinkage Parameter $\theta$
 
-The ICC and the shrinkage parameter $\theta$ are intimately connected. Notice that the ICC formula closely resembles the $\theta$ formula:
+The ICC and shrinkage parameter $\theta$ are mathematically linked, with similar formulas:
 
 $$ICC = \frac{\sigma^2_{\text{between}}}{\sigma^2_{\text{between}} + \sigma^2_{\text{within}}}$$
 
 $$\theta = \frac{\sigma_u^2}{\sigma_u^2 + \sigma_\epsilon^2/T_i}$$
 
-The key difference is that $\theta$ incorporates the number of observations per county ($T_i$), making it county-specific, while ICC is a global measure. When all counties have the same number of observations, the average $\theta$ approaches the ICC as $T_i$ increases.
+The critical difference is that $\theta$ incorporates county-specific observation counts ($T_i$), making it unique for each county, while ICC is a global measure. In balanced panels where all counties have equal observations, the average $\theta$ approaches ICC as $T_i$ increases.
 
-This connection explains why:
+This relationship explains three key patterns in random effects models:
 
-1. With high ICC values, between-county differences dominate, so random effects estimates give more weight to the between estimator
-2. With low ICC values, within-county variation dominates, so random effects estimates more closely resemble fixed effects estimates
-3. The visualization shows this relationship - counties with more observations or less internal variance (higher $\theta$) have random effects lines closer to their fixed effects lines
+1. High ICC values (substantial between-county differences) cause random effects to weight between-county variation more heavily
+   
+2. Low ICC values (dominant within-county variation) produce random effects estimates resembling fixed effects
 
-Understanding this relationship helps us interpret our health data more effectively - we can see which counties' estimates are more heavily influenced by their own data versus the pooled data from all counties.
+3. Counties with more reliable data (more observations or less internal variance) have higher $\theta$ values, resulting in random effects estimates closer to their fixed effects estimates
+
+This mathematical relationship is visualized in our mortality plot, where the varying distances between random effects lines and fixed effects lines across counties reflect different county-specific $\theta$ values. Counties whose random effects estimates closely follow their fixed effects lines have higher $\theta$ values, indicating their estimates are primarily informed by their own data rather than being shrunk toward the global pattern.
 
 Let's calculate and visualize the ICC using our simulated health data:
 
@@ -796,68 +904,57 @@ kable(variance_df, caption = "Variance Components and ICC in Mortality Rates") %
                                     "#e6f7ff", "#ffffff"))
 ```
 
+
 ```{r icc-visualization, fig.width=10, fig.height=8}
-set.seed(42)
-selected_counties <- sample(1:n_counties, 7)
-selected_data <- county_health_df %>%
-  filter(county_id %in% selected_counties)
-
-# Visualize the ICC
-
-# Create a dataset for visualization
+# Create panel data visualization setup
 panel_long <- selected_data %>%
-  select(county_id, year, mortality_rate) %>%
+  select(county_id, year, mortality_rate, median_income) %>%
   mutate(county_numeric = as.numeric(factor(county_id)))
 
 # Calculate global and county-specific means
 global_mean <- mean(panel_long$mortality_rate)
 county_means_viz <- panel_long %>%
   group_by(county_id) %>%
-  summarize(county_mean = mean(mortality_rate))
+  summarize(
+    county_mean = mean(mortality_rate),
+    mean_income = mean(median_income)
+  )
 
 # Join means back to data
 panel_long <- panel_long %>%
   left_join(county_means_viz, by = "county_id") %>%
   mutate(
-    # Deviations from means
     dev_global = mortality_rate - global_mean,
     dev_county = mortality_rate - county_mean,
-    
-    # For visualization positioning
     county_numeric = as.numeric(factor(county_id)),
     county_pos = county_numeric + 0.1 * (as.numeric(factor(year)) - mean(as.numeric(factor(unique(year)))))
   )
 
-# Create an ICC visualization
+# Calculate variance components from the random effects model
+sigma2_between <- 6091.90  # From random effects model output (individual var)
+sigma2_within <- 408.59    # From random effects model output (idiosyncratic var)
+icc <- 0.937               # From random effects model output (individual share)
+
+# First plot showing variance decomposition
 p_icc <- ggplot() +
-  # Add a reference line for global mean
   geom_hline(yintercept = global_mean, color = "black", linetype = "dashed", linewidth = 1) +
-  
-  # Add county means as horizontal lines
   geom_segment(data = county_means_viz, 
               aes(x = as.numeric(factor(county_id)) - 0.4, 
                   xend = as.numeric(factor(county_id)) + 0.4,
                   y = county_mean, yend = county_mean, color = factor(county_id)),
               linewidth = 1.5) +
-  
-  # Add points for individual observations
   geom_point(data = panel_long, 
              aes(x = county_pos, y = mortality_rate, color = factor(county_id)),
              size = 3, alpha = 0.7) +
-  
-  # Connect points to county means with thin lines to show within variation
   geom_segment(data = panel_long,
               aes(x = county_pos, xend = county_pos, 
                   y = county_mean, yend = mortality_rate, color = factor(county_id)),
               alpha = 0.4, linewidth = 0.5) +
-  
-  # Annotations
+  facet_wrap(~"Variance Decomposition View") +
   annotate("text", x = 5.5, y = global_mean + 20, 
            label = "Global Mean Mortality", fontface = "bold") +
   annotate("text", x = 5.5, y = global_mean - 20, 
-           label = paste0("ICC = ", round(icc, 2)), fontface = "bold") +
-  
-  # Customize the plot
+           label = paste0("ICC = ", round(icc, 3)), fontface = "bold") +
   labs(title = "Understanding ICC in County Health Panel Data",
        subtitle = paste0("Between-County Variance: ", round(sigma2_between, 1), 
                          " (", round(100*icc, 1), "% of total)\n",
@@ -865,29 +962,22 @@ p_icc <- ggplot() +
                          " (", round(100*(1-icc), 1), "% of total)"),
        x = "County", 
        y = "Mortality Rate (per 100,000)") +
-  theme_minimal() +
-  theme(legend.position = "none",
-        plot.title = element_text(face = "bold", size = 16),
-        plot.subtitle = element_text(size = 12),
-        axis.text.x = element_text(face = "bold"),
-        panel.grid.minor = element_blank()) +
-  scale_x_continuous(breaks = 1:7, labels = selected_counties) +
-  scale_color_discrete(name = "County ID") 
+  theme_minimal()
 
-# Create a second plot demonstrating how ICC affects random effects weighting
-weight_theta <- sigma2_between / (sigma2_between + sigma2_within/10)  # 10 is our n_years
+# Calculate theta for second plot
+weight_theta <- sigma2_between / (sigma2_between + sigma2_within/10)  # 10 is n_years
 
-# Create a sequence of ICC values for demonstration
+# Create ICC sequence
 icc_seq <- seq(0, 1, by = 0.01)
 weight_seq <- icc_seq / (icc_seq + (1-icc_seq)/10)
 
-# Create a dataframe for the weight demonstration
+# Create weight dataframe
 weight_df <- data.frame(
   ICC = icc_seq,
   RE_Weight = weight_seq
 )
 
-# Mark our current ICC on the plot
+# Mark current ICC
 current_weight <- data.frame(
   ICC = icc,
   RE_Weight = weight_theta
@@ -898,9 +988,9 @@ p_weight <- ggplot(weight_df, aes(x = ICC, y = RE_Weight)) +
   geom_line(color = "purple", linewidth = 1.2) +
   geom_point(data = current_weight, size = 4, color = "red") +
   geom_text(data = current_weight, 
-            aes(label = paste0("Our health data: ICC = ", round(ICC, 2), 
-                              "\nRE Weight = ", round(RE_Weight, 2))),
-            hjust = -0.1, vjust = 0.5, fontface = "bold") +
+            aes(label = paste0("Our health data: ICC = ", round(ICC, 3), 
+                              "\nRE Weight = ", round(RE_Weight, 3))),
+            hjust = 1, vjust = 1.5, fontface = "bold") +
   geom_hline(yintercept = c(0, 1), linetype = "dotted", color = "gray50") +
   geom_vline(xintercept = c(0, 1), linetype = "dotted", color = "gray50") +
   labs(title = "How ICC Affects Random Effects Weights in Health Research",
@@ -916,8 +1006,6 @@ p_weight <- ggplot(weight_df, aes(x = ICC, y = RE_Weight)) +
 # Combine the plots using patchwork
 p_icc / p_weight
 ```
-
-
 
 ##### Interpreting the ICC Visualization
 
@@ -935,16 +1023,6 @@ The visualization illustrates several key aspects of the ICC:
    - With ICC = 0, random effects gives no weight to between variation (equivalent to fixed effects)
    - With ICC = 1, random effects gives full weight to between variation (equivalent to between effects)
    - The red dot shows our health data's position, indicating why our random effects estimates might be closer to one approach than the other
-
-##### ICC and Health Policy Implications
-
-The ICC in health data has important policy implications:
-
-1. High ICC values (>0.7) indicate that most health disparities are structural and persistent between counties, suggesting policy interventions should focus on addressing fundamental county differences.
-
-2. Low ICC values (<0.3) indicate that health outcomes vary more over time within counties than between them, suggesting that temporal factors (policy changes, economic fluctuations) have stronger effects than structural county differences.
-
-3. Moderate ICC values suggest both structural differences and temporal effects matter for health outcomes.
 
 #### Key Characteristics of Random Effects:
 
@@ -967,7 +1045,7 @@ Choosing the appropriate panel data model depends on both statistical considerat
 ```{r model-comparison-table}
 # Extract coefficients from all models for income
 fe_income_coef <- round(coef(fe_health)[1], 3)
-be_income_coef <- round(coef(be_health)[1], 3)
+be_income_coef <- round(coef(be_health)[2], 3)
 re_income_coef <- round(coef(re_health)[2], 3)  # Index 2 because of constant term
 
 # Create a comparison table of all models with enhanced insights
@@ -1076,96 +1154,6 @@ While the Hausman test is widely used, it's important to note its limitations in
 4. The test doesn't consider the substantive significance of any differences for health policy
 
 For these reasons, the Hausman test should be considered one piece of evidence in your model selection process, not the sole determining factor for health policy research.
-
-### Beyond the Basic Models: Extensions and Advanced Considerations
-
-While fixed, between, and random effects form the foundation of panel data analysis in health economics, several extensions and considerations can further enhance your modeling approach:
-
-#### 1. Robust Standard Errors
-
-Health panel data often exhibits complex error structures, including:
-- Serial correlation (correlation over time within counties)
-- Cross-sectional dependence (correlation across counties, especially neighboring ones)
-- Heteroskedasticity (unequal error variances)
-
-To address these issues, it's common to use clustered or robust standard errors:
-
-```{r robust-se-example}
-# Fixed effects with clustered standard errors (county level)
-fe_health_robust <- plm(mortality_rate ~ median_income + uninsured_rate + physician_density + 
-                       hospital_beds + obesity_rate + smoking_rate,
-                      data = county_panel, model = "within")
-coeftest(fe_health_robust, vcov = vcovHC(fe_health_robust, type = "HC1", cluster = "group"))
-```
-
-The clustered standard errors account for the fact that observations within the same county are likely correlated over time, providing more appropriate inference for health policy decisions.
-
-#### 2. Time Fixed Effects
-
-In addition to county fixed effects, you may want to include time fixed effects to control for temporal shocks common to all counties, such as national health policy changes, economic recessions, or pandemic years:
-
-```{r time-fe-example}
-# Two-way fixed effects model for health data
-fe_two_way <- plm(mortality_rate ~ median_income + uninsured_rate + physician_density + 
-                 hospital_beds + obesity_rate + smoking_rate,
-                data = county_panel, model = "within", effect = "twoways")
-summary(fe_two_way)
-```
-
-Two-way fixed effects models control for both county-specific heterogeneity and time-specific effects that affect all counties simultaneously. This approach is particularly valuable when studying health phenomena that might be influenced by common temporal shocks, such as:
-- National health policy reforms (e.g., Affordable Care Act implementation)
-- Economic recessions affecting healthcare access
-- Disease outbreaks or pandemics
-- Major changes in medical technologies or treatments
-
-#### 3. Dynamic Panel Models
-
-Static panel models assume that current values of mortality depend only on current values of income and other factors. However, many health relationships involve dynamic processes where past health outcomes influence current ones. Dynamic panel models incorporate lagged dependent variables:
-
-```{r dynamic-example-setup}
-# Creating a lagged mortality variable for demonstration
-county_health_df <- county_health_df %>%
-  arrange(county_id, year) %>%
-  group_by(county_id) %>%
-  mutate(lag_mortality = lag(mortality_rate, 1)) %>%
-  ungroup()
-
-# Remove first year observations which have NA for lagged values
-county_health_dyn <- county_health_df %>%
-  filter(!is.na(lag_mortality))
-
-# Create panel data object
-county_panel_dyn <- pdata.frame(county_health_dyn, index = c("county_id", "year"))
-
-# Simple dynamic model
-dynamic_model <- plm(mortality_rate ~ lag_mortality + median_income + uninsured_rate,
-                    data = county_panel_dyn, model = "within")
-summary(dynamic_model)
-```
-
-Dynamic models are particularly relevant for health outcomes which often exhibit strong path dependence:
-- Health infrastructure develops gradually and influences future outcomes
-- Population health status has momentum and doesn't change rapidly
-- Health behaviors tend to be persistent
-- Intergenerational health patterns may be reflected in county-level data
-
-#### 4. Heterogeneous Income Effects Across Counties
-
-Standard panel models assume homogeneous slopes across counties - that the relationship between income and mortality is the same for all counties. This assumption can be relaxed to examine how income effects vary by county characteristics:
-
-```{r heterogeneous-effects}
-# Interaction model examining if income effects differ by rural/urban status
-re_interaction <- plm(mortality_rate ~ median_income*rural_urban + uninsured_rate + 
-                     physician_density + hospital_beds + obesity_rate + smoking_rate,
-                    data = county_panel, model = "random")
-summary(re_interaction)
-```
-
-Heterogeneous effects models are particularly useful in health policy research when:
-- Income-health relationships may differ between rural and urban areas
-- Effects of healthcare access might vary by region
-- Health behavior impacts might depend on county education levels
-- Policy effectiveness might vary by county characteristics
 
 ### Conclusion: Key Takeaways and Best Practices for Health Economics Research
 
