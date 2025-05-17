@@ -686,6 +686,7 @@ summary(re_health)
 ```
 
 The random effects model shows significant associations between county characteristics and mortality rates. Key findings:
+
 - The ICC value is 0.937 (from the output's "share" for individual effects), indicating 93.7% of variance comes from between-county differences
 - Significant negative association with median income (-1.50 per $1000, p<0.001)
 - Significant positive association with obesity rate (4.13 per percentage point, p<0.05)
