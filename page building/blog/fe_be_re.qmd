@@ -639,12 +639,12 @@ county_stats <- county_stats %>%
 ggplot(county_stats %>% 
          arrange(icc) %>% 
          mutate(rank = row_number())) +
-  geom_hline(yintercept = global_icc, linetype = "dashed", color = "red", size = 0.7) +
+  geom_hline(yintercept = global_icc, linetype = "dashed", color = "red", size = 1) +
   geom_errorbar(aes(x = rank, 
                    ymin = icc - 1.96*se_icc,
                    ymax = icc + 1.96*se_icc),
-               width = 0.5, alpha = 0.3) +
-  geom_point(aes(x = rank, y = icc), color = "black", size = 1.2) +
+               width = 0.5, alpha = 1) +
+  geom_point(aes(x = rank, y = icc), color = "black", size = 2) +
   labs(title = "Ranked County-Specific ICCs with 95% Confidence Intervals",
        subtitle = paste0("Global ICC = ", round(global_icc, 3)),
        x = "County Rank",
@@ -781,21 +781,6 @@ p3 <- ggplot() +
   geom_point(data = county_means, 
              aes(x = mean_income, y = mean_mortality, fill = factor(county_id)), 
              size = 4, shape = 23, color = "white", stroke = 1) +
-  # Legend
-  # annotate("rect", xmin = 25, xmax = 45, ymin = 910, ymax = 950,
-  #          fill = "white", color = "gray", alpha = 0.7) +
-  # annotate("segment", x = 27, y = 945, xend = 31, yend = 945,
-  #          linewidth = 1.2, linetype = "solid", color = "black") +
-  # annotate("text", x = 32, y = 945, label = "Fixed Effects", hjust = 0, size = 3) +
-  # annotate("segment", x = 27, y = 935, xend = 31, yend = 935,
-  #          linewidth = 1.2, linetype = "dashed", color = "black") +
-  # annotate("text", x = 32, y = 935, label = "Between Effects", hjust = 0, size = 3) +
-  # annotate("segment", x = 27, y = 925, xend = 31, yend = 925,
-  #          linewidth = 1.5, linetype = "dotted", color = "black") +
-  # annotate("text", x = 32, y = 925, label = "Random Effects", hjust = 0, size = 3) +
-  # annotate("point", x = 29, y = 915, size = 4, shape = 23, 
-  #          fill = "black", color = "white") +
-  # annotate("text", x = 32, y = 915, label = "County Mean", hjust = 0, size = 3) +
   scale_color_manual(values = many_colors, name = "County ID") +
   scale_fill_manual(values = many_colors, name = "County ID") +
   labs(title = "Model Predictions Across Selected Counties",
@@ -1013,6 +998,7 @@ icc <- sigma2_between / (sigma2_between + sigma2_within)  # Calculate ICC
 n_years <- length(unique(panel_long$year))  # Extract number of years dynamically
 
 # First plot showing variance decomposition
+# First plot showing variance decomposition
 p_icc <- ggplot() +
   geom_hline(yintercept = global_mean, color = "black", linetype = "dashed", linewidth = 1) +
   geom_segment(data = county_means_viz, 
@@ -1039,6 +1025,7 @@ p_icc <- ggplot() +
                          " (", round(100*(1-icc), 1), "% of total)"),
        x = "County", 
        y = "Mortality Rate (per 100,000)") +
+  scale_color_discrete(name = "County ID") +  # Add this line to fix the legend title
   theme_minimal() +
   theme(legend.position = "right",
         plot.title = element_text(face = "bold"))
@@ -1083,7 +1070,8 @@ p_weight <- ggplot(weight_df, aes(x = ICC, y = RE_Weight)) +
         plot.subtitle = element_text(size = 12))
 
 # Combine the plots using patchwork
-p_icc / p_weight
+p_icc
+p_weight
 ```
 
 ##### Interpreting the ICC Visualization
