@@ -164,6 +164,21 @@ head(county_health_df, n = 20) %>%
   kable_styling(bootstrap_options = c("striped", "hover", "condensed"))
 ```
 
+**Time-Invariant** Variables (constant across years for each county):
+- Region (Northeast, Midwest, South, West)
+- Rural/Urban Status (Rural, Suburban, Urban)
+- County Education (% with college degree)
+- Land Area (square miles)
+
+**Time-Varying** Variables (change over time for each county):
+- Median Income
+- Uninsured Rate
+- Physician Density
+- Hospital Beds
+- Obesity Rate
+- Smoking Rate
+- Mortality Rate (outcome variable)
+
 ### 2. Fixed Effects Model: Within Variation
 
 #### What Are Fixed Effects?
@@ -218,7 +233,7 @@ selected_data <- selected_data %>%
   ) %>%
   ungroup()
 
-# First visualization should show raw data with county-specific trends
+# visualization should show raw data with county-specific trends
 p1 <- ggplot(selected_data, aes(x = median_income, y = mortality_rate, color = factor(county_id))) +
   geom_point(size = 3, alpha = 0.7) +
   geom_smooth(method = "lm", se = FALSE, aes(group = factor(county_id)), linewidth = 1) +
@@ -232,25 +247,8 @@ p1 <- ggplot(selected_data, aes(x = median_income, y = mortality_rate, color = f
         plot.subtitle = element_text(size = 11)) +
   scale_color_discrete(name = "County ID")
 
-# Second visualization shows the fixed effects model with parallel lines
-p2 <- ggplot(selected_data, aes(x = median_income, y = mortality_rate, color = factor(county_id))) +
-  geom_point(size = 3, alpha = 0.7) +
-  geom_line(aes(y = fe_pred), linewidth = 1) +
-  geom_hline(aes(yintercept = fe_intercept, color = factor(county_id)), 
-             linetype = "dashed", show.legend = FALSE) +
-  labs(title = "Fixed Effects Model Fitted Values",
-       subtitle = paste0("Fixed effects constrains all counties to share the same slope \n (β = ", 
-                      round(fe_coef, 2), ") with different intercepts"),
-       x = "Median Household Income ($1000s)", 
-       y = "Mortality Rate (per 100,000)") +
-  theme_minimal() +
-  theme(legend.position = "right",
-        plot.title = element_text(face = "bold", size = 14),
-        plot.subtitle = element_text(size = 11)) +
-  scale_color_discrete(name = "County ID")
-
-# Third visualization shows the demeaned data (centered)
-p3 <- ggplot(selected_data, 
+# visualization shows the demeaned data (centered)
+p2 <- ggplot(selected_data, 
              aes(x = income_centered, y = mortality_centered, color = factor(county_id))) +
   geom_point(size = 3, alpha = 0.7) +
   geom_smooth(method = "lm", se = FALSE, color = "black", linewidth = 1.2, formula = y ~ x) +
@@ -260,6 +258,23 @@ p3 <- ggplot(selected_data,
        subtitle = "After subtracting county means (demeaning),\n the common slope reveals the effect of income changes",
        x = "Income - County Mean Income", 
        y = "Mortality - County Mean Mortality") +
+  theme_minimal() +
+  theme(legend.position = "right",
+        plot.title = element_text(face = "bold", size = 14),
+        plot.subtitle = element_text(size = 11)) +
+  scale_color_discrete(name = "County ID")
+
+# visualization shows the fixed effects model with parallel lines
+p3 <- ggplot(selected_data, aes(x = median_income, y = mortality_rate, color = factor(county_id))) +
+  geom_point(size = 3, alpha = 0.7) +
+  geom_line(aes(y = fe_pred), linewidth = 1) +
+  geom_hline(aes(yintercept = fe_intercept, color = factor(county_id)), 
+             linetype = "dashed", show.legend = FALSE) +
+  labs(title = "Fixed Effects Model Fitted Values",
+       subtitle = paste0("Fixed effects constrains all counties to share the same slope \n (β = ", 
+                      round(fe_coef, 2), ") with different intercepts"),
+       x = "Median Household Income ($1000s)", 
+       y = "Mortality Rate (per 100,000)") +
   theme_minimal() +
   theme(legend.position = "right",
         plot.title = element_text(face = "bold", size = 14),
@@ -276,24 +291,27 @@ p3
 
 The visualizations above illustrate three crucial aspects of fixed effects modeling with our health data:
 
-1. **1st Figure**: Shows the raw data with county-specific trend lines fitted individually:
-   - Each county (color) has its own independently fitted regression line
-   - These lines may have different slopes, suggesting potentially heterogeneous relationships between income and mortality across counties
-   - This highlights why simply pooling all observations might be misleading
+**1st Figure**: Shows the raw data with county-specific trend lines fitted individually:
 
-2. **2st Figure**: Shows the same data with fixed effects model fitted values:
-   - The fixed effects model constrains all counties to share the **same slope coefficient**
-   - Each county has its own intercept (shown by dashed horizontal lines)
-   - The resulting parallel lines reflect the assumption that income changes affect mortality **equally** across all counties
-   - The vertical distance between lines represents the county fixed effects
+- Each county (color) has its own independently fitted regression line
+- These lines may have different slopes, suggesting potentially heterogeneous relationships between income and mortality across counties
+- This highlights why simply pooling all observations might be misleading
 
-3. **3rd Figure**: Shows the data after the **"demeaning"** transformation:
-   - Each county's observations are centered around their own means (at point 0,0)
-   - The county-specific effects are removed through this transformation
-   - The common slope becomes apparent with all counties' data now aligned
-   - All points cluster around a single regression line showing how deviations in income from county averages relate to deviations in mortality from county averages
+**2nd Figure**: Shows the data after the "demeaning" transformation:
 
-This three-part visualization demonstrates how fixed effects modeling works: by imposing a common slope across heterogeneous counties and using the "demeaning" transformation to eliminate county-specific effects, thereby isolating the within-county relationship between income and mortality.
+- Each county's observations are centered around their own means (at point 0,0)
+- The county-specific effects are removed through this transformation by subtracting each county's average from its own observations
+- This mathematical process effectively eliminates all time-invariant county characteristics
+- The common slope becomes apparent with all counties' data now aligned around the origin
+- All points cluster around a single regression line showing how deviations in income from county averages relate to deviations in mortality from county averages
+- This is the core mechanism that allows fixed effects to isolate within-county variation while controlling for between-county differences
+
+**3rd Figure**: Shows the fixed effects model fitted values:
+
+- The fixed effects model constrains all counties to share the same slope coefficient
+- Each county has its own intercept (shown by dashed horizontal lines)
+- The resulting parallel lines reflect the assumption that income changes affect mortality equally across all counties
+- The vertical distance between lines represents the county fixed effects
 
 #### Key Characteristics of Fixed Effects:
 
@@ -308,6 +326,8 @@ This three-part visualization demonstrates how fixed effects modeling works: by 
   - Less efficient than random effects if its assumptions are met
   - Uses only within-county variation, potentially losing information about structural health disparities
   - May exacerbate measurement error issues through the demeaning process
+
+#### Run Fixed Effects Model
 
 Let's estimate a complete fixed effects model with our health controls:
 
@@ -414,12 +434,14 @@ p3 + p4
 The visualization above illustrates the between effects approach with our health data:
 
 1. **Left panel**: Shows the raw data with county means highlighted as larger points:
+
    - Individual observations (small points) show the full dataset with year-to-year fluctuations
    - County means (large points) represent the average income and mortality for each county
    - The black regression line is fitted using only these county means
    - Within-county variation around each mean is ignored, treating temporal changes as noise
 
 2. **Right panel**: Shows only the county means:
+
    - Each point represents the average for one county over the entire period
    - The regression line shows the cross-sectional relationship between income and mortality
    - The confidence interval (gray area) reflects uncertainty about this relationship
@@ -427,6 +449,8 @@ The visualization above illustrates the between effects approach with our health
    - This plot illustrates structural health disparities between counties
 
 *Notice how the between effects slope (positive relationship between income and mortality) may differ from the fixed effects slope.* This difference highlights how the two approaches extract different information from the same health dataset.
+
+#### Run Between Effects Model
 
 Let's estimate a complete between effects model with our health controls:
 
@@ -503,6 +527,153 @@ Where $W$ is a weight matrix that depends on the variance components:
 $$W = \left(\sigma_u^2 \mathbf{J}_T\mathbf{J}_T' + \sigma_\epsilon^2 \mathbf{I}_T \right)^{-1} \sigma_\epsilon^2 \mathbf{I}_T$$
 
 The weight given to the between estimator increases as the between-county variance $\sigma_u^2$ increases relative to the within-county variance $\sigma_\epsilon^2$, demonstrating how random effects optimally balances information from both sources.
+
+#### Intraclass Correlation Coefficient (ICC): Understanding Between vs. Within Variation
+
+A crucial but often overlooked aspect of panel data analysis is quantifying how much variation exists between counties versus within counties over time. The Intraclass Correlation Coefficient (ICC) provides precisely this information, making it an essential diagnostic tool when working with county health data.
+
+##### What is ICC?
+
+The ICC measures the proportion of total variance in mortality rates that is due to differences between counties (between-county variance). 
+
+Mathematically:
+
+$$ICC = \frac{\sigma_u^2}{\sigma_u^2 + \sigma_\epsilon^2}$$
+
+Where:
+
+- $\sigma_u^2$ is the variance between counties (between-county variance)
+- $\sigma_\epsilon^2$ is the variance within counties over time (within-county variance)
+
+The ICC ranges from 0 to 1:
+
+- ICC ≈ 0: Almost all variation in mortality occurs within counties over time
+- ICC ≈ 1: Almost all variation in mortality occurs between counties (stable county differences)
+
+Figure below shows the distribution of data across three different values of ICC
+```{r}
+show_icc <- function(icc = 0.5) {
+ 
+ # These could be function parameters rather than constants if preferred.
+ group_mean    <- 5  # This is arbitrary as there are no numbers on y axis
+ group_sd      <- 1  # This is also arbitrary
+ n_groups      <- 10 # Number of groups along x axis
+ obs_per_group <- 10 # Number of points per group
+ 
+ # This gives us a vector of means, one for each group
+ mu <- rnorm(n_groups, group_mean, group_sd)
+ 
+ dat <- lapply(icc, function(icc) {
+   # Calculate sd within group from icc then generate group samples
+   sigma <- group_sd^2/icc - group_sd^2
+   replicate(obs_per_group, rnorm(n_groups, mu, sigma)) %>%
+   t() %>%
+   as.data.frame() %>%
+   stack() %>%
+   setNames(c('value', 'group')) %>%
+   within(icc <- paste('ICC = ', icc))
+ })
+ 
+ do.call('rbind', dat) |>
+   ggplot(aes(group, value)) +
+   geom_point(color = 'gray') +
+   stat_summary(fun = mean, geom = 'point', 
+                shape = 24, fill = 'red', size = 4) +
+   facet_wrap(.~icc, scales = 'free_y') +
+   theme_classic() +
+   # Change x-axis labels to "County1", "County2", etc.
+   scale_x_discrete(labels = paste0("Cty", 1:n_groups)) +
+   theme(strip.background = element_blank(),
+         strip.text = element_text(size = 14, face = 2),
+         axis.text.y = element_blank())
+}
+
+# Display ICC visualization
+show_icc(c(0.1, 0.9))
+
+```
+
+**Left Panel (ICC = 0.1):**
+
+- Most variation occurs within groups (wide vertical spread within each group)
+- Group means (red diamonds) differ only slightly from each other
+- With low ICC, fixed effects models remove very little overall variation
+- Random effects estimates will be closer to fixed effects estimates
+- Suggests temporal factors dominate over structural differences
+
+**Right Panel (ICC = 0.9):**
+
+- Most variation exists between groups (large differences in group means)
+- Little variation within each group (points cluster tightly)
+- With high ICC, fixed effects remove most of the total variation
+- Random effects estimates will be pulled strongly toward between effects
+- Suggests structural differences between units are the dominant source of variation
+
+Now, let's calculate ICC value across each county based the result of random effect analysis.
+```{r}
+#| message: false
+#| warning: false
+# Calculate ICC for each county
+county_stats <- county_panel %>%
+  group_by(county_id) %>%
+  summarize(
+    county_mean = mean(mortality_rate, na.rm = TRUE),
+    within_var = var(mortality_rate, na.rm = TRUE),
+    n_obs = n()
+  )
+
+# Use variance components from random effects model
+global_between_var <- 6091.90  # individual var from model
+global_within_var <- 408.59    # idiosyncratic var from model
+global_icc <- 0.937            # share value from model
+
+# Calculate county-specific ICCs
+county_stats <- county_stats %>%
+  mutate(
+    between_var = global_between_var,
+    icc = between_var/(between_var + within_var),
+    se_icc = sqrt((1-icc)^2/(n_obs-1))
+  )
+
+# Plot ranked ICCs
+ggplot(county_stats %>% 
+         arrange(icc) %>% 
+         mutate(rank = row_number())) +
+  geom_hline(yintercept = global_icc, linetype = "dashed", color = "red", size = 0.7) +
+  geom_errorbar(aes(x = rank, 
+                   ymin = icc - 1.96*se_icc,
+                   ymax = icc + 1.96*se_icc),
+               width = 0.5, alpha = 0.3) +
+  geom_point(aes(x = rank, y = icc), color = "black", size = 1.2) +
+  labs(title = "Ranked County-Specific ICCs with 95% Confidence Intervals",
+       subtitle = paste0("Global ICC = ", round(global_icc, 3)),
+       x = "County Rank",
+       y = "Intraclass Correlation (ICC)") +
+  theme_minimal() +
+  theme(panel.grid.minor = element_blank(),
+        panel.grid.major.x = element_blank())
+```
+
+This graph shows county-specific ICC values from the random effects model (global ICC = 0.937, red dashed line). The plot reveals:
+
+- Most counties have ICCs between 0.86-0.97, showing the proportion of variance attributable to between-county differences
+- Counties on the right have higher ICCs (≈0.97), indicating more consistent mortality patterns over time
+- Counties on the left have lower ICCs (≈0.86), showing relatively more within-county variation
+- Wider confidence intervals for lower-ICC counties reflect greater uncertainty
+- All counties show high ICCs overall (>0.85), confirming that between-county differences dominate the variation in mortality rates
+- The values above the global average suggest some counties have even more consistent patterns than the overall model indicates
+
+##### Why ICC Matters?
+
+The ICC has several important implications for research using random effects models:
+
+1. **Weighting Mechanism**: The ICC directly influences how random effects models weight between and within variation. With a high ICC, random effects estimates will be closer to between effects estimates; with a low ICC, they'll be closer to fixed effects estimates.
+
+2. **Model Selection**: Higher ICC values suggest that between-county differences are substantial, which may inform whether fixed effects, random effects, or between effects models are most appropriate for health policy questions.
+
+3. **Effect of Fixed Effects**: The ICC indicates how much variation is "removed" when applying fixed effects. A high ICC means fixed effects controls for a large portion of the total variation in mortality.
+
+4. **Design Efficiency**: For research design, the ICC helps determine whether to sample more counties or more time periods per county in future health studies.
 
 #### Interpreting the Random Effects Visualization:
 
@@ -673,6 +844,7 @@ Our visualization of 10 counties illustrates key differences between fixed effec
 
 The contrasting slopes (negative within counties, positive between counties) highlight why model selection matters fundamentally for interpretation. This paradoxical pattern suggests structural factors affecting county-level mortality operate differently than factors driving changes within counties over time.
 
+#### Run Random Effects Model
 
 Let's estimate a complete random effects model with our health controls:
 
@@ -710,153 +882,6 @@ $$\hat{u}_i^{RE} = \theta \times \hat{u}_i^{FE}$$
 When the between-county variance $\sigma_u^2$ is large relative to the within-county variance $\sigma_\epsilon^2$, or when $T_i$ is large, $\theta$ approaches 1, and the random effects estimator approaches the fixed effects estimator. Conversely, when $\sigma_u^2$ is small or $T_i$ is small, $\theta$ approaches 0, and the estimator shrinks toward the global mean.
 
 In our health context, this means counties with health metrics that vary greatly from the national average but have consistent measurements over time will have estimates closer to their own fixed effects. Counties with measurements close to national averages or with inconsistent data will be pulled toward the population average.
-
-#### Intraclass Correlation Coefficient (ICC): Understanding Between vs. Within Variation
-
-A crucial but often overlooked aspect of panel data analysis is quantifying how much variation exists between counties versus within counties over time. The Intraclass Correlation Coefficient (ICC) provides precisely this information, making it an essential diagnostic tool when working with county health data.
-
-##### What is ICC?
-
-The ICC measures the proportion of total variance in mortality rates that is due to differences between counties (between-county variance). 
-
-Mathematically:
-
-$$ICC = \frac{\sigma_u^2}{\sigma_u^2 + \sigma_\epsilon^2}$$
-
-Where:
-
-- $\sigma_u^2$ is the variance between counties (between-county variance)
-- $\sigma_\epsilon^2$ is the variance within counties over time (within-county variance)
-
-The ICC ranges from 0 to 1:
-
-- ICC ≈ 0: Almost all variation in mortality occurs within counties over time
-- ICC ≈ 1: Almost all variation in mortality occurs between counties (stable county differences)
-
-Figure below shows the distribution of data across three different values of ICC
-```{r}
-show_icc <- function(icc = 0.5) {
- 
- # These could be function parameters rather than constants if preferred.
- group_mean    <- 5  # This is arbitrary as there are no numbers on y axis
- group_sd      <- 1  # This is also arbitrary
- n_groups      <- 10 # Number of groups along x axis
- obs_per_group <- 10 # Number of points per group
- 
- # This gives us a vector of means, one for each group
- mu <- rnorm(n_groups, group_mean, group_sd)
- 
- dat <- lapply(icc, function(icc) {
-   # Calculate sd within group from icc then generate group samples
-   sigma <- group_sd^2/icc - group_sd^2
-   replicate(obs_per_group, rnorm(n_groups, mu, sigma)) %>%
-   t() %>%
-   as.data.frame() %>%
-   stack() %>%
-   setNames(c('value', 'group')) %>%
-   within(icc <- paste('ICC = ', icc))
- })
- 
- do.call('rbind', dat) |>
-   ggplot(aes(group, value)) +
-   geom_point(color = 'gray') +
-   stat_summary(fun = mean, geom = 'point', 
-                shape = 24, fill = 'red', size = 4) +
-   facet_wrap(.~icc, scales = 'free_y') +
-   theme_classic() +
-   # Change x-axis labels to "County1", "County2", etc.
-   scale_x_discrete(labels = paste0("Cty", 1:n_groups)) +
-   theme(strip.background = element_blank(),
-         strip.text = element_text(size = 14, face = 2),
-         axis.text.y = element_blank())
-}
-
-# Display ICC visualization
-show_icc(c(0.1, 0.9))
-
-```
-
-**Left Panel (ICC = 0.1):**
-
-- Most variation occurs within groups (wide vertical spread within each group)
-- Group means (red diamonds) differ only slightly from each other
-- With low ICC, fixed effects models remove very little overall variation
-- Random effects estimates will be closer to fixed effects estimates
-- Suggests temporal factors dominate over structural differences
-
-**Right Panel (ICC = 0.9):**
-
-- Most variation exists between groups (large differences in group means)
-- Little variation within each group (points cluster tightly)
-- With high ICC, fixed effects remove most of the total variation
-- Random effects estimates will be pulled strongly toward between effects
-- Suggests structural differences between units are the dominant source of variation
-
-Now, let's calculate ICC value across each county based the result of random effect analysis.
-```{r}
-#| message: false
-#| warning: false
-# Calculate ICC for each county
-county_stats <- county_panel %>%
-  group_by(county_id) %>%
-  summarize(
-    county_mean = mean(mortality_rate, na.rm = TRUE),
-    within_var = var(mortality_rate, na.rm = TRUE),
-    n_obs = n()
-  )
-
-# Use variance components from random effects model
-global_between_var <- 6091.90  # individual var from model
-global_within_var <- 408.59    # idiosyncratic var from model
-global_icc <- 0.937            # share value from model
-
-# Calculate county-specific ICCs
-county_stats <- county_stats %>%
-  mutate(
-    between_var = global_between_var,
-    icc = between_var/(between_var + within_var),
-    se_icc = sqrt((1-icc)^2/(n_obs-1))
-  )
-
-# Plot ranked ICCs
-ggplot(county_stats %>% 
-         arrange(icc) %>% 
-         mutate(rank = row_number())) +
-  geom_hline(yintercept = global_icc, linetype = "dashed", color = "red", size = 0.7) +
-  geom_errorbar(aes(x = rank, 
-                   ymin = icc - 1.96*se_icc,
-                   ymax = icc + 1.96*se_icc),
-               width = 0.5, alpha = 0.3) +
-  geom_point(aes(x = rank, y = icc), color = "black", size = 1.2) +
-  labs(title = "Ranked County-Specific ICCs with 95% Confidence Intervals",
-       subtitle = paste0("Global ICC = ", round(global_icc, 3)),
-       x = "County Rank",
-       y = "Intraclass Correlation (ICC)") +
-  theme_minimal() +
-  theme(panel.grid.minor = element_blank(),
-        panel.grid.major.x = element_blank())
-```
-
-This graph shows county-specific ICC values from the random effects model (global ICC = 0.937, red dashed line). The plot reveals:
-
-- Most counties have ICCs between 0.86-0.97, showing the proportion of variance attributable to between-county differences
-- Counties on the right have higher ICCs (≈0.97), indicating more consistent mortality patterns over time
-- Counties on the left have lower ICCs (≈0.86), showing relatively more within-county variation
-- Wider confidence intervals for lower-ICC counties reflect greater uncertainty
-- All counties show high ICCs overall (>0.85), confirming that between-county differences dominate the variation in mortality rates
-- The values above the global average suggest some counties have even more consistent patterns than the overall model indicates
-
-##### Why ICC Matters?
-
-The ICC has several important implications for research using random effects models:
-
-1. **Weighting Mechanism**: The ICC directly influences how random effects models weight between and within variation. With a high ICC, random effects estimates will be closer to between effects estimates; with a low ICC, they'll be closer to fixed effects estimates.
-
-2. **Model Selection**: Higher ICC values suggest that between-county differences are substantial, which may inform whether fixed effects, random effects, or between effects models are most appropriate for health policy questions.
-
-3. **Effect of Fixed Effects**: The ICC indicates how much variation is "removed" when applying fixed effects. A high ICC means fixed effects controls for a large portion of the total variation in mortality.
-
-4. **Design Efficiency**: For research design, the ICC helps determine whether to sample more counties or more time periods per county in future health studies.
 
 ##### Connection Between ICC and Shrinkage Parameter $\theta$
 
@@ -1208,7 +1233,7 @@ While the Hausman test is widely used, it's important to note its limitations in
 4. The test doesn't consider the substantive significance of any differences for health policy
 5. A rejection may not only indicate correlation between county effects and regressors but could also suggest other forms of model misspecification, such as dynamic effects or nonlinearities
 
-### 6. Conclusion: Key Takeaways and Best Practices for Health Research
+### 6. Conclusion
 
 Panel data analysis provides health economists and policymakers with powerful tools to address complex causal questions by leveraging both cross-sectional and temporal variation. The three core models - fixed effects, between effects, and random effects - each extract different information from health data and answer fundamentally different questions:
 
@@ -1217,23 +1242,3 @@ Panel data analysis provides health economists and policymakers with powerful to
 2. **Between Effects** focus exclusively on cross-sectional relationships between counties, averaging out temporal variation. This approach reveals long-run structural health disparities but doesn't address potential omitted variable bias from unobserved county characteristics. The key question answered is "How do differences in average income between counties relate to differences in their average mortality rates?"
 
 3. **Random Effects** provide a middle ground, using both within and between variation through a weighted average approach. This method is more efficient when its key assumption holds: that county-specific effects are uncorrelated with the regressors. When this assumption is satisfied, random effects can estimate coefficients for time-invariant variables, unlike fixed effects. The key question answered is "What is the effect of income on mortality rates, considering both within-county and between-county information?"
-
-#### Best Practices for Researchers:
-
-1. **Let your health policy research question guide model selection** - Different models answer different questions about health determinants
-
-2. **Conduct thorough diagnostics** - Test for heteroskedasticity, serial correlation, cross-sectional dependence, and model assumptions in health data
-
-3. **Use robust standard errors** - Health panel data often violates classical error assumptions
-
-4. **Consider sensitivity analyses** - Try alternative specifications to ensure health findings are robust
-
-5. **Visualize your health data** - Plots of within and between variation can reveal important patterns in health disparities
-
-6. **Be transparent about limitations** - All panel data approaches involve tradeoffs for health research
-
-7. **Combine statistical tests with theory** - Tests like Hausman provide evidence, but theoretical considerations about health determinants are equally important
-
-By understanding the conceptual foundations of different panel data models and their appropriate applications, health economists can leverage the rich information contained in county-level panel data to answer important health policy questions and address persistent health disparities.
-
-Remember that panel data analysis in health economics isn't just about choosing the "best" model—it's about understanding the different types of variation in your health data and selecting the approach that best addresses your specific health policy research question.
