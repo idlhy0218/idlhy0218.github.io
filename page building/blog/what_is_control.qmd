@@ -9,6 +9,7 @@ format:
     code-fold: true
     code-tools: true
     toc: true
+    toc-depth: 5
     toc-location: left
     self-contained: true
     fig-width: 9
@@ -16,6 +17,9 @@ format:
     fig-dpi: 300
     smooth-scroll: true
     highlight-style: github
+    page-layout: full
+    embed-resources: true
+    html-math-method: katex
 ---
 
 ```{r}
@@ -29,9 +33,12 @@ library(knitr)
 library(broom)
 ```
 
-## What Does It Mean to "Control" in Statistical Analysis?
+# What Does It Mean to "Control" in Statistical Analysis?
 
-In statistical analysis, "controlling" for a variable means accounting for its effect when examining the relationship between other variables. This helps us understand the true relationship between an independent variable (IV) and a dependent variable (DV) by removing the influence of potentially confounding factors.
+In statistical analysis, "controlling" for a variable means accounting for its effect when examining the relationship between other variables. This helps us understand the true relationship between an independent variable (X) and a dependent variable (Y) by removing the influence of potentially confounding factors (Z). As a result, when we interpret the coefficient of X, we can say *"after considering the relationship between Z and X as well as Z and Y, the estimated effect of X on Y is..."*
+
+![Confounding Variable](C:/Users/User/OneDrive/R FILE/image/confounding variable.png)
+
 
 Mathematically, we move from a simple bivariate model:
 
@@ -52,7 +59,7 @@ Where:
 - $\varepsilon$ is the error term
 
 ::: {.callout-note}
-### Key Points: Controlling Variables
+##  Key Points
 * Isolates the unique effect of the independent variable
 * Removes confounding influences 
 * Answers: "What would be the relationship if control variable were held constant?"
@@ -60,7 +67,7 @@ Where:
 * Increases the internal validity of findings
 :::
 
-### 1. Conceptual Understanding
+## 1. Conceptual Understanding
 
 When we say we're "controlling" for a variable, we're asking:
 
@@ -70,7 +77,7 @@ This isolates the unique effect of our independent variable on the dependent var
 
 The coefficient $\beta_1$ in the multiple regression represents the expected change in $Y$ for a one-unit change in $X$, **holding $Z$ constant**.
 
-### 2. Data Generation
+## 2. Data Generation
 
 Let's create simulated data to demonstrate this concept:
 
@@ -124,16 +131,14 @@ head(data) %>%
 
 The data generation process follows these mathematical models:
 
-$$\text{PriorKnowledge} \sim \text{Uniform}(1, 10)$$
+$$\text{TestScore(Y)} = 30 + 3 \times \text{StudyHours(X)} + 5 \times \text{PriorKnowledge(Z)} + \varepsilon_2, \quad \varepsilon_2 \sim N(0, 1)$$
 
-$$\text{StudyHours} = 2 + 0.2 \times \text{PriorKnowledge} + \varepsilon_1, \quad \varepsilon_1 \sim N(0, 1)$$
+$$\text{StudyHours(X)} = 2 + 0.2 \times \text{PriorKnowledge(Z)} + \varepsilon_1, \quad \varepsilon_1 \sim N(0, 1)$$
 
-$$\text{TestScore} = 30 + 3 \times \text{StudyHours} + 5 \times \text{PriorKnowledge} + \varepsilon_2, \quad \varepsilon_2 \sim N(0, 1)$$
+Notice how prior knowledge (Z) influences both study hours (X) and test scores (Y), creating a **confounding** relationship.
 
-Notice how prior knowledge influences both study hours and test scores, creating a confounding relationship.
-
-::: {.callout-note}
-### Data Simulation Notes
+::: {.callout-important}
+## Data Simulation Notes
 * 1000 observations with 3 variables
 * Independent variable: Study hours
 * Dependent variable: Test scores
@@ -141,7 +146,7 @@ Notice how prior knowledge influences both study hours and test scores, creating
 * Prior knowledge affects both study hours and test scores - This creates a deliberate confounding relationship
 :::
 
-### 3. Visualization: Understanding Control Through Stratification
+## 3. Basic Visualization
 
 ```{r}
 #| label: "stratified-visualization"
@@ -172,8 +177,6 @@ $$\text{TestScore}_{\text{high}} = \beta_{0,\text{high}} + \beta_{1,\text{high}}
 
 When slopes ($\beta_1$) are similar across groups but intercepts differ, this suggests an additive effect of the control variable.
 
-### 4. Understanding the Visualization
-
 The visualization demonstrates several critical aspects of controlling for variables:
 
 **Key Observations**:
@@ -184,9 +187,10 @@ The visualization demonstrates several critical aspects of controlling for varia
 
 3. **Confounding Effect**: The steeper slope of the black line reveals confounding - part of what appears to be the effect of studying is actually due to prior knowledge. Students with more prior knowledge tend to study more AND score higher.
 
-4. **Parallel vs. Non-Parallel Lines**: If the colored lines were perfectly parallel, it would suggest prior knowledge only shifts scores up or down without changing how study hours affect scores. Non-parallel lines would suggest an interaction effect.
+4. **Parallel vs. Non-Parallel Lines**: If the colored lines were perfectly parallel, it would suggest prior knowledge only shifts scores up or down without changing how study hours affect scores. Non-parallel lines would suggest an **interaction (or moderation) effect**.
 
-The mathematical reason for confounding bias can be illustrated using our model estimates:
+## 4. Run Models (w/wo Control Variable)
+The mathematical reason for confounding bias can be illustrated using our model estimates. Let's run two OLS analysis:
 
 ```{r}
 #| label: "model-comparison"
@@ -201,6 +205,7 @@ broom::tidy(model_raw)
 broom::tidy(model_controlled)
 ```
 
+Here's a comparison table of two models:
 ```{r}
 # Create coefficient comparison table
 coef_raw <- coef(model_raw)
@@ -218,15 +223,14 @@ coef_table %>%
   kable_styling(bootstrap_options = c("striped", "hover"))
 ```
 
-### 5. Understanding the Results
-
-The table quantifies what we observed visually:
-
+## 5. Understanding the Results
+### 1) Through Mathematical Logics
 1. **Without controlling** for prior knowledge, each additional hour of studying is associated with an increase of approximately `r round(coef_raw[2], 2)` points on the test.
 
 2. **After controlling** for prior knowledge, each additional hour of studying is associated with an increase of approximately `r round(coef_controlled[2], 2)` points on the test.
 
-This difference (`r round(coef_raw[2], 2)` - `r round(coef_controlled[2], 2)`) demonstrates how failing to control for confounding variables leads to overestimating effects. The bias in our uncontrolled estimate can be calculated as:
+- This difference (`r round(coef_raw[2], 2)` - `r round(coef_controlled[2], 2)`) demonstrates how failing to control for confounding variables leads to **overestimating** effects. 
+- The bias in our uncontrolled estimate can be calculated as:
 
 $$\text{Bias} = \beta_1^* - \beta_1 = \beta_2 \times \delta_{X,Z}$$
 
@@ -246,9 +250,177 @@ Their product gives the exact amount of bias when Z is omitted from the model.
 
 This works because when Z is correlated with X, omitting Z causes X to "pick up" the effect of Z on Y. The stronger Z's effect on Y ($\beta_2$) and the stronger the correlation between X and Z ($\delta_{X,Z}$), the larger the bias.
 
-### 6. Residualization Method (The Frisch-Waugh-Lovell Theorem)
+### 2) 3-D Plots
 
-Another way to visualize controlling for a variable is through residualization:
+We can visualize this through a geometric lens, which helps explain what multiple regression does.
+
+```{r}
+#| label: "geometric-interpretation" 
+#| fig.height: 9
+#| fig.width: 11
+#| warning: false
+#| fig.align: "center"
+#| eval: true
+#| echo: true
+
+# Load plotly if needed
+if (!requireNamespace("plotly", quietly = TRUE)) {
+  install.packages("plotly")
+}
+library(plotly)
+
+# Create a small subset for clearer visualization
+set.seed(42)
+sample_indices <- sample(1:nrow(data), 150)
+sample_data <- data[sample_indices, ]
+
+# Create the 3D visualization
+fig <- plot_ly() %>%
+  # Add points representing observations in 3D space with color based on prior knowledge
+  add_trace(
+    data = sample_data,
+    x = ~study_hours, y = ~prior_knowledge, z = ~test_score,
+    type = "scatter3d", mode = "markers",
+    marker = list(
+      size = 5,
+      color = ~prior_knowledge,
+      colorscale = 'Viridis',
+      opacity = 0.8,
+      symbol = 'circle',
+      line = list(color = 'darkgray', width = 0.5)
+    ),
+    name = "Students"
+  )
+
+# Create the plane representing the fitted model
+grid_size <- 25  # Increase for smoother surface
+x_range <- seq(min(data$study_hours) - 0.5, max(data$study_hours) + 0.5, length.out = grid_size)
+y_range <- seq(min(data$prior_knowledge) - 0.5, max(data$prior_knowledge) + 0.5, length.out = grid_size)
+grid <- expand.grid(study_hours = x_range, prior_knowledge = y_range)
+
+# Predict values based on the multiple regression model
+pred_z <- matrix(
+  predict(model_controlled, newdata = grid),
+  nrow = grid_size, ncol = grid_size
+)
+
+# Add the regression plane with enhanced aesthetics
+fig <- fig %>%
+  add_surface(
+    x = x_range, y = y_range, z = pred_z,
+    opacity = 0.7, 
+    colorscale = list(
+      c(0, 0.5, 1), 
+      c("rgb(230,230,250)", "rgb(150,150,230)", "rgb(70,70,200)")
+    ),
+    contours = list(
+      z = list(
+        show = TRUE,
+        usecolormap = TRUE,
+        highlightcolor = "#ff0000",
+        project = list(z = TRUE)
+      )
+    ),
+    name = "Regression Plane"
+  )
+
+# Add TWO "slices" to show constant Z at different values
+# First slice - 25th percentile of prior knowledge
+z_value_low <- quantile(data$prior_knowledge, 0.25)
+closest_y_index_low <- which.min(abs(y_range - z_value_low))
+slice_data_low <- grid[grid$prior_knowledge == y_range[closest_y_index_low], ]
+slice_pred_low <- predict(model_controlled, newdata = slice_data_low)
+
+# Second slice - 75th percentile of prior knowledge
+z_value_high <- quantile(data$prior_knowledge, 0.75)
+closest_y_index_high <- which.min(abs(y_range - z_value_high))
+slice_data_high <- grid[grid$prior_knowledge == y_range[closest_y_index_high], ]
+slice_pred_high <- predict(model_controlled, newdata = slice_data_high)
+
+# Add the low slice
+fig <- fig %>%
+  add_trace(
+    x = slice_data_low$study_hours, 
+    y = rep(y_range[closest_y_index_low], length(slice_data_low$study_hours)), 
+    z = slice_pred_low,
+    type = "scatter3d", 
+    mode = "lines",
+    line = list(color = 'red', width = 6),
+    name = "Low Prior Knowledge Slice"
+  )
+
+# Add the high slice
+fig <- fig %>%
+  add_trace(
+    x = slice_data_high$study_hours, 
+    y = rep(y_range[closest_y_index_high], length(slice_data_high$study_hours)), 
+    z = slice_pred_high,
+    type = "scatter3d", 
+    mode = "lines",
+    line = list(color = 'darkred', width = 6),
+    name = "High Prior Knowledge Slice"
+  )
+
+# Enhance the visualization with better lighting and camera position
+fig <- fig %>%
+  layout(
+    scene = list(
+      xaxis = list(title = list(text = "Study Hours (X)", font = list(size = 12, family = "Arial")), 
+                  gridcolor = 'rgb(220, 220, 220)',
+                  zerolinecolor = 'rgb(0, 0, 0)'),
+      yaxis = list(title = list(text = "Prior Knowledge (Z)", font = list(size = 12, family = "Arial")),
+                  gridcolor = 'rgb(220, 220, 220)',
+                  zerolinecolor = 'rgb(0, 0, 0)'),
+      zaxis = list(title = list(text = "Test Score (Y)", font = list(size = 12, family = "Arial")),
+                  gridcolor = 'rgb(220, 220, 220)',
+                  zerolinecolor = 'rgb(0, 0, 0)'),
+      camera = list(eye = list(x = 1.8, y = 1.8, z = 1.2)),
+      aspectratio = list(x = 1, y = 1, z = 0.8),
+      lighting = list(
+        ambient = 0.7,
+        diffuse = 0.9,
+        specular = 0.8,
+        roughness = 0.4,
+        fresnel = 0.8
+      )
+    ),
+    title = list(
+      text = "Geometric Interpretation of Multiple Regression",
+      font = list(size = 16, family = "Arial", color = "darkblue")
+    ),
+    legend = list(x = 0.7, y = 0.9),
+    margin = list(l = 0, r = 0, b = 0, t = 50)
+  )
+
+fig
+```
+
+In this 3D visualization:
+
+1. **Colored points** represent students with three attributes: study hours (X), prior knowledge (Z), and test score (Y). The color gradient shows different levels of prior knowledge.
+
+2. **The blue surface** represents our multiple regression model $Y = \beta_0 + \beta_1 X + \beta_2 Z$, showing predicted test scores for any combination of study hours and prior knowledge.
+
+3. **The red lines** show "slices" of the model at different levels of prior knowledge:
+   - Each red line shows what happens when we hold prior knowledge constant at a specific value
+   - All red lines have the same slope ($\beta_1$ ≈ 3), showing that each additional hour of studying increases test scores by about 3 points regardless of prior knowledge level
+   - The higher line represents students with greater prior knowledge (75th percentile), who start from a higher baseline score
+   - The lower line represents students with less prior knowledge (25th percentile), who start from a lower baseline
+
+4. **This visualization demonstrates:**
+   - The concept of "controlling for Z" - we're examining the relationship between X and Y while keeping Z fixed
+   - The parallel red lines show that the effect of study hours ($\beta_1$) remains constant across different levels of prior knowledge
+   - The vertical distance between the red lines shows the effect of prior knowledge ($\beta_2$) - how much test scores change when prior knowledge increases but study hours remain the same
+   - This is exactly what our multiple regression coefficient $\beta_1$ represents: the effect of X on Y holding Z constant
+
+::: {.callout-note}
+##  Key Points
+The parallel red lines visually demonstrate what "controlling for a variable" means in statistical terms. When we say $\beta_1$ is "the effect of study hours on test scores, controlling for prior knowledge," we're referring to the slope of these lines - the relationship between X and Y when Z is held fixed at any constant value.
+:::
+
+## 6. Residualization Method (The Frisch-Waugh-Lovell Theorem)
+
+Another way to visualize controlling for a variable is through **residualization**. It's like a partial regression. Let's me plot the process of it:
 
 ```{r}
 #| label: "residualization-enhanced"
@@ -342,21 +514,20 @@ The coefficient $\beta_1$ can be estimated in two mathematically equivalent ways
 
 The coefficient $\delta_1$ from Step 3 will be identical to $\beta_1$ from the direct multiple regression (model with control).
 
-::: {.callout-note}
-### Residualization Process Summary
+::: {.callout-important}
+## Key Points
 * Mathematically removes the influence of the control variable
 * Step 1: Predict study hours from prior knowledge; calculate residuals
 * Step 2: Predict test scores from prior knowledge; calculate residuals
 * Step 3: Analyze relationship between these unpredicted portions (residuals)
 * The slope equals the controlled coefficient in multiple regression
-* Shows the X-Y relationship that cannot be explained by the control variable
 :::
 
-### 7. Explaining the Residualization Process
+## 7. Explaining the Residualization Process
 
 The three-panel visualization demonstrates the mathematical process of controlling through residualization:
 
-**Top Left Panel - Step 1**: Regress Study Hours on Prior Knowledge.
+**Top Left Panel - Step 1**: Regress Study Hours (X) on Prior Knowledge (Z).
 
 $$\text{StudyHours} = \alpha_0 + \alpha_1 \times \text{PriorKnowledge} + e_{\text{StudyHours}}$$
 
@@ -365,7 +536,7 @@ $$\text{StudyHours} = \alpha_0 + \alpha_1 \times \text{PriorKnowledge} + e_{\tex
 - Red vertical lines: Residuals ($e_{\text{StudyHours}}$) - how much a student's study hours differ from prediction
 - These residuals represent study hours AFTER removing the effect of prior knowledge
 
-**Top Right Panel - Step 2**: Regress Test Score on Prior Knowledge.
+**Top Right Panel - Step 2**: Regress Test Score (Y) on Prior Knowledge (Z).
 
 $$\text{TestScore} = \gamma_0 + \gamma_1 \times \text{PriorKnowledge} + e_{\text{TestScore}}$$
 
@@ -383,7 +554,7 @@ $$e_{\text{TestScore}} = \delta_0 + \delta_1 \times e_{\text{StudyHours}} + \nu$
 - Point (0,0): Represents students who study exactly as much as predicted and score exactly as predicted based on their prior knowledge - the "baseline" case where prior knowledge fully explains both behaviors.
 - Red line: The "pure" effect of study hours on test scores after removing prior knowledge's influence. Since we've removed the effect of prior knowledge from both variables, we're now seeing the "pure" relationship between them - the effect of studying that can't be explained away by saying "they just had more prior knowledge.
 - Residuals in this plot: The vertical distance from each point to the red line shows how much each student's test score deviates from what we'd predict based on both their prior knowledge and study hours combined.
-- This relationship is mathematically equivalent to the coefficient of study hours in our multiple regression model
+- **This relationship is mathematically equivalent to the coefficient of study hours in our multiple regression model with control variable**
 
 ```{r}
 #| label: "verify-equivalence"
@@ -405,15 +576,40 @@ equivalence_check %>%
 
 As demonstrated, the coefficient from the residualization method is mathematically equivalent to the multiple regression coefficient, confirming our approach's validity.
 
-### 8. Conclusion
+## 9. Conclusion
 
 Controlling for variables is essential in statistical analysis because it:
 
-1. Isolates the unique effect of our independent variable on the dependent variable
-2. Removes the influence of confounding factors that might bias our results
+1. Isolates the unique effect of our independent variable (X) on the dependent variable (Y)
+2. Removes the influence of confounding factors (Z) that might bias our results
 3. Provides a more accurate understanding of relationships between variables
 4. Allows for more valid inferences, especially in observational studies
 
 Through visualization and mathematical explanation, we've seen how controlling for prior knowledge changes our understanding of how study hours affect test scores. While studying does improve scores, its effect is not as strong as an uncontrolled analysis would suggest.
 
 The true coefficient (3.0) matches our data generation process, where we explicitly set the direct effect of study hours to be 3.0. This confirms that proper controlling techniques can recover the true underlying relationships in our data.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
