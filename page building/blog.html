@@ -130,6 +130,10 @@
             color: var(--bs-primary);
         }
 
+        .introduction-content {
+            padding: 1.5rem;
+        }
+
         @media (max-width: 991.98px) {
             .blog-sidebar {
                 position: static;
@@ -170,9 +174,12 @@
             <div class="col-lg-9">
                 <div class="blog-content-container">
                     <div id="blogContent">
-                        <!-- Selected blog post will be displayed here -->
-                        <div class="text-center p-5">
-                            <p class="lead">Select a blog post from the list to read it.</p>
+                        <!-- Default introduction that shows when no post is selected -->
+                        <div class="introduction-content">
+                            <h2>Welcome to My Blog</h2>
+                            <p>Here you'll find my statistical labs with R. I post on random topics but with a consistent theme: "frequently used statistical concepts that are <strong>easy to forget the underlying logic of</strong>." Feel free to contact me if you find any errors or have any suggestions for topics. Browse the sidebar to select posts that interest you.</p>
+                            <hr class="my-4">
+                            <p class="text-muted">Select a blog post from the list to start reading.</p>
                         </div>
                     </div>
                 </div>
@@ -262,10 +269,9 @@
             const hash = window.location.hash.substring(1);
             if (hash && blogConfig.posts.some(p => p.id === hash)) {
                 loadBlogPost(hash);
-            } else if (blogConfig.posts.length > 0) {
-                // Load the first post by default
-                loadBlogPost(blogConfig.posts[0].id);
-            }
+            } 
+            // Don't load a post by default when the page first loads
+            // This allows the introduction to be visible initially
         });
     </script>
 
