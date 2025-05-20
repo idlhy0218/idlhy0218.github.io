@@ -1,5 +1,5 @@
 ---
-title: "Understanding 'Control' in Statistical Analysis"
+title: "Understanding 'Control' in Regression Analysis"
 author: "Heeyoung Lee"
 date: "May 18, 2025"
 format: 
@@ -33,7 +33,7 @@ library(knitr)
 library(broom)
 ```
 
-# What Does It Mean to "Control" in Statistical Analysis?
+# What Does It Mean to "Control" in Regression Analysis?
 
 In statistical analysis, "controlling" for a variable means accounting for its effect when examining the relationship between other variables. This helps us understand the true relationship between an independent variable (X) and a dependent variable (Y) by removing the influence of potentially confounding factors (Z). As a result, when we interpret the coefficient of X, we can say *"after considering the relationship between Z and X as well as Z and Y, the estimated effect of X on Y is..."*
 
