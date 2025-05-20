@@ -100,11 +100,78 @@
             <div class="tab-content" id="courseTabsContent">
                 <!-- Medical Sociology -->
                 <div class="tab-pane fade show active" id="medical-sociology" role="tabpanel">
-                    <!-- Spring 2025 Course -->
+                    <!-- Spring 2025 Course WITH EVALUATION -->
                     <div class="course-card">
                         <div class="course-title">Medical Sociology - Spring 2025</div>
-                        <div class="mb-2"><small>University at Albany, SUNY | Instructor</small></div>
+                        <div class="mb-2"><small>University at Albany, SUNY | Instructor | Response Rate: 66.36%</small></div>
                         <p>This course introduces students to sociological perspectives on health, illness, and healthcare systems. We examine how social factors influence health outcomes and healthcare access.</p>
+                        
+                        <div class="mt-3 mb-3">
+                            <h6>Course Evaluation</h6>
+                            
+                            <ul class="nav nav-tabs nav-fill mb-2" id="evalTabsSpring25" role="tablist">
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link active" id="chart-tab-spring25" data-bs-toggle="tab" data-bs-target="#chart-content-spring25" type="button">
+                                        Evaluation Scores
+                                    </button>
+                                </li>
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link" id="comments-tab-spring25" data-bs-toggle="tab" data-bs-target="#comments-content-spring25" type="button">
+                                        Student Comments
+                                    </button>
+                                </li>
+                            </ul>
+                            
+                            <div class="tab-content">
+                                <!-- Chart Tab -->
+                                <div class="tab-pane fade show active" id="chart-content-spring25" role="tabpanel">
+                                    <div class="chart-container">
+                                        <canvas id="spring2025EvaluationChart"></canvas>
+                                    </div>
+                                    <div class="text-center mt-2 small">
+                                        <div class="d-inline-block me-3">
+                                            <span style="background: rgba(54, 162, 235, 0.7); width: 12px; height: 12px; display: inline-block;"></span> Your Score
+                                        </div>
+                                        <div class="d-inline-block">
+                                            <span style="background: rgba(153, 102, 255, 0.5); width: 12px; height: 12px; display: inline-block;"></span> Department Average
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Comments Tab -->
+                                <div class="tab-pane fade" id="comments-content-spring25" role="tabpanel">
+                                    <div style="max-height: 300px; overflow-y: auto;">
+                                        <div class="comment-item">
+                                            <p class="mb-0">"Very good teacher. Loved that he was interactive with students and would ask questions and change the course off feedback he received"</p>
+                                        </div>
+                                        <div class="comment-item">
+                                            <p class="mb-0">"My absolute favorite professor by far, he cares so much about his students and makes sure that everything is explained. always makes sure that everyone is comfortable, beyond understanding."</p>
+                                        </div>
+                                        <div class="comment-item">
+                                            <p class="mb-0">"He is amazing! He communicates his expectations very clearly, makes the content easy to understand but still challenges us to think, prepares us well for exams, has a good class format! I love his class and would easily take another class with this professor."</p>
+                                        </div>
+                                        <div class="comment-item">
+                                            <p class="mb-0">"Amazing class. The professor genuinely is so kind and understanding. The course was taught very well and I understood everything. I thought this class was going to be boring but the professor made it interesting with his personality. Everything was explained well and he made me excited to come to class and learn! If I could I'd take another class with this professor!!"</p>
+                                        </div>
+                                        <div class="comment-item">
+                                            <p class="mb-0">"This course was not necessarily a topic I am extremely interested in, but the professor made me want to show up to class every day. He was engaging and interesting. He presented the material in a way that made it fun to learn. His lectures showed his passion for the topic and made me want to know."</p>
+                                        </div>
+                                        <div class="comment-item">
+                                            <p class="mb-0">"Expectations were always clear, updates at the start of classes were great, and the material was interesting with conversations of our class size. This was a good classroom setup for this class for me personally."</p>
+                                        </div>
+                                        <div class="comment-item">
+                                            <p class="mb-0">"Professor was open to feedback throughout the course and applied feedback when it was given, he upheld a positive environment and made it easy to learn."</p>
+                                        </div>
+                                        <div class="comment-item">
+                                            <p class="mb-0">"I really enjoyed this class and didn't find it too challenging for being a 300-level course. I think your teaching style is easy to follow, and I appreciate the cheat sheets for exams as it takes off a lot of pressure."</p>
+                                        </div>
+                                        <div class="comment-item">
+                                            <p class="mb-0">"This course helped deepen my perspective on medical injustices in our society and brought forth new complex ideas about sociology that I want to help further research. The professor taught this course with such a calm demeanor, truly taking time to engage."</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                     
                     <!-- Fall 2024 Course with Evaluation -->
@@ -276,6 +343,43 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            // Spring 2025 Chart setup
+            const ctxSpring2025 = document.getElementById('spring2025EvaluationChart').getContext('2d');
+            
+            new Chart(ctxSpring2025, {
+                type: 'bar',
+                data: {
+                    labels: ['Preparation', 'Communication', 'Interest', 'Challenge', 'Receptiveness', 'Availability', 'Standards', 'Overall'],
+                    datasets: [
+                        {
+                            label: 'Your Score',
+                            data: [4.90, 4.67, 4.51, 4.40, 4.93, 4.79, 4.51, 4.76],
+                            backgroundColor: 'rgba(54, 162, 235, 0.7)'
+                        },
+                        {
+                            label: 'Department Average',
+                            data: [4.89, 4.64, 4.42, 4.43, 4.76, 4.68, 4.53, 4.62],
+                            backgroundColor: 'rgba(153, 102, 255, 0.5)'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            min: 3.5,
+                            max: 5.0
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            });
+            
             // Fall 2024 Chart setup
             const ctxFall = document.getElementById('evaluationChart').getContext('2d');
             
