@@ -11,6 +11,8 @@
       --bs-primary: #2d3748;
       --bs-link-color: #4a90e2;
       --bs-link-hover-color: #2b6cb0;
+      --tab-active-bg: #4a90e2;
+      --tab-hover-bg: #5a9fee;
     }
 
     body {
@@ -27,6 +29,84 @@
     .navbar-brand {
       color: white !important;
       font-weight: 500;
+    }
+
+    /* Enhanced Tab Styling */
+    .tab-container {
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+      padding: 1rem;
+      margin-bottom: 2rem;
+    }
+
+    .nav-tabs {
+      border-bottom: none;
+      gap: 0.5rem;
+    }
+
+    .nav-tabs .nav-link {
+      border: 2px solid transparent;
+      border-radius: 8px;
+      color: #6c757d;
+      font-weight: 600;
+      padding: 0.75rem 1.5rem;
+      background: #f8f9fa;
+      margin-bottom: 0;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .nav-tabs .nav-link:hover {
+      background: var(--tab-hover-bg);
+      color: white;
+      border-color: transparent;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(74, 144, 226, 0.3);
+    }
+
+    .nav-tabs .nav-link.active {
+      background: var(--tab-active-bg);
+      color: white;
+      border-color: transparent;
+      box-shadow: 0 4px 12px rgba(74, 144, 226, 0.4);
+    }
+
+    .nav-tabs .nav-link::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+      transition: left 0.5s;
+    }
+
+    .nav-tabs .nav-link:hover::before {
+      left: 100%;
+    }
+
+    .nav-tabs .nav-link i {
+      margin-right: 0.5rem;
+      font-size: 1.1rem;
+    }
+
+    /* Tab content area */
+    .tab-content {
+      animation: fadeIn 0.3s ease-in;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
     }
 
     .blog-sidebar {
@@ -75,12 +155,14 @@
     .blog-list-link:hover {
       color: var(--bs-link-hover-color);
       background-color: #f8f9fa;
+      transform: translateX(5px);
     }
 
     .blog-list-link.active {
-      color: var(--bs-primary);
-      background-color: #e9ecef;
+      color: white;
+      background-color: var(--tab-active-bg);
       font-weight: 600;
+      box-shadow: 0 2px 8px rgba(74, 144, 226, 0.3);
     }
 
     .blog-date {
@@ -88,6 +170,10 @@
       font-size: 0.85rem;
       display: block;
       margin-top: 0.25rem;
+    }
+
+    .blog-list-link.active .blog-date {
+      color: rgba(255, 255, 255, 0.9);
     }
 
     .blog-description {
@@ -100,6 +186,7 @@
       border-radius: 12px;
       box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
       padding: 1.5rem;
+      min-height: 500px;
     }
 
     .blog-content {
@@ -116,14 +203,24 @@
       display: inline-flex;
       align-items: center;
       margin-bottom: 1rem;
+      padding: 0.5rem 1rem;
+      border-radius: 6px;
+      transition: all 0.2s ease;
     }
 
     .back-button:hover {
       color: var(--bs-primary);
+      background-color: #f8f9fa;
+      transform: translateX(-5px);
     }
 
     .introduction-content {
       padding: 1.5rem;
+    }
+
+    .introduction-content h2 {
+      color: var(--bs-primary);
+      margin-bottom: 1rem;
     }
 
     @media (max-width: 991.98px) {
@@ -134,6 +231,15 @@
 
       .blog-content {
         min-height: 600px;
+      }
+
+      .nav-tabs .nav-link {
+        padding: 0.5rem 1rem;
+        font-size: 0.9rem;
+      }
+
+      .nav-tabs .nav-link i {
+        display: none;
       }
     }
   </style>
@@ -151,16 +257,22 @@
       <i class="bi bi-arrow-left me-2"></i> Back to Home
     </a>
 
-    <ul class="nav nav-tabs" id="blogTab" role="tablist">
-      <li class="nav-item" role="presentation">
-        <button class="nav-link active" id="statslab-tab" data-bs-toggle="tab" data-bs-target="#statslab" type="button" role="tab">Stats Lab</button>
-      </li>
-      <li class="nav-item" role="presentation">
-        <button class="nav-link" id="studynotes-tab" data-bs-toggle="tab" data-bs-target="#studynotes" type="button" role="tab">Study Notes</button>
-      </li>
-    </ul>
+    <div class="tab-container">
+      <ul class="nav nav-tabs" id="blogTab" role="tablist">
+        <li class="nav-item" role="presentation">
+          <button class="nav-link active" id="statslab-tab" data-bs-toggle="tab" data-bs-target="#statslab" type="button" role="tab">
+            <i class="bi bi-graph-up"></i> Stats Lab
+          </button>
+        </li>
+        <li class="nav-item" role="presentation">
+          <button class="nav-link" id="studynotes-tab" data-bs-toggle="tab" data-bs-target="#studynotes" type="button" role="tab">
+            <i class="bi bi-journal-text"></i> Study Notes
+          </button>
+        </li>
+      </ul>
+    </div>
 
-    <div class="tab-content mt-3">
+    <div class="tab-content">
       <!-- Stats Lab -->
       <div class="tab-pane fade show active" id="statslab" role="tabpanel">
         <div class="row">
@@ -175,7 +287,8 @@
               <div id="statsLabContent" class="blogContentTarget">
                 <div class="introduction-content">
                   <h2>Welcome to Stats Lab</h2>
-                  <p>These posts are focused on statistical techniques in R and how to understand them better.</p>
+                  <p>Here you'll find my statistical labs with R. I post on random topics but with a consistent theme: "frequently used statistical concepts that are <strong>easy to forget the underlying logic of</strong>."</p>
+                  <p>Feel free to contact me if you find any errors or have any suggestions for topics. Browse the sidebar to select posts that interest you.</p>
                 </div>
               </div>
             </div>
@@ -197,7 +310,8 @@
               <div id="studyNotesContent" class="blogContentTarget">
                 <div class="introduction-content">
                   <h2>Welcome to Study Notes</h2>
-                  <p>These notes summarize readings or lectures I’ve taken. </p>
+                  <p>These notes summarize important readings, lectures, and research papers I've studied. They serve as a personal reference and might be helpful for others exploring similar topics in sociology and statistics.</p>
+                  <p>Each note is a distilled version of key concepts and insights from various academic sources.</p>
                 </div>
               </div>
             </div>
@@ -209,48 +323,60 @@
 
   <script>
     const blogConfig = {
-      statsLab: [
-        {
-          id: 'twfe',
-          title: 'What is The Logic Behind a Two-Way Fixed Effects Analysis?',
-          date: 'May 28, 2025',
-          description: '',
-          file: 'blog/twfe.html'
-        },
-        {
-          id: 'fe_be_re',
-          title: 'Fixed vs Between vs Random Effect',
-          date: 'May 15, 2025',
-          description: '',
-          file: 'blog/fe_be_re.html'
-        },
-        {
-          id: 'control',
-          title: 'Understanding "Control" in Statistical Analysis',
-          date: 'May 18, 2025',
-          description: '',
-          file: 'blog/what_is_control.html'
-        }
-      ],
-      studyNotes: [
-        {
-          id: 'opportunity_insights',
-          title: 'Opportunity Insights',
-          date: 'June 16, 2025',
-          description: '',
-          file: 'blog/chetty.html'
-        }
-      ]
+      statsLab: {
+        posts: [
+          {
+            id: 'twfe',
+            title: 'What is The Logic Behind a Two-Way Fixed Effects Analysis?',
+            date: 'May 28, 2025',
+            description: '',
+            file: 'blog/twfe.html'
+          },
+          {
+            id: 'fe_be_re',
+            title: 'Fixed vs Between vs Random Effect',
+            date: 'May 15, 2025',
+            description: '',
+            file: 'blog/fe_be_re.html'
+          },
+          {
+            id: 'control',
+            title: 'Understanding "Control" in Statistical Analysis',
+            date: 'May 18, 2025',
+            description: '',
+            file: 'blog/what_is_control.html'
+          }
+        ],
+        tabId: 'statslab',
+        contentId: 'statsLabContent',
+        listId: 'statsLabList'
+      },
+      studyNotes: {
+        posts: [
+          {
+            id: 'opportunity_insights',
+            title: 'Opportunity Insights',
+            date: 'June 16, 2025',
+            description: '',
+            file: 'blog/chetty.html'
+          }
+        ],
+        tabId: 'studynotes',
+        contentId: 'studyNotesContent',
+        listId: 'studyNotesList'
+      }
     };
 
-    function generateBlogList(section, posts) {
-      const listElement = document.getElementById(`${section}List`);
+    function generateBlogList(section) {
+      const config = blogConfig[section];
+      const listElement = document.getElementById(config.listId);
       listElement.innerHTML = '';
-      posts.forEach(post => {
+      
+      config.posts.forEach(post => {
         const listItem = document.createElement('li');
         listItem.className = 'blog-list-item';
         listItem.innerHTML = `
-          <a href="#${section}-${post.id}" class="blog-list-link" id="${post.id}-link"
+          <a href="#${section}__${post.id}" class="blog-list-link" id="${section}-${post.id}-link"
              onclick="loadBlogPost('${section}', '${post.id}'); return false;">
             ${post.title}
             <span class="blog-date">${post.date}</span>
@@ -262,31 +388,63 @@
     }
 
     function loadBlogPost(section, postId) {
-      const post = blogConfig[section].find(p => p.id === postId);
+      const config = blogConfig[section];
+      const post = config.posts.find(p => p.id === postId);
       if (!post) return;
 
+      // Remove active class from all links
       document.querySelectorAll('.blog-list-link').forEach(link => link.classList.remove('active'));
-      const activeLink = document.getElementById(`${postId}-link`);
+      
+      // Add active class to current link
+      const activeLink = document.getElementById(`${section}-${postId}-link`);
       if (activeLink) activeLink.classList.add('active');
 
-      const contentTarget = document.getElementById(`${section}Content`);
-      contentTarget.innerHTML = `<iframe src="${post.file}" class="blog-content" title="${post.title}"></iframe>`;
+      // Load content with fade effect
+      const contentTarget = document.getElementById(config.contentId);
+      contentTarget.style.opacity = '0';
+      
+      setTimeout(() => {
+        contentTarget.innerHTML = `<iframe src="${post.file}" class="blog-content" title="${post.title}"></iframe>`;
+        contentTarget.style.opacity = '1';
+        contentTarget.style.transition = 'opacity 0.3s ease-in';
+      }, 150);
 
-      window.location.hash = `${section}-${postId}`;
+      // Update URL hash
+      window.location.hash = `${section}__${postId}`;
+    }
+
+    function parseHashAndLoad() {
+      const hash = window.location.hash.substring(1);
+      if (hash.includes('__')) {
+        const [section, postId] = hash.split('__');
+        
+        // Check if section exists
+        if (blogConfig[section]) {
+          // Switch to correct tab
+          const tabTrigger = document.querySelector(`button[data-bs-target="#${blogConfig[section].tabId}"]`);
+          if (tabTrigger) {
+            new bootstrap.Tab(tabTrigger).show();
+          }
+          
+          // Load the post
+          setTimeout(() => {
+            loadBlogPost(section, postId);
+          }, 100); // Small delay to ensure tab is shown
+        }
+      }
     }
 
     document.addEventListener('DOMContentLoaded', function () {
-      generateBlogList('statsLab', blogConfig.statsLab);
-      generateBlogList('studyNotes', blogConfig.studyNotes);
+      // Generate lists for both sections
+      generateBlogList('statsLab');
+      generateBlogList('studyNotes');
 
-      const hash = window.location.hash.substring(1);
-      if (hash.includes('-')) {
-        const [section, postId] = hash.split('-');
-        const tabTrigger = document.querySelector(`button[data-bs-target="#${section}"]`);
-        if (tabTrigger) new bootstrap.Tab(tabTrigger).show();
-        loadBlogPost(section, postId);
-      }
+      // Parse hash and load if necessary
+      parseHashAndLoad();
     });
+
+    // Listen for hash changes
+    window.addEventListener('hashchange', parseHashAndLoad);
   </script>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
