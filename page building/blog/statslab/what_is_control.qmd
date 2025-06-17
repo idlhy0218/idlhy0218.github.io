@@ -1,0 +1,615 @@
+---
+title: "Understanding 'Control' in Regression Analysis"
+author: "Heeyoung Lee"
+date: "May 18, 2025"
+format: 
+  html:
+    theme: cosmo
+    css: custom.css
+    code-fold: true
+    code-tools: true
+    toc: true
+    toc-depth: 5
+    toc-location: left
+    self-contained: true
+    fig-width: 9
+    fig-height: 6
+    fig-dpi: 300
+    smooth-scroll: true
+    highlight-style: github
+    page-layout: full
+    embed-resources: true
+    html-math-method: katex
+---
+
+```{r}
+#| label: "setup"
+#| include: false
+library(tidyverse)
+library(ggplot2)
+library(kableExtra)
+library(patchwork)
+library(knitr)
+library(broom)
+```
+
+# What Does It Mean to "Control" in Regression Analysis?
+
+In statistical analysis, "controlling" for a variable means accounting for its effect when examining the relationship between other variables. This helps us understand the true relationship between an independent variable (X) and a dependent variable (Y) by removing the influence of potentially confounding factors (Z). As a result, when we interpret the coefficient of X, we can say *"after considering the relationship between Z and X as well as Z and Y, the estimated effect of X on Y is..."*
+
+![Confounding Variable](C:/Users/User/OneDrive/R FILE/image/confounding variable.png)
+
+
+Mathematically, we move from a simple bivariate model:
+
+$$Y = \beta_0 + \beta_1 X + \varepsilon$$
+
+To a multiple regression model that includes the control variable:
+
+$$Y = \beta_0 + \beta_1 X + \beta_2 Z + \varepsilon$$
+
+Where:
+
+- $Y$ is the dependent variable
+- $X$ is the independent variable of interest
+- $Z$ is the control variable
+- $\beta_0$ is the intercept
+- $\beta_1$ is the coefficient for $X$ (our primary interest)
+- $\beta_2$ is the coefficient for $Z$ (the control variable)
+- $\varepsilon$ is the error term
+
+::: {.callout-note}
+##  Key Points
+* Isolates the unique effect of the independent variable
+* Removes confounding influences 
+* Answers: "What would be the relationship if control variable were held constant?"
+* Essential in observational studies where randomization isn't possible
+* Increases the internal validity of findings
+:::
+
+## 1. Conceptual Understanding
+
+When we say we're "controlling" for a variable, we're asking:
+
+"What would be the relationship between my independent and dependent variables if the control variable were held constant?"
+
+This isolates the unique effect of our independent variable on the dependent variable.
+
+The coefficient $\beta_1$ in the multiple regression represents the expected change in $Y$ for a one-unit change in $X$, **holding $Z$ constant**.
+
+## 2. Data Generation
+
+Let's create simulated data to demonstrate this concept:
+
+```{r}
+#| label: "generate-data"
+#| echo: true
+
+# Set seed for reproducibility
+set.seed(123)
+
+# Generate simulated data
+n <- 1000
+
+# Scenario: 
+# IV = Study Hours (hours spent studying)
+# Control = Prior Knowledge (measured on a scale of 1-10)
+# DV = Test Score (0-100)
+
+# Generate the control variable (Prior Knowledge)
+prior_knowledge <- runif(n, 1, 10)
+
+# Generate the independent variable (Study Hours) with some relationship to Prior Knowledge
+study_hours <- 2 + 0.2 * prior_knowledge + rnorm(n, 0, 1)
+
+# Generate the dependent variable (Test Score)
+# It's influenced by both Prior Knowledge and Study Hours
+test_score <- 30 + 3 * study_hours + 5 * prior_knowledge + rnorm(n, 0, 1)
+
+# Create data frame
+data <- data.frame(
+  study_hours = study_hours,
+  prior_knowledge = prior_knowledge,
+  test_score = test_score
+)
+
+# Round for nicer display
+data$study_hours <- round(data$study_hours, 1)
+data$prior_knowledge <- round(data$prior_knowledge, 1)
+data$test_score <- round(data$test_score, 1)
+
+# Create a factor variable for visualization
+data$prior_knowledge_group <- cut(data$prior_knowledge, 
+                                 breaks = c(0, 3.33, 6.67, 10),
+                                 labels = c("Low", "Medium", "High"))
+
+# Show first few rows of data
+head(data) %>%
+  kable(caption = "Sample of simulated data") %>%
+  kable_styling(bootstrap_options = c("striped", "hover"))
+```
+
+The data generation process follows these mathematical models:
+
+$$\text{TestScore(Y)} = 30 + 3 \times \text{StudyHours(X)} + 5 \times \text{PriorKnowledge(Z)} + \varepsilon_2, \quad \varepsilon_2 \sim N(0, 1)$$
+
+$$\text{StudyHours(X)} = 2 + 0.2 \times \text{PriorKnowledge(Z)} + \varepsilon_1, \quad \varepsilon_1 \sim N(0, 1)$$
+
+Notice how prior knowledge (Z) influences both study hours (X) and test scores (Y), creating a **confounding** relationship.
+
+::: {.callout-important}
+## Data Simulation Notes
+* 1000 observations with 3 variables
+* Independent variable: Study hours
+* Dependent variable: Test scores
+* Control variable: Prior knowledge
+* Prior knowledge affects both study hours and test scores - This creates a deliberate confounding relationship
+:::
+
+## 3. Basic Visualization
+
+```{r}
+#| label: "stratified-visualization"
+#| fig.cap: "Study Hours vs. Test Score stratified by Prior Knowledge"
+#| warning: false
+
+p_stratified <- ggplot(data, aes(x = study_hours, y = test_score, color = prior_knowledge_group)) +
+  geom_point(alpha = 0.7) +
+  # Lines for each prior knowledge group (controlled)
+  geom_smooth(method = "lm", se = FALSE) +
+  # Overall line (uncontrolled)
+  geom_smooth(data = data, aes(x = study_hours, y = test_score, group = 1), 
+              method = "lm", color = "black", linetype = "dashed", se = FALSE) +
+  scale_color_brewer(palette = "Set1") +
+  labs(x = "Study Hours", y = "Test Score", color = "Prior Knowledge",
+       title = "The Effect of Controlling for Prior Knowledge") +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5, face = "bold"))
+
+p_stratified
+```
+
+This stratification approach is mathematically equivalent to estimating separate regression equations for each level of the control variable:
+
+$$\text{TestScore}_{\text{low}} = \beta_{0,\text{low}} + \beta_{1,\text{low}} \times \text{StudyHours} + \varepsilon_{\text{low}}$$
+$$\text{TestScore}_{\text{medium}} = \beta_{0,\text{medium}} + \beta_{1,\text{medium}} \times \text{StudyHours} + \varepsilon_{\text{medium}}$$
+$$\text{TestScore}_{\text{high}} = \beta_{0,\text{high}} + \beta_{1,\text{high}} \times \text{StudyHours} + \varepsilon_{\text{high}}$$
+
+When slopes ($\beta_1$) are similar across groups but intercepts differ, this suggests an additive effect of the control variable.
+
+The visualization demonstrates several critical aspects of controlling for variables:
+
+**Key Observations**:
+
+1. **Different Y-Intercepts**: Students with high prior knowledge (red) start at a higher baseline test score compared to those with medium (green) or low (blue) prior knowledge.
+
+2. **Slope Differences**: The colored lines have a less steep slope than the black dashed line. This indicates that the true effect of study hours on test scores (after controlling for prior knowledge) is smaller than what the uncontrolled analysis suggests.
+
+3. **Confounding Effect**: The steeper slope of the black line reveals confounding - part of what appears to be the effect of studying is actually due to prior knowledge. Students with more prior knowledge tend to study more AND score higher.
+
+4. **Parallel vs. Non-Parallel Lines**: If the colored lines were perfectly parallel, it would suggest prior knowledge only shifts scores up or down without changing how study hours affect scores. Non-parallel lines would suggest an **interaction (or moderation) effect**.
+
+## 4. Run Models (w/wo Control Variable)
+The mathematical reason for confounding bias can be illustrated using our model estimates. Let's run two OLS analysis:
+
+```{r}
+#| label: "model-comparison"
+#| echo: true
+
+# Fit models with and without control
+model_raw <- lm(test_score ~ study_hours, data = data)
+model_controlled <- lm(test_score ~ study_hours + prior_knowledge, data = data)
+
+# Print model summaries
+broom::tidy(model_raw)
+broom::tidy(model_controlled)
+```
+
+Here's a comparison table of two models:
+```{r}
+# Create coefficient comparison table
+coef_raw <- coef(model_raw)
+coef_controlled <- coef(model_controlled)
+
+coef_table <- data.frame(
+  Model = c("Without Control", "With Control"),
+  "Study Hours Coefficient" = c(coef_raw[2], coef_controlled[2]),
+  "Standard Error" = c(summary(model_raw)$coefficients[2,2], 
+                      summary(model_controlled)$coefficients[2,2])
+)
+
+coef_table %>%
+  kable(caption = "Comparison of Study Hours coefficient", digits = 3) %>%
+  kable_styling(bootstrap_options = c("striped", "hover"))
+```
+
+## 5. Understanding the Results
+### 1) Through Mathematical Logics
+1. **Without controlling** for prior knowledge, each additional hour of studying is associated with an increase of approximately `r round(coef_raw[2], 2)` points on the test.
+
+2. **After controlling** for prior knowledge, each additional hour of studying is associated with an increase of approximately `r round(coef_controlled[2], 2)` points on the test.
+
+- This difference (`r round(coef_raw[2], 2)` - `r round(coef_controlled[2], 2)`) demonstrates how failing to control for confounding variables leads to **overestimating** effects. 
+- The bias in our uncontrolled estimate can be calculated as:
+
+$$\text{Bias} = \beta_1^* - \beta_1 = \beta_2 \times \delta_{X,Z}$$
+
+Where:
+
+- $\beta_1^*$ is the uncontrolled estimate
+- $\beta_1$ is the controlled estimate
+- $\beta_2$ is the coefficient of PriorKnowledge
+- $\delta_{X,Z}$ is the coefficient from regressing StudyHours on PriorKnowledge
+
+The formula $\text{Bias} = \beta_2 \times \delta_{X,Z}$ mathematically explains omitted variable bias because:
+
+1. $\beta_2$ represents how much the control variable Z affects Y
+2. $\delta_{X,Z}$ represents how much Z is correlated with X
+
+Their product gives the exact amount of bias when Z is omitted from the model.
+
+This works because when Z is correlated with X, omitting Z causes X to "pick up" the effect of Z on Y. The stronger Z's effect on Y ($\beta_2$) and the stronger the correlation between X and Z ($\delta_{X,Z}$), the larger the bias.
+
+### 2) 3-D Plots
+
+We can visualize this through a geometric lens, which helps explain what multiple regression does.
+
+```{r}
+#| label: "geometric-interpretation" 
+#| fig.height: 9
+#| fig.width: 11
+#| warning: false
+#| fig.align: "center"
+#| eval: true
+#| echo: true
+
+# Load plotly if needed
+if (!requireNamespace("plotly", quietly = TRUE)) {
+  install.packages("plotly")
+}
+library(plotly)
+
+# Create a small subset for clearer visualization
+set.seed(42)
+sample_indices <- sample(1:nrow(data), 150)
+sample_data <- data[sample_indices, ]
+
+# Create the 3D visualization
+fig <- plot_ly() %>%
+  # Add points representing observations in 3D space with color based on prior knowledge
+  add_trace(
+    data = sample_data,
+    x = ~study_hours, y = ~prior_knowledge, z = ~test_score,
+    type = "scatter3d", mode = "markers",
+    marker = list(
+      size = 5,
+      color = ~prior_knowledge,
+      colorscale = 'Viridis',
+      opacity = 0.8,
+      symbol = 'circle',
+      line = list(color = 'darkgray', width = 0.5)
+    ),
+    name = "Students"
+  )
+
+# Create the plane representing the fitted model
+grid_size <- 25  # Increase for smoother surface
+x_range <- seq(min(data$study_hours) - 0.5, max(data$study_hours) + 0.5, length.out = grid_size)
+y_range <- seq(min(data$prior_knowledge) - 0.5, max(data$prior_knowledge) + 0.5, length.out = grid_size)
+grid <- expand.grid(study_hours = x_range, prior_knowledge = y_range)
+
+# Predict values based on the multiple regression model
+pred_z <- matrix(
+  predict(model_controlled, newdata = grid),
+  nrow = grid_size, ncol = grid_size
+)
+
+# Add the regression plane with enhanced aesthetics
+fig <- fig %>%
+  add_surface(
+    x = x_range, y = y_range, z = pred_z,
+    opacity = 0.7, 
+    colorscale = list(
+      c(0, 0.5, 1), 
+      c("rgb(230,230,250)", "rgb(150,150,230)", "rgb(70,70,200)")
+    ),
+    contours = list(
+      z = list(
+        show = TRUE,
+        usecolormap = TRUE,
+        highlightcolor = "#ff0000",
+        project = list(z = TRUE)
+      )
+    ),
+    name = "Regression Plane"
+  )
+
+# Add TWO "slices" to show constant Z at different values
+# First slice - 25th percentile of prior knowledge
+z_value_low <- quantile(data$prior_knowledge, 0.25)
+closest_y_index_low <- which.min(abs(y_range - z_value_low))
+slice_data_low <- grid[grid$prior_knowledge == y_range[closest_y_index_low], ]
+slice_pred_low <- predict(model_controlled, newdata = slice_data_low)
+
+# Second slice - 75th percentile of prior knowledge
+z_value_high <- quantile(data$prior_knowledge, 0.75)
+closest_y_index_high <- which.min(abs(y_range - z_value_high))
+slice_data_high <- grid[grid$prior_knowledge == y_range[closest_y_index_high], ]
+slice_pred_high <- predict(model_controlled, newdata = slice_data_high)
+
+# Add the low slice
+fig <- fig %>%
+  add_trace(
+    x = slice_data_low$study_hours, 
+    y = rep(y_range[closest_y_index_low], length(slice_data_low$study_hours)), 
+    z = slice_pred_low,
+    type = "scatter3d", 
+    mode = "lines",
+    line = list(color = 'red', width = 6),
+    name = "Low Prior Knowledge Slice"
+  )
+
+# Add the high slice
+fig <- fig %>%
+  add_trace(
+    x = slice_data_high$study_hours, 
+    y = rep(y_range[closest_y_index_high], length(slice_data_high$study_hours)), 
+    z = slice_pred_high,
+    type = "scatter3d", 
+    mode = "lines",
+    line = list(color = 'darkred', width = 6),
+    name = "High Prior Knowledge Slice"
+  )
+
+# Enhance the visualization with better lighting and camera position
+fig <- fig %>%
+  layout(
+    scene = list(
+      xaxis = list(title = list(text = "Study Hours (X)", font = list(size = 12, family = "Arial")), 
+                  gridcolor = 'rgb(220, 220, 220)',
+                  zerolinecolor = 'rgb(0, 0, 0)'),
+      yaxis = list(title = list(text = "Prior Knowledge (Z)", font = list(size = 12, family = "Arial")),
+                  gridcolor = 'rgb(220, 220, 220)',
+                  zerolinecolor = 'rgb(0, 0, 0)'),
+      zaxis = list(title = list(text = "Test Score (Y)", font = list(size = 12, family = "Arial")),
+                  gridcolor = 'rgb(220, 220, 220)',
+                  zerolinecolor = 'rgb(0, 0, 0)'),
+      camera = list(eye = list(x = 1.8, y = 1.8, z = 1.2)),
+      aspectratio = list(x = 1, y = 1, z = 0.8),
+      lighting = list(
+        ambient = 0.7,
+        diffuse = 0.9,
+        specular = 0.8,
+        roughness = 0.4,
+        fresnel = 0.8
+      )
+    ),
+    title = list(
+      text = "Geometric Interpretation of Multiple Regression",
+      font = list(size = 16, family = "Arial", color = "darkblue")
+    ),
+    legend = list(x = 0.7, y = 0.9),
+    margin = list(l = 0, r = 0, b = 0, t = 50)
+  )
+
+fig
+```
+
+In this 3D visualization:
+
+1. **Colored points** represent students with three attributes: study hours (X), prior knowledge (Z), and test score (Y). The color gradient shows different levels of prior knowledge.
+
+2. **The blue surface** represents our multiple regression model $Y = \beta_0 + \beta_1 X + \beta_2 Z$, showing predicted test scores for any combination of study hours and prior knowledge.
+
+3. **The red lines** show "slices" of the model at different levels of prior knowledge:
+   - Each red line shows what happens when we hold prior knowledge constant at a specific value
+   - All red lines have the same slope ($\beta_1$ ≈ 3), showing that each additional hour of studying increases test scores by about 3 points regardless of prior knowledge level
+   - The higher line represents students with greater prior knowledge (75th percentile), who start from a higher baseline score
+   - The lower line represents students with less prior knowledge (25th percentile), who start from a lower baseline
+
+4. **This visualization demonstrates:**
+   - The concept of "controlling for Z" - we're examining the relationship between X and Y while keeping Z fixed
+   - The parallel red lines show that the effect of study hours ($\beta_1$) remains constant across different levels of prior knowledge
+   - The vertical distance between the red lines shows the effect of prior knowledge ($\beta_2$) - how much test scores change when prior knowledge increases but study hours remain the same
+   - This is exactly what our multiple regression coefficient $\beta_1$ represents: the effect of X on Y holding Z constant
+
+::: {.callout-note}
+##  Key Points
+The parallel red lines visually demonstrate what "controlling for a variable" means in statistical terms. When we say $\beta_1$ is "the effect of study hours on test scores, controlling for prior knowledge," we're referring to the slope of these lines - the relationship between X and Y when Z is held fixed at any constant value.
+:::
+
+## 6. Residualization Method (The Frisch-Waugh-Lovell Theorem)
+
+Another way to visualize controlling for a variable is through **residualization**. It's like a partial regression. Let's me plot the process of it:
+
+```{r}
+#| label: "residualization-enhanced"
+#| fig.height: 10
+#| fig.width: 10
+#| warning: false
+
+# Creating a 2x2 plot layout to explain residualization
+# Step 1: Regress Study Hours on Prior Knowledge
+hours_resid_model <- lm(study_hours ~ prior_knowledge, data = data)
+data$hours_resid <- residuals(hours_resid_model)
+data$hours_pred <- predict(hours_resid_model)
+
+# Step 2: Regress Test Score on Prior Knowledge
+score_resid_model <- lm(test_score ~ prior_knowledge, data = data)
+data$score_resid <- residuals(score_resid_model)
+data$score_pred <- predict(score_resid_model)
+
+# Create plots
+p_hours <- ggplot(data, aes(x = prior_knowledge, y = study_hours)) +
+  geom_point(alpha = 0.6, color = "forestgreen") +
+  geom_smooth(method = "lm", color = "darkblue") +
+  geom_segment(aes(xend = prior_knowledge, yend = hours_pred), 
+               alpha = 0.2, color = "red") +
+  # Add an example point for annotation
+  geom_point(data = data[25,], color = "red", size = 3) +
+  annotate("text", x = data[25,"prior_knowledge"]+0.8, y = data[25,"study_hours"]+0.5, 
+           label = "Student A", color = "red", fontface = "bold") +
+  labs(x = "Prior Knowledge (Confounder)", y = "Study Hours (IV)",
+       title = "Step 1: Regress Study Hours on Prior Knowledge") +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5, face = "bold"))
+
+p_scores <- ggplot(data, aes(x = prior_knowledge, y = test_score)) +
+  geom_point(alpha = 0.6, color = "orange") +
+  geom_smooth(method = "lm", color = "darkblue") +
+  geom_segment(aes(xend = prior_knowledge, yend = score_pred), 
+               alpha = 0.2, color = "red") +
+  # Add the same example point
+  geom_point(data = data[25,], color = "red", size = 3) +
+  annotate("text", x = data[25,"prior_knowledge"]+0.8, y = data[25,"test_score"]+2, 
+           label = "Student A", color = "red", fontface = "bold") +
+  labs(x = "Prior Knowledge (Confounder)", y = "Test Score (DV)",
+       title = "Step 2: Regress Test Score on Prior Knowledge") +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5, face = "bold"))
+
+# Step 3: Plot the residuals against each other
+p_resid <- ggplot(data, aes(x = hours_resid, y = score_resid)) +
+  geom_point(alpha = 0.6, color = "purple") +
+  geom_smooth(method = "lm", color = "darkred") +
+  geom_vline(xintercept = 0, col = "darkgray", lty = "dashed") +
+  geom_hline(yintercept = 0, col = "darkgray", lty = "dashed") +
+  # Add the same example point
+  geom_point(data = data[25,], color = "red", size = 3) +
+  xlim(-3, 3) +
+  annotate("text", x = data[25,"hours_resid"]+0.7, y = data[25,"score_resid"]+1, 
+           label = "Student A\n(residualized values)", color = "red", fontface = "bold") +
+  # Add quadrant labels
+  annotate("text", x = 2, y = 12, label = "Studies more than predicted,\nscores higher than predicted", 
+           hjust = 0.5, vjust = 0.5, color = "darkblue", size = 4) +
+  annotate("text", x = -2, y = 12, label = "Studies less than predicted,\nscores higher than predicted", 
+           hjust = 0.5, vjust = 0.5, color = "darkblue", size = 4) +
+  annotate("text", x = 2, y = -12, label = "Studies more than predicted,\nscores lower than predicted", 
+           hjust = 0.5, vjust = 0.5, color = "darkblue", size = 4) +
+  annotate("text", x = -2, y = -12, label = "Studies less than predicted,\nscores lower than predicted", 
+           hjust = 0.5, vjust = 0.5, color = "darkblue", size = 4) +
+  labs(x = "Study Hours (residualized: red vertical lines from step 1)",
+       y = "Test Score (residualized: red vertical lines from step 2)",
+       title = "Step 3: Plot Residuals Against Each Other",
+       subtitle = "This shows the relationship after controlling for Prior Knowledge") +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5, face = "bold"),
+        plot.subtitle = element_text(hjust = 0.5))
+
+# Arrange all plots in a 2x1 grid
+(p_hours | p_scores) / (p_resid)
+```
+
+The residualization method is based on the **Frisch–Waugh–Lovell theorem**, which shows that in a multiple regression:
+
+$$Y = \beta_0 + \beta_1X + \beta_2Z + \varepsilon$$
+
+The coefficient $\beta_1$ can be estimated in two mathematically equivalent ways:
+
+1. Direct multiple regression (as we did earlier)
+2. Two-step process:
+   - Step 1: Regress $X$ on $Z$ and compute residuals $e_X$: $X = \alpha_0 + \alpha_1Z + e_X$
+   - Step 2: Regress $Y$ on $Z$ and compute residuals $e_Y$: $Y = \gamma_0 + \gamma_1Z + e_Y$
+   - Step 3: Regress $e_Y$ on $e_X$: $e_Y = \delta_0 + \delta_1e_X + \nu$
+
+The coefficient $\delta_1$ from Step 3 will be identical to $\beta_1$ from the direct multiple regression (model with control).
+
+::: {.callout-important}
+## Key Points
+* Mathematically removes the influence of the control variable
+* Step 1: Predict study hours from prior knowledge; calculate residuals
+* Step 2: Predict test scores from prior knowledge; calculate residuals
+* Step 3: Analyze relationship between these unpredicted portions (residuals)
+* The slope equals the controlled coefficient in multiple regression
+:::
+
+## 7. Explaining the Residualization Process
+
+The three-panel visualization demonstrates the mathematical process of controlling through residualization:
+
+**Top Left Panel - Step 1**: Regress Study Hours (X) on Prior Knowledge (Z).
+
+$$\text{StudyHours} = \alpha_0 + \alpha_1 \times \text{PriorKnowledge} + e_{\text{StudyHours}}$$
+
+- Blue line: Predicted relationship between prior knowledge and study hours
+- Green dots: Students' actual data points
+- Red vertical lines: Residuals ($e_{\text{StudyHours}}$) - how much a student's study hours differ from prediction
+- These residuals represent study hours AFTER removing the effect of prior knowledge
+
+**Top Right Panel - Step 2**: Regress Test Score (Y) on Prior Knowledge (Z).
+
+$$\text{TestScore} = \gamma_0 + \gamma_1 \times \text{PriorKnowledge} + e_{\text{TestScore}}$$
+
+- Blue line: Predicted relationship between prior knowledge and test scores
+- Orange dots: Students' actual test scores
+- Red vertical lines: Residuals ($e_{\text{TestScore}}$) - how much a student's score differs from prediction
+- These residuals represent test scores AFTER removing the effect of prior knowledge
+
+**Bottom Panel - Step 3**: Plot the residuals against each other.
+
+$$e_{\text{TestScore}} = \delta_0 + \delta_1 \times e_{\text{StudyHours}} + \nu$$
+
+- X-axis: How much a student study hours more/less than predicted based on prior knowledge
+- Y-axis: How much a student scores better/worse than predicted based on prior knowledge
+- Point (0,0): Represents students who study exactly as much as predicted and score exactly as predicted based on their prior knowledge - the "baseline" case where prior knowledge fully explains both behaviors.
+- Red line: The "pure" effect of study hours on test scores after removing prior knowledge's influence. Since we've removed the effect of prior knowledge from both variables, we're now seeing the "pure" relationship between them - the effect of studying that can't be explained away by saying "they just had more prior knowledge.
+- Residuals in this plot: The vertical distance from each point to the red line shows how much each student's test score deviates from what we'd predict based on both their prior knowledge and study hours combined.
+- **This relationship is mathematically equivalent to the coefficient of study hours in our multiple regression model with control variable**
+
+```{r}
+#| label: "verify-equivalence"
+#| echo: true
+
+# Verify that the residualization method gives the same coefficient
+residual_model <- lm(score_resid ~ hours_resid, data = data)
+
+# Compare coefficients
+equivalence_check <- data.frame(
+  Method = c("Multiple Regression", "Residualization"),
+  "Study Hours Coefficient" = c(coef_controlled[2], coef(residual_model)[2])
+)
+
+equivalence_check %>%
+  kable(caption = "Coefficient Equivalence Between Methods", digits = 3) %>%
+  kable_styling(bootstrap_options = c("striped", "hover"))
+```
+
+As demonstrated, the coefficient from the residualization method is mathematically equivalent to the multiple regression coefficient, confirming our approach's validity.
+
+## 9. Conclusion
+
+Controlling for variables is essential in statistical analysis because it:
+
+1. Isolates the unique effect of our independent variable (X) on the dependent variable (Y)
+2. Removes the influence of confounding factors (Z) that might bias our results
+3. Provides a more accurate understanding of relationships between variables
+4. Allows for more valid inferences, especially in observational studies
+
+Through visualization and mathematical explanation, we've seen how controlling for prior knowledge changes our understanding of how study hours affect test scores. While studying does improve scores, its effect is not as strong as an uncontrolled analysis would suggest.
+
+The true coefficient (3.0) matches our data generation process, where we explicitly set the direct effect of study hours to be 3.0. This confirms that proper controlling techniques can recover the true underlying relationships in our data.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
