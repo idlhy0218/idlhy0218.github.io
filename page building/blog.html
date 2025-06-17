@@ -415,20 +415,37 @@
 
     function parseHashAndLoad() {
       const hash = window.location.hash.substring(1);
+      
+      // Handle both old format (studyNotes-post_id) and new format (studyNotes__post_id)
+      let section, postId;
+      
       if (hash.includes('__')) {
-        const [section, postId] = hash.split('__');
+        [section, postId] = hash.split('__');
+      } else if (hash.includes('-')) {
+        // Handle legacy format with single dash
+        const parts = hash.split('-');
+        if (parts.length >= 2) {
+          section = parts[0];
+          postId = parts.slice(1).join('-'); // Rejoin in case post ID has dashes
+        }
+      }
+      
+      if (section && postId) {
+        // Check if section exists (case-insensitive check)
+        const sectionKey = Object.keys(blogConfig).find(key => 
+          key.toLowerCase() === section.toLowerCase()
+        );
         
-        // Check if section exists
-        if (blogConfig[section]) {
+        if (sectionKey && blogConfig[sectionKey]) {
           // Switch to correct tab
-          const tabTrigger = document.querySelector(`button[data-bs-target="#${blogConfig[section].tabId}"]`);
+          const tabTrigger = document.querySelector(`button[data-bs-target="#${blogConfig[sectionKey].tabId}"]`);
           if (tabTrigger) {
             new bootstrap.Tab(tabTrigger).show();
           }
           
           // Load the post
           setTimeout(() => {
-            loadBlogPost(section, postId);
+            loadBlogPost(sectionKey, postId);
           }, 100); // Small delay to ensure tab is shown
         }
       }
