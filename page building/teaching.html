@@ -330,9 +330,38 @@
                 <div class="tab-pane fade" id="criminology" role="tabpanel">
                     <div class="course-card">
                         <div class="course-title">Criminology - Summer 2025</div>
-                        <div class="mb-2"><small>University at Albany, SUNY | Instructor</small></div>
+                        <div class="mb-2"><small>University at Albany, SUNY | Instructor | Response Rate: 14.81%</small></div>
                         <p>This course provides a sociological perspective on crime and criminal justice. Students will explore theories explaining criminal behavior, examine patterns of crime, and analyze the criminal justice system's response to crime. The course emphasizes the social contexts of crime and the ways in which structural factors influence criminal behavior and criminal justice outcomes.</p>
                         <p>Topics covered include classical and contemporary criminological theories, social correlates of crime, crime trends and patterns, policing, courts, corrections, and criminal justice policy. Special attention will be given to how factors such as race, class, and gender shape experiences with crime and the criminal justice system.</p>
+                        
+                        <div class="mt-3 mb-3">
+                            <h6>Course Evaluation</h6>
+                            
+                            <ul class="nav nav-tabs nav-fill mb-2" id="evalTabsCriminology" role="tablist">
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link active" id="chart-tab-criminology" data-bs-toggle="tab" data-bs-target="#chart-content-criminology" type="button">
+                                        Evaluation Scores
+                                    </button>
+                                </li>
+                            </ul>
+                            
+                            <div class="tab-content">
+                                <!-- Chart Tab -->
+                                <div class="tab-pane fade show active" id="chart-content-criminology" role="tabpanel">
+                                    <div class="chart-container">
+                                        <canvas id="criminologyEvaluationChart"></canvas>
+                                    </div>
+                                    <div class="text-center mt-2 small">
+                                        <div class="d-inline-block me-3">
+                                            <span style="background: rgba(255, 99, 132, 0.7); width: 12px; height: 12px; display: inline-block;"></span> Your Score
+                                        </div>
+                                        <div class="d-inline-block">
+                                            <span style="background: rgba(153, 102, 255, 0.5); width: 12px; height: 12px; display: inline-block;"></span> Department Average
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -443,6 +472,43 @@
                     scales: {
                         y: {
                             min: 3.5,
+                            max: 5.0
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            });
+            
+            // Criminology Summer 2025 Chart setup
+            const ctxCriminology = document.getElementById('criminologyEvaluationChart').getContext('2d');
+            
+            new Chart(ctxCriminology, {
+                type: 'bar',
+                data: {
+                    labels: ['Organization', 'Communication', 'Interest', 'Learning', 'Collaboration', 'Responsiveness', 'Rigor', 'Overall'],
+                    datasets: [
+                        {
+                            label: 'Your Score',
+                            data: [5.00, 5.00, 4.75, 5.00, 3.00, 5.00, 4.25, 4.75],
+                            backgroundColor: 'rgba(255, 99, 132, 0.7)'
+                        },
+                        {
+                            label: 'Department Average',
+                            data: [4.74, 4.76, 4.33, 4.55, 3.59, 4.66, 4.33, 4.60],
+                            backgroundColor: 'rgba(153, 102, 255, 0.5)'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            min: 2.5,
                             max: 5.0
                         }
                     },
