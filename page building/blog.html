@@ -164,54 +164,9 @@
     .post-meta {
       display: flex;
       align-items: center;
-      justify-content: space-between;
+      gap: 1rem;
       font-size: 0.85rem;
       color: var(--text-muted);
-    }
-
-    .post-info {
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-    }
-
-    .post-actions {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
-
-    .heart-button {
-      background: none;
-      border: none;
-      color: var(--text-muted);
-      font-size: 1.1rem;
-      cursor: pointer;
-      padding: 0.25rem;
-      border-radius: 50%;
-      transition: all 0.2s ease;
-      display: flex;
-      align-items: center;
-      gap: 0.3rem;
-    }
-
-    .heart-button:hover {
-      color: #e74c3c;
-      background-color: rgba(231, 76, 60, 0.1);
-    }
-
-    .heart-button.liked {
-      color: #e74c3c;
-    }
-
-    .heart-button.liked:hover {
-      color: #c0392b;
-    }
-
-    .like-count {
-      font-size: 0.8rem;
-      min-width: 20px;
-      text-align: center;
     }
 
     .post-date {
@@ -306,17 +261,7 @@
       .post-meta {
         flex-direction: column;
         align-items: flex-start;
-        gap: 0.75rem;
-      }
-
-      .post-info {
-        flex-direction: column;
-        align-items: flex-start;
         gap: 0.5rem;
-      }
-
-      .post-actions {
-        align-self: flex-end;
       }
     }
   </style>
@@ -403,24 +348,21 @@
             title: 'What is The Logic Behind a Two-Way Fixed Effects Analysis?',
             date: 'May 28, 2025',
             description: 'Understanding the intuition behind TWFE models and when to use them in causal inference.',
-            file: 'blog/statslab/twfe.html',
-            likes: 12
+            file: 'blog/statslab/twfe.html'
           },
           {
             id: 'fe_be_re',
             title: 'Fixed vs Between vs Random Effect',
             date: 'May 15, 2025',
             description: 'Clarifying the differences between fixed effects, between effects, and random effects models.',
-            file: 'blog/statslab/fe_be_re.html',
-            likes: 8
+            file: 'blog/statslab/fe_be_re.html'
           },
           {
             id: 'control',
             title: 'Understanding "Control" in Statistical Analysis',
             date: 'May 18, 2025',
             description: 'What does it really mean to "control for" a variable in regression analysis?',
-            file: 'blog/statslab/what_is_control.html',
-            likes: 15
+            file: 'blog/statslab/what_is_control.html'
           }
         ],
         tabId: 'statslab',
@@ -434,8 +376,7 @@
             title: 'Opportunity Insights',
             date: 'June 16, 2025',
             description: 'Key findings from Raj Chetty\'s research on economic mobility and opportunity in America.',
-            file: 'blog/studynotes/chetty.html',
-            likes: 6
+            file: 'blog/studynotes/chetty.html'
           }
         ],
         tabId: 'studynotes',
@@ -443,30 +384,6 @@
         postsId: 'studyNotesPosts'
       }
     };
-
-    function toggleLike(event, section, postId) {
-      event.preventDefault();
-      event.stopPropagation();
-      
-      const button = event.currentTarget;
-      const icon = button.querySelector('i');
-      const countSpan = button.querySelector('.like-count');
-      const isLiked = button.getAttribute('data-liked') === 'true';
-      
-      if (isLiked) {
-        // Unlike
-        icon.className = 'bi bi-heart';
-        button.classList.remove('liked');
-        button.setAttribute('data-liked', 'false');
-        countSpan.textContent = parseInt(countSpan.textContent) - 1;
-      } else {
-        // Like
-        icon.className = 'bi bi-heart-fill';
-        button.classList.add('liked');
-        button.setAttribute('data-liked', 'true');
-        countSpan.textContent = parseInt(countSpan.textContent) + 1;
-      }
-    }
 
     function generateBlogPosts(section) {
       const config = blogConfig[section];
@@ -487,21 +404,13 @@
             <h2 class="post-title">${post.title}</h2>
             <p class="post-description">${post.description}</p>
             <div class="post-meta">
-              <div class="post-info">
-                <div class="post-date">
-                  <i class="bi bi-calendar3"></i>
-                  ${post.date}
-                </div>
-                <div class="post-author">
-                  <i class="bi bi-person"></i>
-                  Heeyoung Lee
-                </div>
+              <div class="post-date">
+                <i class="bi bi-calendar3"></i>
+                ${post.date}
               </div>
-              <div class="post-actions">
-                <button class="heart-button" onclick="toggleLike(event, '${section}', '${post.id}')" data-liked="false">
-                  <i class="bi bi-heart"></i>
-                  <span class="like-count">${post.likes || 0}</span>
-                </button>
+              <div class="post-author">
+                <i class="bi bi-person"></i>
+                Heeyoung Lee
               </div>
             </div>
           </div>
