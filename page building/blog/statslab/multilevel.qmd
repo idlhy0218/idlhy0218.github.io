@@ -1,5 +1,5 @@
 ---
-title: "Multilevel Models for Health Data Analysis"
+title: "Understanding Multilevel Model"
 author: "Heeyoung Lee"
 date: "September 1, 2025"
 format: 
@@ -20,11 +20,11 @@ format:
     highlight-style: github
 ---
 
-## Understanding Multilevel Models in Health Research
+## Understanding Multilevel Models
 
 Multilevel modeling (also known as hierarchical linear modeling or mixed-effects modeling) extends the panel data framework to handle nested data structures that are ubiquitous in health research. While panel data considers observations across entities and time, multilevel models address situations where individual observations are nested within higher-level units, creating natural hierarchies in the data structure.
 
-In health economics and public health research, we frequently encounter multilevel structures such as:
+In public health research, we frequently encounter multilevel structures such as:
 
 - **Counties nested within states** (our focus)
 - Patients nested within hospitals
@@ -46,7 +46,7 @@ The key insight is that counties within the same state share certain unmeasured 
 2. **Biased estimates** when state-level factors correlate with predictors
 3. **Missed opportunities** to understand policy effects at different levels
 
-Let's start by loading the necessary packages and creating a realistic multilevel health dataset:
+Let's start by loading the necessary packages and creating a multilevel health dataset:
 
 ```{r library-setup, message=FALSE, warning=FALSE}
 # Load required packages for multilevel modeling
@@ -171,7 +171,7 @@ head(county_data, 20) %>%
   kable_styling(bootstrap_options = c("striped", "hover", "condensed"))
 ```
 
-Our multilevel dataset contains `r nrow(county_data)` counties nested within `r n_states` states, with realistic distributions based on actual U.S. health data patterns. The data structure includes:
+Our multilevel dataset contains `r nrow(county_data)` counties nested within `r n_states` states. The data structure includes:
 
 **Level 2 (State-level) Variables:**
 
@@ -191,102 +191,152 @@ Our multilevel dataset contains `r nrow(county_data)` counties nested within `r 
 
 ### 2. Understanding Intracluster Correlation in Health Data
 
-Before diving into multilevel models, it's crucial to understand why standard regression fails with nested data. The **intracluster correlation coefficient (ICC)** quantifies how similar counties are within states compared to counties in different states.
+When we have nested data like counties within states, observations within the same group tend to be more similar to each other than to observations in different groups. This similarity is called **intracluster correlation**, and it's why we need multilevel models.
 
-```{r icc-analysis}
-# Calculate descriptive statistics by state
-state_summary <- county_data %>%
-  group_by(state_name, state_id) %>%
+Think about it: counties in the same state share many characteristics - they have the same state policies, similar climate, regional culture, and economic conditions. This makes counties within Texas more similar to each other than to counties in New York.
+
+#### 2.1. Why Standard Regression Fails
+
+Standard regression assumes all observations are independent. But in our nested data:
+
+- Counties within the same state are NOT independent
+- They share unmeasured state-level factors
+- Standard errors will be too small (overconfident results)
+- We might miss important policy effects
+
+Let's see this clustering in our data:
+  
+```{r state-clustering-visualization, fig.width=12, fig.height=6}
+# First, let's see the basic pattern
+state_means <- county_data %>%
+  group_by(state_name, medicaid_expansion) %>%
   summarize(
     n_counties = n(),
     mean_mortality = mean(mortality_rate),
     sd_mortality = sd(mortality_rate),
-    min_mortality = min(mortality_rate),
-    max_mortality = max(mortality_rate),
-    mean_income = mean(median_income),
-    medicaid_expansion = first(medicaid_expansion),
     .groups = "drop"
   ) %>%
   arrange(mean_mortality)
 
-# Display state-level summary
-state_summary %>%
-  mutate(
-    medicaid_status = ifelse(medicaid_expansion == 1, "Expanded", "Not Expanded")
-  ) %>%
-  dplyr::select(state_name, n_counties, mean_mortality, sd_mortality, 
-         mean_income, medicaid_status) %>%
-  kable(digits = 1, caption = "Mortality Patterns by State") %>%
-  kable_styling(bootstrap_options = c("striped", "hover", "condensed")) %>%
-  column_spec(1, bold = TRUE) %>%
-  row_spec(which(state_summary$medicaid_expansion == 1), background = "#E8F5E8")
-```
+# Show state means
+state_means %>%
+  mutate(medicaid_status = ifelse(medicaid_expansion == 1, "Expanded", "Not Expanded")) %>%
+  dplyr::select(state_name, n_counties, mean_mortality, sd_mortality, medicaid_status) %>%
+  kable(digits = 1, caption = "Average Mortality Rate by State") %>%
+  kable_styling(bootstrap_options = c("striped", "hover")) %>%
+  row_spec(which(state_means$medicaid_expansion == 1), background = "#E8F5E8")
 
-```{r icc-visualization, fig.width=12, fig.height=8}
-# Calculate overall ICC using ANOVA approach
-mortality_anova <- aov(mortality_rate ~ factor(state_id), data = county_data)
-icc_anova <- summary(mortality_anova)
-
-# Extract variance components
-ms_between <- icc_anova[[1]]$`Mean Sq`[1]  # Between-state variance
-ms_within <- icc_anova[[1]]$`Mean Sq`[2]   # Within-state variance
-n_bar <- county_data %>% count(state_id) %>% pull(n) %>% mean() # Average counties per state
-
-# Calculate ICC
-sigma2_between <- (ms_between - ms_within) / n_bar
-sigma2_within <- ms_within
-icc <- sigma2_between / (sigma2_between + sigma2_within)
-
-# Create visualization showing state clustering
-p1 <- ggplot(county_data, aes(x = reorder(state_name, mortality_rate), 
-                              y = mortality_rate, color = factor(state_id))) +
-  geom_jitter(width = 0.2, alpha = 0.6, size = 2) +
-  stat_summary(fun = mean, geom = "point", size = 4, 
-               shape = 23, fill = "red", color = "black") +
-  stat_summary(fun = mean, geom = "line", aes(group = 1), 
-               color = "red", linewidth = 1.2) +
-  labs(title = "County Mortality Rates Clustered by State",
-       subtitle = paste0("ICC = ", round(icc, 3), 
-                        " (", round(100*icc, 1), "% of variance is between states)"),
-       x = "State (ordered by mean mortality)", 
-       y = "County Mortality Rate (per 100,000)",
-       caption = "Red diamonds show state means; line connects state means") +
+# Visualize the clustering
+ggplot(county_data, aes(x = reorder(state_name, mortality_rate), 
+                        y = mortality_rate)) +
+  geom_jitter(aes(color = factor(medicaid_expansion)), 
+              width = 0.2, alpha = 0.6, size = 2) +
+  stat_summary(fun = mean, geom = "point", 
+               size = 4, shape = 23, fill = "red", color = "black") +
+  scale_color_manual(values = c("0" = "coral", "1" = "steelblue"),
+                     labels = c("No Medicaid Expansion", "Medicaid Expanded"),
+                     name = "Policy Status") +
+  labs(title = "County Mortality Rates Show Clear State Clustering",
+       subtitle = "Red diamonds = state averages. Notice how counties cluster by state!",
+       x = "State (ordered by mortality rate)", 
+       y = "Mortality Rate per 100,000") +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1),
-        legend.position = "none",
-        plot.title = element_text(face = "bold"))
-
-# Create box plot version
-p2 <- ggplot(county_data, aes(x = reorder(state_name, mortality_rate), 
-                              y = mortality_rate, fill = factor(medicaid_expansion))) +
-  geom_boxplot(alpha = 0.7) +
-  geom_point(position = position_jitter(width = 0.2), alpha = 0.4, size = 1) +
-  scale_fill_manual(values = c("0" = "lightcoral", "1" = "lightblue"),
-                   labels = c("No Medicaid Expansion", "Medicaid Expanded"),
-                   name = "Medicaid Status") +
-  labs(title = "State-Level Policy Effects on County Mortality",
-       subtitle = "Counties within states share policy environments",
-       x = "State (ordered by mean mortality)", 
-       y = "County Mortality Rate (per 100,000)") +
-  theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1),
-        legend.position = "bottom",
-        plot.title = element_text(face = "bold"))
-
-# Combine plots
-p1
-p2
+        legend.position = "bottom")
 ```
 
-**Figure Interpretation:** The visualizations reveal critical patterns in our health data:
+#### 2.2. Measuring Clustering: The ICC
 
-The **top panel** shows counties clearly cluster by state, with red diamonds indicating state means that vary considerably. The ICC of `r round(icc, 3)` indicates that `r round(100*icc, 1)`% of the total variance in mortality rates occurs between states rather than within states. This substantial clustering means that ignoring the multilevel structure would lead to incorrect standard errors and potentially misleading conclusions.
+The **Intracluster Correlation Coefficient (ICC)** tells us how much clustering exists. It answers: "How much of the total variance is between states vs. within states?"
 
-The **bottom panel** demonstrates how state-level policies create systematic differences. States with Medicaid expansion (blue boxes) tend to have lower mortality rates than non-expansion states (red boxes), though there's still considerable within-state variation. This pattern suggests that both state-level policies and county-level factors contribute to health outcomes, necessitating a multilevel modeling approach.
+**Formula:** 
+$ICC = \frac{\sigma^2_{between}}{\sigma^2_{between} + \sigma^2_{within}}$
+  
+  Where:
+
+- $\sigma^2_{between}$ = how much states differ from each other
+- $\sigma^2_{within}$ = how much counties vary within each state
+
+#### 2.3. Calculating ICC
+
+The easiest way is to fit an "empty" multilevel model with no predictors:
+  
+```{r calculate-icc}
+# Step 1: Fit empty model (intercept + random state effects only)
+empty_model <- lmer(mortality_rate ~ 1 + (1|state_id), data = county_data)
+
+# Step 2: Look at the variance components
+print(VarCorr(empty_model), comp = "Variance")
+
+# Step 3: Calculate ICC manually
+variance_components <- as.data.frame(VarCorr(empty_model))
+between_state_var <- variance_components$vcov[1]  # State variance
+within_state_var <- variance_components$vcov[2]   # Residual variance
+total_variance <- between_state_var + within_state_var
+
+icc <- between_state_var / total_variance
+
+# Option 1: Clean table format
+variance_table <- data.frame(
+  Component = c("Between-state variance", "Within-state variance", "Total variance"),
+  Value = c(between_state_var, within_state_var, total_variance),
+  Percentage = c(100*icc, 100*(1-icc), 100)
+)
+
+kable(variance_table, 
+      digits = 1,
+      col.names = c("Variance Component", "Value", "Percentage (%)"),
+      caption = "Variance Decomposition Results") %>%
+  kable_styling(bootstrap_options = c("striped", "hover")) %>%
+  row_spec(3, bold = TRUE) %>%
+  add_header_above(c(" " = 1, "Variance" = 2))
+
+cat(sprintf("\nIntraclass Correlation Coefficient (ICC) = %.3f (%.1f%%)", icc, 100*icc))
+```
+
+#### 2.4. Interpreting ICC Values
+
+**ICC Interpretation Guide:**
+  
+- **ICC < 0.05**: Minimal clustering (multilevel modeling optional)
+- **ICC 0.05-0.10**: Small clustering (multilevel modeling recommended)  
+- **ICC 0.10-0.25**: Moderate clustering (multilevel modeling important)
+- **ICC > 0.25**: Large clustering (multilevel modeling essential)
+
+**What Our ICC Means:**
+  
+Our calculated ICC reveals striking insights about the structure of our health data. With an ICC of 0.798, this means:
+  
+- 79.8% of mortality variance occurs BETWEEN states
+- 20.2% of mortality variance occurs WITHIN states  
+- Counties in the same state are 79.8% more similar to each other than to random counties from other states
+
+**Decision for Our Analysis:**
+  
+Since our ICC > 0.25 (and dramatically so), multilevel modeling is absolutely essential. This extremely high clustering indicates that ignoring the nested structure would lead to:
+  
+- Severely underestimated standard errors (false precision)
+- Highly misleading conclusions about predictor significance
+- Complete failure to capture the dominant state-level effects on health outcomes
+
+**What This Tells Us About Health:**
+  
+  This ICC level reveals that state-level factors overwhelmingly dominate county health outcomes. Nearly four-fifths of the variation in mortality rates is attributable to systematic differences between states rather than local county characteristics. This suggests that state policies, healthcare systems, environmental regulations, and regional culture create extremely powerful contextual effects that strongly determine health outcomes for all counties within a state's borders.
+
+The relatively small within-state variation (20.2%) indicates that while county-level factors still matter, state context is by far the primary driver of health disparities. This multilevel structure demonstrates that effective health interventions must prioritize state-level policy changes, as local county-level interventions alone may have limited impact within the broader state policy environment.
+
+#### 2.5. What This Means for Our Analysis
+
+The ICC reveals important insights about our health data:
+  
+1. **Substantial clustering exists**: Counties within states are much more similar than counties across states
+2. **State-level factors matter**: A significant portion of health outcomes is determined by state-level characteristics
+3. **Policy implications**: State policies (like Medicaid expansion) create systematic differences across all counties in a state
+4. **Methodological necessity**: We need multilevel models to properly account for this clustering
+
+In the next section, we'll build multilevel models that properly handle this nested structure and give us correct standard errors and meaningful policy insights.
 
 ### 3. The Multilevel Model Framework
-
-#### 3.1 Basic Two-Level Model Structure
 
 Multilevel models (also called hierarchical linear models or mixed-effects models) are designed for **nested data structures**, where lower-level units (e.g., counties) are grouped within higher-level units (e.g., states). Standard regression assumes all observations are independent, but multilevel models account for **within-group correlation** and allow **group-level variation** in both intercepts and slopes.
 
@@ -375,6 +425,74 @@ The random intercept model shows:
 
 This high ICC value indicates that even after accounting for county-level characteristics, 94% of the remaining mortality variation occurs **between states** rather than within states. This highlights the critical importance of state-level factors (policies, healthcare systems, environmental conditions) in shaping health outcomes, suggesting that county-level interventions alone may have limited impact without addressing broader state-level determinants.
 
+```{r}
+# Visualize random intercept model
+# Create predictions with fixed slopes but varying intercepts
+state_predictions_ri <- county_data %>%
+  dplyr::select(state_id, state_name, median_income, mortality_rate) %>%
+  group_by(state_id, state_name) %>%
+  do(data.frame(
+    median_income = seq(min(.$median_income), max(.$median_income), length.out = 50),
+    # Add the missing variables with their mean values
+    smoking_rate = mean(county_data$smoking_rate),
+    obesity_rate = mean(county_data$obesity_rate),
+    unemployment_rate = mean(county_data$unemployment_rate),
+    hospitals_per_100k = mean(county_data$hospitals_per_100k),
+    primary_care_physicians_per_100k = mean(county_data$primary_care_physicians_per_100k),
+    rural_status = "Suburban"  # Use the most common category
+  )) %>%
+  ungroup()
+
+# Add predictions from random intercept model
+state_predictions_ri$predicted <- predict(model_ri, newdata = state_predictions_ri, allow.new.levels = FALSE)
+
+# Plot state-specific intercepts with parallel slopes
+p_intercepts <- ggplot() +
+  # Individual county data points
+  geom_point(data = county_data, 
+             aes(x = median_income, y = mortality_rate, color = state_name),
+             alpha = 0.5, size = 1.5) +
+  # State-specific regression lines (parallel slopes)
+  geom_line(data = state_predictions_ri, 
+            aes(x = median_income, y = predicted, color = state_name),
+            linewidth = 1.2) +
+  labs(title = "State-Specific Baseline Mortality with Common Income Effect",
+       subtitle = "Random intercept model: parallel lines show same income effect across states",
+       x = "Median Household Income ($1000s)",
+       y = "Predicted Mortality Rate (per 100,000)",
+       color = "State") +
+  theme_minimal() +
+  theme(legend.position = "right")
+
+# Extract random intercepts
+random_intercepts <- ranef(model_ri)$state_id
+random_intercepts$state_name <- state_info$state_name[match(rownames(random_intercepts), state_info$state_id)]
+
+# Display random intercepts table
+random_intercepts %>%
+  arrange(`(Intercept)`) %>%
+  mutate(
+    `Intercept Deviation` = round(`(Intercept)`, 1)
+  ) %>%
+  dplyr::select(state_name, `Intercept Deviation`) %>%
+  kable(caption = "State-Specific Random Intercepts") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed")) %>%
+  column_spec(1, bold = TRUE)
+
+p_intercepts
+```
+
+**Figure Interpretation:** The random intercept model reveals important baseline differences across states while assuming uniform effects of county-level predictors. The parallel lines demonstrate several key patterns:
+
+1. **Intercept variation**: States have substantially different baseline mortality levels, with some states consistently higher or lower than others across all income levels. The vertical separation between lines represents these state-specific deviations from the national average.
+
+2. **Parallel slopes**: All lines have the same slope, indicating that the protective effect of income on mortality is assumed to be identical across all states. This constraint means that a $10,000 increase in median household income has the same predicted reduction in mortality rate regardless of the state context.
+
+3. **State rankings consistency**: States maintain their relative ranking across the income distribution. For example, if State A has higher baseline mortality than State B, this relationship persists at all income levels.
+
+The table of random intercepts quantifies these state-specific baseline deviations. Positive values indicate states with higher-than-average mortality rates after accounting for county-level characteristics, while negative values show states with lower-than-average mortality. These persistent state differences suggest the presence of unmeasured state-level factors (policies, healthcare systems, environmental conditions) that create systematic advantages or disadvantages for all counties within a state's borders.
+
+This pattern supports the need for state-level interventions to address the fundamental contextual factors driving these baseline differences, as county-level interventions alone cannot overcome the broader state policy environment.
 
 #### 4.2 Random Slope Model (More Complex)
 
@@ -777,12 +895,6 @@ ggplot(var_long, aes(x = Model, y = Proportion, fill = Level)) +
 
 One of the most important but often overlooked decisions in multilevel modeling is how to center continuous predictors. The choice of centering strategy fundamentally affects the interpretation of coefficients and can lead to dramatically different conclusions about the same data.
 
-#### 6.1 The Centering Problem
-
-Got it — you’d like me to add more **explanation of what each centering approach means** in practice, so your students/readers can see why the choice matters before diving into contextual effects. Here’s how you can expand your text around **6.1 The Centering Problem** without changing your code chunks:
-
----
-
 ### 6.1 The Centering Problem
 
 When we introduce a continuous predictor in a multilevel model, we have to decide how to **center** it. This choice changes the meaning of the intercept and sometimes the slope. Here are the three main approaches, using median county income as an example:
@@ -1131,7 +1243,7 @@ interpretation_data %>%
 
 Multilevel modeling provides a powerful framework for analyzing nested health data, offering several key advantages over traditional approaches:
 
-#### Key Takeaways
+#### 9.1. Key Takeaways
 
 1. **Hierarchical Structure Recognition**: Health outcomes are naturally nested within geographic, administrative, and organizational units that create dependencies in the data.
 
@@ -1143,7 +1255,7 @@ Multilevel modeling provides a powerful framework for analyzing nested health da
 
 5. **Policy Evaluation**: The framework supports sophisticated policy evaluation by modeling direct effects, indirect effects, and contextual modifications.
 
-#### Best Practices for Health Research
+#### 9.2. Best Practices for Research
 
 ```{r best-practices-checklist}
 best_practices <- data.frame(
@@ -1198,7 +1310,7 @@ best_practices %>%
   pack_rows("Results and Communication", 8, 10, label_row_css = "background-color: #F4E8F8;")
 ```
 
-#### When to Use Multilevel Models in Health Research
+#### 9.3. When to Use Multilevel Models in Research
 
 Multilevel modeling is particularly valuable when:
 
@@ -1209,7 +1321,7 @@ Multilevel modeling is particularly valuable when:
 - Standard errors need to account for clustering
 - Policy evaluation requires understanding of contextual factors
 
-#### Common Pitfalls to Avoid
+#### 9.4. Common Pitfalls to Avoid
 
 1. **Ignoring clustering**: Using standard regression when data is nested leads to incorrect standard errors
 2. **Over-parameterization**: Adding random slopes for every predictor without theoretical justification
