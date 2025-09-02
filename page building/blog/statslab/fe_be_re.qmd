@@ -6,14 +6,15 @@ format:
   html:
     theme: cosmo
     css: custom.css
+    page-layout: full
     code-fold: true
     code-tools: true
     toc: true
     toc-depth: 5
     toc-location: left
     self-contained: true
-    fig-width: 10
-    fig-height: 8
+    fig-width: 8
+    fig-height: 6
     fig-dpi: 300
     smooth-scroll: true
     highlight-style: github
@@ -427,21 +428,22 @@ p4 <- ggplot(county_means, aes(x = mean_income, y = mean_mortality, color = fact
         plot.subtitle = element_text(size = 11))
 
 # Combine plots
-p3 + p4
+p3
+p4
 ```
 
 #### Interpreting the Between Effects Visualization:
 
 The visualization above illustrates the between effects approach with our health data:
 
-1. **Left panel**: Shows the raw data with county means highlighted as larger points:
+1. **Top panel**: Shows the raw data with county means highlighted as larger points:
 
    - Individual observations (small points) show the full dataset with year-to-year fluctuations
    - County means (large points) represent the average income and mortality for each county
    - The black regression line is fitted using only these county means
    - Within-county variation around each mean is ignored, treating temporal changes as noise
 
-2. **Right panel**: Shows only the county means:
+2. **Bottom panel**: Shows only the county means:
 
    - Each point represents the average for one county over the entire period
    - The regression line shows the cross-sectional relationship between income and mortality

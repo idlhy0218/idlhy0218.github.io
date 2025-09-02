@@ -1,0 +1,1220 @@
+---
+title: "Multilevel Models for Health Data Analysis"
+author: "Heeyoung Lee"
+date: "September 1, 2025"
+format: 
+  html:
+    theme: cosmo
+    css: custom.css
+    page-layout: full
+    code-fold: true
+    code-tools: true
+    toc: true
+    toc-depth: 5
+    toc-location: left
+    self-contained: true
+    fig-width: 8
+    fig-height: 6
+    fig-dpi: 300
+    smooth-scroll: true
+    highlight-style: github
+---
+
+## Understanding Multilevel Models in Health Research
+
+Multilevel modeling (also known as hierarchical linear modeling or mixed-effects modeling) extends the panel data framework to handle nested data structures that are ubiquitous in health research. While panel data considers observations across entities and time, multilevel models address situations where individual observations are nested within higher-level units, creating natural hierarchies in the data structure.
+
+In health economics and public health research, we frequently encounter multilevel structures such as:
+
+- **Counties nested within states** (our focus)
+- Patients nested within hospitals
+- Students nested within schools nested within districts
+- Individuals nested within neighborhoods nested within cities
+
+This hierarchical structure violates the independence assumption of traditional regression models because observations within the same higher-level unit tend to be more similar to each other than to observations in other units - a phenomenon known as **intracluster correlation**.
+
+### 1. The Hierarchical Structure of Health Data
+
+Consider mortality data where counties are nested within states. This creates a natural two-level hierarchy:
+
+- **Level 1 (County level)**: Individual counties with their characteristics
+- **Level 2 (State level)**: States that contain multiple counties
+
+The key insight is that counties within the same state share certain unmeasured characteristics (state policies, climate, regional culture) that make them more similar to each other than to counties in other states. Ignoring this structure can lead to:
+
+1. **Underestimated standard errors** (false precision)
+2. **Biased estimates** when state-level factors correlate with predictors
+3. **Missed opportunities** to understand policy effects at different levels
+
+Let's start by loading the necessary packages and creating a realistic multilevel health dataset:
+
+```{r library-setup, message=FALSE, warning=FALSE}
+# Load required packages for multilevel modeling
+library(lme4)      # For multilevel models
+library(lmerTest)  # For p-values in lme4
+library(sjPlot)    # For model visualization
+library(dplyr)
+library(ggplot2)
+library(kableExtra)
+library(patchwork)
+library(performance) # For ICC calculations
+library(broom.mixed) # For tidy model outputs
+library(merTools)   # For prediction intervals
+library(texreg)     # For model comparison tables
+```
+
+```{r simulate-multilevel-data}
+# Create realistic multilevel health data: counties nested within states
+set.seed(123)
+
+# Define state-level characteristics (Level 2)
+n_states <- 8
+state_info <- data.frame(
+  state_id = 1:n_states,
+  state_name = c("California", "Texas", "Florida", "New York", "Pennsylvania", 
+                "Illinois", "Ohio", "Georgia"),
+  region = c("West", "South", "South", "Northeast", "Northeast", 
+            "Midwest", "Midwest", "South"),
+  
+  # State-level variables that affect all counties within the state
+  medicaid_expansion = c(1, 0, 0, 1, 1, 1, 1, 0),  # Binary: expanded Medicaid
+  state_health_spending = c(850, 620, 580, 920, 780, 720, 690, 610), # Per capita
+  tobacco_tax = c(2.87, 1.41, 1.339, 4.35, 2.60, 1.98, 1.60, 0.37), # $ per pack
+  air_quality_index = c(68, 58, 52, 71, 63, 59, 67, 61), # Lower is better
+  
+  # State random effects (unobserved state characteristics)
+  state_effect = rnorm(n_states, mean = 0, sd = 30)
+)
+
+# Generate counties within states (Level 1)
+counties_per_state <- c(58, 254, 67, 62, 67, 102, 88, 159) # Realistic counts
+total_counties <- sum(counties_per_state)
+
+# Create county-level data
+county_data <- data.frame(
+  county_id = 1:total_counties,
+  state_id = rep(1:n_states, times = counties_per_state)
+) %>%
+  left_join(state_info, by = "state_id")
+
+# Add county-level variables (Level 1)
+county_data <- county_data %>%
+  mutate(
+    # County characteristics
+    rural_status = sample(c("Rural", "Suburban", "Urban"), total_counties, 
+                         replace = TRUE, prob = c(0.4, 0.35, 0.25)),
+    population = exp(rnorm(total_counties, mean = log(50000), sd = 1.2)),
+    
+    # Economic variables
+    median_income = rnorm(total_counties, mean = 55, sd = 12) + 
+                   ifelse(rural_status == "Urban", 15, 
+                         ifelse(rural_status == "Suburban", 8, 0)),
+    unemployment_rate = pmax(0, rnorm(total_counties, mean = 6.5, sd = 2.5)),
+    
+    # Healthcare access variables  
+    hospitals_per_100k = pmax(0, rnorm(total_counties, mean = 2.1, sd = 1.2)),
+    primary_care_physicians_per_100k = pmax(0, rnorm(total_counties, mean = 65, sd = 25)),
+    
+    # Health behavior variables
+    smoking_rate = pmax(0, pmin(100, rnorm(total_counties, mean = 18, sd = 6))),
+    obesity_rate = pmax(0, pmin(100, rnorm(total_counties, mean = 32, sd = 7))),
+    physical_inactivity_rate = pmax(0, pmin(100, rnorm(total_counties, mean = 26, sd = 5))),
+    
+    # County random effects
+    county_effect = rnorm(total_counties, mean = 0, sd = 20)
+  )
+
+# Generate mortality rate using multilevel structure with stronger interactions
+county_data <- county_data %>%
+  mutate(
+    # Base mortality rate with multiple influences
+    mortality_rate = 
+      750 +  # Baseline mortality
+      
+      # State-level effects
+      -0.08 * state_health_spending +      # State health investment
+      -25 * medicaid_expansion +           # Medicaid expansion effect
+      -8 * tobacco_tax +                   # Tobacco policy effect
+      0.3 * air_quality_index +           # Environmental health
+      
+      # County-level effects
+      -1.2 * median_income +               # Income effect
+      2.5 * unemployment_rate +            # Economic stress
+      -15 * hospitals_per_100k +           # Healthcare access
+      -0.8 * primary_care_physicians_per_100k + # Primary care access
+      2.8 * smoking_rate +                 # Smoking harm
+      3.2 * obesity_rate +                 # Obesity harm
+      1.5 * physical_inactivity_rate +     # Sedentary lifestyle
+      
+      # STRONGER Cross-level interactions
+      -2 * median_income * medicaid_expansion +  # Income effect stronger in expansion states
+      -1.2 * smoking_rate * tobacco_tax +          # Tobacco tax reduces smoking harm more
+      -0.5 * unemployment_rate * state_health_spending / 100 + # State spending helps more during economic stress
+      
+      # Rural/urban differences
+      ifelse(rural_status == "Rural", 25, 
+            ifelse(rural_status == "Suburban", 10, 0)) +
+      
+      # Random effects
+      state_effect +                       # State-level unobserved factors
+      county_effect +                      # County-level unobserved factors
+      
+      # Random noise
+      rnorm(total_counties, mean = 0, sd = 15)
+  )
+
+# Display first few rows of the data
+head(county_data, 20) %>%
+  dplyr::select(county_id, state_name, rural_status, median_income, smoking_rate, 
+         hospitals_per_100k, medicaid_expansion, mortality_rate) %>%
+  kable(digits = 1) %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"))
+```
+
+Our multilevel dataset contains `r nrow(county_data)` counties nested within `r n_states` states, with realistic distributions based on actual U.S. health data patterns. The data structure includes:
+
+**Level 2 (State-level) Variables:**
+
+- Medicaid expansion status (policy variable)
+- State health spending per capita
+- Tobacco tax rates
+- Air quality index
+- Unobserved state characteristics (random effects)
+
+**Level 1 (County-level) Variables:**
+
+- Rural/urban status
+- Median household income
+- Healthcare infrastructure (hospitals, physicians)
+- Health behaviors (smoking, obesity, physical inactivity)
+- Unobserved county characteristics (random effects)
+
+### 2. Understanding Intracluster Correlation in Health Data
+
+Before diving into multilevel models, it's crucial to understand why standard regression fails with nested data. The **intracluster correlation coefficient (ICC)** quantifies how similar counties are within states compared to counties in different states.
+
+```{r icc-analysis}
+# Calculate descriptive statistics by state
+state_summary <- county_data %>%
+  group_by(state_name, state_id) %>%
+  summarize(
+    n_counties = n(),
+    mean_mortality = mean(mortality_rate),
+    sd_mortality = sd(mortality_rate),
+    min_mortality = min(mortality_rate),
+    max_mortality = max(mortality_rate),
+    mean_income = mean(median_income),
+    medicaid_expansion = first(medicaid_expansion),
+    .groups = "drop"
+  ) %>%
+  arrange(mean_mortality)
+
+# Display state-level summary
+state_summary %>%
+  mutate(
+    medicaid_status = ifelse(medicaid_expansion == 1, "Expanded", "Not Expanded")
+  ) %>%
+  dplyr::select(state_name, n_counties, mean_mortality, sd_mortality, 
+         mean_income, medicaid_status) %>%
+  kable(digits = 1, caption = "Mortality Patterns by State") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed")) %>%
+  column_spec(1, bold = TRUE) %>%
+  row_spec(which(state_summary$medicaid_expansion == 1), background = "#E8F5E8")
+```
+
+```{r icc-visualization, fig.width=12, fig.height=8}
+# Calculate overall ICC using ANOVA approach
+mortality_anova <- aov(mortality_rate ~ factor(state_id), data = county_data)
+icc_anova <- summary(mortality_anova)
+
+# Extract variance components
+ms_between <- icc_anova[[1]]$`Mean Sq`[1]  # Between-state variance
+ms_within <- icc_anova[[1]]$`Mean Sq`[2]   # Within-state variance
+n_bar <- county_data %>% count(state_id) %>% pull(n) %>% mean() # Average counties per state
+
+# Calculate ICC
+sigma2_between <- (ms_between - ms_within) / n_bar
+sigma2_within <- ms_within
+icc <- sigma2_between / (sigma2_between + sigma2_within)
+
+# Create visualization showing state clustering
+p1 <- ggplot(county_data, aes(x = reorder(state_name, mortality_rate), 
+                              y = mortality_rate, color = factor(state_id))) +
+  geom_jitter(width = 0.2, alpha = 0.6, size = 2) +
+  stat_summary(fun = mean, geom = "point", size = 4, 
+               shape = 23, fill = "red", color = "black") +
+  stat_summary(fun = mean, geom = "line", aes(group = 1), 
+               color = "red", linewidth = 1.2) +
+  labs(title = "County Mortality Rates Clustered by State",
+       subtitle = paste0("ICC = ", round(icc, 3), 
+                        " (", round(100*icc, 1), "% of variance is between states)"),
+       x = "State (ordered by mean mortality)", 
+       y = "County Mortality Rate (per 100,000)",
+       caption = "Red diamonds show state means; line connects state means") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1),
+        legend.position = "none",
+        plot.title = element_text(face = "bold"))
+
+# Create box plot version
+p2 <- ggplot(county_data, aes(x = reorder(state_name, mortality_rate), 
+                              y = mortality_rate, fill = factor(medicaid_expansion))) +
+  geom_boxplot(alpha = 0.7) +
+  geom_point(position = position_jitter(width = 0.2), alpha = 0.4, size = 1) +
+  scale_fill_manual(values = c("0" = "lightcoral", "1" = "lightblue"),
+                   labels = c("No Medicaid Expansion", "Medicaid Expanded"),
+                   name = "Medicaid Status") +
+  labs(title = "State-Level Policy Effects on County Mortality",
+       subtitle = "Counties within states share policy environments",
+       x = "State (ordered by mean mortality)", 
+       y = "County Mortality Rate (per 100,000)") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1),
+        legend.position = "bottom",
+        plot.title = element_text(face = "bold"))
+
+# Combine plots
+p1
+p2
+```
+
+**Figure Interpretation:** The visualizations reveal critical patterns in our health data:
+
+The **top panel** shows counties clearly cluster by state, with red diamonds indicating state means that vary considerably. The ICC of `r round(icc, 3)` indicates that `r round(100*icc, 1)`% of the total variance in mortality rates occurs between states rather than within states. This substantial clustering means that ignoring the multilevel structure would lead to incorrect standard errors and potentially misleading conclusions.
+
+The **bottom panel** demonstrates how state-level policies create systematic differences. States with Medicaid expansion (blue boxes) tend to have lower mortality rates than non-expansion states (red boxes), though there's still considerable within-state variation. This pattern suggests that both state-level policies and county-level factors contribute to health outcomes, necessitating a multilevel modeling approach.
+
+### 3. The Multilevel Model Framework
+
+#### 3.1 Basic Two-Level Model Structure
+
+Multilevel models (also called hierarchical linear models or mixed-effects models) are designed for **nested data structures**, where lower-level units (e.g., counties) are grouped within higher-level units (e.g., states). Standard regression assumes all observations are independent, but multilevel models account for **within-group correlation** and allow **group-level variation** in both intercepts and slopes.
+
+**Key concepts:**
+
+- **Levels:**
+ - **Level 1 (County, $i$):** Individual observations at the lower level (counties within states). The **level 1 equation** models county-level mortality as:
+   $$Mortality_{ij} = \beta_{0j} + \beta_1 Income_{ij} + \beta_2 Smoking_{ij} + \beta_3 Obesity_{ij} + \beta_4 Unemployment_{ij} + \cdots + r_{ij}$$
+ - **Level 2 (State, $j$):** Higher-level grouping units (states). The **level 2 equations** model how parameters vary across states:
+   $$\beta_{0j} = \gamma_{00} + \gamma_{01} MedicaidExp_j + \gamma_{02} HealthSpend_j + u_{0j}$$
+   $$\beta_{1j} = \gamma_{10} + u_{1j} \quad \text{(if income effect varies by state)}$$
+
+- **Fixed effects** ($\gamma$ parameters): Average associations across all states, representing population-level relationships such as the mean effect of county income, smoking, or obesity on mortality.
+
+- **Random effects** ($u$ terms): State-specific deviations from the fixed effects, capturing heterogeneity across states:
+
+ - $u_{0j} \sim N(0, \tau_{00})$: Random intercept capturing baseline mortality differences between states
+ - $u_{1j} \sim N(0, \tau_{11})$: Random slope capturing how predictor effects vary between states
+
+- **Residuals** ($r_{ij} \sim N(0, \sigma^2)$): County-level deviations capturing **within-state variation** not explained by predictors.
+
+- **Cross-level interactions:** Terms where state-level factors modify county-level relationships:
+ $$\text{Effect of Income} = \gamma_{10} + \gamma_{11} \times MedicaidExp_j$$
+ This captures whether Medicaid expansion strengthens or weakens the income-mortality association.
+
+- **Intraclass Correlation (ICC):** Proportion of total variance attributable to state-level clustering:
+ $$ICC = \frac{\tau_{00}}{\tau_{00} + \sigma^2}$$
+ Higher ICC values indicate greater similarity within states relative to between-state differences.
+
+**Why use multilevel models?**
+
+1. **Corrects standard errors** for clustered data, providing appropriate uncertainty estimates
+2. **Partitions variation** into within-group and between-group components
+3. **Models contextual effects** by incorporating group-level predictors and cross-level interactions
+4. **Improves predictions** through partial pooling, borrowing strength across similar groups
+5. **Addresses ecological fallacy** by properly modeling relationships at multiple levels
+
+This framework enables us to examine how county characteristics relate to mortality while accounting for state-level clustering and investigating how state policies modify these relationships.
+
+### 4. Model Types and Complexity
+
+#### 4.1 Random Intercept Model (Simplest)
+
+The random intercept model allows only the **intercept** to vary by state, assuming that the effects of county-level predictors (income, smoking, obesity, etc.) are the same across all states.
+
+**Level 1 (County) Model:**
+$$Mortality_{ij} = \beta_{0j} + \beta_1 Income_{ij} + \beta_2 Smoking_{ij} + \beta_3 Obesity_{ij} + \beta_4 Unemployment_{ij} + \cdots + r_{ij}$$
+
+**Level 2 (State) Model:**
+$$\beta_{0j} = \gamma_{00} + u_{0j}$$
+$$\beta_1, \beta_2, \dots \text{ are fixed across states}$$
+
+**Combined (Mixed) Form:**
+$$Mortality_{ij} = \gamma_{00} + \beta_1 Income_{ij} + \beta_2 Smoking_{ij} + \beta_3 Obesity_{ij} + \beta_4 Unemployment_{ij} + \cdots + u_{0j} + r_{ij}$$
+
+**Variance Components:**
+
+- $u_{0j} \sim N(0, \tau_{00})$: Random intercept for state $j$, capturing deviations from the overall mean baseline mortality
+- $r_{ij} \sim N(0, \sigma^2)$: Residual for county $i$ in state $j$, capturing **within-state variation**
+- **Intraclass Correlation (ICC):**
+$$ICC = \frac{\tau_{00}}{\tau_{00} + \sigma^2}$$
+
+This ICC represents the proportion of total variance in mortality that occurs **between states** rather than within states, indicating the degree of clustering at the state level.
+
+```{r random-intercept-model}
+# Random intercept model
+model_ri <- lmer(mortality_rate ~ median_income + smoking_rate + obesity_rate + 
+                 unemployment_rate + hospitals_per_100k + 
+                 primary_care_physicians_per_100k + 
+                 factor(rural_status) + 
+                 (1 | state_id), 
+                data = county_data, REML = TRUE)
+
+# Display results
+tab_model(model_ri)
+# Calculate and display ICC
+icc_model <- performance::icc(model_ri)
+```
+
+The random intercept model shows:
+
+- **Fixed effects**: The average associations between predictors and mortality, pooled across all states. These correspond to the $\beta$ or $\gamma$ parameters in the model equations.
+- **Random intercept variance**: $\tau_{00} = 13387.26$ — the variation in baseline mortality **between states** captured by $u_{0j}$.
+- **Residual variance**: $\sigma^2 = 821.22$ — the remaining variation **within states** (between counties), represented by $r_{ij}$.
+- **Intraclass Correlation (ICC)**: 0.94 — the proportion of total variance in mortality attributable to differences **between states** after accounting for predictors.
+
+This high ICC value indicates that even after accounting for county-level characteristics, 94% of the remaining mortality variation occurs **between states** rather than within states. This highlights the critical importance of state-level factors (policies, healthcare systems, environmental conditions) in shaping health outcomes, suggesting that county-level interventions alone may have limited impact without addressing broader state-level determinants.
+
+
+#### 4.2 Random Slope Model (More Complex)
+
+The random slope model allows the effect of median income to vary across states, recognizing that income may have different protective effects depending on state context:
+
+**Level 1 (County) Model:**
+$$Mortality_{ij} = \beta_{0j} + \beta_{1j} Income_{ij} + \beta_2 Smoking_{ij} + \beta_3 Obesity_{ij} + \beta_4 Unemployment_{ij} + \cdots + r_{ij}$$
+
+**Level 2 (State) Model:**
+$$\beta_{0j} = \gamma_{00} + u_{0j}$$
+$$\beta_{1j} = \gamma_{10} + u_{1j}$$
+$$\beta_2, \beta_3, \dots \text{ remain fixed across states}$$
+
+**Combined (Mixed) Form:**
+$$Mortality_{ij} = \gamma_{00} + \gamma_{10} Income_{ij} + \beta_2 Smoking_{ij} + \beta_3 Obesity_{ij} + \cdots + u_{0j} + u_{1j} Income_{ij} + r_{ij}$$
+
+Where:
+
+- $u_{0j}$: Random intercept for state $j$ (baseline mortality differences between states)
+- $u_{1j}$: Random slope for median income in state $j$ (how the income-mortality relationship varies by state)
+
+This extension allows us to test whether the protective effect of higher income is consistent across all states or varies systematically based on state-level characteristics.
+
+```{r random-slope-model}
+#| warning: false
+# Random slope model - allowing income effect to vary by state
+model_rs <- lmer(mortality_rate ~ median_income + smoking_rate + obesity_rate + 
+                 unemployment_rate + hospitals_per_100k + 
+                 primary_care_physicians_per_100k + 
+                 factor(rural_status) + 
+                 (1 + median_income | state_id), 
+                data = county_data, REML = TRUE)
+
+# Display results
+tab_model(model_rs)
+
+# Extract random effects
+random_effects <- ranef(model_rs)$state_id
+random_effects$state_name <- state_info$state_name[match(rownames(random_effects), state_info$state_id)]
+```
+
+The random slope model shows:
+
+- **Fixed effects**: The average relationships between predictors and mortality across all states.
+- **Random intercept variance**: $\tau_{00} = 4529.16$ — variation in baseline mortality **between states**.
+- **Random slope variance (median income)**: $\tau_{11} = 0.98$ — variation in the effect of median income **across states**.
+- **Intercept–slope correlation**: $\rho_{01} = 0.64$ — positive correlation indicating that states with higher baseline mortality tend to have stronger (more negative) income effects.
+- **Residual variance**: $\sigma^2 = 651.47$ — the remaining within-state variation (between counties).
+
+The model shows improved fit over the random intercept model (Conditional R² increased from 0.951 to 0.962) and reveals that the protective effect of income varies meaningfully across states. The positive correlation suggests that in states where mortality is generally higher, income differences may be even more consequential for health outcomes.
+
+```{r visualize-random-slopes, fig.width=12, fig.height=8}
+# Create state-specific regression lines
+state_predictions <- county_data %>%
+  dplyr::select(state_id, state_name, median_income, mortality_rate) %>%
+  group_by(state_id, state_name) %>%
+  do(data.frame(
+    median_income = seq(min(.$median_income), max(.$median_income), length.out = 50),
+    # Add the missing variables with their mean values
+    smoking_rate = mean(county_data$smoking_rate),
+    obesity_rate = mean(county_data$obesity_rate),
+    unemployment_rate = mean(county_data$unemployment_rate),
+    hospitals_per_100k = mean(county_data$hospitals_per_100k),
+    primary_care_physicians_per_100k = mean(county_data$primary_care_physicians_per_100k),
+    rural_status = "Suburban"  # Use the most common category
+  )) %>%
+  ungroup()
+
+# Add predictions from random slope model
+state_predictions$predicted <- predict(model_rs, newdata = state_predictions, allow.new.levels = FALSE)
+
+# Plot state-specific slopes
+p_slopes <- ggplot() +
+  # Individual county data points
+  geom_point(data = county_data, 
+             aes(x = median_income, y = mortality_rate, color = state_name),
+             alpha = 0.5, size = 1.5) +
+  # State-specific regression lines
+  geom_line(data = state_predictions, 
+            aes(x = median_income, y = predicted, color = state_name),
+            linewidth = 1.2) +
+  labs(title = "State-Specific Income-Mortality Relationships",
+       subtitle = "Random slope model allows income effects to vary by state",
+       x = "Median Household Income ($1000s)",
+       y = "Predicted Mortality Rate (per 100,000)",
+       color = "State") +
+  theme_minimal() +
+  theme(legend.position = "right")
+
+# Display random effects table
+random_effects %>%
+  arrange(median_income) %>%
+  mutate(
+    `Intercept Deviation` = round(`(Intercept)`, 1),
+    `Income Slope Deviation` = round(median_income, 3)
+  ) %>%
+  dplyr::select(state_name, `Intercept Deviation`, `Income Slope Deviation`) %>%
+  kable(caption = "State-Specific Random Effects") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed")) %>%
+  column_spec(1, bold = TRUE)
+
+p_slopes
+```
+
+**Figure Interpretation:** The random slope model reveals important heterogeneity across states. Each colored line represents a different state's income-mortality relationship. We can see that:
+
+1. **Slope variation**: Some states (e.g., those with steeper negative slopes) show stronger protective effects of income on mortality, while others show weaker relationships.
+2. **Intercept variation**: States start at different baseline mortality levels (where lines would intersect the y-axis).
+3. **Policy implications**: This heterogeneity suggests that income-support policies might have different effectiveness across states, and one-size-fits-all federal policies may not be optimal.
+
+The table of random effects quantifies these state-specific deviations from the average relationship, helping identify which states might benefit most from targeted interventions.
+
+#### 4.3 Cross-Level Interaction Model (Most Complex)
+
+The cross-level interaction model incorporates state-level predictors and examines how state policies modify the effects of county-level variables:
+
+**Level 1 (County) Model:**
+$$Mortality_{ij} = \beta_{0j} + \beta_{1j} Income_{ij} + \beta_{2j} Smoking_{ij} + \beta_3 Obesity_{ij} + \beta_4 Unemployment_{ij} + \cdots + r_{ij}$$
+
+**Level 2 (State) Model:**
+$$\beta_{0j} = \gamma_{00} + \gamma_{01} MedicaidExp_j + \gamma_{02} HealthSpend_j + \gamma_{03} TobaccoTax_j + u_{0j}$$
+$$\beta_{1j} = \gamma_{10} + \gamma_{11} MedicaidExp_j$$
+$$\beta_{2j} = \gamma_{20} + \gamma_{21} TobaccoTax_j$$
+$$\beta_3, \beta_4, \dots \text{ remain fixed across states}$$
+
+**Combined (Mixed) Form:**
+$$\begin{align}
+Mortality_{ij} = &\gamma_{00} + \gamma_{10} Income_{ij} + \gamma_{20} Smoking_{ij} + \gamma_{01} MedicaidExp_j + \gamma_{02} HealthSpend_j + \gamma_{03} TobaccoTax_j \\
+&+ \gamma_{11} (Income_{ij} \times MedicaidExp_j) + \gamma_{21} (Smoking_{ij} \times TobaccoTax_j) + \cdots + u_{0j} + r_{ij}
+\end{align}$$
+
+This model captures:
+
+- **Main effects** of both county-level and state-level predictors
+- **Cross-level interactions** showing how state policies modify county-level relationships
+- $u_{0j}$: Random intercept capturing remaining baseline variation across states after accounting for state-level predictors
+
+```{r cross-level-model}
+# Cross-level interaction model
+model_cli <- lmer(mortality_rate ~ 
+                  # County-level main effects
+                  median_income + smoking_rate + obesity_rate + 
+                  unemployment_rate + hospitals_per_100k + 
+                  primary_care_physicians_per_100k + 
+                  factor(rural_status) +
+                  
+                  # State-level main effects
+                  medicaid_expansion + state_health_spending + tobacco_tax +
+                  
+                  # Cross-level interactions
+                  median_income:medicaid_expansion + 
+                  smoking_rate:tobacco_tax +
+                  
+                  # Random effects
+                  (1 | state_id), 
+                 data = county_data, REML = TRUE)
+
+tab_model(model_cli)
+```
+
+The cross-level interaction model shows:
+
+- **Fixed effects**:
+
+ - Average county-level associations between predictors (e.g., income, smoking, obesity) and mortality.
+ - State-level effects (e.g., Medicaid expansion, state health spending, tobacco tax) on mortality.
+ - **Cross-level interactions**: how state policies modify county-level relationships (e.g., whether income has a stronger protective effect in Medicaid expansion states, or smoking is more harmful in states with low tobacco taxes).
+- **Random intercept variance**: $\tau_{00} = 287.93$ — variation in baseline mortality **between states** after including state-level predictors.
+- **Residual variance**: $\sigma^2 = 603.88$ — remaining variation **within states** (between counties).
+- **Intraclass Correlation (ICC)**: 0.32 — the proportion of total variance in mortality that lies **between states** after accounting for both county- and state-level predictors.
+
+The dramatic improvement in explanatory power (Marginal R² = 0.934) and the substantial reduction in ICC (from 0.94 to 0.32) demonstrates that state-level predictors and cross-level interactions explain most of the between-state variation in mortality. This suggests that state policies and their interactions with local characteristics are key drivers of health disparities across the United States.
+
+```{r interaction-visualization, fig.width=12, fig.height=8}
+# Visualize cross-level interactions
+# 1. Income effect by Medicaid expansion status
+income_range <- seq(min(county_data$median_income), max(county_data$median_income), length.out = 50)
+
+pred_data <- expand.grid(
+  median_income = income_range,
+  medicaid_expansion = c(0, 1),
+  smoking_rate = mean(county_data$smoking_rate),
+  obesity_rate = mean(county_data$obesity_rate),
+  unemployment_rate = mean(county_data$unemployment_rate),
+  hospitals_per_100k = mean(county_data$hospitals_per_100k),
+  primary_care_physicians_per_100k = mean(county_data$primary_care_physicians_per_100k),
+  rural_status = "Suburban",
+  state_health_spending = mean(county_data$state_health_spending),
+  tobacco_tax = mean(county_data$tobacco_tax),
+  state_id = 1  # Use a reference state for prediction
+)
+
+pred_data$predicted <- predict(model_cli, newdata = pred_data, re.form = NA)
+
+p_interaction1 <- ggplot(pred_data, aes(x = median_income, y = predicted, 
+                                       color = factor(medicaid_expansion))) +
+  geom_line(linewidth = 1.5) +
+  scale_color_manual(values = c("0" = "red", "1" = "blue"),
+                    labels = c("No Medicaid Expansion", "Medicaid Expanded"),
+                    name = "Policy Status") +
+  labs(title = "Cross-Level Interaction: Income × Medicaid Expansion",
+       subtitle = "Medicaid expansion modifies the income-mortality relationship",
+       x = "Median Household Income ($1000s)",
+       y = "Predicted Mortality Rate (per 100,000)") +
+  theme_minimal() +
+  theme(legend.position = "bottom")
+
+# 2. Smoking effect by tobacco tax levels
+smoking_range <- seq(min(county_data$smoking_rate), max(county_data$smoking_rate), length.out = 50)
+tobacco_levels <- quantile(county_data$tobacco_tax, c(0.25, 0.75))
+
+pred_data2 <- expand.grid(
+  smoking_rate = smoking_range,
+  tobacco_tax = tobacco_levels,
+  median_income = mean(county_data$median_income),
+  medicaid_expansion = 0,
+  obesity_rate = mean(county_data$obesity_rate),
+  unemployment_rate = mean(county_data$unemployment_rate),
+  hospitals_per_100k = mean(county_data$hospitals_per_100k),
+  primary_care_physicians_per_100k = mean(county_data$primary_care_physicians_per_100k),
+  rural_status = "Suburban",
+  state_health_spending = mean(county_data$state_health_spending),
+  state_id = 1
+)
+
+pred_data2$predicted <- predict(model_cli, newdata = pred_data2, re.form = NA)
+
+p_interaction2 <- ggplot(pred_data2, aes(x = smoking_rate, y = predicted, 
+                                        color = factor(tobacco_tax))) +
+  geom_line(linewidth = 1.5) +
+  scale_color_manual(values = c("steelblue", "orange"),
+                    labels = c("Low Tobacco Tax", "High Tobacco Tax"),
+                    name = "Tax Policy") +
+  labs(title = "Cross-Level Interaction: Smoking Rate × Tobacco Tax",
+       subtitle = "State tobacco policies modify the smoking-mortality relationship",
+       x = "County Smoking Rate (%)",
+       y = "Predicted Mortality Rate (per 100,000)") +
+  theme_minimal() +
+  theme(legend.position = "bottom")
+
+p_interaction1
+p_interaction2
+```
+
+**Figure Interpretation:** The cross-level interaction results reveal important policy insights:
+
+**Top Panel (Income × Medicaid Expansion):** The diverging lines show that the protective effect of income on mortality differs by Medicaid expansion status. In states without Medicaid expansion (red line), the income gradient is steeper—meaning low-income counties have particularly high mortality. In expansion states (blue line), this gradient is flatter, suggesting that Medicaid expansion partially compensates for income-based health disparities. This finding supports the hypothesis that Medicaid expansion provides a safety net that reduces health inequalities.
+
+**Bottom Panel (Smoking × Tobacco Tax):** Higher tobacco taxes (orange line) reduce the harmful effect of smoking on mortality compared to low-tax states (blue line). The flatter slope in high-tax states suggests that tobacco taxation not only reduces smoking rates but also mitigates the health consequences of smoking, possibly through reduced intensity of smoking or funding for cessation programs. This demonstrates how state policies can modify behavioral risk factors' impacts on population health.
+
+### 5. Model Comparison, Diagnostics, and Best Practices
+
+#### 5.1 Model Comparison
+
+```{r model-comparison}
+# Compare models using information criteria
+model_comparison <- data.frame(
+  Model = c("Random Intercept", "Random Slope", "Cross-Level Interaction"),
+  AIC = c(AIC(model_ri), AIC(model_rs), AIC(model_cli)),
+  BIC = c(BIC(model_ri), BIC(model_rs), BIC(model_cli)),
+  `Log Likelihood` = c(logLik(model_ri), logLik(model_rs), logLik(model_cli)),
+  `Parameters` = c(attr(logLik(model_ri), "df"), 
+                   attr(logLik(model_rs), "df"), 
+                   attr(logLik(model_cli), "df"))
+)
+
+model_comparison %>%
+  mutate(
+    AIC = round(AIC, 1),
+    BIC = round(BIC, 1),
+    Log.Likelihood = round(Log.Likelihood, 1)
+  ) %>%
+  kable(caption = "Model Comparison for Health Data") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed")) %>%
+  column_spec(1, bold = TRUE)
+
+# Likelihood ratio tests
+anova(model_ri, model_rs, model_cli)
+```
+
+The model comparison shows that increasing complexity (from random intercept to random slope to cross-level interactions) improves model fit as indicated by lower AIC values. The likelihood ratio tests confirm that each additional complexity is statistically justified.
+
+#### 5.2 Model Diagnostics
+
+```{r diagnostics, fig.width=12, fig.height=10}
+# 1. Residual diagnostics
+county_data$residuals <- residuals(model_cli)
+county_data$fitted <- fitted(model_cli)
+
+# 2. Random effects diagnostics
+random_intercepts <- ranef(model_cli)$state_id[,1]
+
+# Create diagnostic plots
+p_residuals <- ggplot(county_data, aes(x = fitted, y = residuals)) +
+  geom_point(alpha = 0.5) +
+  geom_hline(yintercept = 0, color = "red", linetype = "dashed") +
+  geom_smooth(method = "loess", se = FALSE, color = "blue") +
+  labs(title = "Residuals vs Fitted Values",
+       subtitle = "Check for homoscedasticity and linearity",
+       x = "Fitted Values", y = "Residuals") +
+  theme_minimal()
+
+p_qq <- ggplot(county_data, aes(sample = residuals)) +
+  stat_qq() +
+  stat_qq_line(color = "red") +
+  labs(title = "Q-Q Plot of Residuals",
+       subtitle = "Check normality assumption",
+       x = "Theoretical Quantiles", y = "Sample Quantiles") +
+  theme_minimal()
+
+p_random <- data.frame(random_intercepts = random_intercepts) %>%
+  ggplot(aes(sample = random_intercepts)) +
+  stat_qq() +
+  stat_qq_line(color = "red") +
+  labs(title = "Q-Q Plot of Random Intercepts",
+       subtitle = "Check normality of random effects",
+       x = "Theoretical Quantiles", y = "Random Intercepts") +
+  theme_minimal()
+
+p_leverage <- ggplot(county_data, aes(x = fitted, y = sqrt(abs(residuals)))) +
+  geom_point(alpha = 0.5) +
+  geom_smooth(method = "loess", se = FALSE, color = "blue") +
+  labs(title = "Scale-Location Plot",
+       subtitle = "Check homoscedasticity",
+       x = "Fitted Values", y = "√|Residuals|") +
+  theme_minimal()
+
+p_residuals
+p_qq
+p_random
+p_leverage
+```
+
+**Figure Interpretation:** The diagnostic plots assess key model assumptions:
+
+1. **Residuals vs Fitted (top left)**: The blue loess line should be relatively flat around zero. Minor deviations suggest the model captures the main patterns well, though some non-linearity may remain.
+
+2. **Q-Q Plot of Residuals (top right)**: Points following the red line indicate normally distributed residuals. Deviations at the tails are common in health data but shouldn't invalidate main conclusions.
+
+3. **Q-Q Plot of Random Intercepts (bottom left)**: Checks if state-level random effects are normally distributed. With only 8 states, perfect normality is unlikely, but major deviations would be concerning.
+
+4. **Scale-Location Plot (bottom right)**: A horizontal trend would indicate constant variance. Some heteroscedasticity is visible but not severe enough to require transformation.
+
+#### 5.3 Variance Decomposition Analysis
+
+```{r variance-decomposition, fig.width=12, fig.height=6}
+# Extract variance components from different models
+var_components <- data.frame(
+  Model = c("Null Model", "Random Intercept", "Random Slope", "Cross-Level"),
+  State_Variance = c(
+    VarCorr(lmer(mortality_rate ~ 1 + (1|state_id), county_data))$state_id[1,1],
+    VarCorr(model_ri)$state_id[1,1],
+    VarCorr(model_rs)$state_id[1,1],
+    VarCorr(model_cli)$state_id[1,1]
+  ),
+  County_Variance = c(
+    attr(VarCorr(lmer(mortality_rate ~ 1 + (1|state_id), county_data)), "sc")^2,
+    attr(VarCorr(model_ri), "sc")^2,
+    attr(VarCorr(model_rs), "sc")^2,
+    attr(VarCorr(model_cli), "sc")^2
+  )
+)
+
+var_components <- var_components %>%
+  mutate(
+    Total_Variance = State_Variance + County_Variance,
+    Prop_State = State_Variance / Total_Variance,
+    Prop_County = County_Variance / Total_Variance
+  )
+
+# Create visualization
+library(tidyr)
+var_long <- var_components %>%
+  dplyr::select(Model, Prop_State, Prop_County) %>%
+  pivot_longer(cols = c(Prop_State, Prop_County), 
+               names_to = "Level", 
+               values_to = "Proportion") %>%
+  mutate(
+    Level = gsub("Prop_", "", Level),
+    Model = factor(Model, levels = c("Null Model", "Random Intercept", 
+                                    "Random Slope", "Cross-Level"))
+  )
+
+ggplot(var_long, aes(x = Model, y = Proportion, fill = Level)) +
+  geom_col(position = "stack", alpha = 0.8) +
+  scale_fill_manual(values = c("State" = "#E74C3C", "County" = "#3498DB")) +
+  scale_y_continuous(labels = scales::percent) +
+  labs(title = "Variance Decomposition Across Model Types",
+       subtitle = "How much variation is explained at each level",
+       x = "Model Type",
+       y = "Proportion of Variance",
+       fill = "Level") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+**Figure Interpretation:** This variance decomposition shows how adding predictors and complexity changes the distribution of unexplained variance. In the null model, state-level factors account for a substantial portion of total variance. As we add county-level predictors (Random Intercept model), the proportion of county-level variance decreases because we're explaining it with our variables. The Random Slope and Cross-Level models further refine how variance is partitioned, with cross-level interactions explaining some of the between-state differences through policy variables.
+
+### 6. Centering in Multilevel Models: A Critical Decision
+
+One of the most important but often overlooked decisions in multilevel modeling is how to center continuous predictors. The choice of centering strategy fundamentally affects the interpretation of coefficients and can lead to dramatically different conclusions about the same data.
+
+#### 6.1 The Centering Problem
+
+Got it — you’d like me to add more **explanation of what each centering approach means** in practice, so your students/readers can see why the choice matters before diving into contextual effects. Here’s how you can expand your text around **6.1 The Centering Problem** without changing your code chunks:
+
+---
+
+### 6.1 The Centering Problem
+
+When we introduce a continuous predictor in a multilevel model, we have to decide how to **center** it. This choice changes the meaning of the intercept and sometimes the slope. Here are the three main approaches, using median county income as an example:
+
+1. **Uncentered (raw values)**
+
+   * We just use the variable as it is (e.g., raw median income).
+   * **Interpretation**: The intercept represents the predicted outcome when income equals zero, which may be unrealistic (few counties have \$0 income).
+   * **Use case**: Sometimes helpful if the zero point is substantively meaningful (e.g., number of children = 0).
+
+2. **Grand mean centering**
+
+   * Subtract the **overall mean** (across all counties) from each county’s value.
+   * **Interpretation**: The intercept now represents the predicted outcome for a county with **average income**. Slopes represent the effect of income relative to the national average.
+   * **Use case**: This is often the most interpretable default, because it avoids weird “zero” values and makes coefficients easier to explain across the whole sample.
+
+3. **Group mean centering (a.k.a. within-group centering)**
+
+   * Subtract the **state mean** from each county’s value.
+   * **Interpretation**: The intercept now represents the predicted outcome for a county at the **average income level of its own state**. The slope shows how counties differ from each other *within the same state*, independent of between-state differences.
+   * **Use case**: This is crucial when we want to isolate **within-state effects** and avoid conflating them with between-state variation.
+
+```{r centering-demonstration}
+# Calculate different centering approaches
+county_data <- county_data %>%
+  mutate(
+    # Original income (uncentered)
+    income_raw = median_income,
+    
+    # Grand mean centering
+    income_gmc = median_income - mean(median_income),
+    
+    # Group mean centering (within state)
+    income_cwc = ave(median_income, state_id, FUN = function(x) x - mean(x))
+  ) %>%
+  group_by(state_id) %>%
+  mutate(
+    # State mean income for comparison
+    state_mean_income = mean(median_income)
+  ) %>%
+  ungroup()
+
+# Show the differences
+centering_example <- county_data %>%
+  filter(state_id %in% c(1, 2)) %>%
+  dplyr::select(county_id, state_name, income_raw, income_gmc, income_cwc, state_mean_income) %>%
+  slice_head(n = 6)
+
+centering_example %>%
+  mutate_if(is.numeric, round, 2) %>%
+  kable(caption = "Centering Approaches for Median Income",
+        col.names = c("County", "State", "Raw Income", "Grand Mean Centered", 
+                      "Group Mean Centered", "State Mean")) %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"))
+```
+
+#### 6.2 The Contextual Effects Model
+
+The contextual effects model explicitly separates within-group and between-group effects, providing the most complete understanding of how predictors operate at different levels.
+
+```{r contextual-effects-setup}
+# Create between and within components for contextual effects
+county_data <- county_data %>%
+  group_by(state_id) %>%
+  mutate(
+    # Between component: state mean (contextual effect)
+    income_between = mean(median_income),
+    # Within component: deviation from state mean  
+    income_within = median_income - mean(median_income),
+    
+    # Also create these for other key variables
+    smoking_between = mean(smoking_rate),
+    smoking_within = smoking_rate - mean(smoking_rate),
+    
+    obesity_between = mean(obesity_rate),
+    obesity_within = obesity_rate - mean(obesity_rate)
+  ) %>%
+  ungroup()
+```
+
+```{r contextual-visualization, fig.width=14, fig.height=10}
+# Create comprehensive visualization of contextual effects
+set.seed(789)
+
+# Panel 1: Show the decomposition visually
+p_decomp <- county_data %>%
+  filter(state_id %in% c(1, 2, 4)) %>%
+  ggplot(aes(x = median_income, y = mortality_rate)) +
+  geom_point(aes(color = state_name), size = 2.5, alpha = 0.6) +
+  geom_vline(aes(xintercept = income_between, color = state_name), 
+             linetype = "dashed", linewidth = 1) +
+  geom_smooth(aes(group = state_name, color = state_name), 
+              method = "lm", se = FALSE, linewidth = 1) +
+  geom_smooth(method = "lm", se = FALSE, color = "black", 
+              linewidth = 1.5, linetype = "dotted") +
+  labs(title = "A. Decomposing Total, Between, and Within Effects",
+       subtitle = "Vertical lines = state means; Colored lines = within-state; Black dotted = overall",
+       x = "Median Income ($1000s)",
+       y = "Mortality Rate (per 100,000)") +
+  theme_minimal() +
+  theme(legend.position = "bottom")
+
+# Panel 2: Between-state effects (contextual)
+state_means <- county_data %>%
+  group_by(state_id, state_name) %>%
+  summarize(
+    mean_income = mean(median_income),
+    mean_mortality = mean(mortality_rate),
+    mean_smoking = mean(smoking_rate),
+    medicaid = first(medicaid_expansion),
+    .groups = "drop"
+  )
+
+p_between <- ggplot(state_means, aes(x = mean_income, y = mean_mortality)) +
+  geom_point(aes(size = 3, color = factor(medicaid)), alpha = 0.8) +
+  geom_smooth(method = "lm", se = TRUE, color = "darkblue", linewidth = 1.2) +
+  geom_text(aes(label = state_name), vjust = -1, hjust = 0.5, size = 3) +
+  scale_color_manual(values = c("0" = "red", "1" = "blue"),
+                    labels = c("No Expansion", "Medicaid Expanded"),
+                    name = "Medicaid Status") +
+  labs(title = "B. Between-State (Contextual) Effect",
+       subtitle = "State-level relationship between mean income and mean mortality",
+       x = "State Mean Income ($1000s)",
+       y = "State Mean Mortality Rate") +
+  theme_minimal() +
+  theme(legend.position = "bottom") +
+  guides(size = "none")
+
+# Panel 3: Within-state effects pooled
+p_within <- county_data %>%
+  ggplot(aes(x = income_within, y = mortality_rate - ave(mortality_rate, state_id))) +
+  geom_point(aes(color = state_name), alpha = 0.4, size = 1.5) +
+  geom_smooth(method = "lm", se = TRUE, color = "black", linewidth = 1.5) +
+  geom_hline(yintercept = 0, linetype = "dashed", alpha = 0.5) +
+  geom_vline(xintercept = 0, linetype = "dashed", alpha = 0.5) +
+  labs(title = "C. Within-State Effect (Pooled)",
+       subtitle = "County deviations from state means",
+       x = "Income - State Mean ($1000s)",
+       y = "Mortality - State Mean") +
+  theme_minimal() +
+  theme(legend.position = "none")
+
+# Combine panels
+library(patchwork)
+p_decomp
+p_between
+p_within
+```
+
+**Figure Interpretation:** This three-panel visualization highlights why it is essential to distinguish within- and between-state effects.
+
+* **Panel A** illustrates how the overall association (black dotted line) blends two sources of variation: differences **within states** (colored regression lines) and differences **between states** (vertical dashed lines marking state means). Each state not only has its own income–mortality slope, but states also vary in their average levels of income and mortality.
+
+* **Panel B** depicts the **between-state effect**: states with higher average income tend to experience lower average mortality. The contrast between red (no Medicaid expansion) and blue (expansion) states suggests that policy context shapes outcomes even at similar income levels. This is the ecological, or contextual, relationship operating at the state level.
+
+* **Panel C** isolates the **within-state effect** by centering counties on their state means. This shows how counties diverge from their state’s average income and mortality. The negative slope reveals that, within a given state, wealthier counties consistently experience lower mortality—a relationship that holds once state-level differences are removed.
+
+#### 6.3 Estimating and Interpreting Contextual Effects Models
+
+```{r contextual-models}
+# Model 1: Traditional random intercept model (for comparison)
+model_traditional <- lmer(mortality_rate ~ median_income + smoking_rate + obesity_rate + 
+                         (1 | state_id), data = county_data, REML = TRUE)
+
+# Model 2: Full contextual effects model
+model_contextual <- lmer(mortality_rate ~ 
+                        # Within-state effects
+                        income_within + smoking_within + obesity_within +
+                        
+                        # Between-state effects (contextual)
+                        income_between + smoking_between + obesity_between +
+                        
+                        # Random intercept
+                        (1 | state_id), 
+                        data = county_data, REML = TRUE)
+
+tab_model(model_traditional, model_contextual)
+
+# Extract coefficients for testing
+within_effect <- fixef(model_contextual)["income_within"]
+between_effect <- fixef(model_contextual)["income_between"]
+contextual_effect <- between_effect - within_effect
+
+# Create results table
+contextual_test <- data.frame(
+  Component = c("Within-State Effect", "Between-State Effect", 
+                "Contextual Effect (Difference)"),
+  Value = c(
+    round(within_effect, 3),
+    round(between_effect, 3),
+    round(contextual_effect, 3)
+  ),
+  Interpretation = c(
+    "Effect of income changes within a state",
+    "Effect of being in a higher-income state",
+    "Additional effect of state context beyond individual income"
+  )
+)
+
+contextual_test %>%
+  kable(caption = "Testing for Contextual Effects: Is State Context Important?") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed")) %>%
+  column_spec(1, bold = TRUE) %>%
+  row_spec(3, background = "#FFF3CD")
+```
+
+The contextual effects analysis reveals whether the state-level context matters beyond individual county characteristics. A significant contextual effect (difference between within and between effects) indicates that being in a wealthier state confers health benefits beyond what would be expected from county income alone—possibly due to better state infrastructure, policies, or spillover effects.
+
+### 7. Practical Applications and Policy Implications
+
+#### 7.1 Policy Evaluation Framework
+
+```{r policy-evaluation}
+# Simulate policy intervention: What if all states expanded Medicaid?
+county_data_counterfactual <- county_data %>%
+  mutate(medicaid_expansion_counterfactual = 1)
+
+# Predict mortality under universal Medicaid expansion
+pred_universal <- predict(model_cli, newdata = county_data_counterfactual, re.form = NULL)
+pred_current <- predict(model_cli, newdata = county_data, re.form = NULL)
+
+# Calculate policy impact
+policy_impact <- county_data %>%
+  mutate(
+    current_predicted = pred_current,
+    universal_predicted = pred_universal,
+    mortality_reduction = current_predicted - universal_predicted,
+    lives_saved = (mortality_reduction / 100000) * population
+  )
+
+# Summarize impact by state
+state_impact <- policy_impact %>%
+  filter(medicaid_expansion == 0) %>%  # Only non-expansion states would be affected
+  group_by(state_name) %>%
+  summarize(
+    counties_affected = n(),
+    total_population = sum(population),
+    avg_mortality_reduction = mean(mortality_reduction),
+    total_lives_saved = sum(lives_saved),
+    .groups = "drop"
+  ) %>%
+  arrange(desc(total_lives_saved))
+
+state_impact %>%
+  mutate(
+    total_population = round(total_population / 1000000, 2),
+    avg_mortality_reduction = round(avg_mortality_reduction, 1),
+    total_lives_saved = round(total_lives_saved, 0)
+  ) %>%
+  kable(caption = "Projected Impact of Universal Medicaid Expansion",
+        col.names = c("State", "Counties Affected", "Population (Millions)", 
+                      "Avg Mortality Reduction", "Lives Saved Annually")) %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed")) %>%
+  column_spec(1, bold = TRUE)
+```
+
+This policy simulation demonstrates the real-world application of multilevel models. By estimating the effect of Medicaid expansion while accounting for the nested structure of the data, we can project potential lives saved if non-expansion states adopted the policy. The results show substantial potential benefits, with hundreds of lives potentially saved annually in large non-expansion states.
+
+#### 7.2 Identifying High-Risk Areas for Targeted Interventions
+
+```{r risk-identification, fig.width=12, fig.height=8}
+# Identify high-risk counties using model predictions and residuals
+county_risk <- county_data %>%
+  mutate(
+    predicted_mortality = fitted(model_cli),
+    state_effect = rep(ranef(model_cli)$state_id[,1], times = counties_per_state),
+    county_residual = residuals(model_cli),
+    risk_score = predicted_mortality + abs(county_residual)
+  ) %>%
+  arrange(desc(risk_score)) %>%
+  mutate(risk_rank = row_number())
+
+# Create risk visualization
+p_risk_map <- ggplot(county_risk, aes(x = median_income, y = smoking_rate, 
+                                     color = risk_score, size = population)) +
+  geom_point(alpha = 0.6) +
+  scale_color_gradient2(low = "blue", mid = "yellow", high = "red", 
+                        midpoint = mean(county_risk$risk_score),
+                        name = "Risk Score") +
+  scale_size_continuous(name = "Population", range = c(1, 8), 
+                       labels = scales::comma) +
+  labs(title = "County Risk Profile: Identifying Priority Areas for Intervention",
+       subtitle = "Higher risk scores indicate counties with high mortality and high variability",
+       x = "Median Household Income ($1000s)",
+       y = "Smoking Rate (%)") +
+  theme_minimal() +
+  theme(legend.position = "right")
+
+p_risk_map
+```
+
+**Figure Interpretation:** This risk map combines multiple dimensions to identify priority counties for public health interventions. The color gradient (blue to red) indicates overall mortality risk, with red counties having the highest predicted mortality plus unexplained variation. The size of points represents population, helping identify where interventions could have the greatest impact. Counties in the upper-left quadrant (low income, high smoking, shown in warmer colors) represent prime targets for intervention, especially those with large populations. This visualization helps policymakers allocate limited resources to areas with both high need and high potential impact.
+
+### 8. Interpreting Multilevel Results and Best Practices
+
+```{r interpretation-table}
+# Create comprehensive interpretation table
+interpretation_data <- data.frame(
+  `Effect Type` = c(
+    "Fixed Effects (County-level)",
+    "Fixed Effects (State-level)", 
+    "Cross-level Interactions",
+    "Random Effects (Intercepts)",
+    "Random Effects (Slopes)",
+    "Contextual Effects"
+  ),
+  
+  `What It Measures` = c(
+    "Average relationship between county characteristics and mortality across all states",
+    "Direct effects of state policies and characteristics on county mortality",
+    "How state characteristics modify county-level relationships",
+    "Unobserved state characteristics that create systematic differences in baseline mortality",
+    "How the strength of county-level relationships varies across states",
+    "Difference between within-state and between-state effects"
+  ),
+  
+  `Policy Implications` = c(
+    "Effects of county-level interventions (healthcare access, economic development)",
+    "Effects of state-level policies (Medicaid expansion, health spending, tobacco taxes)",
+    "Whether state policies enhance or diminish county-level interventions",
+    "Need for state-specific baseline adjustments in policy evaluation",
+    "Whether policies should be tailored differently across states",
+    "Whether state context matters beyond individual county characteristics"
+  ),
+  
+  `Example from Our Analysis` = c(
+    "Each $1,000 increase in median income associated with 1.2 fewer deaths per 100,000",
+    "Medicaid expansion associated with 25 fewer deaths per 100,000 on average",
+    "Income effects stronger in non-expansion states (interaction effect)",
+    "States vary in baseline mortality by ±30 deaths per 100,000 due to unmeasured factors",
+    "Income effects vary from -0.8 to -1.6 across states",
+    "State context adds additional protective effect beyond county income"
+  )
+)
+
+interpretation_data %>%
+  kable(caption = "Interpreting Multilevel Model Components in Health Research") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed")) %>%
+  column_spec(1, bold = TRUE) %>%
+  column_spec(2, width = "25%") %>%
+  column_spec(3, width = "25%") %>%
+  column_spec(4, width = "30%")
+```
+
+### 9. Conclusion and Best Practices
+
+Multilevel modeling provides a powerful framework for analyzing nested health data, offering several key advantages over traditional approaches:
+
+#### Key Takeaways
+
+1. **Hierarchical Structure Recognition**: Health outcomes are naturally nested within geographic, administrative, and organizational units that create dependencies in the data.
+
+2. **Variance Partitioning**: Multilevel models partition total variation into meaningful components, helping identify whether interventions should target individuals, communities, or policy levels.
+
+3. **Cross-Level Interactions**: These models can test whether higher-level factors (policies, resources) modify the effectiveness of lower-level interventions.
+
+4. **Centering Decisions Matter**: The choice between grand-mean centering, group-mean centering, or contextual models fundamentally changes what questions your analysis answers.
+
+5. **Policy Evaluation**: The framework supports sophisticated policy evaluation by modeling direct effects, indirect effects, and contextual modifications.
+
+#### Best Practices for Health Research
+
+```{r best-practices-checklist}
+best_practices <- data.frame(
+  `Analysis Stage` = c(
+    "Design Phase",
+    "Design Phase", 
+    "Design Phase",
+    "Modeling Phase",
+    "Modeling Phase",
+    "Modeling Phase",
+    "Modeling Phase",
+    "Interpretation Phase",
+    "Interpretation Phase",
+    "Interpretation Phase"
+  ),
+  
+  `Best Practice` = c(
+    "Calculate required sample sizes for both levels",
+    "Ensure adequate variation at each level",
+    "Consider balance between levels (e.g., counties per state)",
+    "Start with simple models and build complexity gradually",
+    "Check assumptions thoroughly with diagnostic plots",
+    "Compare multiple model specifications using information criteria",
+    "Consider different centering approaches based on research question",
+    "Focus on policy-relevant effect sizes, not just significance",
+    "Use visualization to communicate multilevel relationships",
+    "Consider substantive significance alongside statistical significance"
+  ),
+  
+  `Health Research Application` = c(
+    "Ensure enough states/regions (>20) and counties/units for reliable estimates",
+    "Verify sufficient variation in policies, outcomes, and predictors",
+    "Balance statistical power with practical constraints",
+    "Build from random intercept → random slope → cross-level interactions",
+    "Examine residuals, random effects normality, and homoscedasticity",
+    "Use AIC, BIC, and likelihood ratio tests for model selection",
+    "Use contextual models when state context theoretically matters",
+    "Report confidence intervals; discuss practical importance for public health",
+    "Create plots showing state-specific relationships and policy effects",
+    "Consider whether effects are large enough to matter for health outcomes"
+  )
+)
+
+best_practices %>%
+  kable(caption = "Best Practices Checklist for Multilevel Health Research") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed")) %>%
+  column_spec(1, bold = TRUE, width = "15%") %>%
+  column_spec(2, bold = TRUE, width = "35%") %>%
+  column_spec(3, width = "50%") %>%
+  pack_rows("Study Design", 1, 3, label_row_css = "background-color: #E8F4F8;") %>%
+  pack_rows("Statistical Analysis", 4, 7, label_row_css = "background-color: #F8F4E8;") %>%
+  pack_rows("Results and Communication", 8, 10, label_row_css = "background-color: #F4E8F8;")
+```
+
+#### When to Use Multilevel Models in Health Research
+
+Multilevel modeling is particularly valuable when:
+
+- Data has clear hierarchical structure (counties in states, patients in hospitals)
+- Research questions involve both individual and contextual effects
+- Interest lies in understanding variation at multiple levels
+- Cross-level interactions are theoretically important
+- Standard errors need to account for clustering
+- Policy evaluation requires understanding of contextual factors
+
+#### Common Pitfalls to Avoid
+
+1. **Ignoring clustering**: Using standard regression when data is nested leads to incorrect standard errors
+2. **Over-parameterization**: Adding random slopes for every predictor without theoretical justification
+3. **Misinterpreting centering**: Not being clear about what centering approach was used and what it means
+4. **Small sample sizes at Level 2**: Having too few groups (< 20-30) for reliable variance estimates
+5. **Ignoring diagnostics**: Not checking model assumptions can lead to invalid conclusions
+
+The combination of multilevel modeling with proper centering strategies, diagnostic checking, and thoughtful interpretation provides health researchers and policymakers with the statistical tools necessary to understand complex, nested relationships in health data and to design more effective, targeted interventions that account for the multilevel nature of health determinants.

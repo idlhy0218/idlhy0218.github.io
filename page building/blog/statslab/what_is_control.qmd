@@ -6,20 +6,18 @@ format:
   html:
     theme: cosmo
     css: custom.css
+    page-layout: full
     code-fold: true
     code-tools: true
     toc: true
     toc-depth: 5
     toc-location: left
     self-contained: true
-    fig-width: 9
+    fig-width: 8
     fig-height: 6
     fig-dpi: 300
     smooth-scroll: true
     highlight-style: github
-    page-layout: full
-    embed-resources: true
-    html-math-method: katex
 ---
 
 ```{r}
@@ -495,10 +493,20 @@ p_resid <- ggplot(data, aes(x = hours_resid, y = score_resid)) +
   theme_minimal() +
   theme(plot.title = element_text(hjust = 0.5, face = "bold"),
         plot.subtitle = element_text(hjust = 0.5))
-
-# Arrange all plots in a 2x1 grid
-(p_hours | p_scores) / (p_resid)
 ```
+
+```{r}
+p_hours
+```
+
+```{r}
+p_scores
+```
+
+```{r}
+p_resid
+```
+
 
 The residualization method is based on the **Frisch–Waugh–Lovell theorem**, which shows that in a multiple regression:
 
@@ -527,7 +535,7 @@ The coefficient $\delta_1$ from Step 3 will be identical to $\beta_1$ from the d
 
 The three-panel visualization demonstrates the mathematical process of controlling through residualization:
 
-**Top Left Panel - Step 1**: Regress Study Hours (X) on Prior Knowledge (Z).
+**Top Panel - Step 1**: Regress Study Hours (X) on Prior Knowledge (Z).
 
 $$\text{StudyHours} = \alpha_0 + \alpha_1 \times \text{PriorKnowledge} + e_{\text{StudyHours}}$$
 
@@ -536,7 +544,7 @@ $$\text{StudyHours} = \alpha_0 + \alpha_1 \times \text{PriorKnowledge} + e_{\tex
 - Red vertical lines: Residuals ($e_{\text{StudyHours}}$) - how much a student's study hours differ from prediction
 - These residuals represent study hours AFTER removing the effect of prior knowledge
 
-**Top Right Panel - Step 2**: Regress Test Score (Y) on Prior Knowledge (Z).
+**Middle Panel - Step 2**: Regress Test Score (Y) on Prior Knowledge (Z).
 
 $$\text{TestScore} = \gamma_0 + \gamma_1 \times \text{PriorKnowledge} + e_{\text{TestScore}}$$
 

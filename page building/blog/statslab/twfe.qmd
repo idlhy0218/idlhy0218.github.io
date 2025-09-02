@@ -6,14 +6,15 @@ format:
   html:
     theme: cosmo
     css: custom.css
+    page-layout: full
     code-fold: true
     code-tools: true
     toc: true
     toc-depth: 5
     toc-location: left
     self-contained: true
-    fig-width: 10
-    fig-height: 8
+    fig-width: 8
+    fig-height: 6
     fig-dpi: 300
     smooth-scroll: true
     highlight-style: github
