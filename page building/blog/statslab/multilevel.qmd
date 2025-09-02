@@ -20,8 +20,6 @@ format:
     highlight-style: github
 ---
 
-## Understanding Multilevel Models
-
 Multilevel modeling (also known as hierarchical linear modeling or mixed-effects modeling) extends the panel data framework to handle nested data structures that are ubiquitous in health research. While panel data considers observations across entities and time, multilevel models address situations where individual observations are nested within higher-level units, creating natural hierarchies in the data structure.
 
 In public health research, we frequently encounter multilevel structures such as:
@@ -31,7 +29,7 @@ In public health research, we frequently encounter multilevel structures such as
 - Students nested within schools nested within districts
 - Individuals nested within neighborhoods nested within cities
 
-This hierarchical structure violates the independence assumption of traditional regression models because observations within the same higher-level unit tend to be more similar to each other than to observations in other units - a phenomenon known as **intracluster correlation**.
+This hierarchical structure violates the independence assumption of traditional regression models because observations within the same higher-level unit tend to be more similar to each other than to observations in other units - a phenomenon known as <span style="color: #E74C3C; font-weight: bold;">**intracluster correlation**</span>.
 
 ### 1. The Hierarchical Structure of Health Data
 
@@ -245,6 +243,16 @@ ggplot(county_data, aes(x = reorder(state_name, mortality_rate),
         legend.position = "bottom")
 ```
 
+**Figure Interpretation:** This visualization demonstrates the strong clustering pattern that necessitates multilevel modeling. Several key patterns emerge:
+
+1. **Clear state-level clustering**: Counties within each state cluster tightly around their state mean (red diamonds), with relatively small within-state variation compared to the large differences between states. This tight clustering within states violates the independence assumption of standard regression.
+
+2. **Systematic state differences**: States show dramatically different mortality patterns, with some states consistently experiencing mortality rates 100-200 deaths per 100,000 higher than others. The ordering from lowest to highest mortality reveals persistent state-level factors that affect all counties within a state's borders.
+
+3. **Policy pattern evidence**: The color coding reveals that Medicaid expansion states (blue) tend to cluster toward the lower end of the mortality distribution, while non-expansion states (coral) are more heavily represented among higher-mortality states. This suggests state-level policy decisions create systematic health advantages or disadvantages.
+
+This clustering pattern demonstrates why standard regression would be inappropriate—counties within the same state are clearly not independent observations, and ignoring this structure would lead to artificially precise estimates and incorrect conclusions about the significance of predictors.
+
 #### 2.2. Measuring Clustering: The ICC
 
 The **Intracluster Correlation Coefficient (ICC)** tells us how much clustering exists. It answers: "How much of the total variance is between states vs. within states?"
@@ -303,7 +311,7 @@ cat(sprintf("\nIntraclass Correlation Coefficient (ICC) = %.3f (%.1f%%)", icc, 1
 - **ICC 0.10-0.25**: Moderate clustering (multilevel modeling important)
 - **ICC > 0.25**: Large clustering (multilevel modeling essential)
 
-**What Our ICC Means:**
+**What ICC Means:**
   
 Our calculated ICC reveals striking insights about the structure of our health data. With an ICC of 0.798, this means:
   
@@ -321,7 +329,7 @@ Since our ICC > 0.25 (and dramatically so), multilevel modeling is absolutely es
 
 **What This Tells Us About Health:**
   
-  This ICC level reveals that state-level factors overwhelmingly dominate county health outcomes. Nearly four-fifths of the variation in mortality rates is attributable to systematic differences between states rather than local county characteristics. This suggests that state policies, healthcare systems, environmental regulations, and regional culture create extremely powerful contextual effects that strongly determine health outcomes for all counties within a state's borders.
+This ICC level reveals that state-level factors overwhelmingly dominate county health outcomes. Nearly four-fifths of the variation in mortality rates is attributable to systematic differences between states rather than local county characteristics. This suggests that state policies, healthcare systems, environmental regulations, and regional culture create extremely powerful contextual effects that strongly determine health outcomes for all counties within a state's borders.
 
 The relatively small within-state variation (20.2%) indicates that while county-level factors still matter, state context is by far the primary driver of health disparities. This multilevel structure demonstrates that effective health interventions must prioritize state-level policy changes, as local county-level interventions alone may have limited impact within the broader state policy environment.
 
@@ -423,7 +431,7 @@ The random intercept model shows:
 - **Residual variance**: $\sigma^2 = 821.22$ — the remaining variation **within states** (between counties), represented by $r_{ij}$.
 - **Intraclass Correlation (ICC)**: 0.94 — the proportion of total variance in mortality attributable to differences **between states** after accounting for predictors.
 
-This high ICC value indicates that even after accounting for county-level characteristics, 94% of the remaining mortality variation occurs **between states** rather than within states. This highlights the critical importance of state-level factors (policies, healthcare systems, environmental conditions) in shaping health outcomes, suggesting that county-level interventions alone may have limited impact without addressing broader state-level determinants.
+This high ICC value (0.94) indicates that even after accounting for county-level characteristics, the vast majority of remaining mortality variation occurs **between states** rather than within states. This suggests that unmeasured state-level factors (policies, healthcare systems, environmental conditions) dominate health outcomes, creating systematic advantages or disadvantages for all counties within a state's borders. County-level interventions alone may have limited impact without addressing these broader state-level determinants.
 
 ```{r}
 # Visualize random intercept model
@@ -537,12 +545,12 @@ random_effects$state_name <- state_info$state_name[match(rownames(random_effects
 The random slope model shows:
 
 - **Fixed effects**: The average relationships between predictors and mortality across all states.
-- **Random intercept variance**: $\tau_{00} = 4529.16$ — variation in baseline mortality **between states**.
+- **Random intercept variance**: $\tau_{00} = 4529.16$ — variation in baseline mortality **between states** (reduced from 13387.26 in random intercept model).
 - **Random slope variance (median income)**: $\tau_{11} = 0.98$ — variation in the effect of median income **across states**.
 - **Intercept–slope correlation**: $\rho_{01} = 0.64$ — positive correlation indicating that states with higher baseline mortality tend to have stronger (more negative) income effects.
 - **Residual variance**: $\sigma^2 = 651.47$ — the remaining within-state variation (between counties).
 
-The model shows improved fit over the random intercept model (Conditional R² increased from 0.951 to 0.962) and reveals that the protective effect of income varies meaningfully across states. The positive correlation suggests that in states where mortality is generally higher, income differences may be even more consequential for health outcomes.
+The model shows improved fit over the random intercept model (Conditional R² increased from 0.951 to 0.962). **Variance interpretation**: The substantial reduction in random intercept variance (from 13387 to 4529) occurs because allowing income effects to vary by state captures some of the between-state differences that were previously attributed to baseline differences. States with stronger income-mortality relationships now have this heterogeneity explicitly modeled rather than absorbed into their random intercepts. The positive correlation (0.64) suggests that in states where mortality is generally higher, income differences may be even more consequential for health outcomes.
 
 ```{r visualize-random-slopes, fig.width=12, fig.height=8}
 # Create state-specific regression lines
@@ -607,7 +615,12 @@ The table of random effects quantifies these state-specific deviations from the 
 
 #### 4.3 Cross-Level Interaction Model (Most Complex)
 
-The cross-level interaction model incorporates state-level predictors and examines how state policies modify the effects of county-level variables:
+The cross-level interaction model incorporates state-level predictors and examines how state policies modify the effects of county-level variables. We introduce this complexity gradually, first adding state-level predictors, then their interactions with county-level variables.
+
+**State-Level Predictors Added:**
+- Medicaid expansion status (policy variable)
+- State health spending per capita  
+- Tobacco tax rates
 
 **Level 1 (County) Model:**
 $$Mortality_{ij} = \beta_{0j} + \beta_{1j} Income_{ij} + \beta_{2j} Smoking_{ij} + \beta_3 Obesity_{ij} + \beta_4 Unemployment_{ij} + \cdots + r_{ij}$$
@@ -656,15 +669,14 @@ tab_model(model_cli)
 The cross-level interaction model shows:
 
 - **Fixed effects**:
-
- - Average county-level associations between predictors (e.g., income, smoking, obesity) and mortality.
- - State-level effects (e.g., Medicaid expansion, state health spending, tobacco tax) on mortality.
- - **Cross-level interactions**: how state policies modify county-level relationships (e.g., whether income has a stronger protective effect in Medicaid expansion states, or smoking is more harmful in states with low tobacco taxes).
+  - Average county-level associations between predictors (e.g., income, smoking, obesity) and mortality.
+  - State-level effects (e.g., Medicaid expansion, state health spending, tobacco tax) on mortality.
+  - **Cross-level interactions**: how state policies modify county-level relationships (e.g., whether income has a stronger protective effect in Medicaid expansion states, or smoking is more harmful in states with low tobacco taxes).
 - **Random intercept variance**: $\tau_{00} = 287.93$ — variation in baseline mortality **between states** after including state-level predictors.
 - **Residual variance**: $\sigma^2 = 603.88$ — remaining variation **within states** (between counties).
 - **Intraclass Correlation (ICC)**: 0.32 — the proportion of total variance in mortality that lies **between states** after accounting for both county- and state-level predictors.
 
-The dramatic improvement in explanatory power (Marginal R² = 0.934) and the substantial reduction in ICC (from 0.94 to 0.32) demonstrates that state-level predictors and cross-level interactions explain most of the between-state variation in mortality. This suggests that state policies and their interactions with local characteristics are key drivers of health disparities across the United States.
+**Variance interpretation**: The dramatic reduction in ICC from 0.94 (random intercept) to 0.32 (cross-level interaction) occurs because state-level predictors (Medicaid expansion, health spending, tobacco taxes) explain much of the between-state variation that was previously unexplained. The inclusion of these measured state characteristics reduces the remaining unobserved state heterogeneity from 94% to 32% of total variance. This suggests that state policies and their interactions with local characteristics are primary drivers of health disparities across the United States. The cross-level interactions further explain why certain county-level factors (like income) have different effects in different policy contexts.
 
 ```{r interaction-visualization, fig.width=12, fig.height=8}
 # Visualize cross-level interactions
@@ -742,6 +754,112 @@ p_interaction2
 **Top Panel (Income × Medicaid Expansion):** The diverging lines show that the protective effect of income on mortality differs by Medicaid expansion status. In states without Medicaid expansion (red line), the income gradient is steeper—meaning low-income counties have particularly high mortality. In expansion states (blue line), this gradient is flatter, suggesting that Medicaid expansion partially compensates for income-based health disparities. This finding supports the hypothesis that Medicaid expansion provides a safety net that reduces health inequalities.
 
 **Bottom Panel (Smoking × Tobacco Tax):** Higher tobacco taxes (orange line) reduce the harmful effect of smoking on mortality compared to low-tax states (blue line). The flatter slope in high-tax states suggests that tobacco taxation not only reduces smoking rates but also mitigates the health consequences of smoking, possibly through reduced intensity of smoking or funding for cessation programs. This demonstrates how state policies can modify behavioral risk factors' impacts on population health.
+
+#### 4.4 Model Selection Decision Framework
+
+Choosing the appropriate level of model complexity requires balancing theoretical justification, statistical considerations, and practical constraints. The literature provides varied guidance on sample size requirements, reflecting the complexity of multilevel modeling decisions.
+
+**Step 1: Start Simple - Random Intercept Model**
+- **Always begin here** regardless of your research question
+- Provides baseline ICC and model fit statistics
+- Establishes whether multilevel modeling is necessary (ICC > 0.05)
+
+**Step 2: Assess Need for Random Slopes**
+
+*Primary Consideration: Theoretical Justification*
+- Do you have strong theory suggesting predictor effects vary meaningfully across groups?
+- Are cross-group differences in slopes substantively important for your research question?
+- Do existing studies suggest heterogeneous effects in your domain?
+
+*Statistical Evidence*
+- Is there significant variability in the predictor across Level 2 units?
+- Do exploratory plots suggest non-parallel relationships?
+- Does likelihood ratio test support added complexity?
+
+*Sample Size Considerations*
+The literature provides conflicting guidance on minimum group numbers:
+- **Conservative estimates**: 30+ groups for reliable variance component estimation
+- **Moderate estimates**: 10-20 groups may be sufficient with large within-group samples
+- **Liberal estimates**: As few as 5-8 groups in some simulation studies
+
+**Reality**: Your decision should prioritize theoretical justification over arbitrary sample size rules.
+
+**Step 3: Consider Cross-Level Interactions**
+
+*Theoretical Foundation (Most Important)*
+- Do you have measured Level 2 variables that theoretically moderate Level 1 relationships?
+- Are policy or contextual effects central to your research question?
+- Is there substantive reason to believe effects vary systematically (not just randomly)?
+
+*Model Building Strategy*
+- Add Level 2 main effects before interactions
+- Include interactions only with strong theoretical rationale
+- Consider whether random slopes are needed before cross-level interactions
+
+**Decision Framework Table:**
+
+```{r model-selection-table}
+# Create decision framework table
+decision_framework <- data.frame(
+  `Model Type` = c("Random Intercept", "Random Slope", "Cross-Level Interaction"),
+  
+  `When to Use` = c(
+    "Default starting point; Interest in average effects; Theory assumes constant effects",
+    "Theory suggests effect heterogeneity; Exploratory evidence of variation; Policy questions about differential impact",
+    "Specific hypotheses about policy/context moderation; Need to explain slope variation"
+  ),
+  
+  `Sample Considerations` = c(
+    "Flexible - works with small Level 2 samples",
+    "Literature varies: 10-30+ groups depending on context and within-group size",  
+    "Similar to random slopes, plus need variation in Level 2 moderators"
+  ),
+  
+  `Key Trade-offs` = c(
+    "Simple but may miss important heterogeneity; Assumes one-size-fits-all",
+    "More realistic but convergence issues; Harder to interpret",
+    "Policy-relevant but complex; Risk of overfitting and interpretation challenges"
+  ),
+  
+  `Health Research Example` = c(
+    "Average effect of smoking on mortality (assumes same across all states)",
+    "Smoking effects vary by state (captures heterogeneity without explaining why)",
+    "Tobacco tax policy moderates smoking-mortality relationship (explains why effects vary)"
+  )
+)
+
+decision_framework %>%
+  kable(caption = "Model Selection Decision Framework") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed")) %>%
+  column_spec(1, bold = TRUE, width = "15%") %>%
+  column_spec(2, width = "30%") %>%
+  column_spec(3, width = "25%") %>%
+  column_spec(4, width = "30%")
+```
+
+**Practical Guidelines:**
+
+*What the Literature Actually Shows*
+
+- Random intercept models: Generally robust even with small Level 2 samples
+- Random slope models: Performance depends on Level 2 sample size, within-group sample sizes, and true effect heterogeneity
+- Cross-level interactions: Require sufficient variation in both Level 1 and Level 2 variables
+
+*Pragmatic Approach*
+
+1. **Theory first**: Strong theoretical justification trumps sample size concerns
+2. **Convergence as reality check**: Non-convergent models signal overly complex specifications
+3. **Substantive significance**: Focus on effect sizes and policy implications, not just statistical significance
+4. **Sensitivity analysis**: Test robustness of conclusions across different model specifications
+
+**Recommended Workflow:**
+
+1. **Fit random intercept model** → examine ICC and theoretical fit
+2. **Test random slopes** for theoretically important predictors → check convergence and improvement
+3. **Add Level 2 predictors** to explain group-level variation → assess explanatory power
+4. **Consider cross-level interactions** only with strong theoretical basis → focus on policy/practical relevance
+5. **Model comparison**: Use multiple criteria (theory, fit, convergence, interpretability)
+6. **Sensitivity analysis**: Test key conclusions across different specifications
 
 ### 5. Model Comparison, Diagnostics, and Best Practices
 
@@ -889,33 +1007,42 @@ ggplot(var_long, aes(x = Model, y = Proportion, fill = Level)) +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 ```
 
-**Figure Interpretation:** This variance decomposition shows how adding predictors and complexity changes the distribution of unexplained variance. In the null model, state-level factors account for a substantial portion of total variance. As we add county-level predictors (Random Intercept model), the proportion of county-level variance decreases because we're explaining it with our variables. The Random Slope and Cross-Level models further refine how variance is partitioned, with cross-level interactions explaining some of the between-state differences through policy variables.
+**Figure Interpretation:** This variance decomposition reveals the dramatic impact of including state-level predictors and interactions on our understanding of health disparities. The progression shows four key insights:
+
+1. **Null Model**: Nearly 80% of mortality variation occurs between states, with only 20% within states—demonstrating massive state-level clustering that demands multilevel analysis.
+
+2. **Random Intercept Model**: Adding county-level predictors (income, smoking, healthcare access) barely changes the variance partition. State-level factors still dominate, indicating that county characteristics alone cannot explain why some states consistently outperform others.
+
+3. **Random Slope Model**: Allowing income effects to vary by state maintains similar proportions, suggesting that heterogeneous county-level relationships don't substantially alter the fundamental state-county variance structure.
+
+4. **Cross-Level Interaction Model**: The dramatic reversal occurs when we include state policies and their interactions—now 70% of variance is within-state and only 30% between-state. This transformation reveals that measured state-level factors (Medicaid expansion, health spending, tobacco taxes) explain most of the systematic differences between states.
 
 ### 6. Centering in Multilevel Models: A Critical Decision
 
 One of the most important but often overlooked decisions in multilevel modeling is how to center continuous predictors. The choice of centering strategy fundamentally affects the interpretation of coefficients and can lead to dramatically different conclusions about the same data.
 
-### 6.1 The Centering Problem
+#### 6.1 The Centering Problem
 
 When we introduce a continuous predictor in a multilevel model, we have to decide how to **center** it. This choice changes the meaning of the intercept and sometimes the slope. Here are the three main approaches, using median county income as an example:
 
 1. **Uncentered (raw values)**
-
-   * We just use the variable as it is (e.g., raw median income).
-   * **Interpretation**: The intercept represents the predicted outcome when income equals zero, which may be unrealistic (few counties have \$0 income).
+   * We just use the variable as it is: $X_{ij} = Income_{ij}$
+   * **Interpretation**: The intercept represents the predicted outcome when income equals zero, which may be unrealistic (few counties have $0 income).
    * **Use case**: Sometimes helpful if the zero point is substantively meaningful (e.g., number of children = 0).
 
-2. **Grand mean centering**
 
-   * Subtract the **overall mean** (across all counties) from each county’s value.
+2. **Grand mean centering**
+   * Subtract the **overall mean** (across all counties) from each county's value: $X_{ij} = Income_{ij} - \overline{Income}$
    * **Interpretation**: The intercept now represents the predicted outcome for a county with **average income**. Slopes represent the effect of income relative to the national average.
-   * **Use case**: This is often the most interpretable default, because it avoids weird “zero” values and makes coefficients easier to explain across the whole sample.
+   * **Use case**: This is often the most interpretable default, because it avoids weird "zero" values and makes coefficients easier to explain across the whole sample.
+
 
 3. **Group mean centering (a.k.a. within-group centering)**
-
-   * Subtract the **state mean** from each county’s value.
+   * Subtract the **state mean** from each county's value: $X_{ij} = Income_{ij} - \overline{Income_j}$
    * **Interpretation**: The intercept now represents the predicted outcome for a county at the **average income level of its own state**. The slope shows how counties differ from each other *within the same state*, independent of between-state differences.
    * **Use case**: This is crucial when we want to isolate **within-state effects** and avoid conflating them with between-state variation.
+
+Where $\overline{Income}$ is the grand mean across all counties and $\overline{Income_j}$ is the mean income within state $j$.
 
 ```{r centering-demonstration}
 # Calculate different centering approaches
@@ -951,9 +1078,6 @@ centering_example %>%
   kable_styling(bootstrap_options = c("striped", "hover", "condensed"))
 ```
 
-#### 6.2 The Contextual Effects Model
-
-The contextual effects model explicitly separates within-group and between-group effects, providing the most complete understanding of how predictors operate at different levels.
 
 ```{r contextual-effects-setup}
 # Create between and within components for contextual effects
@@ -1038,7 +1162,6 @@ p_within <- county_data %>%
   theme(legend.position = "none")
 
 # Combine panels
-library(patchwork)
 p_decomp
 p_between
 p_within
@@ -1052,7 +1175,11 @@ p_within
 
 * **Panel C** isolates the **within-state effect** by centering counties on their state means. This shows how counties diverge from their state’s average income and mortality. The negative slope reveals that, within a given state, wealthier counties consistently experience lower mortality—a relationship that holds once state-level differences are removed.
 
-#### 6.3 Estimating and Interpreting Contextual Effects Models
+#### 6.2 Estimating and Interpreting Contextual Effects Models
+
+The contextual effects model explicitly separates within-group and between-group effects, providing the most complete understanding of how predictors operate at different levels. This approach is the most sophisticated form of centering because it simultaneously includes **both** the group-mean centered variable (within-group effect) and the group mean itself (between-group effect) as separate predictors. This **dual-centering** strategy allows researchers to test whether the effect of income differs when comparing counties within the same state versus comparing states with different average income levels.
+
+The key question the contextual effects model addresses is: **"Does living in a high-income state provide health benefits beyond what we'd expect from individual county income alone?"**
 
 ```{r contextual-models}
 # Model 1: Traditional random intercept model (for comparison)
@@ -1061,47 +1188,102 @@ model_traditional <- lmer(mortality_rate ~ median_income + smoking_rate + obesit
 
 # Model 2: Full contextual effects model
 model_contextual <- lmer(mortality_rate ~ 
-                        # Within-state effects
+                        # Within-state effects (group-mean centered)
                         income_within + smoking_within + obesity_within +
                         
-                        # Between-state effects (contextual)
+                        # Between-state effects (contextual/ecological)
                         income_between + smoking_between + obesity_between +
                         
                         # Random intercept
                         (1 | state_id), 
                         data = county_data, REML = TRUE)
 
-tab_model(model_traditional, model_contextual)
+tab_model(model_traditional, model_contextual,
+          title = "Comparing Traditional vs. Contextual Effects Models")
+```
 
+The comparison between traditional and contextual effects models reveals striking differences in how we understand income's relationship with mortality:
+
+**Traditional Model Findings:**
+
+- **Median income coefficient**: -2.55 (p < 0.001) - Each $1,000 increase in county income associates with 2.55 fewer deaths per 100,000
+- **Strong statistical significance** suggests income clearly matters for health outcomes
+- **High ICC (0.89)** indicates substantial clustering within states
+
+
+**Contextual Effects Model Findings:**
+
+- **Within-state income effect**: -2.55 (p < 0.001) - Identical to the traditional model, showing robust within-state relationships
+- **Between-state income effect**: -19.26 (p = 0.719) - Large magnitude but not statistically significant
+- **Wide confidence intervals** (-124.20 to 85.68) for between-state effects reflect uncertainty with only 8 states
+
+
+**Critical Interpretation Issues:**
+
+The contextual effects results suggest a potentially important pattern—the between-state coefficient is nearly 8 times larger than the within-state effect—but our analysis faces a fundamental limitation. With only 8 states in the dataset, we lack sufficient power to detect between-state relationships reliably. The wide confidence intervals and non-significant p-values for all between-state effects (income, smoking, obesity) likely reflect this small sample size rather than true absence of contextual effects.
+
+
+**What This Means for Health Research:**
+
+1. **Within-state relationships are robust**: The consistent -2.55 coefficient across models shows that county-level income differences within states reliably predict mortality differences.
+
+2. **Between-state effects are underpowered**: The large but non-significant between-state coefficients suggest potential contextual effects that cannot be reliably estimated with 8 states.
+
+3. **Methodological caution needed**: This demonstrates why contextual effects models require substantial numbers of higher-level units (typically 20+ states/regions) for meaningful between-group comparisons.
+
+The analysis illustrates both the promise and limitations of contextual effects modeling in health research—while theoretically powerful, the approach demands adequate sample sizes at all levels to produce reliable conclusions about how context modifies individual-level relationships.
+
+```{r contextual-test}
 # Extract coefficients for testing
-within_effect <- fixef(model_contextual)["income_within"]
-between_effect <- fixef(model_contextual)["income_between"]
-contextual_effect <- between_effect - within_effect
+within_income <- fixef(model_contextual)["income_within"]
+between_income <- fixef(model_contextual)["income_between"]
+contextual_effect_income <- between_income - within_income
 
-# Create results table
-contextual_test <- data.frame(
-  Component = c("Within-State Effect", "Between-State Effect", 
-                "Contextual Effect (Difference)"),
-  Value = c(
-    round(within_effect, 3),
-    round(between_effect, 3),
-    round(contextual_effect, 3)
+within_smoking <- fixef(model_contextual)["smoking_within"]
+between_smoking <- fixef(model_contextual)["smoking_between"]
+contextual_effect_smoking <- between_smoking - within_smoking
+
+# Create comprehensive results table
+contextual_results <- data.frame(
+  Variable = c("Income", "Income", "Income", "Smoking", "Smoking", "Smoking"),
+  Component = c("Within-State Effect", "Between-State Effect", "Contextual Effect (Difference)", 
+                "Within-State Effect", "Between-State Effect", "Contextual Effect (Difference)"),
+  Coefficient = c(
+    round(within_income, 3),
+    round(between_income, 3),
+    round(contextual_effect_income, 3),
+    round(within_smoking, 3),
+    round(between_smoking, 3),
+    round(contextual_effect_smoking, 3)
   ),
   Interpretation = c(
-    "Effect of income changes within a state",
-    "Effect of being in a higher-income state",
-    "Additional effect of state context beyond individual income"
+    "Effect of $1K income increase within a state",
+    "Effect of living in a state with $1K higher mean income",
+    "Additional contextual benefit of high-income state environment",
+    "Effect of 1% smoking increase within a state",
+    "Effect of living in a state with 1% higher mean smoking",
+    "Additional contextual harm of high-smoking state environment"
   )
 )
 
-contextual_test %>%
-  kable(caption = "Testing for Contextual Effects: Is State Context Important?") %>%
+contextual_results %>%
+  kable(caption = "Contextual Effects Analysis: Do State Contexts Matter Beyond Individual Characteristics?") %>%
   kable_styling(bootstrap_options = c("striped", "hover", "condensed")) %>%
   column_spec(1, bold = TRUE) %>%
-  row_spec(3, background = "#FFF3CD")
+  column_spec(2, bold = TRUE) %>%
+  row_spec(c(3, 6), background = "#FFF3CD") %>%
+  pack_rows("Income Effects", 1, 3, label_row_css = "background-color: #E8F4F8;") %>%
+  pack_rows("Smoking Effects", 4, 6, label_row_css = "background-color: #F8E8E8;")
+
+cat(sprintf("\n**Key Findings:**"))
+cat(sprintf("\n• Income contextual effect: %.3f (%.1f%% stronger between-state effect)", 
+            contextual_effect_income, 100*(contextual_effect_income/abs(within_income))))
+cat(sprintf("\n• Smoking contextual effect: %.3f (%.1f%% difference in between-state effect)",
+            contextual_effect_smoking, 100*(abs(contextual_effect_smoking)/abs(within_smoking))))
 ```
 
-The contextual effects analysis reveals whether the state-level context matters beyond individual county characteristics. A significant contextual effect (difference between within and between effects) indicates that being in a wealthier state confers health benefits beyond what would be expected from county income alone—possibly due to better state infrastructure, policies, or spillover effects.
+The critical test in contextual effects models is whether the **within-group** and **between-group** coefficients differ significantly. If they're the same, there's no contextual effect - state context doesn't matter beyond individual county characteristics.
+
 
 ### 7. Practical Applications and Policy Implications
 
