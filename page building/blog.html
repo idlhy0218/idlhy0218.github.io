@@ -14,19 +14,18 @@
     }
 
     :root {
-      --bg-primary: #fafafa;
+      --bg-primary: #f8fafc;
       --bg-secondary: #ffffff;
-      --text-primary: #1a1a1a;
-      --text-secondary: #666666;
-      --text-muted: #999999;
-      --accent-primary: #4f46e5;
-      --accent-secondary: #7c3aed;
-      --accent-light: #e0e7ff;
-      --border-light: #e5e5e5;
-      --shadow-sm: 0 2px 4px rgba(0,0,0,0.04);
-      --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
-      --shadow-lg: 0 8px 24px rgba(0,0,0,0.12);
-      --shadow-xl: 0 20px 40px rgba(0,0,0,0.15);
+      --text-primary: #1e293b;
+      --text-secondary: #64748b;
+      --text-muted: #94a3b8;
+      --accent-primary: #3b82f6;
+      --accent-secondary: #6366f1;
+      --accent-light: #dbeafe;
+      --border-light: #e2e8f0;
+      --shadow-sm: 0 1px 2px 0 rgba(0,0,0,0.05);
+      --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.1);
+      --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.1);
     }
 
     body {
@@ -35,24 +34,6 @@
       color: var(--text-primary);
       line-height: 1.6;
       min-height: 100vh;
-      position: relative;
-      overflow-x: hidden;
-    }
-
-    /* Subtle gradient background */
-    body::before {
-      content: '';
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: 
-        radial-gradient(circle at 20% 80%, rgba(79, 70, 229, 0.02) 0%, transparent 50%),
-        radial-gradient(circle at 80% 20%, rgba(124, 58, 237, 0.02) 0%, transparent 50%),
-        radial-gradient(circle at 40% 40%, rgba(79, 70, 229, 0.01) 0%, transparent 50%);
-      pointer-events: none;
-      z-index: -1;
     }
 
     /* Navbar */
@@ -60,11 +41,7 @@
       background: var(--bg-secondary);
       border-bottom: 1px solid var(--border-light);
       padding: 1.5rem 0;
-      position: sticky;
-      top: 0;
-      z-index: 100;
-      backdrop-filter: blur(10px);
-      background: rgba(255, 255, 255, 0.9);
+      box-shadow: var(--shadow-sm);
     }
 
     .navbar-brand {
@@ -81,7 +58,7 @@
     /* Tab Container */
     .tab-container {
       background: var(--bg-secondary);
-      border-radius: 16px;
+      border-radius: 12px;
       padding: 1.5rem;
       margin-bottom: 2rem;
       box-shadow: var(--shadow-sm);
@@ -96,14 +73,13 @@
 
     .nav-tabs .nav-link {
       border: 1px solid transparent;
-      border-radius: 10px;
+      border-radius: 8px;
       color: var(--text-secondary);
       font-weight: 500;
       padding: 0.75rem 1.5rem;
       background: transparent;
       margin-bottom: 0;
       transition: all 0.2s ease;
-      position: relative;
       font-size: 0.95rem;
     }
 
@@ -125,142 +101,7 @@
       font-size: 1.1rem;
     }
 
-    /* Sidebar */
-    .blog-sidebar {
-      background: var(--bg-secondary);
-      border-radius: 16px;
-      padding: 2rem;
-      position: sticky;
-      top: 100px;
-      box-shadow: var(--shadow-sm);
-      border: 1px solid var(--border-light);
-      max-height: calc(100vh - 120px);
-      overflow-y: auto;
-    }
-
-    .blog-sidebar::-webkit-scrollbar {
-      width: 6px;
-    }
-
-    .blog-sidebar::-webkit-scrollbar-track {
-      background: var(--bg-primary);
-      border-radius: 3px;
-    }
-
-    .blog-sidebar::-webkit-scrollbar-thumb {
-      background: var(--border-light);
-      border-radius: 3px;
-    }
-
-    .blog-sidebar::-webkit-scrollbar-thumb:hover {
-      background: var(--text-muted);
-    }
-
-    .blog-list-title {
-      color: var(--text-primary);
-      margin-bottom: 1.5rem;
-      padding-bottom: 1rem;
-      border-bottom: 2px solid var(--border-light);
-      font-weight: 600;
-      font-size: 1.1rem;
-      letter-spacing: -0.3px;
-    }
-
-    .blog-list {
-      list-style: none;
-      padding: 0;
-      margin: 0;
-    }
-
-    .blog-list-item {
-      margin-bottom: 0.75rem;
-      border-radius: 8px;
-      transition: all 0.2s ease;
-    }
-
-    .blog-list-link {
-      color: var(--text-primary);
-      text-decoration: none;
-      font-weight: 500;
-      font-size: 0.95rem;
-      display: block;
-      padding: 0.75rem 1rem;
-      border-radius: 8px;
-      transition: all 0.2s ease;
-      border: 1px solid transparent;
-      position: relative;
-    }
-
-    .blog-list-link::before {
-      content: '';
-      position: absolute;
-      left: 0;
-      top: 50%;
-      transform: translateY(-50%);
-      width: 3px;
-      height: 0;
-      background: var(--accent-primary);
-      border-radius: 2px;
-      transition: height 0.2s ease;
-    }
-
-    .blog-list-link:hover {
-      background: var(--bg-primary);
-      color: var(--accent-primary);
-      padding-left: 1.5rem;
-    }
-
-    .blog-list-link:hover::before {
-      height: 60%;
-    }
-
-    .blog-list-link.active {
-      background: var(--accent-light);
-      color: var(--accent-primary);
-      font-weight: 600;
-      border-color: var(--accent-primary);
-      padding-left: 1.5rem;
-    }
-
-    .blog-list-link.active::before {
-      height: 80%;
-    }
-
-    .blog-date {
-      color: var(--text-muted);
-      font-size: 0.8rem;
-      display: block;
-      margin-top: 0.25rem;
-      font-weight: 400;
-    }
-
-    .blog-description {
-      margin-top: 0.5rem;
-      color: var(--text-secondary);
-      font-size: 0.85rem;
-      line-height: 1.5;
-      display: none;
-    }
-
-    /* Content Container */
-    .blog-content-container {
-      background: var(--bg-secondary);
-      border-radius: 16px;
-      padding: 2rem;
-      min-height: 600px;
-      box-shadow: var(--shadow-sm);
-      border: 1px solid var(--border-light);
-      position: relative;
-    }
-
-    .blog-content {
-      width: 100%;
-      min-height: 700px;
-      border: none;
-      background-color: var(--bg-secondary);
-      border-radius: 8px;
-    }
-
+    /* Back Button */
     .back-button {
       text-decoration: none;
       color: var(--text-secondary);
@@ -288,62 +129,156 @@
       transform: translateX(-4px);
     }
 
-    /* Introduction Content */
-    .introduction-content {
-      padding: 3rem 2rem;
-      text-align: center;
-      max-width: 700px;
-      margin: 0 auto;
+    /* Blog Cards Grid */
+    .blog-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+      gap: 1.5rem;
+      padding: 0;
     }
 
-    .introduction-content h2 {
-      color: var(--text-primary);
-      margin-bottom: 1.5rem;
-      font-weight: 600;
-      font-size: 2rem;
-      letter-spacing: -0.5px;
+    .blog-card {
+      background: var(--bg-secondary);
+      border-radius: 12px;
+      padding: 1.5rem;
+      box-shadow: var(--shadow-sm);
+      border: 1px solid var(--border-light);
+      transition: all 0.3s ease;
+      cursor: pointer;
       position: relative;
-      display: inline-block;
+      overflow: hidden;
     }
 
-    .introduction-content h2::after {
+    .blog-card::before {
       content: '';
       position: absolute;
-      bottom: -10px;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 60px;
-      height: 3px;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
       background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary));
-      border-radius: 2px;
+      transform: scaleX(0);
+      transition: transform 0.3s ease;
     }
 
-    .introduction-content p {
-      font-size: 1.05rem;
-      line-height: 1.8;
-      color: var(--text-secondary);
-      margin-bottom: 1.5rem;
+    .blog-card:hover {
+      transform: translateY(-4px);
+      box-shadow: var(--shadow-lg);
     }
 
-    .introduction-content strong {
+    .blog-card:hover::before {
+      transform: scaleX(1);
+    }
+
+    .blog-card-header {
+      margin-bottom: 1rem;
+    }
+
+    .blog-card-title {
+      font-size: 1.25rem;
+      font-weight: 600;
       color: var(--text-primary);
+      margin-bottom: 0.5rem;
+      line-height: 1.4;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .blog-card-date {
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .blog-card-description {
+      color: var(--text-secondary);
+      font-size: 0.95rem;
+      line-height: 1.6;
+      margin-bottom: 1rem;
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .blog-card-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: auto;
+      padding-top: 1rem;
+      border-top: 1px solid var(--border-light);
+    }
+
+    .blog-card-category {
+      background: var(--accent-light);
+      color: var(--accent-primary);
+      padding: 0.25rem 0.75rem;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 500;
+    }
+
+    .blog-card-arrow {
+      color: var(--text-muted);
+      font-size: 1.2rem;
+      transition: all 0.2s ease;
+    }
+
+    .blog-card:hover .blog-card-arrow {
+      color: var(--accent-primary);
+      transform: translateX(4px);
+    }
+
+    /* Introduction Section */
+    .introduction-section {
+      text-align: center;
+      padding: 3rem 1rem;
+      max-width: 800px;
+      margin: 0 auto 3rem auto;
+    }
+
+    .introduction-section h2 {
+      font-size: 2.5rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 1rem;
+      letter-spacing: -0.5px;
+    }
+
+    .introduction-section p {
+      font-size: 1.1rem;
+      color: var(--text-secondary);
+      line-height: 1.7;
+      margin-bottom: 1rem;
+    }
+
+    .introduction-section strong {
+      color: var(--accent-primary);
       font-weight: 600;
     }
 
-    /* Subtle animations */
-    @keyframes fadeIn {
-      from {
-        opacity: 0;
-        transform: translateY(10px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
+    /* Blog Content Container for iframe */
+    .blog-content-container {
+      background: var(--bg-secondary);
+      border-radius: 12px;
+      padding: 0;
+      margin-top: 2rem;
+      box-shadow: var(--shadow-sm);
+      border: 1px solid var(--border-light);
+      overflow: hidden;
     }
 
-    .tab-content {
-      animation: fadeIn 0.4s ease;
+    .blog-content {
+      width: 100%;
+      min-height: 700px;
+      border: none;
+      background-color: var(--bg-secondary);
     }
 
     /* Loading state */
@@ -369,27 +304,44 @@
       to { transform: rotate(360deg); }
     }
 
-    /* Responsive Design */
-    @media (max-width: 991.98px) {
-      .blog-sidebar {
-        position: static;
-        margin-bottom: 1.5rem;
-        max-height: none;
-      }
+    /* Hide/Show States */
+    .blog-overview {
+      display: block;
+    }
 
-      .blog-content {
-        min-height: 500px;
-      }
+    .blog-detail {
+      display: none;
+    }
 
-      .introduction-content {
-        padding: 2rem 1rem;
-      }
+    .blog-detail.active {
+      display: block;
+    }
 
-      .introduction-content h2 {
-        font-size: 1.75rem;
+    .blog-overview.hidden {
+      display: none;
+    }
+
+    /* Animations */
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
       }
     }
 
+    .tab-content {
+      animation: fadeIn 0.4s ease;
+    }
+
+    .blog-card {
+      animation: fadeIn 0.4s ease;
+    }
+
+    /* Responsive Design */
     @media (max-width: 767.98px) {
       .navbar {
         padding: 1rem 0;
@@ -413,16 +365,24 @@
         text-align: center;
       }
 
-      .blog-sidebar,
-      .blog-content-container {
-        padding: 1.5rem;
+      .blog-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
       }
 
-      .introduction-content h2 {
-        font-size: 1.5rem;
+      .blog-card {
+        padding: 1.25rem;
       }
 
-      .introduction-content p {
+      .introduction-section {
+        padding: 2rem 1rem;
+      }
+
+      .introduction-section h2 {
+        font-size: 2rem;
+      }
+
+      .introduction-section p {
         font-size: 1rem;
       }
     }
@@ -432,34 +392,29 @@
         padding: 0 1rem;
       }
 
-      .blog-sidebar,
-      .blog-content-container,
+      .blog-card-title {
+        font-size: 1.1rem;
+      }
+
+      .blog-card {
+        border-radius: 8px;
+      }
+
       .tab-container {
-        border-radius: 12px;
+        border-radius: 8px;
       }
 
-      .back-button {
-        font-size: 0.9rem;
-        padding: 0.5rem 0.75rem;
+      .introduction-section h2 {
+        font-size: 1.75rem;
       }
-    }
-
-    /* Hover effects for interactive elements */
-    button, a {
-      position: relative;
-    }
-
-    /* Micro-interactions */
-    .blog-list-item {
-      transform: translateX(0);
-      transition: transform 0.2s ease;
-    }
-
-    .blog-list-item:hover {
-      transform: translateX(2px);
     }
 
     /* Focus states for accessibility */
+    .blog-card:focus {
+      outline: 2px solid var(--accent-primary);
+      outline-offset: 2px;
+    }
+
     a:focus,
     button:focus {
       outline: 2px solid var(--accent-primary);
@@ -470,14 +425,8 @@
     @media print {
       .navbar,
       .back-button,
-      .tab-container,
-      .blog-sidebar {
+      .tab-container {
         display: none;
-      }
-
-      .blog-content-container {
-        box-shadow: none;
-        border: none;
       }
     }
   </style>
@@ -513,46 +462,38 @@
     <div class="tab-content">
       <!-- Stats Lab -->
       <div class="tab-pane fade show active" id="statslab" role="tabpanel" aria-labelledby="statslab-tab">
-        <div class="row">
-          <div class="col-lg-3">
-            <div class="blog-sidebar">
-              <h2 class="blog-list-title">Stats Lab Posts</h2>
-              <ul class="blog-list" id="statsLabList"></ul>
-            </div>
+        <div class="blog-overview" id="statslab-overview">
+          <div class="introduction-section">
+            <h2>Stats Lab</h2>
+            <p>Here you'll find my statistical labs with R. I post on random topics but with a consistent theme: "frequently used statistical concepts that are <strong>easy to forget the underlying logic of</strong>."</p>
+            <p>Feel free to contact me if you find any errors or have any suggestions for topics.</p>
           </div>
-          <div class="col-lg-9">
-            <div class="blog-content-container">
-              <div id="statsLabContent" class="blogContentTarget">
-                <div class="introduction-content">
-                  <h2>Welcome to Stats Lab</h2>
-                  <p>Here you'll find my statistical labs with R. I post on random topics but with a consistent theme: "frequently used statistical concepts that are <strong>easy to forget the underlying logic of</strong>."</p>
-                  <p>Feel free to contact me if you find any errors or have any suggestions for topics. Browse the sidebar to select posts that interest you.</p>
-                </div>
-              </div>
-            </div>
+          
+          <div class="blog-grid" id="statsLabGrid"></div>
+        </div>
+        
+        <div class="blog-detail" id="statslab-detail">
+          <div class="blog-content-container">
+            <div id="statsLabContent"></div>
           </div>
         </div>
       </div>
 
       <!-- Study Notes -->
       <div class="tab-pane fade" id="studynotes" role="tabpanel" aria-labelledby="studynotes-tab">
-        <div class="row">
-          <div class="col-lg-3">
-            <div class="blog-sidebar">
-              <h2 class="blog-list-title">Study Notes</h2>
-              <ul class="blog-list" id="studyNotesList"></ul>
-            </div>
+        <div class="blog-overview" id="studynotes-overview">
+          <div class="introduction-section">
+            <h2>Study Notes</h2>
+            <p>These notes summarize important readings, lectures, and research papers I've studied. They serve as a personal reference and might be helpful for others exploring similar topics in sociology and statistics.</p>
+            <p>Each note is a distilled version of key concepts and insights from various academic sources.</p>
           </div>
-          <div class="col-lg-9">
-            <div class="blog-content-container">
-              <div id="studyNotesContent" class="blogContentTarget">
-                <div class="introduction-content">
-                  <h2>Welcome to Study Notes</h2>
-                  <p>These notes summarize important readings, lectures, and research papers I've studied. They serve as a personal reference and might be helpful for others exploring similar topics in sociology and statistics.</p>
-                  <p>Each note is a distilled version of key concepts and insights from various academic sources.</p>
-                </div>
-              </div>
-            </div>
+          
+          <div class="blog-grid" id="studyNotesGrid"></div>
+        </div>
+        
+        <div class="blog-detail" id="studynotes-detail">
+          <div class="blog-content-container">
+            <div id="studyNotesContent"></div>
           </div>
         </div>
       </div>
@@ -565,36 +506,38 @@
         posts: [
           {
             id: 'multilevel',
-            title: 'Understading Multilevel Analysis',
+            title: 'Understanding Multilevel Analysis',
             date: 'Sep 1, 2025',
-            description: '',
+            description: 'Explore the fundamentals of multilevel modeling and when to use hierarchical data structures in statistical analysis.',
             file: 'blog/statslab/multilevel.html'
           },
           {
             id: 'twfe',
             title: 'What is The Logic Behind a Two-Way Fixed Effects Analysis?',
             date: 'May 28, 2025',
-            description: '',
+            description: 'Demystify the two-way fixed effects approach and understand the underlying statistical logic for causal inference.',
             file: 'blog/statslab/twfe.html'
           },
           {
             id: 'fe_be_re',
             title: 'Fixed vs Between vs Random Effect',
             date: 'May 15, 2025',
-            description: '',
+            description: 'Clear up the confusion between different types of effects in panel data analysis with practical examples.',
             file: 'blog/statslab/fe_be_re.html'
           },
           {
             id: 'control',
             title: 'Understanding "Control" in Statistical Analysis',
             date: 'May 18, 2025',
-            description: '',
+            description: 'Learn what it really means to "control for" variables and how it affects your statistical interpretations.',
             file: 'blog/statslab/what_is_control.html'
           }
         ],
         tabId: 'statslab',
         contentId: 'statsLabContent',
-        listId: 'statsLabList'
+        gridId: 'statsLabGrid',
+        overviewId: 'statslab-overview',
+        detailId: 'statslab-detail'
       },
       studyNotes: {
         posts: [
@@ -602,33 +545,52 @@
             id: 'opportunity_insights',
             title: 'Opportunity Insights',
             date: 'June 16, 2025',
-            description: '',
+            description: 'Key findings and methodological insights from Raj Chetty\'s research on economic mobility and opportunity in America.',
             file: 'blog/studynotes/chetty.html'
           }
         ],
         tabId: 'studynotes',
         contentId: 'studyNotesContent',
-        listId: 'studyNotesList'
+        gridId: 'studyNotesGrid',
+        overviewId: 'studynotes-overview',
+        detailId: 'studynotes-detail'
       }
     };
 
-    function generateBlogList(section) {
+    function generateBlogGrid(section) {
       const config = blogConfig[section];
-      const listElement = document.getElementById(config.listId);
-      listElement.innerHTML = '';
+      const gridElement = document.getElementById(config.gridId);
+      gridElement.innerHTML = '';
       
       config.posts.forEach(post => {
-        const listItem = document.createElement('li');
-        listItem.className = 'blog-list-item';
-        listItem.innerHTML = `
-          <a href="#${section}__${post.id}" class="blog-list-link" id="${section}-${post.id}-link"
-             onclick="loadBlogPost('${section}', '${post.id}'); return false;">
-            ${post.title}
-            <span class="blog-date">${post.date}</span>
-          </a>
-          ${post.description ? `<div class="blog-description">${post.description}</div>` : ''}
+        const cardElement = document.createElement('div');
+        cardElement.className = 'blog-card';
+        cardElement.setAttribute('tabindex', '0');
+        cardElement.setAttribute('role', 'button');
+        cardElement.innerHTML = `
+          <div class="blog-card-header">
+            <h3 class="blog-card-title">${post.title}</h3>
+            <div class="blog-card-date">
+              <i class="bi bi-calendar3"></i>
+              ${post.date}
+            </div>
+          </div>
+          <div class="blog-card-description">${post.description}</div>
+          <div class="blog-card-footer">
+            <span class="blog-card-category">${section === 'statsLab' ? 'Stats Lab' : 'Study Notes'}</span>
+            <i class="bi bi-arrow-right blog-card-arrow"></i>
+          </div>
         `;
-        listElement.appendChild(listItem);
+        
+        cardElement.addEventListener('click', () => loadBlogPost(section, post.id));
+        cardElement.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            loadBlogPost(section, post.id);
+          }
+        });
+        
+        gridElement.appendChild(cardElement);
       });
     }
 
@@ -637,24 +599,39 @@
       const post = config.posts.find(p => p.id === postId);
       if (!post) return;
 
-      // Remove active class from all links
-      document.querySelectorAll('.blog-list-link').forEach(link => link.classList.remove('active'));
-      
-      // Add active class to current link
-      const activeLink = document.getElementById(`${section}-${postId}-link`);
-      if (activeLink) activeLink.classList.add('active');
+      // Hide overview, show detail
+      document.getElementById(config.overviewId).classList.add('hidden');
+      document.getElementById(config.detailId).classList.add('active');
 
       // Load content with loading state
       const contentTarget = document.getElementById(config.contentId);
       contentTarget.innerHTML = '<div class="content-loading"></div>';
       
-      // Simulate loading and then show iframe
+      // Add back button
       setTimeout(() => {
-        contentTarget.innerHTML = `<iframe src="${post.file}" class="blog-content" title="${post.title}"></iframe>`;
+        contentTarget.innerHTML = `
+          <div style="padding: 1.5rem 1.5rem 0 1.5rem;">
+            <a href="#" class="back-button" onclick="showOverview('${section}'); return false;">
+              <i class="bi bi-arrow-left me-2"></i> Back to ${section === 'statsLab' ? 'Stats Lab' : 'Study Notes'}
+            </a>
+          </div>
+          <iframe src="${post.file}" class="blog-content" title="${post.title}"></iframe>
+        `;
       }, 300);
 
       // Update URL hash
       window.location.hash = `${section}__${postId}`;
+    }
+
+    function showOverview(section) {
+      const config = blogConfig[section];
+      
+      // Show overview, hide detail
+      document.getElementById(config.overviewId).classList.remove('hidden');
+      document.getElementById(config.detailId).classList.remove('active');
+      
+      // Clear hash
+      window.location.hash = '';
     }
 
     function parseHashAndLoad() {
@@ -691,24 +668,21 @@
     }
 
     document.addEventListener('DOMContentLoaded', function () {
-      // Generate lists for both sections
-      generateBlogList('statsLab');
-      generateBlogList('studyNotes');
+      // Generate grids for both sections
+      generateBlogGrid('statsLab');
+      generateBlogGrid('studyNotes');
 
       // Parse hash and load if necessary
       parseHashAndLoad();
 
-      // Smooth scroll behavior
-      document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-        anchor.addEventListener('click', function (e) {
-          const href = this.getAttribute('href');
-          if (href && href !== '#' && !href.includes('__')) {
-            e.preventDefault();
-            const target = document.querySelector(href);
-            if (target) {
-              target.scrollIntoView({ behavior: 'smooth' });
-            }
-          }
+      // Tab switching logic
+      document.querySelectorAll('[data-bs-toggle="tab"]').forEach(tab => {
+        tab.addEventListener('shown.bs.tab', function (e) {
+          const targetId = e.target.getAttribute('data-bs-target').substring(1);
+          const section = targetId === 'statslab' ? 'statsLab' : 'studyNotes';
+          
+          // Always show overview when switching tabs
+          showOverview(section);
         });
       });
     });
