@@ -235,6 +235,139 @@
       transform: translateX(4px);
     }
 
+    /* Gallery Grid */
+    .gallery-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 1.5rem;
+      padding: 0;
+    }
+
+    .gallery-item {
+      background: var(--bg-secondary);
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: var(--shadow-sm);
+      border: 1px solid var(--border-light);
+      transition: all 0.3s ease;
+      cursor: pointer;
+      position: relative;
+    }
+
+    .gallery-item:hover {
+      transform: translateY(-4px);
+      box-shadow: var(--shadow-lg);
+    }
+
+    .gallery-item-image {
+      width: 100%;
+      height: 250px;
+      object-fit: cover;
+      display: block;
+      transition: transform 0.3s ease;
+    }
+
+    .gallery-item:hover .gallery-item-image {
+      transform: scale(1.05);
+    }
+
+    .gallery-item-overlay {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: linear-gradient(transparent, rgba(0,0,0,0.8));
+      padding: 2rem 1.5rem 1.5rem;
+      color: white;
+      transform: translateY(100%);
+      transition: transform 0.3s ease;
+    }
+
+    .gallery-item:hover .gallery-item-overlay {
+      transform: translateY(0);
+    }
+
+    .gallery-item-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+      line-height: 1.3;
+    }
+
+    .gallery-item-description {
+      font-size: 0.9rem;
+      opacity: 0.9;
+      line-height: 1.4;
+    }
+
+    /* Modal for gallery images */
+    .gallery-modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0,0,0,0.9);
+      animation: fadeIn 0.3s ease;
+    }
+
+    .gallery-modal.active {
+      display: block;
+    }
+
+    .gallery-modal-content {
+      position: relative;
+      max-width: 90%;
+      max-height: 90%;
+      margin: auto;
+      top: 50%;
+      transform: translateY(-50%);
+    }
+
+    .gallery-modal-image {
+      width: 100%;
+      height: auto;
+      border-radius: 8px;
+      box-shadow: var(--shadow-lg);
+    }
+
+    .gallery-modal-close {
+      position: absolute;
+      top: -40px;
+      right: 0;
+      color: white;
+      font-size: 2rem;
+      font-weight: bold;
+      cursor: pointer;
+      transition: color 0.2s ease;
+    }
+
+    .gallery-modal-close:hover {
+      color: var(--accent-primary);
+    }
+
+    .gallery-modal-info {
+      background: var(--bg-secondary);
+      padding: 1.5rem;
+      margin-top: 1rem;
+      border-radius: 8px;
+      box-shadow: var(--shadow-md);
+    }
+
+    .gallery-modal-title {
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 0.5rem;
+    }
+
+    .gallery-modal-description {
+      color: var(--text-secondary);
+      line-height: 1.6;
+    }
+
     /* Introduction Section */
     .introduction-section {
       text-align: center;
@@ -341,7 +474,21 @@
       animation: fadeIn 0.4s ease;
     }
 
+    .gallery-item {
+      animation: fadeIn 0.4s ease;
+    }
+
     /* Responsive Design */
+    @media (max-width: 991.98px) {
+      .nav-tabs {
+        flex-wrap: wrap;
+      }
+      
+      .gallery-grid {
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      }
+    }
+
     @media (max-width: 767.98px) {
       .navbar {
         padding: 1rem 0;
@@ -370,6 +517,11 @@
         gap: 1rem;
       }
 
+      .gallery-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+      }
+
       .blog-card {
         padding: 1.25rem;
       }
@@ -384,6 +536,11 @@
 
       .introduction-section p {
         font-size: 1rem;
+      }
+
+      .gallery-modal-content {
+        max-width: 95%;
+        max-height: 85%;
       }
     }
 
@@ -407,10 +564,19 @@
       .introduction-section h2 {
         font-size: 1.75rem;
       }
+
+      .gallery-item {
+        border-radius: 8px;
+      }
+
+      .gallery-item-image {
+        height: 200px;
+      }
     }
 
     /* Focus states for accessibility */
-    .blog-card:focus {
+    .blog-card:focus,
+    .gallery-item:focus {
       outline: 2px solid var(--accent-primary);
       outline-offset: 2px;
     }
@@ -456,6 +622,11 @@
             <i class="bi bi-journal-text"></i> Study Notes
           </button>
         </li>
+        <li class="nav-item" role="presentation">
+          <button class="nav-link" id="gallery-tab" data-bs-toggle="tab" data-bs-target="#gallery" type="button" role="tab" aria-controls="gallery" aria-selected="false">
+            <i class="bi bi-image"></i> Gallery
+          </button>
+        </li>
       </ul>
     </div>
 
@@ -496,6 +667,29 @@
             <div id="studyNotesContent"></div>
           </div>
         </div>
+      </div>
+
+      <!-- Gallery -->
+      <div class="tab-pane fade" id="gallery" role="tabpanel" aria-labelledby="gallery-tab">
+        <div class="introduction-section">
+          <h2>Gallery</h2>
+          <p>A collection of visualizations, charts, and images I've created for my research and projects. Each piece represents a different approach to <strong>visual storytelling with data</strong>.</p>
+          <p>Click on any image to view it in full size with additional details.</p>
+        </div>
+        
+        <div class="gallery-grid" id="galleryGrid"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Gallery Modal -->
+  <div class="gallery-modal" id="galleryModal">
+    <div class="gallery-modal-content">
+      <span class="gallery-modal-close" id="galleryModalClose">&times;</span>
+      <img class="gallery-modal-image" id="galleryModalImage" src="" alt="">
+      <div class="gallery-modal-info" id="galleryModalInfo">
+        <h3 class="gallery-modal-title" id="galleryModalTitle"></h3>
+        <p class="gallery-modal-description" id="galleryModalDescription"></p>
       </div>
     </div>
   </div>
@@ -554,6 +748,24 @@
         gridId: 'studyNotesGrid',
         overviewId: 'studynotes-overview',
         detailId: 'studynotes-detail'
+      },
+      gallery: {
+        images: [
+          {
+            id: 'map_art_1',
+            title: 'Albany Metro Area',
+            description: '',
+            file: 'blog/gallery/albany_metro_white.png',
+            date: 'Sep 9th, 2025'
+          },
+            {
+            id: 'map_art_2',
+            title: 'NYS Water Map',
+            description: '',
+            file: 'blog/gallery/nys_water.png',
+            date: 'Sep 9th, 2025'
+          }
+        ]
       }
     };
 
@@ -592,6 +804,57 @@
         
         gridElement.appendChild(cardElement);
       });
+    }
+
+    function generateGallery() {
+      const galleryGrid = document.getElementById('galleryGrid');
+      galleryGrid.innerHTML = '';
+      
+      blogConfig.gallery.images.forEach(image => {
+        const galleryItem = document.createElement('div');
+        galleryItem.className = 'gallery-item';
+        galleryItem.setAttribute('tabindex', '0');
+        galleryItem.setAttribute('role', 'button');
+        galleryItem.innerHTML = `
+          <img src="${image.file}" alt="${image.title}" class="gallery-item-image" loading="lazy">
+          <div class="gallery-item-overlay">
+            <div class="gallery-item-title">${image.title}</div>
+            <div class="gallery-item-description">${image.description}</div>
+          </div>
+        `;
+        
+        galleryItem.addEventListener('click', () => openGalleryModal(image));
+        galleryItem.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            openGalleryModal(image);
+          }
+        });
+        
+        galleryGrid.appendChild(galleryItem);
+      });
+    }
+
+    function openGalleryModal(image) {
+      const modal = document.getElementById('galleryModal');
+      const modalImage = document.getElementById('galleryModalImage');
+      const modalTitle = document.getElementById('galleryModalTitle');
+      const modalDescription = document.getElementById('galleryModalDescription');
+      
+      modalImage.src = image.file;
+      modalImage.alt = image.title;
+      modalTitle.textContent = image.title;
+      modalDescription.textContent = image.description;
+      
+      modal.classList.add('active');
+      
+      // Focus management for accessibility
+      modalImage.focus();
+    }
+
+    function closeGalleryModal() {
+      const modal = document.getElementById('galleryModal');
+      modal.classList.remove('active');
     }
 
     function loadBlogPost(section, postId) {
@@ -651,7 +914,7 @@
       
       if (section && postId) {
         const sectionKey = Object.keys(blogConfig).find(key => 
-          key.toLowerCase() === section.toLowerCase()
+          key.toLowerCase() === section.toLowerCase() && key !== 'gallery'
         );
         
         if (sectionKey && blogConfig[sectionKey]) {
@@ -668,9 +931,12 @@
     }
 
     document.addEventListener('DOMContentLoaded', function () {
-      // Generate grids for both sections
+      // Generate grids for blog sections
       generateBlogGrid('statsLab');
       generateBlogGrid('studyNotes');
+      
+      // Generate gallery
+      generateGallery();
 
       // Parse hash and load if necessary
       parseHashAndLoad();
@@ -679,11 +945,34 @@
       document.querySelectorAll('[data-bs-toggle="tab"]').forEach(tab => {
         tab.addEventListener('shown.bs.tab', function (e) {
           const targetId = e.target.getAttribute('data-bs-target').substring(1);
-          const section = targetId === 'statslab' ? 'statsLab' : 'studyNotes';
           
-          // Always show overview when switching tabs
-          showOverview(section);
+          // Always show overview when switching tabs (only for blog sections)
+          if (targetId === 'statslab') {
+            showOverview('statsLab');
+          } else if (targetId === 'studynotes') {
+            showOverview('studyNotes');
+          }
         });
+      });
+
+      // Gallery modal event listeners
+      const galleryModal = document.getElementById('galleryModal');
+      const galleryModalClose = document.getElementById('galleryModalClose');
+      
+      galleryModalClose.addEventListener('click', closeGalleryModal);
+      
+      // Close modal when clicking outside the image
+      galleryModal.addEventListener('click', function(e) {
+        if (e.target === galleryModal) {
+          closeGalleryModal();
+        }
+      });
+      
+      // Close modal with Escape key
+      document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && galleryModal.classList.contains('active')) {
+          closeGalleryModal();
+        }
       });
     });
 
