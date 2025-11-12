@@ -242,6 +242,7 @@ The modern DiD estimators presented below address the limitations of TWFE by usi
 # 3-1. Method 1: Callaway & Sant'Anna (2021)
 
 **Reference**: 
+
 - [did package vignette](https://cran.r-project.org/web/packages/did/vignettes/did-basics.html)
 - [Callaway & Sant'Anna (2021)](https://doi.org/10.1016/j.jeconom.2020.12.001)
 
@@ -305,6 +306,7 @@ ggdid(cs_ct)
 # 3-2. Method 2: Sun & Abraham (2021)
 
 **Reference**: 
+
 - [fixest](https://lrberge.github.io/fixest/reference/sunab.html)
 - [Sun & Abraham](https://doi.org/10.1016/j.jeconom.2020.09.006)
 
@@ -342,6 +344,7 @@ print(sa_cohort)
 # 3-3. Method 3: Wooldridge ETWFE (2023)
 
 **Reference**: 
+
 - [etwfe package vignette](https://cran.r-project.org/web/packages/etwfe/vignettes/etwfe.html)
 - [Wooldridge (2023)](https://doi.org/10.1093/ectj/utad016)
 
@@ -449,8 +452,10 @@ ggplot(etwfe_es2, aes(x = event, y = estimate)) +
 
 # 3-4. Method 4: Gardner Two-Stage (2022)
 
-**Reference**: [did2s GitHub](https://github.com/kylebutts/did2s)
-**Reference**: [Gardner (2022)](https://doi.org/10.48550/arXiv.2207.05943)
+**Reference**:
+
+- [did2s GitHub](https://github.com/kylebutts/did2s)
+- [Gardner (2022)](https://doi.org/10.48550/arXiv.2207.05943)
 
 Gardner's two-stage approach first estimates unit and time fixed effects from untreated observations, then estimates treatment effects in the second stage.
 
@@ -498,7 +503,7 @@ fixest::iplot(did2s_es, main = "Gardner Two-Stage: Event Study",
               ref.line = -0.5, drop = "Inf")
 ```
 
-### Custom Event Study Plot (ggploy)
+### Custom Event Study Plot (ggplot)
 
 ```{r did2s-event-custom}
 did2s_es_coef <- broom::tidy(did2s_es, conf.int = TRUE) %>%
@@ -555,7 +560,7 @@ ggplot(results, aes(x = Method, y = ATT)) +
   geom_hline(yintercept = 5.36, linetype = "solid", color = "red", alpha = 0.5, size = 2) +  # True effect
   coord_flip() +
   labs(title = "Method Comparison", 
-       subtitle = "Red line = true effect (3)",
+       subtitle = "Red line = true effect (5.36)",
        x = "", y = "ATT Estimate") +
   theme_minimal()
 ```
