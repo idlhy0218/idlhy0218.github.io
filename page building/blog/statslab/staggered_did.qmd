@@ -225,6 +225,7 @@ The TWFE event study reveals several issues:
 2. **Post-treatment pattern**: The post-treatment coefficients should reflect the true dynamic treatment effects. However, under heterogeneous treatment effects, TWFE estimates are biased and do not accurately capture the true effect trajectory.
 
 ## Why is TWFE Biased?
+**Reference**: [Goodman-Bacon (2021)](https://doi.org/10.1016/j.jeconom.2021.03.014)
 
 In this setting, TWFE produces biased estimates because it implicitly uses already-treated units as controls for newly treated units. Specifically:
 
@@ -240,7 +241,9 @@ The modern DiD estimators presented below address the limitations of TWFE by usi
 
 # 3-1. Method 1: Callaway & Sant'Anna (2021)
 
-**Reference**: [did package vignette](https://cran.r-project.org/web/packages/did/vignettes/did-basics.html)
+**Reference**: 
+- [did package vignette](https://cran.r-project.org/web/packages/did/vignettes/did-basics.html)
+- [Callaway & Sant'Anna (2021)](https://doi.org/10.1016/j.jeconom.2020.12.001)
 
 The Callaway & Sant'Anna approach estimates group-time specific average treatment effects and provides several aggregation options. It allows for flexible control group specifications (never-treated or not-yet-treated).
 
@@ -301,7 +304,9 @@ ggdid(cs_ct)
 
 # 3-2. Method 2: Sun & Abraham (2021)
 
-**Reference**: [fixest](https://lrberge.github.io/fixest/reference/sunab.html)
+**Reference**: 
+- [fixest](https://lrberge.github.io/fixest/reference/sunab.html)
+- [Sun & Abraham](https://doi.org/10.1016/j.jeconom.2020.09.006)
 
 Sun & Abraham propose an interaction-weighted estimator that uses last treated cohort as the clean control group. Implemented via `fixest::sunab()`.
 
@@ -334,27 +339,11 @@ sa_cohort <- summary(sa, agg = "cohort")
 print(sa_cohort)
 ```
 
-### Extract Coefficients for Calendar Time
+# 3-3. Method 3: Wooldridge ETWFE (2023)
 
-Manual extraction of coefficients for period-specific analysis.
-
-```{r sa-calendar}
-sa_all <- data.frame(
-  coef_name = names(coef(sa)),
-  att = coef(sa),
-  se = se(sa)
-) %>%
-  filter(grepl("::", coef_name)) %>%
-  mutate(
-    cohort = as.numeric(sub(".*treat_time = ([0-9]+)::.*", "\\1", coef_name)),
-    rel_time = as.numeric(sub(".*::", "", coef_name)),
-    period = cohort + rel_time
-  )
-```
-
-# 3-3. Method 3: Wooldridge ETWFE (2021)
-
-**Reference**: [etwfe package vignette](https://cran.r-project.org/web/packages/etwfe/vignettes/etwfe.html)
+**Reference**: 
+- [etwfe package vignette](https://cran.r-project.org/web/packages/etwfe/vignettes/etwfe.html)
+- [Wooldridge (2023)](https://doi.org/10.1093/ectj/utad016)
 
 Wooldridge's extended two-way fixed effects (ETWFE) approach saturates the model with all possible treatment-time interactions. Provides multiple aggregation options.
 
@@ -376,13 +365,6 @@ summary(etwfe_mod)
 ```{r etwfe-simple}
 etwfe_agg <- emfx(etwfe_mod, type = "simple")
 etwfe_agg
-
-ggplot(etwfe_agg, aes(x = term, y = estimate)) +
-  geom_point(size = 4, color = "steelblue") +
-  geom_errorbar(aes(ymin = conf.low, ymax = conf.high), width = 0.1) +
-  geom_hline(yintercept = 0, linetype = "dashed", color = "red") +
-  labs(title = "Wooldridge ETWFE: Simple ATT", x = "", y = "ATT") +
-  theme_minimal()
 ```
 
 #### Event Study
@@ -393,7 +375,7 @@ etwfe_es
 
 ggplot(etwfe_es, aes(x = event, y = estimate)) +
   geom_point() +
-  geom_errorbar(aes(ymin = conf.low, ymax = conf.high), width = 0.2) +
+  geom_ribbon(aes(ymin = conf.low, ymax = conf.high), fill = "skyblue", alpha = 0.5) +
   geom_hline(yintercept = 0, linetype = "dashed", color = "red") +
   geom_vline(xintercept = -0.5, linetype = "dashed") +
   labs(title = "Wooldridge ETWFE: Event Study (Not-Yet-Treated Control)", 
@@ -436,7 +418,7 @@ ggplot(etwfe_calendar, aes(x = time, y = estimate)) +
 
 ### Model 2: Never-Treated as Control
 
-Alternative specification using never-treated units as controls. This returns pre-treatment effects but may yield less precise estimates.
+Alternative specification using never-treated units as controls. This returns pre-treatment effects.
 
 ```{r etwfe-mod2}
 etwfe_mod2 <- etwfe(fml = y ~ 1, 
@@ -456,7 +438,7 @@ etwfe_es2
 
 ggplot(etwfe_es2, aes(x = event, y = estimate)) +
   geom_point() +
-  geom_errorbar(aes(ymin = conf.low, ymax = conf.high), width = 0.2) +
+  geom_ribbon(aes(ymin = conf.low, ymax = conf.high), fill = "skyblue", alpha = 0.5) +
   geom_hline(yintercept = 0, linetype = "dashed", color = "red") +
   geom_vline(xintercept = -0.5, linetype = "dashed") +
   labs(title = "Wooldridge ETWFE: Event Study (Never-Treated Control)", 
@@ -468,6 +450,7 @@ ggplot(etwfe_es2, aes(x = event, y = estimate)) +
 # 3-4. Method 4: Gardner Two-Stage (2022)
 
 **Reference**: [did2s GitHub](https://github.com/kylebutts/did2s)
+**Reference**: [Gardner (2022)](https://doi.org/10.48550/arXiv.2207.05943)
 
 Gardner's two-stage approach first estimates unit and time fixed effects from untreated observations, then estimates treatment effects in the second stage.
 
@@ -515,7 +498,7 @@ fixest::iplot(did2s_es, main = "Gardner Two-Stage: Event Study",
               ref.line = -0.5, drop = "Inf")
 ```
 
-### Custom Event Study Plot
+### Custom Event Study Plot (ggploy)
 
 ```{r did2s-event-custom}
 did2s_es_coef <- broom::tidy(did2s_es, conf.int = TRUE) %>%
@@ -524,7 +507,7 @@ did2s_es_coef <- broom::tidy(did2s_es, conf.int = TRUE) %>%
 
 ggplot(did2s_es_coef, aes(x = rel_time, y = estimate)) +
   geom_point() +
-  geom_errorbar(aes(ymin = conf.low, ymax = conf.high), width = 0.2) +
+  geom_ribbon(aes(ymin = conf.low, ymax = conf.high), fill = "skyblue", alpha = 0.5) +
   geom_hline(yintercept = 0, linetype = "dashed", color = "red") +
   geom_vline(xintercept = -0.5, linetype = "dotted", alpha = 0.5) +
   labs(title = "Gardner Two-Stage: Event Study", 
@@ -579,8 +562,16 @@ ggplot(results, aes(x = Method, y = ATT)) +
 
 
 ## Combined Event Study Plot
-```{r event-study-comparison, fig.width=12, fig.height=8}
-# Extract event study coefficients from each method
+```{r event-study-comparison}
+## Combined Event Study Plot
+# --- TRUE EFFECT LINE ---
+true_es <- data %>%
+  filter(treated == 1) %>%
+  mutate(rel_time = time - treat_time) %>%
+  group_by(rel_time) %>%
+  summarise(true_effect = mean(true_te), .groups = "drop")
+
+# --- Extract event study coefficients (same as before) ---
 
 # 1. TWFE
 twfe_es_df <- broom::tidy(twfe_es, conf.int = TRUE) %>%
@@ -599,7 +590,6 @@ cs_es_df <- broom::tidy(cs_event, conf.int = TRUE) %>%
     method = "Callaway & Sant'Anna"
   ) %>%
   select(method, rel_time, estimate, conf.low, conf.high)
-summary(cs_event)
 
 # 3. Sun & Abraham
 sa_es_df <- broom::tidy(sa, conf.int = TRUE) %>%
@@ -617,7 +607,7 @@ sa_es_df <- broom::tidy(sa, conf.int = TRUE) %>%
     .groups = "drop"
   )
 
-# 4. Wooldridge ETWFE (using never-treated control for pre-treatment effects)
+# 4. Wooldridge ETWFE
 etwfe_es_df <- as.data.frame(etwfe_es2) %>%
   mutate(
     rel_time = event,
@@ -635,7 +625,7 @@ did2s_es_df <- broom::tidy(did2s_es, conf.int = TRUE) %>%
   filter(!is.na(rel_time)) %>%
   select(method, rel_time, estimate, conf.low, conf.high)
 
-# Combine all methods
+# --- Combine all methods ---
 all_es <- bind_rows(
   twfe_es_df,
   cs_es_df,
@@ -653,24 +643,35 @@ all_es <- bind_rows(
     ))
   )
 
-# Plot comparison
+# --- Plot comparison with TRUE line ---
 ggplot(all_es, aes(x = rel_time, y = estimate, color = method, shape = method)) +
-  geom_point(size = 2.5, position = position_dodge(width = 0.3)) +
+  geom_point(size = 2.5, position = position_dodge(width = 0.4)) +
   geom_errorbar(aes(ymin = conf.low, ymax = conf.high), 
                 width = 0.2, 
                 position = position_dodge(width = 0.3),
                 alpha = 0.7) +
+  # Add true effect line
+  geom_line(data = true_es, aes(x = rel_time, y = true_effect),
+            inherit.aes = FALSE, color = "black", linewidth = 1, linetype = "dotted") +
   geom_hline(yintercept = 0, linetype = "dashed", color = "black", alpha = 0.5) +
   geom_vline(xintercept = -0.5, linetype = "dotted", alpha = 0.3) +
   scale_color_manual(values = c(
-    "TWFE (biased)" = "#C44536",        # muted red
-    "Callaway & Sant'Anna" = "#4A6FA5", # steel blue
-    "Sun & Abraham" = "#588B8B",        # teal
-    "Wooldridge ETWFE" = "#8E7C93",     # mauve
-    "Gardner Two-Stage" = "#D4A574"     # tan
+    "TWFE (biased)" = "#C44536",
+    "Callaway & Sant'Anna" = "#4A6FA5",
+    "Sun & Abraham" = "#588B8B",
+    "Wooldridge ETWFE" = "#8E7C93",
+    "Gardner Two-Stage" = "#D4A574"
+  )) +
+    scale_shape_manual(values = c(
+    "TWFE (biased)" = 16,
+    "Callaway & Sant'Anna" = 17,
+    "Sun & Abraham" = 15,
+    "Wooldridge ETWFE" = 18,
+    "Gardner Two-Stage" = 19
   )) +
   labs(
-    title = "Event Study Comparison: All Methods",
+    title = "Event Study Comparison: All Methods vs. True Effect",
+    subtitle = "Black dotted line indicates true effects",
     x = "Relative Time to Treatment",
     y = "Treatment Effect Estimate",
     color = "Method",
@@ -682,6 +683,7 @@ ggplot(all_es, aes(x = rel_time, y = estimate, color = method, shape = method)) 
     legend.title = element_text(face = "bold"),
     plot.title = element_text(face = "bold", size = 14)
   )
+
 ```
 ## Key Observations
 
