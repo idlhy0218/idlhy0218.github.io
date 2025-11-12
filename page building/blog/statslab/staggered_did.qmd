@@ -650,10 +650,10 @@ all_es <- bind_rows(
 
 # --- Plot comparison with TRUE line ---
 ggplot(all_es, aes(x = rel_time, y = estimate, color = method, shape = method)) +
-  geom_point(size = 2.5, position = position_dodge(width = 0.4)) +
+  # geom_point(size = 2.5, position = position_dodge(width = 0.4)) +
   geom_errorbar(aes(ymin = conf.low, ymax = conf.high), 
                 width = 0.2, 
-                position = position_dodge(width = 0.3),
+                position = position_dodge(width = 0.4),
                 alpha = 0.7) +
   # Add true effect line
   geom_line(data = true_es, aes(x = rel_time, y = true_effect),
