@@ -1,0 +1,698 @@
+---
+title: "Hands-on Practice for Staggered Diff-in-Diff in R"
+author: "Heeyoung Lee"
+date: "Nov 12, 2025"
+format: 
+  html:
+    theme: cosmo
+    css: custom.css
+    page-layout: full
+    code-fold: true
+    code-tools: true
+    toc: true
+    toc-depth: 5
+    toc-location: left
+    self-contained: true
+    fig-width: 8
+    fig-height: 6
+    fig-dpi: 200
+    smooth-scroll: true
+    highlight-style: github
+execute:
+  warning: false
+  message: false
+---
+
+# Introduction
+
+This document compares modern difference-in-differences (DiD) estimators designed to handle staggered treatment adoption. Traditional two-way fixed effects (TWFE) estimators can produce biased estimates when treatment timing varies across units. The methods compared here address this issue through different approaches.
+
+## Methods Overview
+
+1. **Traditional TWFE**: Baseline (biased) estimator
+2. **Callaway & Sant'Anna (2021)**: Group-time specific treatment effects
+3. **Sun & Abraham (2021)**: Interaction-weighted estimator
+4. **Wooldridge ETWFE (2021)**: Extended two-way fixed effects
+5. **Gardner Two-Stage (2022)**: Two-stage difference-in-differences
+
+# Setup
+
+Load required packages for the analysis.
+```{r setup, message=FALSE, warning=FALSE}
+library(tidyverse)
+library(did)
+library(fixest)
+library(DIDmultiplegt)
+library(did2s)
+library(etwfe)
+```
+
+# 1. Data Generation
+
+We simulate a balanced panel dataset with staggered treatment adoption. Treatment occurs at different times for different cohorts:
+
+- Cohort 1 (units 1-25): treated at time 5
+- Cohort 2 (units 26-50): treated at time 6
+- Cohort 3 (units 51-75): treated at time 7
+- Never-treated (units 76-100): never receive treatment
+
+The data generating process features both **cohort heterogeneity** and **dynamic treatment effects**:
+
+- **Cohort heterogeneity**: Treatment effects differ across groups based on when they adopt treatment. Early adopters (Cohort 1) experience larger baseline effects (6) than middle adopters (Cohort 2, effect = 3) or late adopters (Cohort 3, effect = 1).
+- **Dynamic treatment effects**: Treatment effects grow over time after adoption. Each additional period of exposure increases the effect by 0.8 units. For example, a unit treated at time 5 experiences effects of 6.0 (at t=5), 6.8 (at t=6), 7.6 (at t=7), and so on.
+
+The true average treatment effect on the treated (ATT) is approximately **5.36**. This represents the average effect across all treated units in all post-treatment periods, accounting for both the varying baseline effects by cohort and the accumulation of effects over time.
+
+## Data Generating Process
+
+The outcome variable is generated as:
+
+$$y_{it} = 2 + 0.5 \times id_i + 0.3 \times time_t + TE_{it} \times treated_{it} + \epsilon_{it}$$
+
+where:
+
+- **Unit fixed effects**: $0.5 \times id_i$ (captures time-invariant unit characteristics)
+- **Time fixed effects**: $0.3 \times time_t$ (captures common time trends)
+- **Heterogeneous treatment effect**: $TE_{it} = \text{cohort\_effect}_g + 0.8 \times \text{time\_since\_treatment}_{it}$
+  - Cohort 1 (early adopters): Base effect = 6
+  - Cohort 2 (middle adopters): Base effect = 3
+  - Cohort 3 (late adopters): Base effect = 1
+  - Dynamic component: Effect grows by 0.8 for each period after treatment
+- **Error term**: $\epsilon_{it} \sim N(0, 0.5^2)$
+
+This design incorporates two key sources of treatment effect heterogeneity:
+
+1. **Cohort heterogeneity**: Early adopters experience larger treatment effects than late adopters
+2. **Dynamic effects**: Treatment effects accumulate over time, growing by 0.8 per period
+
+The true ATT (5.36) is calculated as the weighted average of treatment effects across all treated unit-time observations.
+
+## Why This Matters for TWFE
+
+Under staggered adoption with heterogeneous treatment effects, traditional TWFE estimators use problematic comparisons:
+
+1. **Earlier-treated vs later-treated units**: Later-treated units serve as controls for earlier-treated units, but they eventually get treated themselves
+2. **Later-treated vs earlier-treated units**: Already-treated units serve as "controls" for newly treated units, creating negative weights. This is particularly problematic when early adopters have larger treatment effects
+3. **Treatment effect heterogeneity**: TWFE produces a weighted average that assigns negative weights to some treatment effects, potentially yielding estimates that do not represent any meaningful causal parameter
+
+In this simulation, TWFE is expected to produce substantially biased estimates because:
+
+- Early-treated units (large effects) are used as controls for later-treated units (small effects)
+- Units with longer exposure (larger cumulative effects) are compared with newly treated units
+- The combination of cohort and dynamic heterogeneity maximizes the bias from forbidden comparisons
+
+Modern DiD estimators (Callaway & Sant'Anna, Sun & Abraham, etc.) address these issues by:
+
+- Using only clean comparison groups (never-treated or not-yet-treated)
+- Avoiding forbidden comparisons between differentially-treated units
+- Explicitly modeling treatment effect heterogeneity across cohorts and time
+
+```{r data-generation}
+set.seed(123)
+n_units <- 100
+n_periods <- 10
+
+data <- expand.grid(id = 1:n_units, time = 1:n_periods) %>%
+  mutate(
+    treat_time = case_when(
+      id <= 25 ~ 5,
+      id <= 50 ~ 6,
+      id <= 75 ~ 7,
+      TRUE ~ 0
+    ),
+    treated = if_else(treat_time > 0 & time >= treat_time, 1, 0),
+    # Both cohort AND dynamic heterogeneity
+    cohort_effect = case_when(
+      treat_time == 5 ~ 6,
+      treat_time == 6 ~ 3,
+      treat_time == 7 ~ 1,
+      TRUE ~ 0
+    ),
+    time_since_treatment = if_else(treated == 1, time - treat_time, 0),
+    dynamic_effect = 0.8 * time_since_treatment,
+    true_te = cohort_effect + dynamic_effect,
+    y = 2 + 0.5*id + 0.3*time + true_te*treated + rnorm(n(), sd = 0.5)
+  )
+
+glimpse(data)
+```
+## Visualization
+
+The heatmap below shows the treatment rollout pattern across units and time periods.
+
+```{r visualization}
+ggplot(data, aes(x = time, y = id, fill = factor(treated))) +
+  geom_tile() +
+  scale_fill_manual(values = c("0" = "lightblue", "1" = "darkred")) +
+  labs(title = "Treatment Rollout", x = "Time", y = "Unit", fill = "Treated") +
+  theme_minimal()
+```
+
+# 2. Traditional TWFE (Baseline)
+
+Before examining modern DiD estimators, we first estimate the traditional two-way fixed effects (TWFE) model. This serves as our baseline for comparison and demonstrates the bias that arises under staggered treatment adoption with heterogeneous treatment effects.
+
+## TWFE Estimation
+
+The traditional TWFE specification regresses the outcome on a treatment indicator while controlling for unit and time fixed effects:
+
+$$y_{it} = \alpha_i + \lambda_t + \beta \times treated_{it} + \epsilon_{it}$$
+
+where $\alpha_i$ are unit fixed effects, $\lambda_t$ are time fixed effects, and $\beta$ is the estimated treatment effect.
+
+```{r twfe}
+twfe <- feols(y ~ treated | id + time, data = data, cluster = ~id)
+summary(twfe)
+```
+
+## TWFE Results
+
+```{r twfe-results}
+twfe_coef <- broom::tidy(twfe, conf.int = TRUE)
+
+ggplot(twfe_coef, aes(x = term, y = estimate)) +
+  geom_point(size = 4, color = "coral") +
+  geom_errorbar(aes(ymin = conf.low, ymax = conf.high), width = 0.1) +
+  geom_hline(yintercept = 5.36, linetype = "solid", color = "red", alpha = 0.5, linewidth = 1) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "black") +
+  annotate("text", x = 1, y = 5.8, label = "True ATT = 5.36", color = "red", hjust = 0.5) +
+  labs(title = "TWFE: Treatment Effect Estimate", 
+       subtitle = "Expected to be biased due to forbidden comparisons",
+       x = "", y = "Coefficient Estimate") +
+  theme_minimal()
+
+cat("\nTWFE Estimate:", round(coef(twfe)[1], 3), 
+    "\nTrue ATT:", 5.36,
+    "\nBias:", round(coef(twfe)[1] - 5.36, 3))
+```
+
+## TWFE Event Study
+
+To further illustrate the bias in TWFE, we estimate an event study specification that allows treatment effects to vary by relative time to treatment adoption.
+
+```{r twfe-event-study}
+# Create relative time variable
+data_es <- data %>%
+  mutate(
+    rel_time = if_else(treat_time > 0, time - treat_time, Inf)  # Use Inf for never-treated
+  )
+
+# TWFE event study with relative time dummies
+# Omit rel_time = -1 as reference period
+twfe_es <- feols(y ~ i(rel_time, ref = c(-1, Inf)) | id + time, 
+                 data = data_es, 
+                 cluster = ~id)
+
+summary(twfe_es)
+```
+
+## TWFE Event Study Plot
+```{r twfe-event-plot}
+# Plot event study
+iplot(twfe_es, 
+      main = "TWFE Event Study (BIASED)", 
+      xlab = "Relative Time to Treatment",
+      ylab = "Coefficient Estimate",
+      ref.line = -0.5)
+```
+
+## Interpretation
+
+The TWFE event study reveals several issues:
+
+1. **Pre-treatment trends**: Ideally, coefficients for periods before treatment (rel_time < 0) should be close to zero, indicating parallel trends. Any significant pre-treatment coefficients suggest violations of the parallel trends assumption or specification issues.
+
+2. **Post-treatment pattern**: The post-treatment coefficients should reflect the true dynamic treatment effects. However, under heterogeneous treatment effects, TWFE estimates are biased and do not accurately capture the true effect trajectory.
+
+## Why is TWFE Biased?
+
+In this setting, TWFE produces biased estimates because it implicitly uses already-treated units as controls for newly treated units. Specifically:
+
+1. **Negative weights problem**: When comparing newly treated units (with small baseline effects) to already-treated units (with large cumulative effects), TWFE assigns negative weights to some comparisons.
+
+2. **Forbidden comparisons**: Early-treated Cohort 1 units (experiencing effects of 6-10) serve as "controls" when Cohort 2 and 3 units receive treatment. This creates downward bias because the "control" group is actually experiencing large positive treatment effects.
+
+3. **Dynamic effects ignored**: Units with longer exposure have accumulated larger effects, but TWFE treats all treated observations as having the same effect, leading to mis-specified comparisons.
+
+# 3. Modern DiD Estimators
+
+The modern DiD estimators presented below address the limitations of TWFE by using only clean comparison groups and explicitly accounting for treatment effect heterogeneity.
+
+# 3-1. Method 1: Callaway & Sant'Anna (2021)
+
+**Reference**: [did package vignette](https://cran.r-project.org/web/packages/did/vignettes/did-basics.html)
+
+The Callaway & Sant'Anna approach estimates group-time specific average treatment effects and provides several aggregation options. It allows for flexible control group specifications (never-treated or not-yet-treated).
+
+### Estimate Group-Time ATTs
+
+```{r cs-main}
+cs <- att_gt(yname = "y", 
+             tname = "time", 
+             idname = "id", 
+             gname = "treat_time", 
+             data = data, 
+             panel = TRUE,
+             control_group = "nevertreated") # or "notyettreated"
+summary(cs)
+ggdid(cs)
+```
+
+### Simple Aggregation
+
+Overall average treatment effect on the treated (ATT).
+
+```{r cs-simple}
+cs_simple <- aggte(cs, type = "simple")
+summary(cs_simple)
+```
+
+### Event Study
+
+Dynamic effects by relative time to treatment.
+
+```{r cs-event}
+cs_event <- aggte(cs, type = "dynamic")
+summary(cs_event)
+ggdid(cs_event) + 
+  ggtitle("Callaway & Sant'Anna: Event Study") +
+  theme_minimal()
+```
+
+### Group-Specific ATTs
+
+Treatment effects by treatment cohort.
+
+```{r cs-group}
+cs_group <- aggte(cs, type = "group")
+summary(cs_group)
+ggdid(cs_group)
+```
+
+### Calendar Time Effects
+
+Treatment effects by calendar time period.
+
+```{r cs-calendar}
+cs_ct <- aggte(cs, type = "calendar")
+summary(cs_ct)
+ggdid(cs_ct)
+```
+
+# 3-2. Method 2: Sun & Abraham (2021)
+
+**Reference**: [fixest](https://lrberge.github.io/fixest/reference/sunab.html)
+
+Sun & Abraham propose an interaction-weighted estimator that uses last treated cohort as the clean control group. Implemented via `fixest::sunab()`.
+
+### Estimate Model
+
+```{r sa-main}
+sa <- feols(y ~ sunab(treat_time, time) | id + time, 
+            data = data, cluster = ~id)
+summary(sa)
+```
+
+### Simple Aggregation
+
+```{r sa-simple}
+sa_agg <- summary(sa, agg = "ATT")
+print(sa_agg)
+```
+
+### Event Study
+
+```{r sa-event}
+iplot(sa, main = "Sun & Abraham: Event Study", 
+      ref.line = -0.5, xlab = "Relative Time", ylab = "ATT")
+```
+
+### Cohort-Specific Effects
+
+```{r sa-cohort}
+sa_cohort <- summary(sa, agg = "cohort")
+print(sa_cohort)
+```
+
+### Extract Coefficients for Calendar Time
+
+Manual extraction of coefficients for period-specific analysis.
+
+```{r sa-calendar}
+sa_all <- data.frame(
+  coef_name = names(coef(sa)),
+  att = coef(sa),
+  se = se(sa)
+) %>%
+  filter(grepl("::", coef_name)) %>%
+  mutate(
+    cohort = as.numeric(sub(".*treat_time = ([0-9]+)::.*", "\\1", coef_name)),
+    rel_time = as.numeric(sub(".*::", "", coef_name)),
+    period = cohort + rel_time
+  )
+```
+
+# 3-3. Method 3: Wooldridge ETWFE (2021)
+
+**Reference**: [etwfe package vignette](https://cran.r-project.org/web/packages/etwfe/vignettes/etwfe.html)
+
+Wooldridge's extended two-way fixed effects (ETWFE) approach saturates the model with all possible treatment-time interactions. Provides multiple aggregation options.
+
+### Model 1: Not-Yet-Treated as Control
+
+Default specification using not-yet-treated units as controls. Pre-treatment effects are mechanistically set to zero.
+
+```{r etwfe-mod1}
+etwfe_mod <- etwfe(fml = y ~ 1, 
+                   tvar = time, 
+                   gvar = treat_time, 
+                   data = data, 
+                   vcov = ~id)
+summary(etwfe_mod)
+```
+
+#### Simple Aggregation
+
+```{r etwfe-simple}
+etwfe_agg <- emfx(etwfe_mod, type = "simple")
+etwfe_agg
+
+ggplot(etwfe_agg, aes(x = term, y = estimate)) +
+  geom_point(size = 4, color = "steelblue") +
+  geom_errorbar(aes(ymin = conf.low, ymax = conf.high), width = 0.1) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "red") +
+  labs(title = "Wooldridge ETWFE: Simple ATT", x = "", y = "ATT") +
+  theme_minimal()
+```
+
+#### Event Study
+
+```{r etwfe-event}
+etwfe_es <- emfx(etwfe_mod, type = "event")
+etwfe_es
+
+ggplot(etwfe_es, aes(x = event, y = estimate)) +
+  geom_point() +
+  geom_errorbar(aes(ymin = conf.low, ymax = conf.high), width = 0.2) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "red") +
+  geom_vline(xintercept = -0.5, linetype = "dashed") +
+  labs(title = "Wooldridge ETWFE: Event Study (Not-Yet-Treated Control)", 
+       x = "Relative Time", y = "ATT") +
+  theme_minimal()
+```
+
+**Note**: `emfx()` only reports post-treatment effects here because all pre-treatment effects are swept out under the "not-yet-treated" control group specification.
+
+#### Cohort-Specific ATT
+
+```{r etwfe-cohort}
+etwfe_cohort <- emfx(etwfe_mod, type = "group")
+etwfe_cohort
+
+ggplot(etwfe_cohort, aes(x = factor(treat_time), y = estimate)) +
+  geom_point(size = 3, color = "darkgreen") +
+  geom_errorbar(aes(ymin = conf.low, ymax = conf.high), width = 0.2) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "red") +
+  labs(title = "Wooldridge ETWFE: ATT by Cohort", 
+       x = "Treatment Cohort", y = "ATT") +
+  theme_minimal()
+```
+
+#### Calendar Time Effects
+
+```{r etwfe-calendar}
+etwfe_calendar <- emfx(etwfe_mod, type = "calendar")
+etwfe_calendar
+
+ggplot(etwfe_calendar, aes(x = time, y = estimate)) +
+  geom_point(size = 2) +
+  geom_line() +
+  geom_errorbar(aes(ymin = conf.low, ymax = conf.high), width = 0.2) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "red") +
+  labs(title = "Wooldridge ETWFE: Calendar Time Effects", 
+       x = "Time Period", y = "ATT") +
+  theme_minimal()
+```
+
+### Model 2: Never-Treated as Control
+
+Alternative specification using never-treated units as controls. This returns pre-treatment effects but may yield less precise estimates.
+
+```{r etwfe-mod2}
+etwfe_mod2 <- etwfe(fml = y ~ 1, 
+                    tvar = time, 
+                    gvar = treat_time, 
+                    data = data, 
+                    vcov = ~id,
+                    cgroup = "never")
+summary(etwfe_mod2)
+```
+
+#### Event Study with Pre-Treatment Effects
+
+```{r etwfe-event2}
+etwfe_es2 <- emfx(etwfe_mod2, type = "event")
+etwfe_es2
+
+ggplot(etwfe_es2, aes(x = event, y = estimate)) +
+  geom_point() +
+  geom_errorbar(aes(ymin = conf.low, ymax = conf.high), width = 0.2) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "red") +
+  geom_vline(xintercept = -0.5, linetype = "dashed") +
+  labs(title = "Wooldridge ETWFE: Event Study (Never-Treated Control)", 
+       subtitle = "Includes pre-treatment effects",
+       x = "Relative Time", y = "ATT") +
+  theme_minimal()
+```
+
+# 3-4. Method 4: Gardner Two-Stage (2022)
+
+**Reference**: [did2s GitHub](https://github.com/kylebutts/did2s)
+
+Gardner's two-stage approach first estimates unit and time fixed effects from untreated observations, then estimates treatment effects in the second stage.
+
+### Simple Aggregation
+
+```{r did2s-simple}
+did2s_static <- did2s(
+  data = data,
+  yname = "y",
+  first_stage = ~ 0 | id + time,
+  second_stage = ~ i(treated, ref = FALSE),
+  treatment = "treated",
+  cluster_var = "id"
+)
+
+fixest::etable(did2s_static)
+
+coef_data <- broom::tidy(did2s_static, conf.int = TRUE)
+ggplot(coef_data, aes(x = term, y = estimate)) +
+  geom_point(size = 4, color = "steelblue") +
+  geom_errorbar(aes(ymin = conf.low, ymax = conf.high), width = 0.1) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "red") +
+  labs(title = "Gardner Two-Stage: Simple ATT", x = "", y = "ATT") +
+  theme_minimal()
+```
+
+### Event Study
+
+```{r did2s-event}
+data_es <- data %>%
+  mutate(rel_time = if_else(treat_time > 0, 
+                            time - treat_time, 
+                            Inf)) # Inf for never treated
+
+did2s_es <- did2s(
+  data = data_es,
+  yname = "y",
+  first_stage = ~ 0 | id + time,
+  second_stage = ~ i(rel_time, ref = Inf),
+  treatment = "treated",
+  cluster_var = "id"
+)
+
+fixest::iplot(did2s_es, main = "Gardner Two-Stage: Event Study", 
+              ref.line = -0.5, drop = "Inf")
+```
+
+### Custom Event Study Plot
+
+```{r did2s-event-custom}
+did2s_es_coef <- broom::tidy(did2s_es, conf.int = TRUE) %>%
+  filter(term != "Inf") %>%
+  mutate(rel_time = as.numeric(gsub("rel_time::", "", term)))
+
+ggplot(did2s_es_coef, aes(x = rel_time, y = estimate)) +
+  geom_point() +
+  geom_errorbar(aes(ymin = conf.low, ymax = conf.high), width = 0.2) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "red") +
+  geom_vline(xintercept = -0.5, linetype = "dotted", alpha = 0.5) +
+  labs(title = "Gardner Two-Stage: Event Study", 
+       x = "Relative Time", y = "ATT") +
+  theme_minimal()
+```
+
+# 4. Results Comparison
+
+## Summary Table
+
+Comparison of ATT estimates across all methods.
+
+```{r comparison-table}
+results <- tibble(
+  Method = c("TWFE (biased)", "Callaway & Sant'Anna", "Sun & Abraham", 
+             "Wooldridge ETWFE", "Gardner Two-Stage"),
+  ATT = c(coef(twfe)[1],
+          cs_simple$overall.att,
+          coef(sa_agg)[1],
+          etwfe_agg$estimate,
+          coef(did2s_static)[1]),
+  SE = c(twfe_coef$std.error[1],
+         cs_simple$overall.se,
+         se(sa_agg)[1],
+         etwfe_agg$std.error,
+         coef_data$std.error[1])
+) %>%
+  mutate(
+    CI_lower = ATT - 1.96 * SE,
+    CI_upper = ATT + 1.96 * SE,
+    Method = factor(Method, levels = c("Gardner Two-Stage", "Wooldridge ETWFE",
+                                       "Sun & Abraham", "Callaway & Sant'Anna",
+                                       "TWFE (biased)"))
+  )
+
+print(results, n = Inf)
+```
+
+## Visual Comparison
+```{r comparison-plot}
+ggplot(results, aes(x = Method, y = ATT)) +
+  geom_point(size = 3) +
+  geom_errorbar(aes(ymin = CI_lower, ymax = CI_upper), width = 0.2) +
+  geom_hline(yintercept = 5.36, linetype = "solid", color = "red", alpha = 0.5, size = 2) +  # True effect
+  coord_flip() +
+  labs(title = "Method Comparison", 
+       subtitle = "Red line = true effect (3)",
+       x = "", y = "ATT Estimate") +
+  theme_minimal()
+```
+
+
+## Combined Event Study Plot
+```{r event-study-comparison, fig.width=12, fig.height=8}
+# Extract event study coefficients from each method
+
+# 1. TWFE
+twfe_es_df <- broom::tidy(twfe_es, conf.int = TRUE) %>%
+  filter(term != "Inf") %>%
+  mutate(
+    rel_time = as.numeric(gsub("rel_time::", "", term)),
+    method = "TWFE (biased)"
+  ) %>%
+  filter(!is.na(rel_time)) %>%
+  select(method, rel_time, estimate, conf.low, conf.high)
+
+# 2. Callaway & Sant'Anna
+cs_es_df <- broom::tidy(cs_event, conf.int = TRUE) %>%
+  mutate(
+    rel_time = event.time,
+    method = "Callaway & Sant'Anna"
+  ) %>%
+  select(method, rel_time, estimate, conf.low, conf.high)
+summary(cs_event)
+
+# 3. Sun & Abraham
+sa_es_df <- broom::tidy(sa, conf.int = TRUE) %>%
+  filter(grepl("::", term)) %>%
+  mutate(
+    cohort = as.numeric(sub(".*treat_time = ([0-9]+)::.*", "\\1", term)),
+    rel_time = as.numeric(sub(".*::", "", term)),
+    method = "Sun & Abraham"
+  ) %>%
+  group_by(method, rel_time) %>%
+  summarise(
+    estimate = mean(estimate),
+    conf.low = mean(conf.low),
+    conf.high = mean(conf.high),
+    .groups = "drop"
+  )
+
+# 4. Wooldridge ETWFE (using never-treated control for pre-treatment effects)
+etwfe_es_df <- as.data.frame(etwfe_es2) %>%
+  mutate(
+    rel_time = event,
+    method = "Wooldridge ETWFE"
+  ) %>%
+  select(method, rel_time, estimate, conf.low, conf.high)
+
+# 5. Gardner Two-Stage
+did2s_es_df <- broom::tidy(did2s_es, conf.int = TRUE) %>%
+  filter(term != "Inf") %>%
+  mutate(
+    rel_time = as.numeric(gsub("rel_time::", "", term)),
+    method = "Gardner Two-Stage"
+  ) %>%
+  filter(!is.na(rel_time)) %>%
+  select(method, rel_time, estimate, conf.low, conf.high)
+
+# Combine all methods
+all_es <- bind_rows(
+  twfe_es_df,
+  cs_es_df,
+  sa_es_df,
+  etwfe_es_df,
+  did2s_es_df
+) %>%
+  mutate(
+    method = factor(method, levels = c(
+      "TWFE (biased)",
+      "Callaway & Sant'Anna",
+      "Sun & Abraham",
+      "Wooldridge ETWFE",
+      "Gardner Two-Stage"
+    ))
+  )
+
+# Plot comparison
+ggplot(all_es, aes(x = rel_time, y = estimate, color = method, shape = method)) +
+  geom_point(size = 2.5, position = position_dodge(width = 0.3)) +
+  geom_errorbar(aes(ymin = conf.low, ymax = conf.high), 
+                width = 0.2, 
+                position = position_dodge(width = 0.3),
+                alpha = 0.7) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "black", alpha = 0.5) +
+  geom_vline(xintercept = -0.5, linetype = "dotted", alpha = 0.3) +
+  scale_color_manual(values = c(
+    "TWFE (biased)" = "#C44536",        # muted red
+    "Callaway & Sant'Anna" = "#4A6FA5", # steel blue
+    "Sun & Abraham" = "#588B8B",        # teal
+    "Wooldridge ETWFE" = "#8E7C93",     # mauve
+    "Gardner Two-Stage" = "#D4A574"     # tan
+  )) +
+  labs(
+    title = "Event Study Comparison: All Methods",
+    x = "Relative Time to Treatment",
+    y = "Treatment Effect Estimate",
+    color = "Method",
+    shape = "Method"
+  ) +
+  theme_minimal() +
+  theme(
+    legend.position = "bottom",
+    legend.title = element_text(face = "bold"),
+    plot.title = element_text(face = "bold", size = 14)
+  )
+```
+## Key Observations
+
+Comparing the event study plots reveals:
+
+1. **TWFE bias**: The TWFE estimates deviate substantially from the true ATT (5.36), particularly in post-treatment periods. This bias stems from forbidden comparisons between already-treated and newly-treated units.
+
+2. **Pre-treatment trends**: Modern DiD methods show coefficients close to zero in pre-treatment periods, supporting the parallel trends assumption. TWFE may show spurious pre-trends due to misspecification.
+
+3. **Dynamic effects**: All modern methods capture the growth in treatment effects over time (due to the 0.8 per-period accumulation in our DGP). TWFE fails to accurately represent this dynamic pattern.
+
+4. **Convergence of modern methods**: Callaway & Sant'Anna, Sun & Abraham, Wooldridge ETWFE, and Gardner Two-Stage produce similar estimates that cluster around the true effect, demonstrating their robustness to treatment effect heterogeneity.
+
+5. **Uncertainty**: Confidence intervals vary across methods, reflecting different estimation approaches and sample sizes used in comparisons. Methods using never-treated controls may have wider confidence intervals than those using not-yet-treated controls.
