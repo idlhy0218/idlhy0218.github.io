@@ -6,92 +6,178 @@
     <title>About - Heeyoung Lee</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700&family=Lora:ital,wght@0,400..700;1,400..700&display=swap" rel="stylesheet">
+
     <style>
+        /* Academic Aesthetic Style Block (Consistent with blog.html) */
         :root {
-            --bs-primary: #2d3748;
-            --bs-link-color: #4a90e2;
+            --bg-primary: #f9f9f9;
+            --bg-secondary: #ffffff;
+            --text-primary: #212529;
+            --text-secondary: #5a6268;
+            --text-muted: #868e96;
+            --accent-primary: #2c5282; /* Academic blue */
+            --accent-secondary: #5a7d9a;
+            --accent-light: #e8f0f7;
+            --border-light: #dee2e6;
+            --shadow-sm: 0 1px 2px 0 rgba(0,0,0,0.03);
+            --shadow-md: 0 3px 5px -1px rgba(0,0,0,0.05);
         }
+
         body {
-            font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
-            background-color: #f8f9fa;
-            color: #333;
+            font-family: 'Lora', 'EB Garamond', serif; /* Serif first */
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.7;
         }
+
+        /* Apply sans-serif to headers, nav, and titles for contrast */
+        h1, h2, h3, h4, h5, h6,
+        .navbar-brand,
+        .nav-pills .nav-link,
+        .back-button {
+            font-family: 'Lato', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+            font-weight: 700;
+        }
+
         .navbar {
-            background-color: var(--bs-primary);
+            background-color: var(--bg-secondary);
+            border-bottom: 1px solid var(--border-light);
             padding: 1rem;
+            box-shadow: var(--shadow-sm);
         }
+        
+        .navbar-brand {
+            color: var(--text-primary) !important;
+            font-weight: 700;
+            font-size: 1.3rem;
+            letter-spacing: -0.5px;
+        }
+
         .content-section {
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            background: var(--bg-secondary);
+            border-radius: 10px;
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--border-light);
             padding: 2rem;
             margin: 2rem auto;
         }
+
         .info-card {
-            background: #f8f9fa;
+            background: var(--bg-primary);
             border-radius: 8px;
             padding: 1.5rem;
             margin-bottom: 1rem;
-            transition: transform 0.3s ease;
+            border: 1px solid var(--border-light);
+            transition: border-color 0.3s ease;
         }
+
         .info-card:hover {
-            transform: translateY(-5px);
+            border-color: var(--accent-secondary);
         }
+
         .info-card h4 {
-            color: var(--bs-primary);
+            color: var(--accent-primary);
             margin-bottom: 0.5rem;
+            font-weight: 700;
         }
+
         .info-card i {
-            color: var(--bs-primary);
+            color: var(--accent-primary);
             margin-right: 0.5rem;
         }
+        
+        .info-card p, .info-card ul {
+            color: var(--text-secondary);
+            margin-bottom: 0;
+        }
+        
+        .info-card p strong {
+             color: var(--text-primary);
+             font-weight: 700;
+        }
+        
+        .info-card .text-muted-small {
+            font-family: 'Lato', sans-serif;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+
         .back-button {
             text-decoration: none;
-            color: #6c757d;
+            color: var(--text-secondary);
             display: inline-flex;
             align-items: center;
             margin-bottom: 1rem;
+            font-weight: 700;
+            font-size: 0.95rem;
         }
+
         .back-button:hover {
-            color: var(--bs-primary);
+            color: var(--accent-primary);
         }
+        
+        .back-button i {
+            transition: transform 0.2s ease;
+        }
+
+        .back-button:hover i {
+            transform: translateX(-4px);
+        }
+
         .nav-pills .nav-link {
-            color: var(--bs-primary);
+            color: var(--text-secondary);
             margin: 0.25rem;
-            border-radius: 6px;
+            border-radius: 8px;
             padding: 0.5rem 1rem;
-            font-weight: 500;
+            font-weight: 700;
+            border: 1px solid transparent;
+            transition: all 0.2s ease;
         }
+
         .nav-pills .nav-link.active {
-            background-color: var(--bs-primary);
+            background-color: var(--accent-primary);
             color: white;
+            border-color: var(--accent-primary);
         }
+
         .nav-pills .nav-link:hover:not(.active) {
-            background-color: #e9ecef;
+            background-color: var(--accent-light);
+            color: var(--accent-primary);
         }
-        .navbar-brand {
-            color: white !important;
-            font-weight: 500;
+        
+        .lead {
+            font-size: 1.2rem;
+            color: var(--text-secondary);
         }
+        
+        /* Focus states for accessibility */
+        a:focus,
+        button:focus {
+          outline: 2px solid var(--accent-primary);
+          outline-offset: 2px;
+        }
+
     </style>
 </head>
 <body>
     <nav class="navbar navbar-expand-lg">
         <div class="container">
-            <span class="navbar-brand">About Me</span>
+            <span class="navbar-brand">Heeyoung Lee</span>
         </div>
     </nav>
     
     <div class="container mt-4">
-        <a href="../../index.html" class="back-button">
+        <a href="../index.html" class="back-button">
             <i class="bi bi-arrow-left me-2"></i> Back to Home
         </a>
 
         <div class="content-section">
-            <!-- Introduction -->
             <p class="lead mb-4">I am a Ph.D. Candidate in Sociology at the University at Albany, SUNY. My research focuses on population health, criminology, and life-course analysis, with particular emphasis on spatial methods and longitudinal analysis.</p>
 
-            <!-- Tabs -->
             <ul class="nav nav-pills mb-4" id="aboutTabs" role="tablist">
                 <li class="nav-item" role="presentation">
                     <button class="nav-link active" id="research-tab" data-bs-toggle="pill" data-bs-target="#research" type="button">
@@ -100,78 +186,94 @@
                 </li>
                 <li class="nav-item" role="presentation">
                     <button class="nav-link" id="teaching-tab" data-bs-toggle="pill" data-bs-target="#teaching" type="button">
-                        <i class="bi bi-book me-1"></i> Teaching Experience
+                        <i class="bi bi-book me-1"></i> Teaching
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
                     <button class="nav-link" id="service-tab" data-bs-toggle="pill" data-bs-target="#service" type="button">
-                        <i class="bi bi-people me-1"></i> Professional Service
+                        <i class="bi bi-people me-1"></i> Service
                     </button>
                 </li>
             </ul>
 
             <div class="tab-content" id="aboutTabsContent">
-                <!-- Research Tab -->
                 <div class="tab-pane fade show active" id="research" role="tabpanel">
                     <div class="info-card">
-                        <h4><i class="bi bi-heart-pulse"></i>Population Health</h4>
+                        <h4><i class="bi bi-heart-pulse"></i>Population Health & Life-Course</h4>
                         <p class="mb-2"><strong>Focus:</strong> Health Inequalities and Social Determinants</p>
-                        <p>Investigating temporal and spatial dimensions of health inequalities. My work examines how neighborhood contexts and social determinants shape health outcomes across different populations, with particular attention to racial and socioeconomic disparities in health.</p>
+                        <p>Investigating temporal and spatial dimensions of health inequalities. My work examines how life-course events and neighborhood contexts shape health outcomes across different populations, with particular attention to racial and socioeconomic disparities in health.</p>
                     </div>
 
                     <div class="info-card">
-                        <h4><i class="bi bi-journal-text"></i>Criminology</h4>
+                        <h4><i class="bi bi-journal-text"></i>Crime and Deviance</h4>
                         <p class="mb-2"><strong>Focus:</strong> Youth Development and Violence</p>
                         <p>Studying adolescent behavior, sexual violence, and the effects of police interactions on youth development. My research incorporates both quantitative and spatial approaches to understanding crime patterns and their societal impacts.</p>
                     </div>
 
                     <div class="info-card">
-                        <h4><i class="bi bi-graph-up"></i>Methods</h4>
-                        <p class="mb-2"><strong>Expertise:</strong> Spatial and Longitudinal Analysis</p>
-                        <p>Specializing in spatial analysis, longitudinal methods, and advanced statistical techniques using R, STATA, and ArcGIS. I focus on developing innovative approaches to analyzing complex social phenomena through quantitative methodologies.</p>
+                        <h4><i class="bi bi-bar-chart-line"></i>Methods</h4>
+                        <p class="mb-2"><strong>Expertise:</strong> Longitudinal and Spatial Analysis</p>
+                        <p>Specializing in longitudinal methods, spatial analysis, and advanced statistical techniques using R, STATA, and ArcGIS to analyze complex social phenomena through quantitative methodologies.</p>
                     </div>
                 </div>
 
-                <!-- Teaching Tab -->
                 <div class="tab-pane fade" id="teaching" role="tabpanel">
-                    <p class="mb-4">My teaching philosophy emphasizes practical skills development alongside theoretical understanding. I strive to create an inclusive learning environment that encourages critical thinking and active participation.</p>
                     
                     <div class="info-card">
-                        <h4><i class="bi bi-book"></i>Medical Sociology</h4>
-                        <p class="mb-2"><strong>Role:</strong> Instructor</p>
-                        <p class="mb-2"><strong>Semesters:</strong> Spring 2025, Fall 2024, Summer 2024</p>
+                        <h4><i class="bi bi-book-half"></i>Medical Sociology</h4>
+                        <p class="mb-2"><strong>Role:</strong> Instructor of Record</p>
+                        <p class="text-muted-small mb-2">Fall 2025, Spring 2025, Fall 2024, Summer 2024</p>
                         <p>Developed and delivered comprehensive curriculum covering social determinants of health, healthcare systems, and medical institutions.</p>
                     </div>
 
                     <div class="info-card">
+                        <h4><i class="bi bi-book-half"></i>Criminology</h4>
+                        <p class="mb-2"><strong>Role:</strong> Instructor of Record</p>
+                        <p class="text-muted-small mb-2">Fall 2025, Summer 2025</p>
+                        <p>Taught foundational theories of criminology, covering the social roots of crime, deviance, and the justice system.</p>
+                    </div>
+
+                    <div class="info-card">
                         <h4><i class="bi bi-calculator"></i>Statistics for Sociologists</h4>
-                        <p class="mb-2"><strong>Role:</strong> Co-Teacher</p>
-                        <p class="mb-2"><strong>Semester:</strong> Spring 2023</p>
+                        <p class="mb-2"><strong>Role:</strong> Co-Instructor</p>
+                        <p class="text-muted-small mb-2">Spring 2023</p>
                         <p>Collaborated in teaching statistical methods, research design, and data analysis using R and STATA.</p>
+                    </div>
+                    
+                    <div class="info-card">
+                        <h4><i class="bi bi-person-video3"></i>Summer Seminar on Population</h4>
+                        <p class="mb-2"><strong>Role:</strong> Teaching Assistant</p>
+                        <p class="text-muted-small mb-2">Summer 2025</p>
+                        <p>Assisted with The 12th KOSTAT-UNFPA Summer Seminar, supporting instruction on global population dynamics.</p>
                     </div>
                 </div>
 
-                <!-- Service Tab -->
                 <div class="tab-pane fade" id="service" role="tabpanel">
                     <div class="info-card">
                         <h4><i class="bi bi-journal-check"></i>Peer Review</h4>
-                        <p class="mb-2"><strong>Journals:</strong> Social Science and Research, Socius, Society and Mental Health, Journal of Homosexuality</p>
-                        <p>Regular reviewer providing detailed feedback to strengthen methodological rigor and theoretical contributions in sociological research.</p>
+                        <p>Regular reviewer for journals including:</p>
+                        <ul class="mb-0 mt-2" style="padding-left: 1.2rem;">
+                            <li>Social Science and Research</li>
+                            <li>Population Research and Policy Review</li>
+                            <li>Socius</li>
+                            <li>Society and Mental Health</li>
+                            <li>American Journal of Preventive Medicine Focus</li>
+                            <li>Journal of Homosexuality</li>
+                        </ul>
                     </div>
 
                     <div class="info-card">
-                        <h4><i class="bi bi-people"></i>Academic Leadership</h4>
+                        <h4><i class="bi bi-people-fill"></i>Academic Leadership</h4>
                         <p class="mb-2"><strong>Role:</strong> Founding Member, Quantitative Research Group (QRG)</p>
-                        <p>Lead methodology workshops and research presentations at University at Albany, SUNY, fostering collaborative learning and research development among graduate students.</p>
+                        <p>Lead methodology workshops and research presentations at University at Albany, SUNY, fostering collaborative learning and research development among graduate students (2023-2025).</p>
                     </div>
 
                     <div class="info-card">
                         <h4><i class="bi bi-building"></i>Professional Memberships</h4>
-                        <p class="mb-2"><strong>Organizations:</strong></p>
-                        <ul class="mb-0">
-                            <li>American Sociological Association</li>
-                            <li>International Sociological Association</li>
-                            <li>Korean Sociological Association</li>
+                        <ul class="mb-0" style="padding-left: 1.2rem;">
+                            <li>American Sociological Association (ASA)</li>
+                            <li>International Sociological Association (ISA)</li>
+                            <li>Korean Sociological Association (KSA)</li>
                         </ul>
                     </div>
                 </div>
