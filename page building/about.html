@@ -7,133 +7,96 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <style>
-        /* Revised Academic Palette (No Font Changes) */
         :root {
-            --bg-primary: #f9f9f9;
-            --bg-secondary: #ffffff;
-            --text-primary: #212529;
-            --text-secondary: #5a6268;
-            --text-muted: #868e96;
-            --accent-primary: #2c5282; /* Academic blue */
-            --accent-secondary: #5a7d9a;
-            --accent-light: #e8f0f7;
-            --border-light: #dee2e6;
-            --shadow-sm: 0 1px 2px 0 rgba(0,0,0,0.03);
-            --shadow-md: 0 3px 5px -1px rgba(0,0,0,0.05);
+            --bs-primary: #2d3748; /* Original dark color */
+            --bs-link-color: #4a90e2;
+            
+            /* Add accent colors *only* for the new tabs, from blog.html */
+            --accent-primary: #3b82f6; 
+            --accent-light: #dbeafe;
+            --border-light: #e2e8f0;
+            --text-secondary-tabs: #64748b; /* Text color for inactive tabs */
         }
-
-        /* Using System Font as Requested */
         body {
-            font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-            background-color: var(--bg-primary);
-            color: var(--text-primary);
-            line-height: 1.7; /* Increased for readability */
+            font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+            background-color: #f8f9fa;
+            color: #333;
+            line-height: 1.7; /* Added for readability */
         }
-        
-        h1, h2, h3, h4, h5, h6,
-        .navbar-brand,
-        .nav-tabs .nav-link,
-        .back-button {
-            font-weight: 700; /* Bolder headers */
-        }
-
-        /* Navbar updated to match light theme of blog.html */
         .navbar {
-            background-color: var(--bg-secondary);
-            border-bottom: 1px solid var(--border-light);
+            background-color: var(--bs-primary);
             padding: 1rem;
-            box-shadow: var(--shadow-sm);
         }
-        
-        .navbar-brand {
-            color: var(--text-primary) !important; /* Changed from white */
-            font-weight: 700;
-            font-size: 1.3rem;
-            letter-spacing: -0.5px;
-        }
-
         .content-section {
-            background: var(--bg-secondary);
-            border-radius: 10px;
-            box-shadow: var(--shadow-sm);
-            border: 1px solid var(--border-light);
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
             padding: 2rem;
             margin: 2rem auto;
         }
-
         .info-card {
-            background: var(--bg-primary); /* Slight contrast */
+            background: #f8f9fa;
             border-radius: 8px;
             padding: 1.5rem;
             margin-bottom: 1rem;
-            border: 1px solid var(--border-light);
-            transition: border-color 0.3s ease;
+            transition: transform 0.3s ease;
+            border: 1px solid #e9ecef; /* Added subtle border */
         }
-
-        /* Subtle hover effect */
         .info-card:hover {
             transform: translateY(0); /* Removed lift */
-            border-color: var(--accent-secondary);
+            border-color: #cdd5de;
         }
-
         .info-card h4 {
-            color: var(--accent-primary);
+            color: var(--bs-primary);
             margin-bottom: 0.5rem;
-            font-weight: 700;
+            font-weight: 700; /* Bolder */
         }
-
         .info-card i {
-            color: var(--accent-primary);
+            color: var(--bs-primary);
             margin-right: 0.5rem;
         }
-        
         .info-card p, .info-card ul {
-            color: var(--text-secondary);
+            color: #495057; /* Slightly darker text */
             margin-bottom: 0;
         }
-        
         .info-card p strong {
-             color: var(--text-primary);
+             color: var(--bs-primary);
              font-weight: 700;
         }
-        
         .info-card .text-muted-small {
             font-size: 0.9rem;
-            color: var(--text-muted);
+            color: #6c757d;
         }
-
+        
         .back-button {
             text-decoration: none;
-            color: var(--text-secondary);
+            color: #6c757d;
             display: inline-flex;
             align-items: center;
             margin-bottom: 1rem;
-            font-weight: 700;
-            font-size: 0.95rem;
+            font-weight: 700; /* Bolder */
         }
-
         .back-button:hover {
-            color: var(--accent-primary);
+            color: var(--bs-primary);
         }
-        
         .back-button i {
             transition: transform 0.2s ease;
         }
-
         .back-button:hover i {
             transform: translateX(-4px);
         }
-
-        /* Changed nav-pills to nav-tabs for consistency */
+        
+        /* --- START: Tab Styling (Copied from blog.html) --- */
         .nav-tabs {
             border-bottom: none;
             gap: 0.5rem;
-            margin-bottom: 2rem !important;
+            margin-bottom: 2rem !important; /* Ensure spacing */
         }
+
         .nav-tabs .nav-link {
             border: 1px solid transparent;
             border-radius: 8px;
-            color: var(--text-secondary);
+            color: var(--text-secondary-tabs); /* Use special tab text color */
             font-weight: 700;
             padding: 0.75rem 1.5rem;
             background: transparent;
@@ -141,33 +104,41 @@
             transition: all 0.2s ease;
             font-size: 0.95rem;
         }
-        .nav-tabs .nav-link:hover:not(.active) {
-            background-color: var(--accent-light);
-            color: var(--accent-primary);
+
+        .nav-tabs .nav-link:hover {
+            background: #f1f5f9; /* Light gray bg */
+            color: var(--bs-primary);
+            border-color: var(--border-light);
         }
+
         .nav-tabs .nav-link.active {
-            background-color: var(--accent-primary);
+            background: var(--accent-primary);
             color: white;
             border-color: var(--accent-primary);
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+        }
+
+        .nav-tabs .nav-link i {
+            margin-right: 0.5rem;
+            font-size: 1.1rem;
+        }
+        /* --- END: Tab Styling --- */
+        
+        .navbar-brand {
+            color: white !important;
+            font-weight: 500;
         }
         
         .lead {
             font-size: 1.2rem;
-            color: var(--text-secondary);
-        }
-        
-        /* Focus states for accessibility */
-        a:focus,
-        button:focus {
-          outline: 2px solid var(--accent-primary);
-          outline-offset: 2px;
+            color: #495057;
         }
     </style>
 </head>
 <body>
     <nav class="navbar navbar-expand-lg">
         <div class="container">
-            <span class="navbar-brand">Heeyoung Lee</span>
+            <span class="navbar-brand">About Me</span>
         </div>
     </nav>
     
@@ -181,24 +152,24 @@
 
             <ul class="nav nav-tabs mb-4" id="aboutTabs" role="tablist">
                 <li class="nav-item" role="presentation">
-                    <button class="nav-link active" id="research-tab" data-bs-toggle="tab" data-bs-target="#research" type="button">
+                    <button class="nav-link active" id="research-tab" data-bs-toggle="tab" data-bs-target="#research" type="button" role="tab" aria-controls="research" aria-selected="true">
                         <i class="bi bi-graph-up me-1"></i> Research Interests
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="teaching-tab" data-bs-toggle="tab" data-bs-target="#teaching" type="button">
+                    <button class="nav-link" id="teaching-tab" data-bs-toggle="tab" data-bs-target="#teaching" type="button" role="tab" aria-controls="teaching" aria-selected="false">
                         <i class="bi bi-book me-1"></i> Teaching
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="service-tab" data-bs-toggle="tab" data-bs-target="#service" type="button">
+                    <button class="nav-link" id="service-tab" data-bs-toggle="tab" data-bs-target="#service" type="button" role="tab" aria-controls="service" aria-selected="false">
                         <i class="bi bi-people me-1"></i> Service
                     </button>
                 </li>
             </ul>
 
             <div class="tab-content" id="aboutTabsContent">
-                <div class="tab-pane fade show active" id="research" role="tabpanel">
+                <div class="tab-pane fade show active" id="research" role="tabpanel" aria-labelledby="research-tab">
                     <div class="info-card">
                         <h4><i class="bi bi-heart-pulse"></i>Population Health & Life-Course</h4>
                         <p class="mb-2"><strong>Focus:</strong> Health Inequalities and Social Determinants</p>
@@ -218,7 +189,7 @@
                     </div>
                 </div>
 
-                <div class="tab-pane fade" id="teaching" role="tabpanel">
+                <div class="tab-pane fade" id="teaching" role="tabpanel" aria-labelledby="teaching-tab">
                     
                     <div class="info-card">
                         <h4><i class="bi bi-book-half"></i>Medical Sociology</h4>
@@ -249,7 +220,7 @@
                     </div>
                 </div>
 
-                <div class="tab-pane fade" id="service" role="tabpanel">
+                <div class="tab-pane fade" id="service" role="tabpanel" aria-labelledby="service-tab">
                     <div class="info-card">
                         <h4><i class="bi bi-journal-check"></i>Peer Review</h4>
                         <p>Regular reviewer for journals including:</p>
