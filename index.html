@@ -7,145 +7,260 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <style>
+        /* Academic Aesthetic Style Block (Consistent with other pages) */
         :root {
-            --bs-primary: #2d3748;
-            --bs-link-color: #4a90e2;
-            --bs-link-hover-color: #2b6cb0;
+            --bg-primary: #f9f9f9;
+            --bg-secondary: #ffffff;
+            --text-primary: #212529;
+            --text-secondary: #5a6268;
+            --text-muted: #868e96;
+            --accent-primary: #2c5282; /* Academic blue */
+            --accent-secondary: #5a7d9a;
+            --accent-light: #e8f0f7;
+            --border-light: #dee2e6;
+            --shadow-sm: 0 1px 2px 0 rgba(0,0,0,0.03);
+            --shadow-md: 0 3px 5px -1px rgba(0,0,0,0.05);
         }
 
+        /* Using System Font as Requested */
         body {
-            font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
-            background-color: #f8f9fa;
+            font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.7;
+        }
+        
+        h1, h2, h3, h4, h5, h6,
+        .navbar-brand,
+        .nav-link {
+            font-weight: 700;
         }
 
+        /* Light Navbar */
         .navbar {
-            background-color: var(--bs-primary);
+            background-color: var(--bg-secondary);
+            border-bottom: 1px solid var(--border-light);
             padding: 1rem;
+            box-shadow: var(--shadow-sm);
         }
         
         .navbar-brand {
-            color: white !important;
-            font-weight: 500;
+            color: var(--text-primary) !important;
+            font-size: 1.3rem;
+            letter-spacing: -0.5px;
         }
         
         .nav-link {
-            color: rgba(255, 255, 255, 0.85) !important;
+            color: var(--text-secondary) !important;
             transition: color 0.3s ease;
             padding: 0.5rem 1rem !important;
+            font-size: 0.95rem;
         }
         
         .nav-link:hover {
-            color: white !important;
+            color: var(--accent-primary) !important;
         }
         
-        /* Add these new styles to make the toggle button visible on dark backgrounds */
         .navbar-toggler {
-            border-color: rgba(255, 255, 255, 0.5);
+            border-color: var(--border-light);
         }
         
         .navbar-toggler-icon {
-            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba(255, 255, 255, 0.85)' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba(44, 82, 130, 0.8)' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
+        }
+        
+        .navbar-nav {
+            margin-left: auto;
+        }
+        
+        @media (max-width: 991.98px) {
+            .navbar-collapse {
+                background-color: var(--bg-secondary);
+                padding: 1rem;
+                border-radius: 8px;
+                margin-top: 1rem;
+                border: 1px solid var(--border-light);
+            }
         }
 
-        .profile-section {
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-            padding: 2rem;
-            margin: 2rem auto;
-        }
+        /* --- Two-Column Layout Styles --- */
 
-        .content-section {
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-            padding: 2rem;
-            margin: 1rem auto;
+        /* Left Sidebar Card */
+        .profile-sidebar {
+            background: var(--bg-secondary);
+            border-radius: 10px;
+            box-shadow: var(--shadow-sm);
+            padding: 2.5rem 2rem;
+            margin-top: 2rem;
+            border: 1px solid var(--border-light);
+            text-align: center;
+            height: 100%;
         }
 
         .profile-image {
-            width: 200px;
-            height: 200px;
-            border-radius: 12px;
+            width: 180px;
+            height: 180px;
+            border-radius: 50%; /* Changed to circle */
             object-fit: cover;
+            margin-bottom: 1.5rem;
+            border: 3px solid var(--border-light);
+        }
+
+        .name-title {
+            font-size: 1.75rem;
+            color: var(--text-primary);
+            margin-bottom: 0.25rem;
+            font-weight: 700;
+        }
+
+        .korean-name {
+            font-size: 1.2rem;
+            color: var(--text-muted);
+            margin-bottom: 1rem;
+            font-weight: 400;
+        }
+        
+        .profile-sidebar .lead {
+            font-size: 1rem;
+            color: var(--text-secondary);
+            line-height: 1.6;
+            font-weight: 400;
+            margin-bottom: 1rem;
+        }
+        
+        .profile-sidebar .lead strong {
+            color: var(--text-primary);
+            font-weight: 700;
+        }
+        
+        .profile-sidebar .contact-info {
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+            margin-top: 1.5rem;
+            text-align: left;
+            line-height: 1.8;
+        }
+
+        .profile-sidebar .contact-info i {
+            color: var(--accent-primary);
+            width: 20px;
+            text-align: center;
+            margin-right: 0.5rem;
+        }
+
+        .social-links {
+            margin-top: 1.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 0.75rem;
         }
 
         .social-links a {
             text-decoration: none;
-            padding: 0.5rem 1rem;
-            margin: 0.25rem;
+            padding: 0.5rem 0.75rem;
             border-radius: 6px;
-            display: inline-block;
-            background-color: #f8f9fa;
-            color: var(--bs-primary);
+            display: inline-flex;
+            align-items: center;
+            background-color: var(--bg-primary);
+            color: var(--text-secondary);
             transition: all 0.3s ease;
-            border: 1px solid #dee2e6;
+            border: 1px solid var(--border-light);
+            font-size: 0.9rem;
+            font-weight: 500;
         }
 
         .social-links a:hover {
-            background-color: var(--bs-link-color);
+            background-color: var(--accent-primary);
             color: white;
-            transform: translateY(-2px);
+            border-color: var(--accent-primary);
         }
 
-        .name-title {
-            font-size: 2.5rem;
-            color: var(--bs-primary);
-            margin-bottom: 0.5rem;
+        /* Right Main Content Cards */
+        .main-content-card {
+            background: white;
+            border-radius: 10px;
+            box-shadow: var(--shadow-sm);
+            padding: 2.5rem;
+            margin: 2rem 0;
+            border: 1px solid var(--border-light);
         }
-
-        .korean-name {
+        
+        .main-content-card h3 {
+            color: var(--accent-primary);
+            border-bottom: 2px solid var(--border-light);
+            padding-bottom: 0.75rem;
+            margin-bottom: 1.5rem;
             font-size: 1.5rem;
-            color: #6c757d;
-            margin-bottom: 1rem;
+        }
+        
+        .main-content-card p {
+            color: var(--text-secondary);
+            line-height: 1.7;
+            font-size: 1.05rem;
+        }
+        
+        /* List Style (for Pubs & Teaching) */
+        .content-list {
+            list-style-type: none;
+            padding-left: 0;
+        }
+        .content-list li {
+            position: relative;
+            padding-left: 1.75rem;
+            margin-bottom: 1.25rem;
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+        .content-list li strong {
+            color: var(--text-primary);
+            font-weight: 700;
+            display: block;
+            font-size: 1.05rem;
+            margin-bottom: 0.25rem;
+        }
+        
+        /* Icon for Pubs */
+        .publication-list li::before {
+            content: "\f2e2"; /* file-earmark-text */
+            font-family: "bootstrap-icons";
+            position: absolute;
+            left: 0;
+            top: 4px;
+            color: var(--accent-primary);
+            font-size: 1rem;
         }
 
-        .research-interests {
-            color: #6c757d;
-            font-size: 1.2rem;
-            margin: 1rem 0;
+        /* Icon for Teaching */
+        .teaching-list li::before {
+            content: "\f1ae"; /* book-half */
+            font-family: "bootstrap-icons";
+            position: absolute;
+            left: 0;
+            top: 4px;
+            color: var(--accent-primary);
+            font-size: 1rem;
         }
-
-        .section-title {
-            color: var(--bs-primary);
-            border-bottom: 2px solid #e9ecef;
-            padding-bottom: 0.5rem;
-            margin-bottom: 1rem;
+        
+        .btn-outline-primary {
+            color: var(--accent-primary);
+            border-color: var(--accent-primary);
+            font-weight: 700;
+            font-size: 0.9rem;
         }
-
-        .publication-year {
-            color: var(--bs-primary);
-            font-weight: 500;
-            margin-top: 1.5rem;
+        
+        .btn-outline-primary:hover {
+            background-color: var(--accent-primary);
+            color: white;
         }
-
-        .publication-item {
-            margin-bottom: 1rem;
-            padding-left: 1rem;
-        }
-
-        .award-item {
-            margin-bottom: 0.5rem;
-        }
-
-        .code-block {
-            background: #f8f9fa;
-            padding: 1rem;
-            border-radius: 6px;
-            font-family: monospace;
-        }
-
-        .navbar-nav {
-            margin-left: auto;
-        }
-
-        @media (max-width: 768px) {
-            .navbar-collapse {
-                background-color: var(--bs-primary);
-                padding: 1rem;
-                border-radius: 8px;
-                margin-top: 1rem;
-            }
+        
+        .last-updated {
+            text-align: center;
+            color: var(--text-muted);
+            margin-top: 1rem;
+            margin-bottom: 3rem;
+            font-size: 0.9rem;
         }
     </style>
 </head>
@@ -194,40 +309,140 @@
     </nav>
 
     <div class="container mt-4">
-        <div class="profile-section">
-            <div class="row align-items-center">
-                <div class="col-md-4 text-center">
+        <div class="row">
+            
+            <div class="col-lg-4">
+                <div class="profile-sidebar">
                     <img src="images/profile picture.png" alt="Heeyoung Lee" class="profile-image mb-3">
-                </div>
-                <div class="col-md-8">
                     <h1 class="name-title">Heeyoung Lee</h1>
                     <h2 class="korean-name">이희영</h2>
-                    <p class="lead">Ph.D. Candidate in Sociology<br>
-                    University at Albany, SUNY</p>
-                    <p class="research-interests">Population Health | Criminology | Life-course | Spatial Analysis</p>
-                    <p><i class="bi bi-envelope-fill"></i> hlee25@albany.edu</p>
+                    <p class="lead">
+                        Ph.D. Candidate in <strong>Sociology</strong><br>
+                        University at Albany, SUNY
+                    </p>
+                    
+                    <div class="contact-info">
+                         <p class="mb-2">
+                            <i class="bi bi-envelope-fill"></i> hlee25@albany.edu
+                         </p>
+                         <p class="mb-0">
+                            <i class="bi bi-mortarboard-fill"></i> <strong>Interests:</strong> Population Health, Criminology, Life-course, Spatial Analysis
+                         </p>
+                    </div>
+
                     <div class="social-links">
-                        <a href="https://scholar.google.com/citations?user=bh3YJZ0AAAAJ&hl=en&oi=sra">
-                            <i class="bi bi-google"></i> Google Scholar
+                        <a href="https://scholar.google.com/citations?user=bh3YJZ0AAAAJ&hl=en&oi=sra" target="_blank">
+                            <i class="bi bi-google"></i> Scholar
                         </a>
-                        <a href="https://www.linkedin.com/in/heeyoung-lee-086b2926a/">
+                        <a href="https://www.linkedin.com/in/heeyoung-lee-086b2926a/" target="_blank">
                             <i class="bi bi-linkedin"></i> LinkedIn
                         </a>
-                        <a href="https://x.com/idlhy0218">
+                        <a href="https://x.com/idlhy0218" target="_blank">
                             <i class="bi bi-twitter-x"></i> Twitter(X)
                         </a>
                     </div>
                 </div>
             </div>
-        </div>
 
-        <div class="text-center text-muted mt-4 mb-4">
-            <i>Last updated: Aug 13, 2025</i>
+            <div class="col-lg-8">
+                
+                <div class="main-content-card">
+                    <h3>About Me</h3>
+                    <p>I am a Ph.D. Candidate in Sociology at the University at Albany, SUNY. My research focuses on population health, criminology, and life-course analysis, with particular emphasis on spatial methods and longitudinal analysis.
+                    </p>
+                    <p>My work investigates the temporal and spatial dimensions of health inequalities and examines how neighborhood contexts and social determinants shape outcomes across different populations.</p>
+                    <a href="page building/about.html" class="btn btn-outline-primary mt-2">
+                        More About Me <i class="bi bi-arrow-right-short"></i>
+                    </a>
+                </div>
+
+                <div class="main-content-card">
+                    <h3>Publications</h3>
+                    <ul class="content-list publication-list">
+                        <li>
+                            <strong>Lee, Heeyoung*</strong>, and Tse-Chuan Yang. 2025. "Unequal Spillover of Human Capital: Longitudinal Analysis of Mortality Among Populations by College Degree in US Counties, 2010-2022." 
+                            <i>American Journal of Preventive Medicine</i>.
+                        </li>
+                        <li>
+                            Yang, Tse-Chuan, Carla Shoff, Kate Strully and <strong>Heeyoung Lee</strong>. 2025. "Features of Residential Counties and Individual Health Conditions for Opioid Use Disorder Among Older Medicare Beneficiaries." 
+                            <i>The Journals of Gerontology, Series B: Psychological Sciences and Social Sciences</i>.
+                        </li>
+                        <li>
+                            <strong>Lee, Heeyoung*</strong>, and Matt Vogel. 2025. "Exposure to Police Killing and Adolescents’ Self-Concept: Diverging Effects for Black and White American Youths." 
+                            <i>Journal of Adolescence</i>.
+                        </li>
+                         <li>
+                            <strong>Lee, Heeyoung*</strong>, and Tse-Chuan Yang. 2024. "Spatial and Temporal Dimension of Black-White Mental Health Paradox in the US: Effect of Cumulative Neighborhood Disadvantage."
+                            <i>Population Research & Policy Review</i>.
+                        </li>
+                        <li>
+                            <strong>Lee, Heeyoung*</strong>. 2024. "State-Level Structural Sexism and Adolescent Sexual Violence Victimization in the US." 
+                            <i>Child Abuse and Neglect</i>.
+                        </li>
+                        <li>
+                            <strong>Lee, Heeyoung*</strong>. 2024. "Delinquency During Puberty as a Biosocial Behavior: Time-Varying Effects of Social Contexts on Girl’s Delinquency in South Korea." 
+                            <i>Criminal Justice and Behaviors</i>.
+                        </li>
+                        <li>
+                            Jung, Seong-Jo, <strong>Heeyoung Lee</strong>, and Chan. S, Suh. 2024. "Moving Apart and Coming Together: The Dynamics of Coalition Building in the Case of South Korean LGBTQ Movement." 
+                            <i>Journal of Homosexuality</i>.
+                        </li>
+                        <li>
+                            <strong>Lee, Heeyoung*</strong>, and Seong-Jo Jung. 2024. "Gender Differences in the Relationship between Coming Out as LGB to Family and Depression in South Korea." 
+                            <i>Society and Mental Health</i>.
+                        </li>
+                        <li>
+                            <strong>Lee, Heeyoung*</strong>, Sooyeon Moon, and Na-Young Lee. 2023. "Industry Culture Matters: Sexual Harassment in the South Korean Film Industry." 
+                            <i>Violence Against Women</i>.
+                        </li>
+                        <li>
+                            Jung, Seong-Jo and <strong>Heeyoung Lee</strong>. 2023. "Open, Discreet, and Repressive Closet: Latent Class Analysis on the Patterns of LGBTQ+ Youth’s Coming Out." 
+                            <i>The Korean Journal of Sociology [in Korean]</i>.
+                        </li>
+                        <li>
+                            <strong>Lee, Heeyoung*</strong>, Dawool Cheong, and Seoung-Jo Jung. 2021. "A Democratic Response to COVID-19 or Governance with People Without Rights." 
+                            <i>Memory & Vision [in Korean]</i>.
+                        </li>
+                        <li>
+                            <strong>Lee, Heeyoung*</strong>, and Na-Young Lee. 2019. "Constituting ‘Premature Girls’ during the 1960s-70s in South Korea: A Gendered Regime of Sexual Efficiency." 
+                            <i>The Journal of Asian Women [in Korean]</i>.
+                        </li>
+                        <li>
+                            <strong>Lee, Heeyoung*</strong>, and Na-Young Lee. 2019. "Constructing the National Body: Child Development in the Postcolonial Nation-State during the 1960s - 1970s." 
+                            <i>Society and History [in Korean]</i>.
+                        </li>
+                    </ul>
+                    <a href="page building/publications.html" class="btn btn-outline-primary mt-2">
+                        View All (with abstracts) <i class="bi bi-arrow-right-short"></i>
+                    </a>
+                </div>
+                
+                <div class="main-content-card">
+                    <h3>Teaching Experience</h3>
+                    <ul class="content-list teaching-list">
+                        <li>
+                            <strong>Instructor of Record</strong>
+                            Courses: Criminology (Fall 2025, Summer 2025); Medical Sociology (Fall 2025, Spring 2025, Fall 2024, Summer 2024)
+                        </li>
+                        <li>
+                            <strong>Co-Instructor</strong>
+                            Course: Statistics for Sociologists (Spring 2023)
+                        </li>
+                         <li>
+                            <strong>Teaching Assistant</strong>
+                            Course: The 12th KOSTAT-UNFPA Summer Seminar on Population (Summer 2025)
+                        </li>
+                    </ul>
+                    <a href="page building/teaching.html" class="btn btn-outline-primary mt-2">
+                        More About Teaching <i class="bi bi-arrow-right-short"></i>
+                    </a>
+                </div>
+
+            </div> </div> <div class="last-updated">
+            <i>Last updated: November 15, 2025</i>
         </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
-
-
