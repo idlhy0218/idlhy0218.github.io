@@ -6,6 +6,11 @@
   <title>Blog - Heeyoung Lee</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" />
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700&family=Lora:ital,wght@0,400..700;1,400..700&display=swap" rel="stylesheet">
+
   <style>
     * {
       margin: 0;
@@ -13,41 +18,57 @@
       box-sizing: border-box;
     }
 
+    /* Revised Academic Palette & Shadows */
     :root {
-      --bg-primary: #f8fafc;
+      --bg-primary: #f9f9f9; /* Warmer, paper-like background */
       --bg-secondary: #ffffff;
-      --text-primary: #1e293b;
-      --text-secondary: #64748b;
-      --text-muted: #94a3b8;
-      --accent-primary: #3b82f6;
-      --accent-secondary: #6366f1;
-      --accent-light: #dbeafe;
-      --border-light: #e2e8f0;
-      --shadow-sm: 0 1px 2px 0 rgba(0,0,0,0.05);
-      --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.1);
-      --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.1);
+      --text-primary: #212529; /* Darker, more classic text */
+      --text-secondary: #5a6268; /* Subdued secondary text */
+      --text-muted: #868e96;
+      --accent-primary: #2c5282; /* A deep, academic blue */
+      --accent-secondary: #5a7d9a; /* A lighter, complementary blue */
+      --accent-light: #e8f0f7; /* Light blue for tags, matches accent */
+      --border-light: #dee2e6;
+      
+      /* Softer Shadows */
+      --shadow-sm: 0 1px 2px 0 rgba(0,0,0,0.03);
+      --shadow-md: 0 3px 5px -1px rgba(0,0,0,0.05);
+      --shadow-lg: 0 8px 12px -3px rgba(0,0,0,0.07);
     }
 
+    /* Revised Body Typography */
     body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      font-family: 'Lora', 'EB Garamond', serif; /* Serif first */
       background: var(--bg-primary);
       color: var(--text-primary);
-      line-height: 1.6;
+      line-height: 1.7; /* Increased for readability */
       min-height: 100vh;
+    }
+
+    /* Apply sans-serif to headers, nav, and titles for contrast */
+    h1, h2, h3, h4, h5, h6,
+    .navbar-brand,
+    .nav-tabs .nav-link,
+    .blog-card-title,
+    .gallery-item-title,
+    .gallery-modal-title,
+    .back-button {
+      font-family: 'Lato', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      font-weight: 700; /* Bolder headers */
     }
 
     /* Navbar */
     .navbar {
       background: var(--bg-secondary);
       border-bottom: 1px solid var(--border-light);
-      padding: 1.5rem 0;
+      padding: 1rem 0; /* Reduced padding */
       box-shadow: var(--shadow-sm);
     }
 
     .navbar-brand {
       color: var(--text-primary) !important;
-      font-weight: 600;
-      font-size: 1.5rem;
+      font-weight: 700;
+      font-size: 1.3rem; /* Reduced size */
       letter-spacing: -0.5px;
     }
 
@@ -81,6 +102,7 @@
       margin-bottom: 0;
       transition: all 0.2s ease;
       font-size: 0.95rem;
+      font-weight: 700;
     }
 
     .nav-tabs .nav-link:hover {
@@ -93,7 +115,7 @@
       background: var(--accent-primary);
       color: white;
       border-color: var(--accent-primary);
-      box-shadow: var(--shadow-md);
+      box-shadow: none; /* Removed shadow */
     }
 
     .nav-tabs .nav-link i {
@@ -111,14 +133,14 @@
       padding: 0.5rem 1rem;
       border-radius: 8px;
       transition: all 0.2s ease;
-      font-weight: 500;
+      font-weight: 700;
       font-size: 0.95rem;
     }
 
     .back-button:hover {
       color: var(--accent-primary);
       background: var(--bg-secondary);
-      transform: translateX(-4px);
+      transform: translateX(0); /* Removed transform */
     }
 
     .back-button i {
@@ -139,7 +161,7 @@
 
     .blog-card {
       background: var(--bg-secondary);
-      border-radius: 12px;
+      border-radius: 10px; /* Slightly less rounded */
       padding: 1.5rem;
       box-shadow: var(--shadow-sm);
       border: 1px solid var(--border-light);
@@ -149,25 +171,16 @@
       overflow: hidden;
     }
 
+    /* Removed gradient bar */
     .blog-card::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      height: 4px;
-      background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary));
-      transform: scaleX(0);
-      transition: transform 0.3s ease;
+      display: none;
     }
 
+    /* Subtle hover: border color + slightly deeper shadow */
     .blog-card:hover {
-      transform: translateY(-4px);
-      box-shadow: var(--shadow-lg);
-    }
-
-    .blog-card:hover::before {
-      transform: scaleX(1);
+      transform: translateY(0); /* Removed lift */
+      box-shadow: var(--shadow-md);
+      border-color: var(--accent-primary);
     }
 
     .blog-card-header {
@@ -176,7 +189,7 @@
 
     .blog-card-title {
       font-size: 1.25rem;
-      font-weight: 600;
+      font-weight: 700;
       color: var(--text-primary);
       margin-bottom: 0.5rem;
       line-height: 1.4;
@@ -193,6 +206,7 @@
       display: flex;
       align-items: center;
       gap: 0.5rem;
+      font-family: 'Lato', sans-serif; /* Date should be sans-serif */
     }
 
     .blog-card-description {
@@ -221,7 +235,8 @@
       padding: 0.25rem 0.75rem;
       border-radius: 20px;
       font-size: 0.8rem;
-      font-weight: 500;
+      font-weight: 700;
+      font-family: 'Lato', sans-serif; /* Category tag sans-serif */
     }
 
     .blog-card-arrow {
@@ -232,7 +247,7 @@
 
     .blog-card:hover .blog-card-arrow {
       color: var(--accent-primary);
-      transform: translateX(4px);
+      transform: translateX(0); /* Removed arrow movement */
     }
 
     /* Gallery Grid */
@@ -255,8 +270,9 @@
     }
 
     .gallery-item:hover {
-      transform: translateY(-4px);
-      box-shadow: var(--shadow-lg);
+      transform: translateY(0); /* Removed lift */
+      box-shadow: var(--shadow-md);
+      border-color: var(--accent-primary);
     }
 
     .gallery-item-image {
@@ -268,7 +284,7 @@
     }
 
     .gallery-item:hover .gallery-item-image {
-      transform: scale(1.05);
+      transform: scale(1.0); /* Removed zoom */
     }
 
     .gallery-item-overlay {
@@ -289,7 +305,7 @@
 
     .gallery-item-title {
       font-size: 1.1rem;
-      font-weight: 600;
+      font-weight: 700;
       margin-bottom: 0.5rem;
       line-height: 1.3;
     }
@@ -298,6 +314,7 @@
       font-size: 0.9rem;
       opacity: 0.9;
       line-height: 1.4;
+      font-family: 'Lato', sans-serif; /* Match body text */
     }
 
     /* Modal for gallery images */
@@ -358,7 +375,7 @@
 
     .gallery-modal-title {
       font-size: 1.5rem;
-      font-weight: 600;
+      font-weight: 700;
       color: var(--text-primary);
       margin-bottom: 0.5rem;
     }
@@ -377,7 +394,7 @@
     }
 
     .introduction-section h2 {
-      font-size: 2.5rem;
+      font-size: 2.2rem; /* Slightly smaller */
       font-weight: 700;
       color: var(--text-primary);
       margin-bottom: 1rem;
@@ -399,7 +416,7 @@
     /* Blog Content Container for iframe */
     .blog-content-container {
       background: var(--bg-secondary);
-      border-radius: 12px;
+      border-radius: 10px; /* Match cards */
       padding: 0;
       margin-top: 2rem;
       box-shadow: var(--shadow-sm);
@@ -631,7 +648,6 @@
     </div>
 
     <div class="tab-content">
-      <!-- Stats Lab -->
       <div class="tab-pane fade show active" id="statslab" role="tabpanel" aria-labelledby="statslab-tab">
         <div class="blog-overview" id="statslab-overview">
           <div class="introduction-section">
@@ -650,7 +666,6 @@
         </div>
       </div>
 
-      <!-- Study Notes -->
       <div class="tab-pane fade" id="studynotes" role="tabpanel" aria-labelledby="studynotes-tab">
         <div class="blog-overview" id="studynotes-overview">
           <div class="introduction-section">
@@ -669,7 +684,6 @@
         </div>
       </div>
 
-      <!-- Gallery -->
       <div class="tab-pane fade" id="gallery" role="tabpanel" aria-labelledby="gallery-tab">
         <div class="introduction-section">
           <h2>Gallery</h2>
@@ -682,7 +696,6 @@
     </div>
   </div>
 
-  <!-- Gallery Modal -->
   <div class="gallery-modal" id="galleryModal">
     <div class="gallery-modal-content">
       <span class="gallery-modal-close" id="galleryModalClose">&times;</span>
