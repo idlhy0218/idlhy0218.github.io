@@ -1,0 +1,648 @@
+---
+title: "Understanding Event History Analysis (Survival Analysis)"
+author: "Heeyoung Lee"
+date: "November 24, 2025"
+format: 
+  html:
+    theme: cosmo
+    css: custom.css
+    page-layout: full
+    code-fold: true
+    code-tools: true
+    toc: true
+    toc-depth: 5
+    toc-location: left
+    self-contained: true
+    fig-width: 8
+    fig-height: 6
+    fig-dpi: 300
+    smooth-scroll: true
+    highlight-style: github
+execute:
+  warning: false
+  message: false
+---
+
+## Understanding Event History Analysis (Survival Analysis)
+
+Event history analysis, also known as survival analysis or duration analysis, is a powerful statistical framework for analyzing the timing of events. Originally developed in biostatistics to study patient survival, these methods have become essential tools across sociology, criminology, demography, and economics.
+
+The fundamental question event history analysis addresses is: **How long until an event occurs, and what factors affect this timing?**
+
+Unlike traditional regression that models whether an event occurs, survival analysis models **when** it occurs, accounting for the fact that some observations may not experience the event during the study period (censoring).
+
+### 1. Core Concepts in Event History Analysis
+
+#### The Event and Time-to-Event
+
+**Event**: A qualitative change in status that can be precisely located in time
+
+- Recidivism (re-arrest after release)
+- Death or disease onset
+- Job loss or employment
+- Marriage or divorce
+- Program dropout
+
+**Time-to-event** (Duration, Survival Time): The elapsed time from a starting point until the event occurs
+
+- Months until re-arrest after prison release
+- Years until death after diagnosis
+- Days until employment after job search begins
+
+#### Censoring: The Key Challenge
+
+**Right Censoring** occurs when we know the event has not occurred by the end of observation, but we don't know when (or if) it will occur:
+
+- A formerly incarcerated person has not been re-arrested by study end
+- A patient is still alive when the study concludes
+- A participant drops out before the event
+
+**Why censoring matters**: Simply excluding censored cases creates bias because those with longer survival times are systematically excluded. Survival analysis uses partial information from censored cases to provide unbiased estimates.
+
+#### The Hazard Function
+
+The **hazard rate** $h(t)$ is the instantaneous risk of experiencing the event at time $t$, given survival up to that point:
+
+$$h(t) = \lim_{\Delta t \to 0} \frac{P(t \leq T < t + \Delta t | T \geq t)}{\Delta t}$$
+
+**Interpretation**: The hazard represents the "instantaneous risk right now." For example, if we're studying recidivism:
+
+- At 6 months after release, a person who hasn't been re-arrested yet has some risk of being arrested in the next moment
+- The hazard tells us: "Among people who've made it 6 months without arrest, what's their risk of arrest right now?"
+- It's like asking: "How dangerous is this moment?" rather than "What's the cumulative chance over the whole period?"
+- The hazard can go up or down over time (e.g., recidivism risk might be highest right after release, then decline)
+
+- Higher hazard = greater risk of event at time $t$
+- Can vary over time (e.g., recidivism risk highest immediately after release)
+- Can be influenced by covariates (e.g., age, prior record)
+
+#### The Survival Function
+
+The **survival function** $S(t)$ gives the probability of surviving past time $t$:
+
+$$S(t) = P(T > t) = 1 - F(t)$$
+
+Where $F(t)$ is the cumulative distribution function.
+
+The survival function is straightforward - it's simply the probability of "surviving" past time $t$ without experiencing the event.
+
+- If $S(12) = 0.60$, this means 60% of people make it past 12 months without re-arrest
+- It always starts at 1.0 (everyone begins without the event) and decreases over time
+- It can never increase - once someone experiences the event, they can't "un-experience" it
+- It's the complement of the cumulative distribution: if 40% have been re-arrested by 12 months, then 60% haven't been
+
+**Relationship to hazard**: 
+$$S(t) = \exp\left(-\int_0^t h(u)du\right)$$
+
+The survival function and hazard function contain equivalent information but emphasize different aspects of the timing process.
+
+- The integral $\int_0^t h(u)du$ is called the **cumulative hazard** - it adds up all the instantaneous risks from time 0 to time $t$
+- Think of it like this: if you face a small risk each moment, the cumulative hazard is the total "risk exposure" you've accumulated
+- The survival probability decreases exponentially with cumulative hazard: more accumulated risk = lower chance of survival
+- Example: If hazard is constant at 0.1 per month, after 10 months the cumulative hazard is 1.0, and survival is $e^{-1} \approx 0.37$ (37% survive)
+- **Why exponential?** The exponential function captures the multiplicative nature of survival - surviving each moment is like passing a series of tests, and your overall survival is the product of all those individual "passes"
+- **Practical insight**: Two people can have the same cumulative hazard through different paths (one with high hazard for short time vs. one with low hazard for long time) and end up with the same survival probability - it's the accumulated risk that matters, not how you got there
+
+```{r library-imports, message=FALSE, warning=FALSE}
+# Load required packages
+library(survival)
+library(survminer)
+library(dplyr)
+library(ggplot2)
+library(kableExtra)
+library(patchwork)
+library(broom)
+```
+
+### 2. Simulating Recidivism Data
+
+Let's create a realistic dataset examining recidivism (re-arrest) among formerly incarcerated individuals. This application is highly relevant to criminology and demonstrates the practical value of survival analysis.
+
+**Research Question**: How do individual characteristics and post-release circumstances affect the timing of recidivism?
+
+**Key Variables**:
+
+- **Time-to-event**: Months until re-arrest (or censoring)
+- **Event indicator**: Whether re-arrest occurred (1) or censored (0)
+- **Covariates**:
+  - Age at release (younger = higher risk)
+  - Prior arrests (more priors = higher risk)
+  - Employment status post-release (employed = lower risk)
+  - Substance abuse history (abuse = higher risk)
+  - Education level (higher education = lower risk)
+
+```{r simulate-data}
+set.seed(456)
+n <- 500  # 500 formerly incarcerated individuals
+
+# Generate covariates
+age <- round(rnorm(n, mean = 35, sd = 10))
+age <- pmax(18, pmin(age, 65))  # Constrain between 18-65
+
+prior_arrests <- rpois(n, lambda = 3)
+prior_arrests <- pmin(prior_arrests, 15)  # Cap at 15
+
+employed <- rbinom(n, 1, prob = 0.4)  # 40% employed post-release
+
+substance_abuse <- rbinom(n, 1, prob = 0.6)  # 60% with substance abuse history
+
+education <- sample(c("Less than HS", "HS", "Some College", "College+"), 
+                   n, replace = TRUE, 
+                   prob = c(0.4, 0.35, 0.2, 0.05))
+
+# Create education numeric for hazard calculation
+education_num <- case_when(
+  education == "Less than HS" ~ 0,
+  education == "HS" ~ 1,
+  education == "Some College" ~ 2,
+  education == "College+" ~ 3
+)
+
+# Generate survival times using Weibull distribution
+# Log-hazard model: incorporates covariate effects
+shape <- 1.2  # Weibull shape parameter (>1 means increasing hazard over time)
+
+# Linear predictor for log-hazard
+log_hazard <- 2.5 +  # Baseline
+             -0.03 * age +  # Older = lower risk
+             0.15 * prior_arrests +  # More priors = higher risk
+             -0.8 * employed +  # Employment = lower risk  
+             0.6 * substance_abuse +  # Substance abuse = higher risk
+             -0.3 * education_num  # More education = lower risk
+
+# Generate time-to-event from Weibull distribution
+scale <- exp(-log_hazard / shape)
+time_to_event <- rweibull(n, shape = shape, scale = scale)
+
+# Ensure all times are at least 0.1 months (to avoid zero/negative times)
+time_to_event <- pmax(time_to_event, 0.1)
+
+# Generate censoring: study follows people for 36 months
+study_end <- 36
+censoring_time <- runif(n, min = 12, max = study_end)  # Random censoring
+
+# Observed time is minimum of event time and censoring time
+observed_time <- pmin(time_to_event, censoring_time)
+
+# Ensure observed times are positive
+observed_time <- pmax(observed_time, 0.1)
+
+# Event indicator: 1 if event occurred, 0 if censored
+event <- as.numeric(time_to_event <= censoring_time)
+
+# Create dataset
+recidivism_data <- data.frame(
+  id = 1:n,
+  time = round(observed_time, 1),
+  recidivism = event,
+  age = age,
+  prior_arrests = prior_arrests,
+  employed = factor(employed, levels = c(0, 1), labels = c("No", "Yes")),
+  substance_abuse = factor(substance_abuse, levels = c(0, 1), 
+                          labels = c("No", "Yes")),
+  education = factor(education, 
+                    levels = c("Less than HS", "HS", "Some College", "College+"))
+)
+
+# Summary statistics
+cat("Dataset Summary:\n")
+cat("Total observations:", n, "\n")
+cat("Events (re-arrests):", sum(recidivism_data$recidivism), "\n")
+cat("Censored:", sum(1 - recidivism_data$recidivism), "\n")
+cat("Censoring rate:", 
+    round(mean(1 - recidivism_data$recidivism) * 100, 1), "%\n\n")
+
+# Display sample
+head(recidivism_data, 15) %>%
+  kable(digits = 1, 
+        caption = "Sample Recidivism Data: Time to Re-arrest After Release") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"))
+```
+
+### 3. Visualizing Survival Data
+
+Understanding survival data requires specialized visualization techniques that account for censoring.
+
+#### 3.1 Distribution of Survival Times
+
+```{r time-distribution, fig.width=10, fig.height=5}
+# Plot 1: Histogram of observed times, colored by event status
+p1 <- ggplot(recidivism_data, aes(x = time, fill = factor(recidivism))) +
+  geom_histogram(bins = 30, alpha = 0.7, position = "identity") +
+  scale_fill_manual(values = c("0" = "blue", "1" = "red"),
+                   labels = c("Censored", "Re-arrested")) +
+  labs(title = "Distribution of Observed Times",
+       x = "Months Since Release", 
+       y = "Frequency",
+       fill = "Status") +
+  theme_minimal()
+
+# Plot 2: Cumulative events over time
+event_counts <- recidivism_data %>%
+  filter(recidivism == 1) %>%
+  arrange(time) %>%
+  mutate(cumulative_events = row_number())
+
+p2 <- ggplot(event_counts, aes(x = time, y = cumulative_events)) +
+  geom_step(size = 1, color = "darkred") +
+  labs(title = "Cumulative Re-arrests Over Time",
+       x = "Months Since Release",
+       y = "Cumulative Number of Re-arrests") +
+  theme_minimal()
+
+p1
+p2
+```
+
+**Key observations**:
+
+- Red bars show when re-arrests occurred
+- Blue bars show censored observations (study ended before re-arrest)
+- Many events occur early (high initial hazard)
+- Cumulative plot shows the pattern of events accumulating over time
+
+### 4. Kaplan-Meier Estimator: Non-parametric Survival Curves
+
+The **Kaplan-Meier (KM) estimator** is the most common method for estimating survival functions from censored data. It provides a step function estimate of $S(t)$ without assuming any parametric form.
+
+#### Mathematical Foundation
+
+The KM estimator at time $t$ is:
+
+$$\hat{S}(t) = \prod_{t_i \leq t} \left(1 - \frac{d_i}{n_i}\right)$$
+
+Where:
+
+- $t_i$ = distinct event times
+- $d_i$ = number of events at time $t_i$
+- $n_i$ = number at risk just before $t_i$ (not yet experienced event or censored)
+
+The survival probability at time $t$ is the product of conditional probabilities of surviving each earlier time point.
+
+**Intuitive explanation with an example**:
+
+Imagine tracking 100 people after prison release:
+
+- **Month 1**: 100 people at risk, 5 get re-arrested → Survival rate = $(1 - 5/100) = 0.95$
+- **Month 2**: 95 people still at risk, 3 get re-arrested → Survival rate = $0.95 \times (1 - 3/95) = 0.92$
+- **Month 3**: 90 people at risk, 2 get re-arrested → Survival rate = $0.92 \times (1 - 2/90) = 0.90$
+
+The KM estimator multiplies these conditional probabilities together. Each term $(1 - d_i/n_i)$ is the probability of "surviving" that specific time point, given you made it there.
+
+**Key insight**: Censored individuals contribute information up until their censoring time. If someone is censored at month 2, they're included in the "at risk" count for months 1 and 2, but not month 3 or later. This is why the number at risk ($n_i$) decreases over time.
+
+#### Overall Survival Curve
+
+```{r km-overall}
+# Fit Kaplan-Meier model
+km_fit <- survfit(Surv(time, recidivism) ~ 1, data = recidivism_data)
+
+# Visualize overall survival curve
+ggsurvplot(km_fit, 
+          data = recidivism_data,
+          conf.int = TRUE,
+          risk.table = TRUE,
+          xlab = "Months Since Release",
+          ylab = "Probability of No Re-arrest",
+          title = "Kaplan-Meier Survival Curve: Recidivism-Free Survival",
+          legend = "none",
+          ggtheme = theme_minimal(),
+          risk.table.height = 0.25)
+```
+
+**Interpretation**:
+- By 0.5 months: ~35% remain arrest-free
+- By 1 month: ~5% remain arrest-free  
+- By 2 months: Nearly 0% remain arrest-free
+- The steep decline indicates very high recidivism risk immediately after release
+- Risk table shows rapid attrition as most individuals experience re-arrest within the first few months
+
+#### Comparing Groups: Employment Status
+
+```{r km-employment}
+# Fit KM by employment status
+km_employment <- survfit(Surv(time, recidivism) ~ employed, 
+                        data = recidivism_data)
+
+# Log-rank test for difference
+logrank_test <- survdiff(Surv(time, recidivism) ~ employed, 
+                        data = recidivism_data)
+
+# Visualize
+ggsurvplot(km_employment,
+          data = recidivism_data,
+          conf.int = TRUE,
+          pval = TRUE,
+          risk.table = TRUE,
+          xlab = "Months Since Release",
+          ylab = "Probability of No Re-arrest",
+          title = "Survival by Employment Status",
+          legend.title = "Employed",
+          legend.labs = c("No", "Yes"),
+          ggtheme = theme_minimal(),
+          palette = c("red", "blue"),
+          risk.table.height = 0.25)
+
+cat("\nLog-Rank Test Results:\n")
+cat("Chi-squared =", round(logrank_test$chisq, 2), "\n")
+cat("p-value =", format.pval(logrank_test$pvalue, digits = 3), "\n")
+```
+
+**Key Findings**:
+
+- Employed individuals show significantly better survival (lower recidivism)
+- The survival curves diverge quickly and remain separated
+- Log-rank test confirms the difference is statistically significant
+- Employment appears to be a strong protective factor against recidivism
+
+#### Comparing Groups: Substance Abuse History
+
+```{r km-substance}
+# Fit KM by substance abuse
+km_substance <- survfit(Surv(time, recidivism) ~ substance_abuse, 
+                       data = recidivism_data)
+
+# Visualize
+ggsurvplot(km_substance,
+          data = recidivism_data,
+          conf.int = TRUE,
+          pval = TRUE,
+          risk.table = TRUE,
+          xlab = "Months Since Release",
+          ylab = "Probability of No Re-arrest",
+          title = "Survival by Substance Abuse History",
+          legend.title = "Substance Abuse",
+          legend.labs = c("No", "Yes"),
+          ggtheme = theme_minimal(),
+          palette = c("darkgreen", "orange"),
+          risk.table.height = 0.25)
+```
+
+**Key Findings**:
+
+- Individuals with substance abuse history show higher recidivism risk
+- The effect is substantial and persistent over time
+- This suggests substance abuse treatment may be important for reducing recidivism
+
+### 5. Cox Proportional Hazards Model
+
+The **Cox proportional hazards model** is the most widely used method for regression analysis of survival data. It allows us to examine multiple covariates simultaneously while making minimal distributional assumptions.
+
+#### The Model
+
+$$h(t|X) = h_0(t) \exp(\beta_1 X_1 + \beta_2 X_2 + ... + \beta_p X_p)$$
+
+Where:
+
+- $h(t|X)$ = hazard at time $t$ for individual with covariates $X$
+- $h_0(t)$ = baseline hazard function (unspecified, non-parametric)
+- $\exp(\beta_1 X_1 + ... + \beta_p X_p)$ = proportional effect of covariates
+
+**Key assumption**: **Proportional hazards** - The ratio of hazards for any two individuals is constant over time. The covariates shift the hazard function proportionally but don't change its shape.
+
+**Intuitive explanation**: 
+
+Think of the Cox model as having two components:
+
+1. **Baseline hazard** $h_0(t)$: This is the hazard function for a "reference person" (all covariates = 0). It can have any shape - increasing, decreasing, or non-monotonic. We don't assume any particular form for it.
+
+2. **Covariate effects** $\exp(\beta_1 X_1 + ...)$: This multiplicative factor scales the baseline hazard up or down based on individual characteristics.
+
+**Again, why use exp()?** 
+
+- The exponential function ensures the hazard is always positive (hazards can't be negative!)
+- It creates a multiplicative relationship: covariates multiply the baseline hazard rather than add to it
+- This makes sense because risk factors compound - someone with multiple risk factors doesn't just add risks together, they multiply
+- Example: If $\beta_1 X_1 = -0.5$, then $\exp(-0.5) \approx 0.61$, meaning 61% of baseline hazard (a 39% reduction)
+- The log-linear structure ($\log h(t|X) = \log h_0(t) + \beta_1 X_1 + ...$) becomes multiplicative when exponentiated, which is intuitive for modeling relative risks
+
+**Concrete example**: 
+
+- Suppose the baseline hazard of recidivism at 0.5 months is 0.05 (5% risk per month for a reference person)
+- Person A is employed ($\beta_{employed} = -0.8$, so $\exp(-0.8) \approx 0.45$)
+- Person A's hazard = $0.05 \times 0.45 = 0.0225$ (2.25% risk per month)
+- Person A has 45% the risk of the baseline person at ALL time points
+
+The "proportional" assumption means if Person A has half the risk of Person B at 0.5 months, they also have half the risk at 1 month, 2 months, etc. The ratio stays constant even as the baseline hazard changes.
+
+#### Interpreting Hazard Ratios
+
+The exponentiated coefficients $\exp(\beta)$ are **hazard ratios**:
+
+- $HR = 1$: No effect
+- $HR > 1$: Increased hazard (higher risk)
+- $HR < 1$: Decreased hazard (protective effect)
+
+Example: $HR = 1.5$ means a 50% increase in the hazard of recidivism.
+
+Hazard ratios tell us how much riskier (or safer) one group is compared to another:
+
+- **HR = 1.5**: The exposed group has 1.5 times the hazard (50% higher risk) than the reference group
+  - Interpretation: "Being in this group increases recidivism risk by 50%"
+  
+- **HR = 0.7**: The exposed group has 0.7 times the hazard (30% lower risk) than the reference group
+  - Interpretation: "Being in this group reduces recidivism risk by 30%"
+  - Formula: $(1 - 0.7) \times 100\% = 30\%$ reduction
+  
+- **HR = 2.0**: The exposed group has double the hazard
+  - Interpretation: "This group is twice as likely to experience recidivism at any given time"
+
+**Important**: Hazard ratios are NOT the same as risk ratios or odds ratios, though they're often similar in magnitude. The hazard ratio specifically compares instantaneous rates of event occurrence.
+
+#### Fitting the Cox Model
+```{r cox-model}
+# Fit Cox proportional hazards model
+cox_model <- coxph(Surv(time, recidivism) ~ age + prior_arrests + 
+                   employed + substance_abuse + education,
+                   data = recidivism_data)
+
+# Display results
+summary(cox_model)
+
+# Create a cleaner table
+cox_results <- tidy(cox_model, exponentiate = TRUE, conf.int = TRUE) %>%
+  mutate(
+    term = recode(term,
+                 "age" = "Age at Release",
+                 "prior_arrests" = "Prior Arrests",
+                 "employedYes" = "Employed (vs. No)",
+                 "substance_abuseYes" = "Substance Abuse (vs. No)",
+                 "educationHS" = "HS (vs. Less than HS)",
+                 "educationSome College" = "Some College (vs. Less than HS)",
+                 "educationCollege+" = "College+ (vs. Less than HS)")
+  ) %>%
+  select(term, estimate, conf.low, conf.high, p.value)
+
+cox_results %>%
+  kable(digits = 3,
+        col.names = c("Variable", "Hazard Ratio", "95% CI Lower", 
+                     "95% CI Upper", "p-value"),
+        caption = "Cox Proportional Hazards Model: Recidivism Risk") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"))
+```
+
+#### Interpretation of Results
+
+**Understanding the output:**
+
+- **Hazard Ratio (HR)**: The exponentiated coefficient $\exp(\beta)$
+- **Coefficient $\beta$**: The log hazard ratio (shown in full summary output)
+- **95% CI**: Confidence interval for the hazard ratio
+- **p-value**: Tests whether the hazard ratio is significantly different from 1.0
+
+**How to interpret each coefficient:**
+
+**Age at Release** (HR = 0.974, p < 0.001, protective factor):
+
+- Each additional year of age multiplies the recidivism hazard by 0.974
+- Practical meaning: Each year of age reduces recidivism risk by $(1 - 0.974) \times 100 = 2.6$%
+- A 30-year-old has approximately 0.974^10 = 0.77 times the hazard of a 20-year-old (23% lower risk)
+- Interpretation: Older individuals show significantly lower recidivism rates, possibly due to maturation and life stability
+
+**Prior Arrests** (HR = 1.141, p < 0.001, risk factor):
+
+- Each additional prior arrest multiplies the recidivism hazard by 1.141
+- Practical meaning: Each prior arrest increases recidivism risk by $(1.141 - 1) \times 100 = 14.1$%
+- Someone with 5 prior arrests has 1.141^5 = 1.93 times the hazard of someone with no priors (93% higher risk)
+- Interpretation: Criminal history is a strong predictor; past behavior predicts future behavior
+
+**Employed** (HR = 0.462, p < 0.001, strong protective factor):
+
+- Employed individuals have 0.462 times the recidivism hazard of unemployed individuals
+- Practical meaning: Employment reduces recidivism risk by $(1 - 0.462) \times 100 = 53.8$%
+- Interpretation: Employment provides financial stability, social bonds, and structured routines that substantially reduce recidivism. This is one of the strongest protective factors in the model.
+
+**Substance Abuse** (HR = 1.663, p < 0.001, strong risk factor):
+
+- Those with substance abuse history have 1.663 times the recidivism hazard of those without
+- Practical meaning: Substance abuse history increases recidivism risk by $(1.663 - 1) \times 100 = 66.3$%
+- Interpretation: Substance abuse is a critical risk factor requiring intervention. Individuals with this history face substantially higher recidivism rates, suggesting the need for treatment programs.
+
+**Education levels** (reference: Less than HS):
+
+- **HS diploma** (HR = 0.841, p = 0.102, not significant): High school graduates have 15.9% lower risk than those without HS, but this difference is not statistically significant at the 0.05 level
+- **Some College** (HR = 0.553, p < 0.001, protective): Those with some college have 44.7% lower recidivism risk than those without HS
+- **College+** (HR = 0.426, p < 0.001, strong protective): College graduates have 57.4% lower recidivism risk than those without HS
+
+Interpretation: Higher education shows a clear dose-response relationship with recidivism reduction. College education (complete or partial) provides substantial protection, likely through better employment opportunities, cognitive skills, and social networks.
+
+**Overall model insights:**
+
+1. **Strongest protective factors**: Employment (54% reduction) and college education (57% reduction)
+2. **Strongest risk factors**: Substance abuse (66% increase) and criminal history (14% per prior arrest)
+3. **Demographic patterns**: Age shows modest but significant protective effects
+
+### 6. Model Diagnostics: Testing Proportional Hazards Assumption
+
+The Cox model assumes hazards are proportional over time. We must check this assumption.
+
+#### Schoenfeld Residuals Test
+
+```{r ph-test}
+# Test proportional hazards assumption
+ph_test <- cox.zph(cox_model)
+print(ph_test)
+
+# Plot Schoenfeld residuals
+par(mfrow = c(2, 3))
+plot(ph_test)
+par(mfrow = c(1, 1))
+```
+
+**Interpretation**:
+
+- **Global test**: Tests whether any variable violates proportionality
+- **Individual tests**: Test each covariate separately
+- **p-value > 0.05**: No evidence against proportional hazards
+- **Flat trend in plots**: Consistent with proportional hazards
+
+If proportional hazards are violated:
+
+- Consider stratification
+- Use time-varying coefficients
+- Try parametric models with different hazard shapes
+
+### 7. Visualizing Cox Model Results
+
+#### Forest Plot of Hazard Ratios
+
+```{r forest-plot}
+# Create forest plot
+ggforest(cox_model, 
+        data = recidivism_data,
+        main = "Hazard Ratios for Recidivism",
+        fontsize = 0.8)
+```
+
+This visualization clearly shows:
+
+- Variables associated with increased risk (HR > 1) to the right
+- Protective factors (HR < 1) to the left
+- Confidence intervals that cross 1.0 are not statistically significant
+
+#### Survival Curves by Covariate Patterns
+
+```{r survival-curves-covariates}
+# Create hypothetical profiles
+new_data <- expand.grid(
+  age = c(25, 45),
+  prior_arrests = c(1, 5),
+  employed = factor("Yes", levels = c("No", "Yes")),
+  substance_abuse = factor(c("No", "Yes"), levels = c("No", "Yes")),
+  education = factor("HS", levels = levels(recidivism_data$education))
+)
+
+# Generate survival curves for these profiles
+fit_profiles <- survfit(cox_model, newdata = new_data)
+
+# Plot
+ggsurvplot(fit_profiles,
+          data = recidivism_data,
+          conf.int = FALSE,
+          legend.labs = c("Young/Low Priors/No SA", 
+                         "Young/Low Priors/Yes SA",
+                         "Young/High Priors/No SA",
+                         "Young/High Priors/Yes SA",
+                         "Older/Low Priors/No SA",
+                         "Older/Low Priors/Yes SA",
+                         "Older/High Priors/No SA",
+                         "Older/High Priors/Yes SA"),
+          xlab = "Months Since Release",
+          ylab = "Probability of No Re-arrest",
+          title = "Predicted Survival for Different Risk Profiles",
+          ggtheme = theme_minimal())
+```
+
+This demonstrates how different combinations of risk factors produce dramatically different survival trajectories, even when all individuals are employed with high school education.
+
+
+### 8. Key Takeaways
+
+**Why Use Survival Analysis?**
+
+1. **Handles censoring**: Uses all available information efficiently
+2. **Time-varying risk**: Models how hazard changes over time
+3. **Covariate effects**: Examines multiple predictors simultaneously
+4. **Causal inference**: Can provide evidence for policy interventions
+
+**Choosing Methods**:
+
+- **Kaplan-Meier**: Descriptive, comparing groups, no covariates
+- **Cox model**: Most flexible, minimal assumptions, multiple covariates
+
+**Applications in Sociology and Criminology**:
+
+- Recidivism and criminal justice interventions
+- Marriage, divorce, and family formation
+- Employment duration and job transitions
+- Disease onset and health disparities
+- Program participation and dropout
+- Social mobility and status attainment
+
+**Critical Considerations**:
+
+- Censoring mechanism must be non-informative
+- Proportional hazards assumption for Cox models
+- Sample size and event counts affect power
+- Time-varying covariates require special handling
+- Competing risks may need alternative approaches
