@@ -1,0 +1,619 @@
+---
+title: "Understanding Difference-in-Differences"
+author: "Heeyoung Lee"
+date: "Nov 29, 2025"
+format: 
+  html:
+    theme: cosmo
+    css: custom.css
+    page-layout: full
+    code-fold: true
+    code-tools: true
+    toc: true
+    toc-depth: 5
+    toc-location: left
+    self-contained: true
+    fig-width: 8
+    fig-height: 6
+    fig-dpi: 300
+    smooth-scroll: true
+    highlight-style: github
+execute:
+  warning: false
+  message: false
+---
+
+## Understanding Difference-in-Differences
+
+## 1. Introduction - The Cholera Mystery: A Historical Prelude to Causal Inference
+
+In 1854, London faced a devastating cholera outbreak in Soho. The prevailing theory blamed "miasma"—bad air. But physician John Snow suspected contaminated water. He mapped cholera deaths and noticed clustering around the Broad Street water pump. Yet correlation wasn't causation: did the pump cause cholera, or did people near the pump share other risk factors?
+
+Snow found his natural experiment: two water companies served the same neighborhoods. The Lambeth Company had recently moved its water intake upstream (away from sewage), while Southwark & Vauxhall continued drawing contaminated water. Crucially, households on the same street received water from different companies based on historical contracts—not health or wealth.
+
+![**Figure 1.** Water Supply of the Southwark and Vauxhall and Lambeth Companies, London, 1855. This map shows neighborhoods supplied by two different water companies. People consuming water from the Southwark and Vauxhall Company (blue) became ill with cholera, while those consuming water from the Lambeth Company (pink) did not. Thus, the water supply, not social class or behavior, caused the disease. (source: https://www.cooperhewitt.org/)](C:/Users/User/OneDrive/R FILE/Github Blog Posts/image/cholera map2.jpeg)
+
+```{r library-imports, message=FALSE, warning=FALSE}
+library(HistData)
+library(fixest)
+library(dplyr)
+library(ggplot2)
+library(kableExtra)
+library(patchwork)
+library(tidyr)
+```
+
+```{r cholera-comparison, fig.cap="**Figure 2.** Snow's natural experiment comparing cholera deaths by water source. Households served by different companies in the same neighborhoods experienced dramatically different mortality rates. Data based on Snow (1855)."}
+# Simulate Snow's comparison (simplified)
+set.seed(123)
+
+cholera_data <- data.frame(
+  company = rep(c("Lambeth (Clean)", "Southwark and Vauxhall (Contaminated)"), each = 100),
+  deaths_per_10k = c(rnorm(100, mean = 37, sd = 8),
+                     rnorm(100, mean = 315, sd = 40))
+)
+
+ggplot(cholera_data, aes(x = company, y = deaths_per_10k, fill = company)) +
+  geom_boxplot(alpha = 0.7) +
+  geom_hline(yintercept = c(37, 315), linetype = "dashed", alpha = 0.5) +
+  scale_fill_manual(values = c("Lambeth (Clean)" = "steelblue", 
+                                "Southwark and Vauxhall (Contaminated)" = "coral")) +
+  labs(
+    title = "Snow's Natural Experiment: Deaths by Water Source",
+    subtitle = "Same neighborhoods, different water companies",
+    x = "Water Company",
+    y = "Deaths per 10,000 Households",
+    caption = "Based on Snow (1855)"
+  ) +
+  theme_minimal() +
+  theme(legend.position = "none")
+```
+
+**Snow's insight:** By comparing similar households with different water sources, he isolated the causal effect. Deaths: Lambeth = 37 per 10,000; S&V = 315 per 10,000. The pump was removed, the outbreak ended.
+
+**The challenge:** Snow had a simple before-after comparison at one point in time. But what if we want to study interventions that roll out gradually? What if we can't randomly assign treatment?
+
+### Enter Difference-in-Differences
+
+DiD extends Snow's logic to **over-time comparisons**. Instead of comparing groups at one time, we compare how groups change differently after an intervention. This addresses a critical weakness: even if groups differ at baseline, we can still estimate causal effects if they would have trended similarly without treatment.
+
+**The core insight:** 
+
+- Snow: Compare across groups (spatial variation)
+- DiD: Compare across groups AND time (spatiotemporal variation)
+
+By "differencing out" both baseline differences and common trends, DiD isolates the treatment effect—just as Snow isolated water quality by holding neighborhoods constant.
+
+## 2. What Is Difference-in-Differences?
+
+### The Core Idea
+
+DiD estimates treatment effects by comparing how outcomes change over time in two groups: one that receives an intervention (treatment group) and one that doesn't (control group). The method removes two major sources of bias:
+
+1. **Baseline differences** between areas that stay constant over time (first difference)
+2. **Common epidemic trends** that affect both areas equally (second difference)
+
+By subtracting out these two sources of bias, we isolate the true causal effect of the pump removal.
+
+### Mathematical Model
+
+The basic 2×2 DiD setup (two groups, two time periods) is:
+
+$$Y_{it} = \beta_0 + \beta_1 \text{Treat}_i + \beta_2 \text{Post}_t + \beta_3 (\text{Treat}_i \times \text{Post}_t) + \epsilon_{it}$$
+
+Where:
+
+- $Y_{it}$ = cholera deaths in district $i$ at week $t$
+- $\text{Treat}_i$ = 1 if district near Broad Street pump, 0 if not
+- $\text{Post}_t$ = 1 if after pump removal, 0 if before
+- $\text{Treat}_i \times \text{Post}_t$ = interaction term
+- $\beta_3$ = **DiD estimator** (lives saved by pump removal)
+
+### The DiD Estimator
+
+The DiD estimator calculates:
+
+$$\hat{\beta}_{DiD} = (\bar{Y}_{\text{Broad St,post}} - \bar{Y}_{\text{Broad St,pre}}) - (\bar{Y}_{\text{other,post}} - \bar{Y}_{\text{other,pre}})$$
+
+In plain language:
+
+- **First difference**: How deaths changed near Broad Street pump
+- **Second difference**: How deaths changed in other areas
+- **DiD effect**: Extra mortality reduction near Broad Street beyond the natural epidemic decline
+
+### Why DiD Works: The Parallel Trends Assumption
+
+DiD relies on one key assumption: **parallel trends**. Without pump removal, both areas would have experienced the same epidemic trajectory.
+
+What this means:
+
+- Areas don't need the same baseline death rates
+- They just need to follow the same epidemic curve (same slope)
+- Any divergence after pump removal is attributed to the intervention
+
+### Relationship Between DiD and TWFE
+
+DiD and Two-Way Fixed Effects (TWFE) are related but different:
+
+**DiD** is a **research design** comparing areas near vs. far from the pump before vs. after removal.
+
+**TWFE** is an **estimation method** that controls for district-specific and week-specific factors using fixed effects.
+
+**Key connections:**
+
+1. **They give the same answer** in simple 2×2 cases:
+   - DiD: $Y_{it} = \beta_0 + \beta_1 \text{Treat}_i + \beta_2 \text{Post}_t + \beta_3 (\text{Treat}_i \times \text{Post}_t) + \epsilon_{it}$
+   - TWFE: $Y_{it} = \beta_3 (\text{Treat}_i \times \text{Post}_t) + \alpha_i + \gamma_t + \epsilon_{it}$
+   
+   District fixed effects ($\alpha_i$) capture baseline risk differences, and week fixed effects ($\gamma_t$) capture the natural epidemic curve.
+
+2. **TWFE extends DiD** to handle multiple weeks and districts efficiently.
+
+3. **Be careful with staggered treatment**: If pump removals happened at different times across London, TWFE can give biased estimates. Modern DiD methods (Callaway & Sant'Anna, Sun & Abraham) address this issue. Click [here](https://idlhy0218.github.io/page%20building/blog.html#statsLab__staggered_did) for this new methods.
+
+## 3. John Snow's Cholera Study: A Natural DiD Design
+
+In 1854, London experienced a devastating cholera outbreak. Dr. John Snow famously traced the outbreak to contaminated water from the Broad Street pump. On September 8, 1854, the pump handle was removed, creating a natural experiment.
+
+We'll use the `HistData` package's Snow dataset, which contains weekly cholera deaths. We'll construct a DiD analysis comparing:
+
+- **Treatment group**: Areas primarily served by Broad Street pump (high exposure)
+- **Control group**: Areas served by other water sources (low exposure)
+- **Treatment**: Pump handle removal (September 8, 1854)
+
+### Data Preparation
+
+```{r prepare-cholera-data}
+data(Snow.deaths)
+data(Snow.streets)
+data(Snow.pumps)
+
+# Create weekly data from late August through late September
+weeks <- seq(as.Date("1854-08-21"), as.Date("1854-09-25"), by = "week")
+week_labels <- c("Week -2", "Week -1", "Week 0", "Week 1", "Week 2", "Week 3")
+
+# Define districts by proximity to Broad Street pump (pump 4 in the data)
+broad_st_pump <- Snow.pumps[4, ]
+
+# Calculate distances from each death to Broad Street pump
+Snow.deaths$dist_to_broad <- sqrt(
+  (Snow.deaths$x - broad_st_pump$x)^2 + 
+  (Snow.deaths$y - broad_st_pump$y)^2
+)
+
+# Create treatment assignment: close to Broad Street = treatment
+median_dist <- median(Snow.deaths$dist_to_broad)
+Snow.deaths$treat <- ifelse(Snow.deaths$dist_to_broad < median_dist, 1, 0)
+
+# Simulating weekly pattern with perfect parallel trends
+set.seed(123)
+
+# Create weekly panel
+cholera_data <- expand.grid(
+  week = 0:5,
+  district = 1:40
+) %>%
+  mutate(
+    treat = rep(c(rep(1, 20), rep(0, 20)), 6),
+    post = ifelse(week >= 2, 1, 0),  # Week 2 = pump removal
+    week_date = weeks[week + 1],
+    week_label = week_labels[week + 1]
+  )
+
+# Simulate death counts with DiD structure - PERFECT PARALLEL TRENDS
+cholera_data <- cholera_data %>%
+  mutate(
+    # Baseline: treatment areas have higher baseline risk (time-invariant)
+    baseline = ifelse(treat == 1, 12, 8),
+    
+    # Common epidemic trend (IDENTICAL for both groups)
+    epidemic_trend = case_when(
+      week == 0 ~ 5,
+      week == 1 ~ 15,
+      week == 2 ~ 10,
+      week == 3 ~ 4,
+      week == 4 ~ 2,
+      week == 5 ~ 1
+    ),
+    
+    # Treatment effect: pump removal reduces deaths ONLY post-treatment
+    treatment_effect = ifelse(treat == 1 & post == 1, -8, 0),
+    
+    # Deaths with minimal noise for clean parallel trends
+    deaths = pmax(0, baseline + epidemic_trend + treatment_effect + 
+                    rnorm(n(), 0, 0.5)),  # Reduced noise from 1 to 0.5
+    
+    # Group labels
+    group = ifelse(treat == 1, "Near Broad St Pump", "Other Areas"),
+    treat_post = treat * post
+  )
+
+# Summary statistics
+cholera_data %>%
+  group_by(group, week_label) %>%
+  summarize(
+    n_districts = n_distinct(district),
+    total_deaths = sum(deaths),
+    mean_deaths = mean(deaths),
+    sd_deaths = sd(deaths),
+    .groups = "drop"
+  ) %>%
+  kable(digits = 2, caption = "Weekly Cholera Deaths by Area and Week") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"))
+```
+
+## 4. Visualizing the DiD Design
+
+```{r cholera-did-visualization, fig.width=10, fig.height=8}
+# Calculate group means by week
+group_means <- cholera_data %>%
+  group_by(group, week, week_label) %>%
+  summarize(mean_deaths = mean(deaths), .groups = "drop")
+
+# Counterfactual: treatment group's pre-treatment path + control group's post-treatment trend
+treat_pre <- group_means %>% 
+  filter(group == "Near Broad St Pump", week <= 1)
+
+treat_week1 <- group_means %>% 
+  filter(group == "Near Broad St Pump", week == 1)
+control_week1 <- group_means %>% 
+  filter(group == "Other Areas", week == 1)
+control_post <- group_means %>% 
+  filter(group == "Other Areas", week >= 2)
+
+counterfactual <- bind_rows(
+  treat_pre %>% mutate(group = "Counterfactual"),
+  control_post %>%
+    mutate(
+      group = "Counterfactual",
+      mean_deaths = treat_week1$mean_deaths + 
+        (mean_deaths - control_week1$mean_deaths)
+    )
+)
+
+plot_data <- bind_rows(group_means, counterfactual)
+
+ggplot() +
+  geom_line(data = cholera_data, 
+            aes(x = week, y = deaths, group = district),
+            color = "grey70", alpha = 0.3, linewidth = 0.5) +
+  geom_line(data = filter(plot_data, group %in% c("Near Broad St Pump", "Other Areas")),
+            aes(x = week, y = mean_deaths, color = group), linewidth = 1.5) +
+  geom_line(data = filter(plot_data, group == "Counterfactual"),
+            aes(x = week, y = mean_deaths, color = "Counterfactual"),
+            linetype = "dashed", linewidth = 1.5) +
+  geom_point(data = filter(plot_data, group %in% c("Near Broad St Pump", "Other Areas")),
+             aes(x = week, y = mean_deaths, color = group), size = 3) +
+  geom_point(data = filter(plot_data, group == "Counterfactual"),
+             aes(x = week, y = mean_deaths, color = "Counterfactual"), size = 2) +
+  geom_vline(xintercept = 1.5, linetype = "dashed", alpha = 0.5, color = "gray25") +
+  annotate("text", x = 1.5, y = max(plot_data$mean_deaths),
+           label = "Pump Removal\n(Sept 8, 1854)", vjust = -0.5, size = 4) +
+  # DiD Effect bracket
+  annotate("segment",
+           x = 5.1, xend = 5.1,
+           y = filter(plot_data, group == "Near Broad St Pump", week == 5)$mean_deaths,
+           yend = filter(plot_data, group == "Counterfactual", week == 5)$mean_deaths,
+           color = "black", linewidth = 1) +
+  annotate("segment",
+           x = 5.05, xend = 5.1,
+           y = filter(plot_data, group == "Near Broad St Pump", week == 5)$mean_deaths,
+           yend = filter(plot_data, group == "Near Broad St Pump", week == 5)$mean_deaths,
+           color = "black", linewidth = 1) +
+  annotate("segment",
+           x = 5.05, xend = 5.1,
+           y = filter(plot_data, group == "Counterfactual", week == 5)$mean_deaths,
+           yend = filter(plot_data, group == "Counterfactual", week == 5)$mean_deaths,
+           color = "black", linewidth = 1) +
+  annotate("text", x = 5.25,
+           y = mean(c(
+             filter(plot_data, group == "Near Broad St Pump", week == 5)$mean_deaths,
+             filter(plot_data, group == "Counterfactual", week == 5)$mean_deaths
+           )),
+           label = "DiD Effect >>", hjust = 1.3, vjust = -2, size = 5, fontface = "bold") +
+  scale_color_manual(values = c(
+    "Near Broad St Pump" = "red3",
+    "Other Areas" = "blue3",
+    "Counterfactual" = "pink"
+  )) +
+  scale_x_continuous(breaks = 0:5, labels = week_labels) +
+  labs(
+    title = "Cholera Deaths Before and After Broad Street Pump Removal",
+    subtitle = "Grey lines = individual districts; bold lines = group averages",
+    x = "Week (Pump Removed in Week 2)",
+    y = "Weekly Deaths",
+    color = "Group"
+  ) +
+  theme_minimal() +
+  theme(legend.position = "bottom", plot.title = element_text(face = "bold"))
+```
+
+**Key observations:**
+
+1. **Parallel pre-trends (Weeks -2 to 1)**: Both areas follow similar epidemic trajectory
+2. **Treatment divergence (Week 2+)**: Areas near Broad Street show sharper decline after pump removal
+3. **Counterfactual**: Dashed line shows where Broad Street areas would be without intervention
+4. **DiD estimate**: Vertical gap shows lives saved by pump removal
+
+## 5. The DiD Calculation: Step by Step
+
+Using Week 1 (pre-removal) and Week 5 (post-removal) for classic 2×2 comparison:
+
+```{r manual-cholera-did}
+# Filter to 2×2 design: Week 1 vs Week 5
+cholera_2x2 <- cholera_data %>%
+  filter(week %in% c(1, 5)) %>%
+  mutate(period = ifelse(week == 1, "Pre (Week 1)", "Post (Week 5)"))
+
+# Calculate means
+means_table <- cholera_2x2 %>%
+  group_by(group, period) %>%
+  summarize(mean_deaths = mean(deaths), .groups = "drop") %>%
+  pivot_wider(names_from = period, values_from = mean_deaths)
+
+print(means_table)
+
+# Extract means
+treat_post <- means_table %>% 
+  filter(group == "Near Broad St Pump") %>% 
+  pull(`Post (Week 5)`)
+treat_pre <- means_table %>% 
+  filter(group == "Near Broad St Pump") %>% 
+  pull(`Pre (Week 1)`)
+control_post <- means_table %>% 
+  filter(group == "Other Areas") %>% 
+  pull(`Post (Week 5)`)
+control_pre <- means_table %>% 
+  filter(group == "Other Areas") %>% 
+  pull(`Pre (Week 1)`)
+
+# Calculate differences
+treat_diff <- treat_post - treat_pre
+control_diff <- control_post - control_pre
+did_estimate <- treat_diff - control_diff
+
+# Display calculation
+data.frame(
+  Step = c(
+    "Broad St areas change (Week 5 - Week 1)",
+    "Other areas change (Week 5 - Week 1)", 
+    "DiD estimate (Δ_treat - Δ_control)",
+    "True effect (simulated)"
+  ),
+  Calculation = c(
+    sprintf("%.2f - %.2f", treat_post, treat_pre),
+    sprintf("%.2f - %.2f", control_post, control_pre),
+    sprintf("%.2f - (%.2f)", treat_diff, control_diff),
+    "-8.00"
+  ),
+  Result = c(treat_diff, control_diff, did_estimate, -8.00)
+) %>%
+  kable(digits = 2, caption = "Manual DiD Calculation: Pump Removal Effect") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"))
+```
+
+**Understanding the calculation:**
+
+- **Broad Street change**: Natural epidemic decline + pump removal effect
+- **Other areas change**: Natural epidemic decline only
+- **DiD**: Isolates pump removal effect by differencing out common epidemic trend
+
+## 6. Estimating DiD with Regression
+
+```{r cholera-did-regression}
+# Basic DiD regression (Week 1 vs Week 5)
+cholera_did_model <- feols(deaths ~ treat + post + treat_post, 
+                           data = cholera_2x2)
+
+etable(cholera_did_model, digits = 3, se.below = TRUE)
+```
+
+**Coefficients:**
+
+- **treat**: Baseline difference (Broad St areas had higher baseline risk)
+- **post**: Natural epidemic decline affecting both groups
+- **treat_post**: DiD estimator (pump removal effect = lives saved)
+
+### DiD with Fixed Effects
+
+```{r cholera-did-fe}
+# Using full panel (Weeks 0-5) with fixed effects
+cholera_fe_model <- feols(deaths ~ treat_post | district + week,
+                          data = cholera_data)
+
+etable(cholera_did_model, cholera_fe_model,
+       headers = c("2×2 DiD", "Panel FE"),
+       digits = 3, se.below = TRUE)
+```
+
+**Comparing specifications:**
+
+- **Model 1 (2×2 DiD)**: Uses only Week 1 (pre-removal) and Week 5 (post-removal), giving 80 observations. Estimates baseline difference between areas near vs. far from Broad Street (`treat` = 4.20 deaths), natural epidemic decline (`post` = -14.2 deaths), and pump removal effect (`treat_post` = -7.80 deaths saved).
+
+- **Model 2 (Panel FE)**: Uses all 6 weeks (240 observations). District fixed effects absorb time-invariant baseline differences between areas. Week fixed effects absorb the natural epidemic curve affecting all districts equally.
+
+**Key differences:**
+
+1. **Precision**: Panel FE is more efficient (SE = 0.458 vs. 0.221), using the full epidemic trajectory rather than just two time points.
+2. **Standard errors**: Panel FE clusters by district, accounting for correlation within the same district across weeks.
+3. **Fit**: Panel FE explains more variation (R² = 0.98 vs. 0.997), with fixed effects absorbing week-to-week epidemic dynamics and area-specific baseline risk.
+4. **Treatment effect**: Both models show significant mortality reduction (7.80 vs. 6.26 deaths saved), with similar magnitudes confirming the pump removal saved lives. The slight difference reflects using all weeks vs. only endpoints.
+
+## 7. Testing Parallel Trends
+```{r cholera-parallel-trends, fig.width=10, fig.height=6}
+# Group means by week
+trends_data <- cholera_data %>%
+  group_by(group, week, week_label) %>%
+  summarize(mean_deaths = mean(deaths), .groups = "drop")
+
+# Pre-treatment regression by group
+pre_data <- trends_data %>% filter(week <= 1)
+
+treat_pre <- pre_data %>% filter(group == "Near Broad St Pump")
+control_pre <- pre_data %>% filter(group == "Other Areas")
+
+# Fit pre-trend lines
+treat_lm <- lm(mean_deaths ~ week, data = treat_pre)
+control_lm <- lm(mean_deaths ~ week, data = control_pre)
+
+# Extract slopes
+treat_slope <- coef(treat_lm)[2]
+control_slope <- coef(control_lm)[2]
+
+ggplot(trends_data, aes(x = week, y = mean_deaths, color = group)) +
+  geom_line(linewidth = 1.5, alpha = 0.4) +
+  geom_point(size = 3) +
+  # Highlight pre-period with thicker lines
+  geom_line(data = pre_data, linewidth = 2) +
+  geom_point(data = pre_data, size = 4) +
+  # Extended trend lines
+  geom_abline(intercept = coef(treat_lm)[1], slope = treat_slope,
+              color = "red3", linetype = "dashed", linewidth = 1) +
+  geom_abline(intercept = coef(control_lm)[1], slope = control_slope,
+              color = "blue3", linetype = "dashed", linewidth = 1) +
+  geom_vline(xintercept = 1.5, linetype = "dotted", color = "black") +
+  annotate("text", x = 1.5, y = min(trends_data$mean_deaths),
+           label = "Pump\nRemoval", vjust = -0.5, size = 3.5, fontface = "bold") +
+  # Add slope annotations
+  annotate("text", x = 0.5, y = 18.5,
+           label = sprintf("Slope = %.2f", treat_slope),
+           color = "red3", size = 3) +
+  annotate("text", x = 0.5, y = 13.5,
+           label = sprintf("Slope = %.2f", control_slope),
+           color = "blue3", size = 3) +
+  scale_color_manual(values = c(
+    "Near Broad St Pump" = "red3",
+    "Other Areas" = "blue3"
+  )) +
+  scale_x_continuous(breaks = 0:5, labels = week_labels) +
+  labs(
+    title = "Parallel Trends Test: Pre-Removal Period",
+    subtitle = "Both areas show similar epidemic growth rates before intervention",
+    x = "Week",
+    y = "Weekly Deaths",
+    color = "Area"
+  ) +
+  theme_minimal() +
+  theme(legend.position = "bottom", plot.title = element_text(face = "bold"))
+```
+
+**Testing the parallel trends assumption:**
+
+The parallel trends assumption requires both areas to follow similar trajectories before pump removal. We test this by:
+
+1. **Visual inspection**: Plotting pre-removal trends (Weeks 0-1) for both areas
+2. **Slope comparison**: Calculating growth rates in each area before intervention
+3. **Extended projections**: Dashed lines show where trends would continue without treatment
+
+**What to look for:**
+
+- Similar slopes in pre-period (indicating parallel epidemic growth)
+- No systematic divergence before Week 2
+- Post-removal deviation only in treated area
+
+If slopes differ substantially or groups already diverge pre-treatment, the parallel trends assumption fails and DiD estimates may be biased.
+
+## 8. Event Study Specification
+
+Event study estimates treatment effects for each week relative to pump removal, allowing us to:
+
+1. **Test parallel trends**: Pre-removal coefficients should be near zero
+2. **Examine dynamics**: See how treatment effects evolve post-removal
+3. **Assess timing**: Verify effect begins after intervention
+
+```{r cholera-event-study}
+# Event time dummies - pump removed at Week 2
+cholera_data <- cholera_data %>%
+  mutate(
+    # For treated units: week relative to treatment (Week 2)
+    # Week 0 = -2, Week 1 = -1, Week 2 = 0, Week 3 = 1, etc.
+    rel_week = ifelse(treat == 1, week - 2, NA),
+    d_m2 = as.numeric(rel_week == -2),
+    d_m1 = as.numeric(rel_week == -1),
+    d_0 = as.numeric(rel_week == 0),
+    d_1 = as.numeric(rel_week == 1),
+    d_2 = as.numeric(rel_week == 2),
+    d_3 = as.numeric(rel_week == 3)
+  ) %>%
+  replace(is.na(.), 0)
+
+# Event study - omit d_m1 (Week 1) as reference
+event_study_model <- lm(
+  deaths ~ d_m2 + d_0 + d_1 + d_2 + d_3 + 
+    factor(district) + factor(week),
+  data = cholera_data
+)
+
+# Extract coefficients
+event_coefs <- data.frame(
+  rel_week = c(-2, -1, 0, 1, 2, 3),
+  week_label = c("Week 0", "Week 1", "Week 2", 
+                 "Week 3", "Week 4", "Week 5"),
+  estimate = c(coef(event_study_model)[2], 0, 
+               coef(event_study_model)[3:6]),
+  se = c(summary(event_study_model)$coef[2, 2], 0, 
+         summary(event_study_model)$coef[3:6, 2])
+) %>%
+  mutate(
+    ci_lower = estimate - 1.96 * se,
+    ci_upper = estimate + 1.96 * se
+  )
+
+ggplot(event_coefs, aes(x = rel_week, y = estimate)) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "gray50") +
+  geom_vline(xintercept = -0.5, linetype = "dashed", color = "red", alpha = 0.5) +
+  geom_point(size = 3) +
+  geom_errorbar(aes(ymin = ci_lower, ymax = ci_upper), width = 0.2) +
+  geom_line() +
+  scale_x_continuous(
+    breaks = -2:3, 
+    labels = c("t-2", "t-1", "t=0", "t+1", "t+2", "t+3")
+  ) +
+  labs(
+    title = "Event Study: Pump Removal Effect on Cholera Deaths",
+    subtitle = "Reference: t-1 (pre-removal); negative = lives saved",
+    x = "Time Relative to Pump Removal",
+    y = "Estimated Effect on Deaths"
+  ) +
+  theme_minimal()
+```
+
+**Interpretation:**
+
+- **Pre-removal (Weeks -2, -1)**: Coefficients near zero with overlapping CIs → supports parallel trends
+- **Removal week (Week 0)**: Immediate negative effect emerges
+- **Post-removal (Weeks 1-3)**: Sustained mortality reduction, strengthening over time
+- **Pattern**: Consistent with pump removal preventing deaths in affected areas
+
+## 9. Practical Recommendations
+
+**For credible DiD:**
+
+1. Visualize trends before estimating
+2. Test parallel trends with pre-periods
+3. Report event studies showing dynamics
+4. Cluster standard errors by treatment unit
+5. Be transparent about assumption violations
+
+**Common pitfalls:**
+
+- Not testing parallel trends
+- Ignoring heterogeneous treatment effects in staggered designs
+- Small sample sizes
+- Using post-treatment data to "test" parallel trends
+
+**When DiD works best:**
+
+- Clear treatment timing
+- Plausible parallel trends (similar units)
+- Multiple pre-periods for testing
+- Exogenous treatment timing
+- Adequate sample size
+
+## 10. Conclusion
+
+Difference-in-differences remains one of the most powerful and intuitive methods for causal inference with observational data. Its core logic—comparing changes over time between treatment and control groups—provides a transparent framework for policy evaluation.
+
+The cholera example illustrates DiD's strength: even without randomization, comparing epidemic trajectories between areas near and far from the contaminated pump isolates the pump removal effect by differencing out the natural epidemic decline.
+
+However, DiD is not a magic bullet. The parallel trends assumption, while weaker than assuming no selection bias, is still a strong identifying assumption that requires careful justification. Modern developments in DiD methodology (particularly for staggered treatments) continue to refine and strengthen the approach. Click [here](https://idlhy0218.github.io/page%20building/blog.html#statsLab__staggered_did) for this new methods!
