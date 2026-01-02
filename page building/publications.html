@@ -8,35 +8,42 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <style>
         :root {
-            --primary-color: #1a1a1a;
-            --accent-color: #2c5aa0;
-            --border-color: #d1d5db;
-            --bg-light: #fafafa;
+            --bs-primary: #2d3748;
+            --bs-link-color: #4a90e2;
         }
 
         body {
-            font-family: 'Georgia', 'Times New Roman', serif;
-            background-color: white;
-            color: var(--primary-color);
-            line-height: 1.6;
+            font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+            background-color: #f8f9fa;
+            color: #333;
         }
 
         .navbar {
-            background-color: var(--primary-color);
-            padding: 1.5rem 0;
-            border-bottom: 3px solid var(--accent-color);
-        }
-
-        .navbar-brand {
-            font-size: 1.5rem;
-            font-weight: 600;
-            letter-spacing: 0.5px;
+            background-color: var(--bs-primary);
+            padding: 1rem;
         }
 
         .content-section {
-            max-width: 900px;
-            margin: 3rem auto;
-            padding: 0 2rem;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            padding: 2rem;
+            margin: 2rem auto;
+        }
+
+        .nav-pills .nav-link {
+            color: var(--bs-primary);
+            margin: 0.25rem;
+            border-radius: 6px;
+        }
+
+        .nav-pills .nav-link.active {
+            background-color: var(--bs-primary);
+            color: white;
+        }
+
+        .nav-pills .nav-link:hover:not(.active) {
+            background-color: #e9ecef;
         }
 
         .back-to-home {
@@ -44,73 +51,42 @@
             color: #6c757d;
             display: inline-flex;
             align-items: center;
-            margin-bottom: 2rem;
-            font-size: 0.95rem;
+            margin-bottom: 1rem;
         }
 
         .back-to-home:hover {
-            color: var(--accent-color);
-        }
-
-        .section-title {
-            font-size: 1.8rem;
-            font-weight: 600;
-            margin-bottom: 2rem;
-            padding-bottom: 0.5rem;
-            border-bottom: 2px solid var(--primary-color);
-        }
-
-        .nav-pills {
-            margin-bottom: 2.5rem;
-            border-bottom: 1px solid var(--border-color);
-            padding-bottom: 0;
-        }
-
-        .nav-pills .nav-link {
-            color: #6c757d;
-            border-radius: 0;
-            padding: 0.75rem 1.5rem;
-            margin: 0;
-            border-bottom: 3px solid transparent;
-            font-weight: 500;
-        }
-
-        .nav-pills .nav-link.active {
-            background-color: transparent;
-            color: var(--accent-color);
-            border-bottom-color: var(--accent-color);
-        }
-
-        .nav-pills .nav-link:hover:not(.active) {
-            background-color: transparent;
-            color: var(--primary-color);
-        }
-
-        .year-section {
-            margin-bottom: 3rem;
+            color: var(--bs-primary);
         }
 
         .year-header {
-            font-size: 1.3rem;
+            font-size: 1.5rem;
             font-weight: 700;
-            color: var(--accent-color);
+            color: var(--bs-primary);
+            margin-top: 2rem;
             margin-bottom: 1.5rem;
             padding-bottom: 0.5rem;
-            border-bottom: 1px solid var(--border-color);
+            border-bottom: 2px solid var(--bs-primary);
         }
 
-        .publication-item {
-            margin-bottom: 2rem;
-            padding-bottom: 1.5rem;
-            border-bottom: 1px solid #f0f0f0;
+        .year-header:first-child {
+            margin-top: 0;
         }
 
-        .publication-item:last-child {
-            border-bottom: none;
+        .publication-card {
+            border-left: 4px solid var(--bs-primary);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            background: #f8f9fa;
+            border-radius: 0 8px 8px 0;
+            transition: transform 0.3s ease;
+        }
+
+        .publication-card:hover {
+            transform: translateX(10px);
         }
 
         .publication-authors {
-            margin-bottom: 0.25rem;
+            margin-bottom: 0.5rem;
             font-size: 0.95rem;
         }
 
@@ -120,7 +96,8 @@
 
         .publication-title {
             font-style: italic;
-            margin-bottom: 0.25rem;
+            margin-bottom: 0.5rem;
+            line-height: 1.4;
         }
 
         .publication-venue {
@@ -130,96 +107,95 @@
 
         .publication-details {
             font-size: 0.9rem;
-            color: #4b5563;
+            color: #6c757d;
+            margin-bottom: 0.5rem;
         }
 
         .publication-doi {
-            margin-top: 0.5rem;
-            font-size: 0.9rem;
+            color: var(--bs-link-color);
+            font-size: 0.9em;
+            word-break: break-all;
         }
 
         .publication-doi a {
-            color: var(--accent-color);
+            color: var(--bs-link-color);
             text-decoration: none;
+            transition: color 0.2s ease, text-decoration 0.2s ease;
         }
 
         .publication-doi a:hover {
+            color: var(--bs-primary);
             text-decoration: underline;
         }
 
         .award {
-            background-color: #fef3c7;
-            border-left: 3px solid #f59e0b;
-            padding: 0.5rem 0.75rem;
-            margin-top: 0.75rem;
-            font-size: 0.85rem;
-            color: #92400e;
-        }
-
-        .award i {
-            color: #f59e0b;
-            margin-right: 0.25rem;
+            color: #ff6b35;
+            font-style: italic;
+            margin-top: 0.5rem;
+            font-size: 0.9em;
         }
 
         .status-badge {
             display: inline-block;
             padding: 0.25rem 0.75rem;
             border-radius: 4px;
-            font-size: 0.8rem;
-            font-weight: 600;
-            margin-left: 0.5rem;
+            font-size: 0.85rem;
+            font-weight: 500;
+            margin-top: 0.5rem;
         }
 
         .status-rnr {
-            background-color: #fef3c7;
-            color: #92400e;
+            background-color: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
         }
 
         .status-review {
-            background-color: #dbeafe;
-            color: #1e40af;
+            background-color: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
         }
     </style>
 </head>
 <body>
-    <nav class="navbar">
+    <nav class="navbar navbar-expand-lg">
         <div class="container">
             <span class="navbar-brand text-white">Publications</span>
         </div>
     </nav>
 
-    <div class="content-section">
+    <div class="container mt-4">
         <a href="../../index.html" class="back-to-home">
             <i class="bi bi-arrow-left me-2"></i> Back to Home
         </a>
 
-        <ul class="nav nav-pills" id="publicationTabs" role="tablist">
-            <li class="nav-item" role="presentation">
-                <button class="nav-link active" id="published-tab" data-bs-toggle="pill" data-bs-target="#published" type="button">
-                    Published
-                </button>
-            </li>
-            <li class="nav-item" role="presentation">
-                <button class="nav-link" id="review-tab" data-bs-toggle="pill" data-bs-target="#review" type="button">
-                    Under Review
-                </button>
-            </li>
-            <li class="nav-item" role="presentation">
-                <button class="nav-link" id="preparation-tab" data-bs-toggle="pill" data-bs-target="#preparation" type="button">
-                    In Preparation
-                </button>
-            </li>
-        </ul>
+        <div class="content-section">
+            <ul class="nav nav-pills mb-4" id="publicationTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="published-tab" data-bs-toggle="pill" data-bs-target="#published" type="button">
+                        <i class="bi bi-journal-text me-1"></i> Published Papers
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="review-tab" data-bs-toggle="pill" data-bs-target="#review" type="button">
+                        <i class="bi bi-hourglass-split me-1"></i> Under Review
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="preparation-tab" data-bs-toggle="pill" data-bs-target="#preparation" type="button">
+                        <i class="bi bi-pencil-square me-1"></i> In Preparation
+                    </button>
+                </li>
+            </ul>
 
-        <div class="tab-content" id="publicationTabsContent">
-            <!-- Published Papers -->
-            <div class="tab-pane fade show active" id="published" role="tabpanel">
-                
-                <!-- 2025 -->
-                <div class="year-section">
+            <div class="tab-content" id="publicationTabsContent">
+                <!-- Published Papers -->
+                <div class="tab-pane fade show active" id="published" role="tabpanel">
+                    
+                    <!-- 2025 -->
                     <div class="year-header">2025</div>
                     
-                    <div class="publication-item">
+                    <div class="publication-card">
                         <div class="publication-authors">
                             <strong>Lee, Heeyoung</strong>, and Tse-Chuan Yang
                         </div>
@@ -230,14 +206,14 @@
                             American Journal of Preventive Medicine
                         </div>
                         <div class="publication-doi">
-                            DOI: <a href="https://doi.org/10.1016/j.amepre.2025.107646" target="_blank">10.1016/j.amepre.2025.107646</a>
+                            <i class="bi bi-link-45deg"></i> DOI: <a href="https://doi.org/10.1016/j.amepre.2025.107646" target="_blank">https://doi.org/10.1016/j.amepre.2025.107646</a>
                         </div>
                         <div class="award">
-                            <i class="bi bi-award"></i> Invited to Research Brief: How Does County Educational Composition Affect Mortality, Lerner Center Population Health Research Brief Series, Research Brief #139
+                            Invited to Research Brief: How Does County Educational Composition Affect Mortality, Lerner Center Population Health Research Brief Series, Research Brief #139
                         </div>
                     </div>
 
-                    <div class="publication-item">
+                    <div class="publication-card">
                         <div class="publication-authors">
                             Yang, Tse-Chuan, Carla Shoff, Kate Strully, and <strong>Heeyoung Lee</strong>
                         </div>
@@ -248,11 +224,11 @@
                             The Journals of Gerontology, Series B: Psychological Sciences and Social Sciences
                         </div>
                         <div class="publication-doi">
-                            DOI: <a href="https://doi.org/10.1093/geronb/gbaf069" target="_blank">10.1093/geronb/gbaf069</a>
+                            <i class="bi bi-link-45deg"></i> DOI: <a href="https://doi.org/10.1093/geronb/gbaf069" target="_blank">https://doi.org/10.1093/geronb/gbaf069</a>
                         </div>
                     </div>
 
-                    <div class="publication-item">
+                    <div class="publication-card">
                         <div class="publication-authors">
                             <strong>Lee, Heeyoung</strong>, and Matt Vogel
                         </div>
@@ -263,16 +239,14 @@
                             Journal of Adolescence
                         </div>
                         <div class="publication-doi">
-                            DOI: <a href="https://doi.org/10.1002/jad.12490" target="_blank">10.1002/jad.12490</a>
+                            <i class="bi bi-link-45deg"></i> DOI: <a href="https://doi.org/10.1002/jad.12490" target="_blank">https://doi.org/10.1002/jad.12490</a>
                         </div>
                     </div>
-                </div>
 
-                <!-- 2024 -->
-                <div class="year-section">
+                    <!-- 2024 -->
                     <div class="year-header">2024</div>
                     
-                    <div class="publication-item">
+                    <div class="publication-card">
                         <div class="publication-authors">
                             <strong>Lee, Heeyoung</strong>, and Tse-Chuan Yang
                         </div>
@@ -283,11 +257,11 @@
                             Population Research & Policy Review
                         </div>
                         <div class="publication-doi">
-                            DOI: <a href="https://doi.org/10.1007/s11113-024-09922-2" target="_blank">10.1007/s11113-024-09922-2</a>
+                            <i class="bi bi-link-45deg"></i> DOI: <a href="https://doi.org/10.1007/s11113-024-09922-2" target="_blank">https://doi.org/10.1007/s11113-024-09922-2</a>
                         </div>
                     </div>
 
-                    <div class="publication-item">
+                    <div class="publication-card">
                         <div class="publication-authors">
                             <strong>Lee, Heeyoung</strong>
                         </div>
@@ -298,11 +272,11 @@
                             Child Abuse and Neglect
                         </div>
                         <div class="publication-doi">
-                            DOI: <a href="https://doi.org/10.1016/j.chiabu.2024.107096" target="_blank">10.1016/j.chiabu.2024.107096</a>
+                            <i class="bi bi-link-45deg"></i> DOI: <a href="https://doi.org/10.1016/j.chiabu.2024.107096" target="_blank">https://doi.org/10.1016/j.chiabu.2024.107096</a>
                         </div>
                     </div>
 
-                    <div class="publication-item">
+                    <div class="publication-card">
                         <div class="publication-authors">
                             <strong>Lee, Heeyoung</strong>
                         </div>
@@ -313,16 +287,16 @@
                             Criminal Justice and Behaviors
                         </div>
                         <div class="publication-doi">
-                            DOI: <a href="https://doi.org/10.1177/00938548241276087" target="_blank">10.1177/00938548241276087</a>
+                            <i class="bi bi-link-45deg"></i> DOI: <a href="https://doi.org/10.1177/00938548241276087" target="_blank">https://doi.org/10.1177/00938548241276087</a>
                         </div>
                         <div class="award">
-                            <i class="bi bi-award"></i> 2022 Paul Meadows Excellence in Research Award Winner, Sociology Department, University at Albany, SUNY
+                            2022 Paul Meadows, Excellence in Research Award Winner, Sociology Department, University at Albany, SUNY
                         </div>
                     </div>
 
-                    <div class="publication-item">
+                    <div class="publication-card">
                         <div class="publication-authors">
-                            Jung, Seong-Jo, <strong>Heeyoung Lee</strong>, and Chan S. Suh
+                            Jung, Seong-Jo, <strong>Heeyoung Lee</strong>, and Chan. S, Suh
                         </div>
                         <div class="publication-title">
                             "Moving Apart and Coming Together: The Dynamics of Coalition Building in the Case of South Korean LGBTQ Movement"
@@ -331,11 +305,11 @@
                             Journal of Homosexuality
                         </div>
                         <div class="publication-doi">
-                            DOI: <a href="https://doi.org/10.1080/00918369.2024.2378743" target="_blank">10.1080/00918369.2024.2378743</a>
+                            <i class="bi bi-link-45deg"></i> DOI: <a href="https://doi.org/10.1080/00918369.2024.2378743" target="_blank">https://doi.org/10.1080/00918369.2024.2378743</a>
                         </div>
                     </div>
 
-                    <div class="publication-item">
+                    <div class="publication-card">
                         <div class="publication-authors">
                             <strong>Lee, Heeyoung</strong>, and Seong-Jo Jung
                         </div>
@@ -346,19 +320,17 @@
                             Society and Mental Health
                         </div>
                         <div class="publication-doi">
-                            DOI: <a href="https://doi.org/10.1177/21568693241242400" target="_blank">10.1177/21568693241242400</a>
+                            <i class="bi bi-link-45deg"></i> DOI: <a href="https://doi.org/10.1177/21568693241242400" target="_blank">https://doi.org/10.1177/21568693241242400</a>
                         </div>
                         <div class="award">
-                            <i class="bi bi-award"></i> 2024 Paul Meadows Excellence in Research Award Winner, Sociology Department, University at Albany, SUNY
+                            2024 Paul Meadows, Excellence in Research Award Winner, Sociology Department, University at Albany, SUNY
                         </div>
                     </div>
-                </div>
 
-                <!-- 2023 -->
-                <div class="year-section">
+                    <!-- 2023 -->
                     <div class="year-header">2023</div>
                     
-                    <div class="publication-item">
+                    <div class="publication-card">
                         <div class="publication-authors">
                             <strong>Lee, Heeyoung</strong>, Sooyeon Moon, and Na-Young Lee
                         </div>
@@ -369,11 +341,11 @@
                             Violence Against Women
                         </div>
                         <div class="publication-doi">
-                            DOI: <a href="https://doi.org/10.1177/10778012231203001" target="_blank">10.1177/10778012231203001</a>
+                            <i class="bi bi-link-45deg"></i> DOI: <a href="https://doi.org/10.1177/10778012231203001" target="_blank">https://doi.org/10.1177/10778012231203001</a>
                         </div>
                     </div>
 
-                    <div class="publication-item">
+                    <div class="publication-card">
                         <div class="publication-authors">
                             Jung, Seong-Jo, and <strong>Heeyoung Lee</strong>
                         </div>
@@ -387,16 +359,14 @@
                             57(4): 1-44
                         </div>
                         <div class="award">
-                            <i class="bi bi-award"></i> 2023 Graduate Student Research Award Winner, Sociology Department, Chung-Ang University
+                            2023 Graduate Student Research Award Winner, Sociology Department, Chung-Ang University
                         </div>
                     </div>
-                </div>
 
-                <!-- 2021 -->
-                <div class="year-section">
+                    <!-- 2021 -->
                     <div class="year-header">2021</div>
                     
-                    <div class="publication-item">
+                    <div class="publication-card">
                         <div class="publication-authors">
                             <strong>Lee, Heeyoung</strong>, Dawool Cheong, and Seoung-Jo Jung
                         </div>
@@ -410,19 +380,17 @@
                             0(45): 272-314
                         </div>
                         <div class="award">
-                            <i class="bi bi-award"></i> 2021 Democracy Academic Paper Contest Winner, Korean Democracy Foundation
+                            2021 Democracy Academic Paper Contest Winner, Korean Democracy Foundation
                         </div>
                         <div class="award">
-                            <i class="bi bi-award"></i> 2022 Academic Paper Award Winner, People's Solidarity for Participatory Democracy
+                            2022 Academic Paper Award Winner, People's Solidarity for Participatory Democracy
                         </div>
                     </div>
-                </div>
 
-                <!-- 2019 -->
-                <div class="year-section">
+                    <!-- 2019 -->
                     <div class="year-header">2019</div>
                     
-                    <div class="publication-item">
+                    <div class="publication-card">
                         <div class="publication-authors">
                             <strong>Lee, Heeyoung</strong>, and Na-Young Lee
                         </div>
@@ -437,7 +405,7 @@
                         </div>
                     </div>
 
-                    <div class="publication-item">
+                    <div class="publication-card">
                         <div class="publication-authors">
                             <strong>Lee, Heeyoung</strong>, and Na-Young Lee
                         </div>
@@ -452,125 +420,125 @@
                         </div>
                     </div>
                 </div>
-            </div>
 
-            <!-- Papers Under Review -->
-            <div class="tab-pane fade" id="review" role="tabpanel">
-                
-                <div class="publication-item">
-                    <div class="publication-authors">
-                        Yang, Tse-Chuan, Carla Shoff, <strong>Heeyoung Lee</strong>, and Kiwoong Park
+                <!-- Papers Under Review -->
+                <div class="tab-pane fade" id="review" role="tabpanel">
+                    
+                    <div class="publication-card">
+                        <div class="publication-authors">
+                            Yang, Tse-Chuan, Carla Shoff, <strong>Heeyoung Lee</strong>, and Kiwoong Park
+                        </div>
+                        <div class="publication-title">
+                            "Research Note: Opioid Use Disorder Diagnosis during the COVID-19 Pandemic and Mortality Rates among Older Medicare Beneficiaries in the US"
+                        </div>
+                        <span class="status-badge status-rnr">Revise and Resubmit</span>
                     </div>
-                    <div class="publication-title">
-                        "Research Note: Opioid Use Disorder Diagnosis during the COVID-19 Pandemic and Mortality Rates among Older Medicare Beneficiaries in the US"
-                    </div>
-                    <span class="status-badge status-rnr">Revise and Resubmit</span>
-                </div>
 
-                <div class="publication-item">
-                    <div class="publication-authors">
-                        <strong>Lee, Heeyoung</strong>
+                    <div class="publication-card">
+                        <div class="publication-authors">
+                            <strong>Lee, Heeyoung</strong>
+                        </div>
+                        <div class="publication-title">
+                            "Permeable Boundaries: How Neighboring States' Policy Environments Shape Local Mortality Rates in The United States"
+                        </div>
+                        <span class="status-badge status-rnr">Revise and Resubmit</span>
                     </div>
-                    <div class="publication-title">
-                        "Permeable Boundaries: How Neighboring States' Policy Environments Shape Local Mortality Rates in The United States"
-                    </div>
-                    <span class="status-badge status-rnr">Revise and Resubmit</span>
-                </div>
 
-                <div class="publication-item">
-                    <div class="publication-authors">
-                        <strong>Lee, Heeyoung</strong>, and Matt Vogel
+                    <div class="publication-card">
+                        <div class="publication-authors">
+                            <strong>Lee, Heeyoung</strong>, and Matt Vogel
+                        </div>
+                        <div class="publication-title">
+                            "Privilege or Threat: American Youth Responses to Contested Racial Boundaries"
+                        </div>
+                        <span class="status-badge status-review">Under Review</span>
                     </div>
-                    <div class="publication-title">
-                        "Privilege or Threat: American Youth Responses to Contested Racial Boundaries"
-                    </div>
-                    <span class="status-badge status-review">Under Review</span>
-                </div>
 
-                <div class="publication-item">
-                    <div class="publication-authors">
-                        <strong>Lee, Heeyoung</strong>
+                    <div class="publication-card">
+                        <div class="publication-authors">
+                            <strong>Lee, Heeyoung</strong>
+                        </div>
+                        <div class="publication-title">
+                            "Geographic Structure of Health Disparities in the US: Decomposing Compositional and Contextual Effects Across Census Tracts, Counties, and States"
+                        </div>
+                        <span class="status-badge status-review">Under Review</span>
                     </div>
-                    <div class="publication-title">
-                        "Geographic Structure of Health Disparities in the US: Decomposing Compositional and Contextual Effects Across Census Tracts, Counties, and States"
-                    </div>
-                    <span class="status-badge status-review">Under Review</span>
-                </div>
 
-                <div class="publication-item">
-                    <div class="publication-authors">
-                        Yang, Tse-Chuan, <strong>Heeyoung Lee</strong>, and Golam Morshed Suhel
-                    </div>
-                    <div class="publication-title">
-                        "Age Segregation and Death of Despair among Older American"
-                    </div>
-                    <span class="status-badge status-review">Under Review</span>
-                </div>
-            </div>
-
-            <!-- Papers in Preparation -->
-            <div class="tab-pane fade" id="preparation" role="tabpanel">
-
-                <div class="publication-item">
-                    <div class="publication-authors">
-                        Vogel, Matt, <strong>Heeyoung Lee</strong>, Taylor Kaser, and Yoobin Kim
-                    </div>
-                    <div class="publication-title">
-                        "Misappropriating Vulnerability: Assessing the Social Vulnerability Index as a Predictor of Firearm Violence"
+                    <div class="publication-card">
+                        <div class="publication-authors">
+                            Yang, Tse-Chuan, <strong>Heeyoung Lee</strong>, and Golam Morshed Suhel
+                        </div>
+                        <div class="publication-title">
+                            "Age Segregation and Death of Despair among Older American"
+                        </div>
+                        <span class="status-badge status-review">Under Review</span>
                     </div>
                 </div>
 
-                <div class="publication-item">
-                    <div class="publication-authors">
-                        <strong>Lee, Heeyoung</strong>, and Patricia Homan
-                    </div>
-                    <div class="publication-title">
-                        "Long-Term Effect of Structural Racism on Cardiopulmonary Symptoms in The U.S."
-                    </div>
-                </div>
+                <!-- Papers in Preparation -->
+                <div class="tab-pane fade" id="preparation" role="tabpanel">
 
-                <div class="publication-item">
-                    <div class="publication-authors">
-                        Strully, Kate, Chris Lowenstein, David Rehkoph, and <strong>Heeyoung Lee</strong>
+                    <div class="publication-card">
+                        <div class="publication-authors">
+                            Vogel, Matt, <strong>Heeyoung Lee</strong>, Taylor Kaser, and Yoobin Kim
+                        </div>
+                        <div class="publication-title">
+                            "Misappropriating Vulnerability: Assessing the Social Vulnerability Index as a Predictor of Firearm Violence"
+                        </div>
                     </div>
-                    <div class="publication-title">
-                        "The Earned Income and Child Tax Credits, Racial-Ethnic Labor Market Inequality, and Health and Income Disparities"
-                    </div>
-                </div>
 
-                <div class="publication-item">
-                    <div class="publication-authors">
-                        <strong>Lee, Heeyoung</strong>, and Scott Schieman
+                    <div class="publication-card">
+                        <div class="publication-authors">
+                            <strong>Lee, Heeyoung</strong>, and Patricia Homan
+                        </div>
+                        <div class="publication-title">
+                            "Long-Term Effect of Structural Racism on Cardiopulmonary Symptoms in The U.S."
+                        </div>
                     </div>
-                    <div class="publication-title">
-                        "Working at Home and Work Stress"
-                    </div>
-                </div>
 
-                <div class="publication-item">
-                    <div class="publication-authors">
-                        <strong>Lee, Heeyoung</strong>, Jungmin Shin, and Jonathan Dirlam
+                    <div class="publication-card">
+                        <div class="publication-authors">
+                            Strully, Kate, Chris Lowenstein, David Rehkoph, and <strong>Heeyoung Lee</strong>
+                        </div>
+                        <div class="publication-title">
+                            "The Earned Income and Child Tax Credits, Racial-Ethnic Labor Market Inequality, and Health and Income Disparities"
+                        </div>
                     </div>
-                    <div class="publication-title">
-                        "Structural Sexism and Sexual Harassment"
-                    </div>
-                </div>
 
-                <div class="publication-item">
-                    <div class="publication-authors">
-                        <strong>Lee, Heeyoung</strong>
+                    <div class="publication-card">
+                        <div class="publication-authors">
+                            <strong>Lee, Heeyoung</strong>, and Scott Schieman
+                        </div>
+                        <div class="publication-title">
+                            "Working at Home and Work Stress"
+                        </div>
                     </div>
-                    <div class="publication-title">
-                        "Cognitive Decline after Partner Loss in The U.S.: Heterogeneous Impact across Race"
-                    </div>
-                </div>
 
-                <div class="publication-item">
-                    <div class="publication-authors">
-                        <strong>Lee, Heeyoung</strong>
+                    <div class="publication-card">
+                        <div class="publication-authors">
+                            <strong>Lee, Heeyoung</strong>, Jungmin Shin, and Jonathan Dirlam
+                        </div>
+                        <div class="publication-title">
+                            "Structural Sexism and Sexual Harassment"
+                        </div>
                     </div>
-                    <div class="publication-title">
-                        "Places Where Social Capital Matters for Residents' Health"
+
+                    <div class="publication-card">
+                        <div class="publication-authors">
+                            <strong>Lee, Heeyoung</strong>
+                        </div>
+                        <div class="publication-title">
+                            "Cognitive Decline after Partner Loss in The U.S.: Heterogeneous Impact across Race"
+                        </div>
+                    </div>
+
+                    <div class="publication-card">
+                        <div class="publication-authors">
+                            <strong>Lee, Heeyoung</strong>
+                        </div>
+                        <div class="publication-title">
+                            "Places Where Social Capital Matters for Residents' Health"
+                        </div>
                     </div>
                 </div>
             </div>
