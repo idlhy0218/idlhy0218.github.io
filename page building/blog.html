@@ -1,15 +1,18 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Blog - Heeyoung Lee</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" />
-  
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700&family=Lora:ital,wght@0,400..700;1,400..700&display=swap" rel="stylesheet">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700&family=Lora:ital,wght@0,400..700;1,400..700&display=swap"
+    rel="stylesheet">
 
   <style>
     * {
@@ -18,58 +21,95 @@
       box-sizing: border-box;
     }
 
-    /* Revised Academic Palette & Shadows */
     :root {
-      --bg-primary: #f9f9f9; /* Warmer, paper-like background */
-      --bg-secondary: #ffffff;
-      --text-primary: #212529; /* Darker, more classic text */
-      --text-secondary: #5a6268; /* Subdued secondary text */
-      --text-muted: #868e96;
-      --accent-primary: #2c5282; /* A deep, academic blue */
-      --accent-secondary: #5a7d9a; /* A lighter, complementary blue */
-      --accent-light: #e8f0f7; /* Light blue for tags, matches accent */
-      --border-light: #dee2e6;
-      
-      /* Softer Shadows */
-      --shadow-sm: 0 1px 2px 0 rgba(0,0,0,0.03);
-      --shadow-md: 0 3px 5px -1px rgba(0,0,0,0.05);
-      --shadow-lg: 0 8px 12px -3px rgba(0,0,0,0.07);
+      /* FT Theme Colors */
+      --ft-paper: #FFF1E5;
+      --ft-card: #F2DFCE;
+      --ft-text-primary: #333333;
+      --ft-border: #333333;
+
+      /* Accent Palette */
+      --accent-teal: #0D7680;
+      --accent-claret: #990F3D;
+      --accent-dark: #262A33;
+
+      /* Typography */
+      --font-newspaper-headline: 'Libre Baskerville', serif;
+      --font-newspaper-body: 'PT Serif', serif;
+      --font-ui: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
     }
 
-    /* Revised Body Typography */
     body {
-      font-family: 'Lora', 'EB Garamond', serif; /* Serif first */
-      background: var(--bg-primary);
-      color: var(--text-primary);
-      line-height: 1.7; /* Increased for readability */
+      font-family: var(--font-newspaper-body);
+      background: var(--ft-paper);
+      color: var(--ft-text-primary);
+      line-height: 1.8;
       min-height: 100vh;
     }
 
-    /* Apply sans-serif to headers, nav, and titles for contrast */
-    h1, h2, h3, h4, h5, h6,
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6,
     .navbar-brand,
     .nav-tabs .nav-link,
     .blog-card-title,
     .gallery-item-title,
     .gallery-modal-title,
     .back-button {
-      font-family: 'Lato', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-      font-weight: 700; /* Bolder headers */
+      font-family: var(--font-newspaper-headline);
+      font-weight: 700;
     }
 
     /* Navbar */
     .navbar {
-      background: var(--bg-secondary);
-      border-bottom: 1px solid var(--border-light);
-      padding: 1rem 0; /* Reduced padding */
-      box-shadow: var(--shadow-sm);
+      background: var(--ft-paper);
+      border-bottom: 2px solid var(--ft-border);
+      padding: 1rem 0;
+      box-shadow: none;
     }
 
     .navbar-brand {
-      color: var(--text-primary) !important;
+      color: var(--accent-dark) !important;
       font-weight: 700;
-      font-size: 1.3rem; /* Reduced size */
-      letter-spacing: -0.5px;
+      font-size: 1.4rem;
+    }
+
+    .navbar-toggler {
+      border-color: var(--ft-border);
+    }
+
+    .navbar-toggler-icon {
+      background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='%23333333' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
+    }
+
+    .nav-link {
+      font-family: var(--font-newspaper-headline);
+      color: var(--accent-claret) !important;
+      font-weight: 700;
+      font-size: 0.95rem;
+      padding: 0.5rem 1rem !important;
+      transition: color 0.3s ease;
+    }
+
+    .nav-link:hover {
+      color: var(--accent-dark) !important;
+    }
+
+    .nav-link.active {
+      color: var(--accent-dark) !important;
+      border-bottom: 2px solid var(--accent-claret);
+    }
+
+    @media (max-width: 991.98px) {
+      .navbar-collapse {
+        background-color: var(--ft-card);
+        padding: 1rem;
+        margin-top: 1rem;
+        border: 1px solid var(--ft-border);
+      }
     }
 
     .container {
@@ -78,44 +118,41 @@
 
     /* Tab Container */
     .tab-container {
-      background: var(--bg-secondary);
-      border-radius: 12px;
-      padding: 1.5rem;
+      background: var(--ft-card);
+      border: 1px solid var(--ft-border);
+      border-radius: 0;
+      padding: 2rem;
       margin-bottom: 2rem;
-      box-shadow: var(--shadow-sm);
-      border: 1px solid var(--border-light);
+      box-shadow: none;
     }
 
     .nav-tabs {
-      border-bottom: none;
-      gap: 0.5rem;
+      border-bottom: 1px solid rgba(51, 51, 51, 0.2);
+      gap: 0;
       justify-content: center;
     }
 
     .nav-tabs .nav-link {
-      border: 1px solid transparent;
-      border-radius: 8px;
-      color: var(--text-secondary);
-      font-weight: 500;
+      border: none;
+      border-bottom: 2px solid transparent;
+      border-radius: 0;
+      color: var(--ft-text-primary);
+      font-weight: 700;
       padding: 0.75rem 1.5rem;
       background: transparent;
-      margin-bottom: 0;
       transition: all 0.2s ease;
-      font-size: 0.95rem;
-      font-weight: 700;
+      font-size: 1.1rem;
     }
 
     .nav-tabs .nav-link:hover {
-      background: var(--bg-primary);
-      color: var(--text-primary);
-      border-color: var(--border-light);
+      color: var(--accent-claret);
+      border-bottom-color: var(--accent-claret);
     }
 
     .nav-tabs .nav-link.active {
-      background: var(--accent-primary);
-      color: white;
-      border-color: var(--accent-primary);
-      box-shadow: none; /* Removed shadow */
+      color: var(--accent-claret);
+      border-bottom-color: var(--accent-claret);
+      background: transparent;
     }
 
     .nav-tabs .nav-link i {
@@ -125,22 +162,21 @@
 
     /* Back Button */
     .back-button {
+      font-family: var(--font-ui);
       text-decoration: none;
-      color: var(--text-secondary);
+      color: #6c757d;
       display: inline-flex;
       align-items: center;
       margin-bottom: 1.5rem;
       padding: 0.5rem 1rem;
-      border-radius: 8px;
+      border-radius: 0;
       transition: all 0.2s ease;
-      font-weight: 700;
+      font-weight: 600;
       font-size: 0.95rem;
     }
 
     .back-button:hover {
-      color: var(--accent-primary);
-      background: var(--bg-secondary);
-      transform: translateX(0); /* Removed transform */
+      color: var(--accent-dark);
     }
 
     .back-button i {
@@ -160,27 +196,18 @@
     }
 
     .blog-card {
-      background: var(--bg-secondary);
-      border-radius: 10px; /* Slightly less rounded */
+      background: var(--ft-paper);
+      border: 1px solid rgba(51, 51, 51, 0.2);
+      border-radius: 0;
       padding: 1.5rem;
-      box-shadow: var(--shadow-sm);
-      border: 1px solid var(--border-light);
-      transition: all 0.3s ease;
+      transition: border-color 0.2s ease;
       cursor: pointer;
       position: relative;
       overflow: hidden;
     }
 
-    /* Removed gradient bar */
-    .blog-card::before {
-      display: none;
-    }
-
-    /* Subtle hover: border color + slightly deeper shadow */
     .blog-card:hover {
-      transform: translateY(0); /* Removed lift */
-      box-shadow: var(--shadow-md);
-      border-color: var(--accent-primary);
+      border-color: var(--ft-border);
     }
 
     .blog-card-header {
@@ -190,7 +217,7 @@
     .blog-card-title {
       font-size: 1.25rem;
       font-weight: 700;
-      color: var(--text-primary);
+      color: var(--accent-claret);
       margin-bottom: 0.5rem;
       line-height: 1.4;
       display: -webkit-box;
@@ -200,17 +227,17 @@
     }
 
     .blog-card-date {
-      color: var(--text-muted);
+      font-family: var(--font-ui);
+      color: #6c757d;
       font-size: 0.85rem;
       font-weight: 500;
       display: flex;
       align-items: center;
       gap: 0.5rem;
-      font-family: 'Lato', sans-serif; /* Date should be sans-serif */
     }
 
     .blog-card-description {
-      color: var(--text-secondary);
+      color: var(--ft-text-primary);
       font-size: 0.95rem;
       line-height: 1.6;
       margin-bottom: 1rem;
@@ -226,28 +253,28 @@
       align-items: center;
       margin-top: auto;
       padding-top: 1rem;
-      border-top: 1px solid var(--border-light);
+      border-top: 1px solid rgba(51, 51, 51, 0.2);
     }
 
     .blog-card-category {
-      background: var(--accent-light);
-      color: var(--accent-primary);
+      font-family: var(--font-ui);
+      background: rgba(153, 15, 61, 0.1);
+      color: var(--accent-claret);
       padding: 0.25rem 0.75rem;
-      border-radius: 20px;
+      border-radius: 0;
       font-size: 0.8rem;
       font-weight: 700;
-      font-family: 'Lato', sans-serif; /* Category tag sans-serif */
+      border: 1px solid var(--accent-claret);
     }
 
     .blog-card-arrow {
-      color: var(--text-muted);
+      color: #6c757d;
       font-size: 1.2rem;
       transition: all 0.2s ease;
     }
 
     .blog-card:hover .blog-card-arrow {
-      color: var(--accent-primary);
-      transform: translateX(0); /* Removed arrow movement */
+      color: var(--accent-claret);
     }
 
     /* Gallery Grid */
@@ -259,20 +286,18 @@
     }
 
     .gallery-item {
-      background: var(--bg-secondary);
-      border-radius: 12px;
+      background: var(--ft-paper);
+      border: 1px solid rgba(51, 51, 51, 0.2);
+      border-radius: 0;
       overflow: hidden;
-      box-shadow: var(--shadow-sm);
-      border: 1px solid var(--border-light);
-      transition: all 0.3s ease;
+      box-shadow: none;
+      transition: border-color 0.2s ease;
       cursor: pointer;
       position: relative;
     }
 
     .gallery-item:hover {
-      transform: translateY(0); /* Removed lift */
-      box-shadow: var(--shadow-md);
-      border-color: var(--accent-primary);
+      border-color: var(--ft-border);
     }
 
     .gallery-item-image {
@@ -280,11 +305,6 @@
       height: 250px;
       object-fit: cover;
       display: block;
-      transition: transform 0.3s ease;
-    }
-
-    .gallery-item:hover .gallery-item-image {
-      transform: scale(1.0); /* Removed zoom */
     }
 
     .gallery-item-overlay {
@@ -292,7 +312,7 @@
       bottom: 0;
       left: 0;
       right: 0;
-      background: linear-gradient(transparent, rgba(0,0,0,0.8));
+      background: linear-gradient(transparent, rgba(0, 0, 0, 0.8));
       padding: 2rem 1.5rem 1.5rem;
       color: white;
       transform: translateY(100%);
@@ -314,7 +334,6 @@
       font-size: 0.9rem;
       opacity: 0.9;
       line-height: 1.4;
-      font-family: 'Lato', sans-serif; /* Match body text */
     }
 
     /* Modal for gallery images */
@@ -326,7 +345,7 @@
       top: 0;
       width: 100%;
       height: 100%;
-      background-color: rgba(0,0,0,0.9);
+      background-color: rgba(0, 0, 0, 0.9);
       animation: fadeIn 0.3s ease;
     }
 
@@ -346,8 +365,8 @@
     .gallery-modal-image {
       width: 100%;
       height: auto;
-      border-radius: 8px;
-      box-shadow: var(--shadow-lg);
+      border-radius: 0;
+      box-shadow: none;
     }
 
     .gallery-modal-close {
@@ -362,26 +381,27 @@
     }
 
     .gallery-modal-close:hover {
-      color: var(--accent-primary);
+      color: var(--accent-claret);
     }
 
     .gallery-modal-info {
-      background: var(--bg-secondary);
+      background: var(--ft-card);
       padding: 1.5rem;
       margin-top: 1rem;
-      border-radius: 8px;
-      box-shadow: var(--shadow-md);
+      border-radius: 0;
+      box-shadow: none;
+      border: 1px solid var(--ft-border);
     }
 
     .gallery-modal-title {
       font-size: 1.5rem;
       font-weight: 700;
-      color: var(--text-primary);
+      color: var(--accent-dark);
       margin-bottom: 0.5rem;
     }
 
     .gallery-modal-description {
-      color: var(--text-secondary);
+      color: var(--ft-text-primary);
       line-height: 1.6;
     }
 
@@ -394,33 +414,32 @@
     }
 
     .introduction-section h2 {
-      font-size: 2.2rem; /* Slightly smaller */
+      font-size: 2.2rem;
       font-weight: 700;
-      color: var(--text-primary);
+      color: var(--accent-dark);
       margin-bottom: 1rem;
-      letter-spacing: -0.5px;
     }
 
     .introduction-section p {
       font-size: 1.1rem;
-      color: var(--text-secondary);
+      color: var(--ft-text-primary);
       line-height: 1.7;
       margin-bottom: 1rem;
     }
 
     .introduction-section strong {
-      color: var(--accent-primary);
+      color: var(--accent-claret);
       font-weight: 600;
     }
 
     /* Blog Content Container for iframe */
     .blog-content-container {
-      background: var(--bg-secondary);
-      border-radius: 10px; /* Match cards */
+      background: var(--ft-card);
+      border: 1px solid var(--ft-border);
+      border-radius: 0;
       padding: 0;
       margin-top: 2rem;
-      box-shadow: var(--shadow-sm);
-      border: 1px solid var(--border-light);
+      box-shadow: none;
       overflow: hidden;
     }
 
@@ -428,7 +447,7 @@
       width: 100%;
       min-height: 700px;
       border: none;
-      background-color: var(--bg-secondary);
+      background-color: var(--ft-paper);
     }
 
     /* Loading state */
@@ -437,21 +456,23 @@
       justify-content: center;
       align-items: center;
       min-height: 400px;
-      color: var(--text-muted);
+      color: #6c757d;
     }
 
     .content-loading::after {
       content: '';
       width: 30px;
       height: 30px;
-      border: 3px solid var(--border-light);
-      border-top-color: var(--accent-primary);
+      border: 3px solid rgba(51, 51, 51, 0.2);
+      border-top-color: var(--accent-claret);
       border-radius: 50%;
       animation: spin 0.8s linear infinite;
     }
 
     @keyframes spin {
-      to { transform: rotate(360deg); }
+      to {
+        transform: rotate(360deg);
+      }
     }
 
     /* Hide/Show States */
@@ -477,6 +498,7 @@
         opacity: 0;
         transform: translateY(10px);
       }
+
       to {
         opacity: 1;
         transform: translateY(0);
@@ -500,7 +522,7 @@
       .nav-tabs {
         flex-wrap: wrap;
       }
-      
+
       .gallery-grid {
         grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
       }
@@ -571,11 +593,11 @@
       }
 
       .blog-card {
-        border-radius: 8px;
+        border-radius: 0;
       }
 
       .tab-container {
-        border-radius: 8px;
+        border-radius: 0;
       }
 
       .introduction-section h2 {
@@ -583,7 +605,7 @@
       }
 
       .gallery-item {
-        border-radius: 8px;
+        border-radius: 0;
       }
 
       .gallery-item-image {
@@ -594,18 +616,19 @@
     /* Focus states for accessibility */
     .blog-card:focus,
     .gallery-item:focus {
-      outline: 2px solid var(--accent-primary);
+      outline: 2px solid var(--accent-claret);
       outline-offset: 2px;
     }
 
     a:focus,
     button:focus {
-      outline: 2px solid var(--accent-primary);
+      outline: 2px solid var(--accent-claret);
       outline-offset: 2px;
     }
 
     /* Print styles */
     @media print {
+
       .navbar,
       .back-button,
       .tab-container {
@@ -616,31 +639,49 @@
 </head>
 
 <body>
-  <nav class="navbar">
+  <nav class="navbar navbar-expand-lg">
     <div class="container">
-      <span class="navbar-brand">Blog</span>
+      <a class="navbar-brand" href="../index.html">Heeyoung Lee | Sociology</a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav">
+          <li class="nav-item"><a class="nav-link" href="about.html"><i class="bi bi-person-lines-fill me-1"></i> About
+              Me</a></li>
+          <li class="nav-item"><a class="nav-link" href="publications.html"><i class="bi bi-file-earmark-text me-1"></i>
+              Publications</a></li>
+          <li class="nav-item"><a class="nav-link" href="teaching.html"><i class="bi bi-easel2 me-1"></i> Teaching</a>
+          </li>
+          <li class="nav-item"><a class="nav-link active" href="blog.html"><i class="bi bi-bar-chart-steps me-1"></i>
+              Blog</a></li>
+          <li class="nav-item"><a class="nav-link" href="cv.html"><i class="bi bi-file-text me-1"></i> CV</a></li>
+          <li class="nav-item"><a class="nav-link" href="contact.html"><i class="bi bi-envelope me-1"></i> Contact</a>
+          </li>
+        </ul>
+      </div>
     </div>
   </nav>
 
   <div class="container mt-4">
-    <a href="../index.html" class="back-button">
-      <i class="bi bi-arrow-left me-2"></i> Back to Home
-    </a>
 
     <div class="tab-container">
       <ul class="nav nav-tabs" id="blogTab" role="tablist">
         <li class="nav-item" role="presentation">
-          <button class="nav-link active" id="statslab-tab" data-bs-toggle="tab" data-bs-target="#statslab" type="button" role="tab" aria-controls="statslab" aria-selected="true">
+          <button class="nav-link active" id="statslab-tab" data-bs-toggle="tab" data-bs-target="#statslab"
+            type="button" role="tab" aria-controls="statslab" aria-selected="true">
             <i class="bi bi-graph-up"></i> Stats Lab
           </button>
         </li>
         <li class="nav-item" role="presentation">
-          <button class="nav-link" id="studynotes-tab" data-bs-toggle="tab" data-bs-target="#studynotes" type="button" role="tab" aria-controls="studynotes" aria-selected="false">
+          <button class="nav-link" id="studynotes-tab" data-bs-toggle="tab" data-bs-target="#studynotes" type="button"
+            role="tab" aria-controls="studynotes" aria-selected="false">
             <i class="bi bi-journal-text"></i> Study Notes
           </button>
         </li>
         <li class="nav-item" role="presentation">
-          <button class="nav-link" id="gallery-tab" data-bs-toggle="tab" data-bs-target="#gallery" type="button" role="tab" aria-controls="gallery" aria-selected="false">
+          <button class="nav-link" id="gallery-tab" data-bs-toggle="tab" data-bs-target="#gallery" type="button"
+            role="tab" aria-controls="gallery" aria-selected="false">
             <i class="bi bi-image"></i> Gallery
           </button>
         </li>
@@ -652,13 +693,15 @@
         <div class="blog-overview" id="statslab-overview">
           <div class="introduction-section">
             <h2>Stats Lab</h2>
-            <p>Here you'll find my statistical labs with R. I post on random topics but with a consistent theme: "frequently used statistical concepts that are <strong>easy to forget the underlying logic of</strong>."</p>
+            <p>Here you'll find my statistical labs with R. I post on random topics but with a consistent theme:
+              "frequently used statistical concepts that are <strong>easy to forget the underlying logic of</strong>."
+            </p>
             <p>Feel free to contact me if you find any errors or have any suggestions for topics.</p>
           </div>
-          
+
           <div class="blog-grid" id="statsLabGrid"></div>
         </div>
-        
+
         <div class="blog-detail" id="statslab-detail">
           <div class="blog-content-container">
             <div id="statsLabContent"></div>
@@ -670,13 +713,15 @@
         <div class="blog-overview" id="studynotes-overview">
           <div class="introduction-section">
             <h2>Study Notes</h2>
-            <p>These notes summarize important readings, lectures, and research papers I've studied. They serve as a personal reference and might be helpful for others exploring similar topics in sociology and statistics.</p>
+            <p>These notes summarize important readings, lectures, and research papers I've studied. They serve as a
+              personal reference and might be helpful for others exploring similar topics in sociology and statistics.
+            </p>
             <p>Each note is a distilled version of key concepts and insights from various academic sources.</p>
           </div>
-          
+
           <div class="blog-grid" id="studyNotesGrid"></div>
         </div>
-        
+
         <div class="blog-detail" id="studynotes-detail">
           <div class="blog-content-container">
             <div id="studyNotesContent"></div>
@@ -687,10 +732,11 @@
       <div class="tab-pane fade" id="gallery" role="tabpanel" aria-labelledby="gallery-tab">
         <div class="introduction-section">
           <h2>Gallery</h2>
-          <p>A collection of visualizations, charts, and images I've created for my research and projects. Each piece represents a different approach to <strong>visual storytelling with data</strong>.</p>
+          <p>A collection of visualizations, charts, and images I've created for my research and projects. Each piece
+            represents a different approach to <strong>visual storytelling with data</strong>.</p>
           <p>Click on any image to view it in full size with additional details.</p>
         </div>
-        
+
         <div class="gallery-grid" id="galleryGrid"></div>
       </div>
     </div>
@@ -792,7 +838,7 @@
             file: 'blog/gallery/albany_metro_white.png',
             date: 'Sep 9th, 2025'
           },
-            {
+          {
             id: 'map_art_2',
             title: 'NYS Water Map',
             description: '',
@@ -807,7 +853,7 @@
       const config = blogConfig[section];
       const gridElement = document.getElementById(config.gridId);
       gridElement.innerHTML = '';
-      
+
       config.posts.forEach(post => {
         const cardElement = document.createElement('div');
         cardElement.className = 'blog-card';
@@ -827,7 +873,7 @@
             <i class="bi bi-arrow-right blog-card-arrow"></i>
           </div>
         `;
-        
+
         cardElement.addEventListener('click', () => loadBlogPost(section, post.id));
         cardElement.addEventListener('keydown', (e) => {
           if (e.key === 'Enter' || e.key === ' ') {
@@ -835,7 +881,7 @@
             loadBlogPost(section, post.id);
           }
         });
-        
+
         gridElement.appendChild(cardElement);
       });
     }
@@ -843,7 +889,7 @@
     function generateGallery() {
       const galleryGrid = document.getElementById('galleryGrid');
       galleryGrid.innerHTML = '';
-      
+
       blogConfig.gallery.images.forEach(image => {
         const galleryItem = document.createElement('div');
         galleryItem.className = 'gallery-item';
@@ -856,7 +902,7 @@
             <div class="gallery-item-description">${image.description}</div>
           </div>
         `;
-        
+
         galleryItem.addEventListener('click', () => openGalleryModal(image));
         galleryItem.addEventListener('keydown', (e) => {
           if (e.key === 'Enter' || e.key === ' ') {
@@ -864,7 +910,7 @@
             openGalleryModal(image);
           }
         });
-        
+
         galleryGrid.appendChild(galleryItem);
       });
     }
@@ -874,14 +920,14 @@
       const modalImage = document.getElementById('galleryModalImage');
       const modalTitle = document.getElementById('galleryModalTitle');
       const modalDescription = document.getElementById('galleryModalDescription');
-      
+
       modalImage.src = image.file;
       modalImage.alt = image.title;
       modalTitle.textContent = image.title;
       modalDescription.textContent = image.description;
-      
+
       modal.classList.add('active');
-      
+
       // Focus management for accessibility
       modalImage.focus();
     }
@@ -903,7 +949,7 @@
       // Load content with loading state
       const contentTarget = document.getElementById(config.contentId);
       contentTarget.innerHTML = '<div class="content-loading"></div>';
-      
+
       // Add back button
       setTimeout(() => {
         contentTarget.innerHTML = `
@@ -922,20 +968,20 @@
 
     function showOverview(section) {
       const config = blogConfig[section];
-      
+
       // Show overview, hide detail
       document.getElementById(config.overviewId).classList.remove('hidden');
       document.getElementById(config.detailId).classList.remove('active');
-      
+
       // Clear hash
       window.location.hash = '';
     }
 
     function parseHashAndLoad() {
       const hash = window.location.hash.substring(1);
-      
+
       let section, postId;
-      
+
       if (hash.includes('__')) {
         [section, postId] = hash.split('__');
       } else if (hash.includes('-')) {
@@ -945,18 +991,18 @@
           postId = parts.slice(1).join('-');
         }
       }
-      
+
       if (section && postId) {
-        const sectionKey = Object.keys(blogConfig).find(key => 
+        const sectionKey = Object.keys(blogConfig).find(key =>
           key.toLowerCase() === section.toLowerCase() && key !== 'gallery'
         );
-        
+
         if (sectionKey && blogConfig[sectionKey]) {
           const tabTrigger = document.querySelector(`button[data-bs-target="#${blogConfig[sectionKey].tabId}"]`);
           if (tabTrigger) {
             new bootstrap.Tab(tabTrigger).show();
           }
-          
+
           setTimeout(() => {
             loadBlogPost(sectionKey, postId);
           }, 100);
@@ -968,7 +1014,7 @@
       // Generate grids for blog sections
       generateBlogGrid('statsLab');
       generateBlogGrid('studyNotes');
-      
+
       // Generate gallery
       generateGallery();
 
@@ -979,7 +1025,7 @@
       document.querySelectorAll('[data-bs-toggle="tab"]').forEach(tab => {
         tab.addEventListener('shown.bs.tab', function (e) {
           const targetId = e.target.getAttribute('data-bs-target').substring(1);
-          
+
           // Always show overview when switching tabs (only for blog sections)
           if (targetId === 'statslab') {
             showOverview('statsLab');
@@ -992,18 +1038,18 @@
       // Gallery modal event listeners
       const galleryModal = document.getElementById('galleryModal');
       const galleryModalClose = document.getElementById('galleryModalClose');
-      
+
       galleryModalClose.addEventListener('click', closeGalleryModal);
-      
+
       // Close modal when clicking outside the image
-      galleryModal.addEventListener('click', function(e) {
+      galleryModal.addEventListener('click', function (e) {
         if (e.target === galleryModal) {
           closeGalleryModal();
         }
       });
-      
+
       // Close modal with Escape key
-      document.addEventListener('keydown', function(e) {
+      document.addEventListener('keydown', function (e) {
         if (e.key === 'Escape' && galleryModal.classList.contains('active')) {
           closeGalleryModal();
         }
@@ -1016,4 +1062,5 @@
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
+
 </html>
