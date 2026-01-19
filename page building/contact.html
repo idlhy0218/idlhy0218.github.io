@@ -60,6 +60,16 @@
             color: var(--accent-dark) !important;
             font-weight: 700;
             font-size: 1.4rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .navbar-logo {
+            height: 48px;
+            width: auto;
+            object-fit: contain;
+            background: transparent;
         }
 
         .nav-link {
@@ -220,7 +230,10 @@
 <body>
     <nav class="navbar navbar-expand-lg">
         <div class="container">
-            <a class="navbar-brand" href="../index.html">Heeyoung Lee | Sociology</a>
+            <a class="navbar-brand" href="../index.html">
+                <img src="../images/logo image.png" alt="Logo" class="navbar-logo">
+                <span>Heeyoung Lee | Sociology</span>
+            </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
