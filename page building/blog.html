@@ -27,7 +27,7 @@
       --bg-primary: #ffffff;
       --bg-secondary: #f8fafc;
       --border: #e2e8f0;
-      --accent: #1e40af;
+      --accent: #3b82f6;
     }
 
     body {
@@ -906,14 +906,14 @@
             id: 'map_art_1',
             title: 'Albany Metro Area',
             description: '',
-            file: 'blog/gallery/albany_metro_white.png',
+            file: '../blog/gallery/albany_metro_white.png',
             date: 'Sep 9th, 2025'
           },
           {
             id: 'map_art_2',
             title: 'NYS Water Map',
             description: '',
-            file: 'blog/gallery/nys_water.png',
+            file: '../blog/gallery/nys_water.png',
             date: 'Sep 9th, 2025'
           }
         ]
@@ -1029,7 +1029,7 @@
               <i class="bi bi-arrow-left me-2"></i> Back to ${section === 'statsLab' ? 'Stats Lab' : 'Study Notes'}
             </a>
           </div>
-          <iframe src="${post.file}" class="blog-content" title="${post.title}"></iframe>
+          <iframe src="../${post.file}" class="blog-content" title="${post.title}"></iframe>
         `;
       }, 300);
 
