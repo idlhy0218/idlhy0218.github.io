@@ -109,6 +109,17 @@
       color: var(--primary);
     }
 
+    /* Mobile Menu Toggle */
+    .mobile-menu-toggle {
+      display: none;
+      background: none;
+      border: none;
+      font-size: 1.5rem;
+      color: var(--text-primary);
+      cursor: pointer;
+      padding: 0.5rem;
+    }
+
     .container {
       max-width: 1200px;
       margin: 0 auto;
@@ -515,6 +526,43 @@
     }
 
     /* Responsive Design */
+    @media (max-width: 768px) {
+      .mobile-menu-toggle {
+        display: block;
+      }
+
+      .nav-links {
+        display: none;
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background: var(--bg-primary);
+        flex-direction: column;
+        padding: 1rem 2rem;
+        border-top: 1px solid var(--border);
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        gap: 0;
+      }
+
+      .nav-links.active {
+        display: flex;
+      }
+
+      .nav-links li {
+        padding: 0.75rem 0;
+        border-bottom: 1px solid var(--border);
+      }
+
+      .nav-links li:last-child {
+        border-bottom: none;
+      }
+
+      nav {
+        position: relative;
+      }
+    }
+
     @media (max-width: 991.98px) {
       .nav-tabs {
         flex-wrap: wrap;
@@ -641,6 +689,9 @@
       <a href="../index.html" class="logo">
         <span>Heeyoung Lee</span>
       </a>
+      <button class="mobile-menu-toggle" aria-label="Toggle menu">
+        <i class="bi bi-list"></i>
+      </button>
       <ul class="nav-links">
         <li><a href="about.html"><i class="bi bi-person-lines-fill"></i> About</a></li>
         <li><a href="publications.html"><i class="bi bi-file-earmark-text"></i> Publications</a></li>
@@ -1050,6 +1101,39 @@
   </script>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+  <script>
+    // Mobile menu toggle
+    document.addEventListener('DOMContentLoaded', function () {
+      const mobileMenuToggle = document.querySelector('.mobile-menu-toggle');
+      const navLinks = document.querySelector('.nav-links');
+
+      if (mobileMenuToggle) {
+        mobileMenuToggle.addEventListener('click', function () {
+          navLinks.classList.toggle('active');
+          const icon = this.querySelector('i');
+          if (navLinks.classList.contains('active')) {
+            icon.classList.remove('bi-list');
+            icon.classList.add('bi-x');
+          } else {
+            icon.classList.remove('bi-x');
+            icon.classList.add('bi-list');
+          }
+        });
+
+        // Close menu when clicking on a link
+        const menuLinks = navLinks.querySelectorAll('a');
+        menuLinks.forEach(link => {
+          link.addEventListener('click', function () {
+            navLinks.classList.remove('active');
+            const icon = mobileMenuToggle.querySelector('i');
+            icon.classList.remove('bi-x');
+            icon.classList.add('bi-list');
+          });
+        });
+      }
+    });
+  </script>
 </body>
 
 </html>

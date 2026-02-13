@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>About - Heeyoung Lee</title>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
     <link
         href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap"
@@ -100,6 +101,17 @@
         .nav-links a:hover,
         .nav-links a.active {
             color: var(--primary);
+        }
+
+        /* Mobile Menu Toggle */
+        .mobile-menu-toggle {
+            display: none;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: var(--text-primary);
+            cursor: pointer;
+            padding: 0.5rem;
         }
 
         /* Container */
@@ -220,9 +232,40 @@
         }
 
         /* Responsive */
-        @media (max-width: 968px) {
+        @media (max-width: 768px) {
+            .mobile-menu-toggle {
+                display: block;
+            }
+
             .nav-links {
                 display: none;
+                position: absolute;
+                top: 100%;
+                left: 0;
+                right: 0;
+                background: var(--bg-primary);
+                flex-direction: column;
+                padding: 1rem 2rem;
+                border-top: 1px solid var(--border);
+                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+                gap: 0;
+            }
+
+            .nav-links.active {
+                display: flex;
+            }
+
+            .nav-links li {
+                padding: 0.75rem 0;
+                border-bottom: 1px solid var(--border);
+            }
+
+            .nav-links li:last-child {
+                border-bottom: none;
+            }
+
+            nav {
+                position: relative;
             }
 
             .nav-tabs {
@@ -243,6 +286,9 @@
             <a href="../index.html" class="logo">
                 <span>Heeyoung Lee</span>
             </a>
+            <button class="mobile-menu-toggle" aria-label="Toggle menu">
+                <i class="bi bi-list"></i>
+            </button>
             <ul class="nav-links">
                 <li><a href="about.html" class="active"><i class="bi bi-person-lines-fill"></i> About</a></li>
                 <li><a href="publications.html"><i class="bi bi-file-earmark-text"></i> Publications</a></li>
