@@ -833,49 +833,49 @@
             title: 'Understanding Basic Difference-in-Differences',
             date: 'Nov 30, 2025',
             description: 'Understanding the basic concepts of Difference-in-Differences with an example using John Snow cholera data.',
-            file: 'blog/statslab/did_tutorial.html'
+            file: '../blog/statslab/did_tutorial.html'
           },
           {
             id: 'event_history',
             title: 'Understanding Event History Analysis',
             date: 'Nov 24, 2025',
             description: 'Understanding basic concept of Event History Analysis (also known as Survival Analysis).',
-            file: 'blog/statslab/event_history.html'
+            file: '../blog/statslab/event_history.html'
           },
           {
             id: 'staggered_did',
             title: 'Hands-on Practice for Staggered Diff-in-Diff in R',
             date: 'Nov 12, 2025',
             description: 'Compares modern difference-in-differences (DiD) estimators designed to handle staggered treatment adoption.',
-            file: 'blog/statslab/staggered_did.html'
+            file: '../blog/statslab/staggered_did.html'
           },
           {
             id: 'multilevel',
             title: 'Understanding Multilevel Analysis',
             date: 'Sep 1, 2025',
             description: 'Explore the fundamentals of multilevel modeling and when to use hierarchical data structures in statistical analysis.',
-            file: 'blog/statslab/multilevel.html'
+            file: '../blog/statslab/multilevel.html'
           },
           {
             id: 'twfe',
             title: 'What is The Logic Behind a Two-Way Fixed Effects Analysis?',
             date: 'May 28, 2025',
             description: 'Demystify the two-way fixed effects approach and understand the underlying statistical logic for causal inference.',
-            file: 'blog/statslab/twfe.html'
+            file: '../blog/statslab/twfe.html'
           },
           {
             id: 'fe_be_re',
             title: 'Fixed vs Between vs Random Effect',
             date: 'May 15, 2025',
             description: 'Clear up the confusion between different types of effects in panel data analysis with practical examples.',
-            file: 'blog/statslab/fe_be_re.html'
+            file: '../blog/statslab/fe_be_re.html'
           },
           {
             id: 'control',
             title: 'Understanding "Control" in Statistical Analysis',
             date: 'May 18, 2025',
             description: 'Learn what it really means to "control for" variables and how it affects your statistical interpretations.',
-            file: 'blog/statslab/what_is_control.html'
+            file: '../blog/statslab/what_is_control.html'
           }
         ],
         tabId: 'statslab',
@@ -891,7 +891,7 @@
             title: 'Opportunity Insights',
             date: 'June 16, 2025',
             description: 'Key findings and methodological insights from Raj Chetty\'s research on economic mobility and opportunity in America.',
-            file: 'blog/studynotes/chetty.html'
+            file: '../blog/studynotes/chetty.html'
           }
         ],
         tabId: 'studynotes',
@@ -1029,7 +1029,7 @@
               <i class="bi bi-arrow-left me-2"></i> Back to ${section === 'statsLab' ? 'Stats Lab' : 'Study Notes'}
             </a>
           </div>
-          <iframe src="../${post.file}" class="blog-content" title="${post.title}"></iframe>
+          <iframe src="${post.file}" class="blog-content" title="${post.title}"></iframe>
         `;
       }, 300);
 
