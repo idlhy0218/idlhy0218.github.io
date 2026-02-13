@@ -91,6 +91,8 @@
       display: flex;
       gap: 2rem;
       list-style: none;
+      margin: 0;
+      padding: 0;
     }
 
     .nav-links a {
@@ -560,6 +562,38 @@
 
       nav {
         position: relative;
+      }
+    }
+
+    /* Mobile Typography & Spacing */
+    @media (max-width: 768px) {
+      html {
+        font-size: 16px;
+      }
+
+      body {
+        font-size: 1.05rem;
+        line-height: 1.7;
+      }
+
+      p {
+        font-size: 1.05rem;
+        margin-bottom: 1.25rem;
+      }
+
+      .container {
+        padding: 0 1rem;
+        /* Already adjusted in existing query but ensuring consistency */
+      }
+
+      .tab-container {
+        padding: 1.5rem;
+      }
+
+      .blog-card-description {
+        font-size: 1rem;
+        -webkit-line-clamp: 4;
+        line-clamp: 4;
       }
     }
 
