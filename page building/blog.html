@@ -5,13 +5,11 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Blog - Heeyoung Lee</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" />
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link
-    href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap"
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
     rel="stylesheet">
 
   <style>
@@ -46,7 +44,7 @@
     h4,
     h5,
     h6 {
-      font-family: 'Playfair Display', serif;
+      font-family: 'Inter', sans-serif;
       font-weight: 600;
       color: var(--text-primary);
     }
@@ -72,7 +70,7 @@
     }
 
     .logo {
-      font-family: 'Playfair Display', serif;
+      font-family: 'Inter', sans-serif;
       font-size: 1.35rem;
       font-weight: 700;
       color: var(--text-primary);
@@ -142,40 +140,53 @@
       gap: 0;
       justify-content: center;
       margin-bottom: 2rem;
+      display: flex;
+      list-style: none;
+      padding: 0;
     }
 
-    .nav-tabs .nav-link {
+    .nav-tabs button {
       font-family: 'Inter', sans-serif;
       border: none;
       border-bottom: 2px solid transparent;
-      border-radius: 0;
+      background: transparent;
       color: var(--text-secondary);
       font-weight: 600;
       padding: 0.75rem 1.5rem;
-      background: transparent;
-      transition: all 0.2s ease;
-      font-size: 1.1rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-size: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
     }
 
-    .nav-tabs .nav-link:hover {
+    .nav-tabs button:hover {
       color: var(--primary);
       border-bottom-color: var(--primary);
     }
 
-    .nav-tabs .nav-link.active {
+    .nav-tabs button.active {
       color: var(--primary);
       border-bottom-color: var(--primary);
-      background: transparent;
     }
 
-    .nav-tabs .nav-link i {
+    .nav-tabs button i {
       margin-right: 0.5rem;
       font-size: 1.1rem;
     }
 
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
     /* Back Button */
     .back-button {
-      font-family: var(--font-ui);
+      font-family: 'Inter', sans-serif;
       text-decoration: none;
       color: #6c757d;
       display: inline-flex;
@@ -230,7 +241,7 @@
     }
 
     .blog-card-title {
-      font-family: 'Playfair Display', serif;
+      font-family: 'Inter', sans-serif;
       font-size: 1.25rem;
       font-weight: 700;
       color: var(--primary);
@@ -515,18 +526,6 @@
       }
     }
 
-    .tab-content {
-      animation: fadeIn 0.4s ease;
-    }
-
-    .blog-card {
-      animation: fadeIn 0.4s ease;
-    }
-
-    .gallery-item {
-      animation: fadeIn 0.4s ease;
-    }
-
     /* Responsive Design */
     @media (max-width: 768px) {
       .mobile-menu-toggle {
@@ -583,7 +582,6 @@
 
       .container {
         padding: 0 1rem;
-        /* Already adjusted in existing query but ensuring consistency */
       }
 
       .tab-container {
@@ -625,7 +623,7 @@
         align-items: stretch;
       }
 
-      .nav-tabs .nav-link {
+      .nav-tabs button {
         margin-bottom: 0.5rem;
         text-align: center;
       }
@@ -740,79 +738,74 @@
   <div class="container">
 
     <div class="tab-container">
-      <ul class="nav nav-tabs" id="blogTab" role="tablist">
-        <li class="nav-item" role="presentation">
-          <button class="nav-link active" id="statslab-tab" data-bs-toggle="tab" data-bs-target="#statslab"
-            type="button" role="tab" aria-controls="statslab" aria-selected="true">
+      <ul class="nav-tabs" role="tablist">
+        <li role="presentation">
+          <button class="active" data-tab="statslab">
             <i class="bi bi-graph-up"></i> Stats Lab
           </button>
         </li>
-        <li class="nav-item" role="presentation">
-          <button class="nav-link" id="studynotes-tab" data-bs-toggle="tab" data-bs-target="#studynotes" type="button"
-            role="tab" aria-controls="studynotes" aria-selected="false">
+        <li role="presentation">
+          <button data-tab="studynotes">
             <i class="bi bi-journal-text"></i> Study Notes
           </button>
         </li>
-        <li class="nav-item" role="presentation">
-          <button class="nav-link" id="gallery-tab" data-bs-toggle="tab" data-bs-target="#gallery" type="button"
-            role="tab" aria-controls="gallery" aria-selected="false">
+        <li role="presentation">
+          <button data-tab="gallery">
             <i class="bi bi-image"></i> Gallery
           </button>
         </li>
       </ul>
     </div>
 
-    <div class="tab-content">
-      <div class="tab-pane fade show active" id="statslab" role="tabpanel" aria-labelledby="statslab-tab">
-        <div class="blog-overview" id="statslab-overview">
-          <div class="introduction-section">
-            <h2>Stats Lab</h2>
-            <p>Here you'll find my statistical labs with R. I post on random topics but with a consistent theme:
-              "frequently used statistical concepts that are <strong>easy to forget the underlying logic of</strong>."
-            </p>
-            <p>Feel free to contact me if you find any errors or have any suggestions for topics.</p>
-          </div>
-
-          <div class="blog-grid" id="statsLabGrid"></div>
-        </div>
-
-        <div class="blog-detail" id="statslab-detail">
-          <div class="blog-content-container">
-            <div id="statsLabContent"></div>
-          </div>
-        </div>
-      </div>
-
-      <div class="tab-pane fade" id="studynotes" role="tabpanel" aria-labelledby="studynotes-tab">
-        <div class="blog-overview" id="studynotes-overview">
-          <div class="introduction-section">
-            <h2>Study Notes</h2>
-            <p>These notes summarize important readings, lectures, and research papers I've studied. They serve as a
-              personal reference and might be helpful for others exploring similar topics in sociology and statistics.
-            </p>
-            <p>Each note is a distilled version of key concepts and insights from various academic sources.</p>
-          </div>
-
-          <div class="blog-grid" id="studyNotesGrid"></div>
-        </div>
-
-        <div class="blog-detail" id="studynotes-detail">
-          <div class="blog-content-container">
-            <div id="studyNotesContent"></div>
-          </div>
-        </div>
-      </div>
-
-      <div class="tab-pane fade" id="gallery" role="tabpanel" aria-labelledby="gallery-tab">
+    <div class="tab-content active" id="statslab">
+      <div class="blog-overview" id="statslab-overview">
         <div class="introduction-section">
-          <h2>Gallery</h2>
-          <p>A collection of visualizations, charts, and images I've created for my research and projects. Each piece
-            represents a different approach to <strong>visual storytelling with data</strong>.</p>
-          <p>Click on any image to view it in full size with additional details.</p>
+          <h2>Stats Lab</h2>
+          <p>Here you'll find my statistical labs with R. I post on random topics but with a consistent theme:
+            "frequently used statistical concepts that are <strong>easy to forget the underlying logic of</strong>."
+          </p>
+          <p>Feel free to contact me if you find any errors or have any suggestions for topics.</p>
         </div>
 
-        <div class="gallery-grid" id="galleryGrid"></div>
+        <div class="blog-grid" id="statsLabGrid"></div>
       </div>
+
+      <div class="blog-detail" id="statslab-detail">
+        <div class="blog-content-container">
+          <div id="statsLabContent"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="tab-content" id="studynotes">
+      <div class="blog-overview" id="studynotes-overview">
+        <div class="introduction-section">
+          <h2>Study Notes</h2>
+          <p>These notes summarize important readings, lectures, and research papers I've studied. They serve as a
+            personal reference and might be helpful for others exploring similar topics in sociology and statistics.
+          </p>
+          <p>Each note is a distilled version of key concepts and insights from various academic sources.</p>
+        </div>
+
+        <div class="blog-grid" id="studyNotesGrid"></div>
+      </div>
+
+      <div class="blog-detail" id="studynotes-detail">
+        <div class="blog-content-container">
+          <div id="studyNotesContent"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="tab-content" id="gallery">
+      <div class="introduction-section">
+        <h2>Gallery</h2>
+        <p>A collection of visualizations, charts, and images I've created for my research and projects. Each piece
+          represents a different approach to <strong>visual storytelling with data</strong>.</p>
+        <p>Click on any image to view it in full size with additional details.</p>
+      </div>
+
+      <div class="gallery-grid" id="galleryGrid"></div>
     </div>
   </div>
 
@@ -1072,9 +1065,9 @@
         );
 
         if (sectionKey && blogConfig[sectionKey]) {
-          const tabTrigger = document.querySelector(`button[data-bs-target="#${blogConfig[sectionKey].tabId}"]`);
-          if (tabTrigger) {
-            new bootstrap.Tab(tabTrigger).show();
+          const tabButton = document.querySelector(`button[data-tab="${blogConfig[sectionKey].tabId}"]`);
+          if (tabButton) {
+            tabButton.click();
           }
 
           setTimeout(() => {
@@ -1095,15 +1088,24 @@
       // Parse hash and load if necessary
       parseHashAndLoad();
 
-      // Tab switching logic
-      document.querySelectorAll('[data-bs-toggle="tab"]').forEach(tab => {
-        tab.addEventListener('shown.bs.tab', function (e) {
-          const targetId = e.target.getAttribute('data-bs-target').substring(1);
+      // Tab functionality
+      document.querySelectorAll('.nav-tabs button').forEach(button => {
+        button.addEventListener('click', () => {
+          // Remove active class from all buttons and contents
+          document.querySelectorAll('.nav-tabs button').forEach(btn => btn.classList.remove('active'));
+          document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+
+          // Add active class to clicked button
+          button.classList.add('active');
+
+          // Show corresponding content
+          const tabId = button.getAttribute('data-tab');
+          document.getElementById(tabId).classList.add('active');
 
           // Always show overview when switching tabs (only for blog sections)
-          if (targetId === 'statslab') {
+          if (tabId === 'statslab') {
             showOverview('statsLab');
-          } else if (targetId === 'studynotes') {
+          } else if (tabId === 'studynotes') {
             showOverview('studyNotes');
           }
         });
@@ -1133,8 +1135,6 @@
     // Listen for hash changes
     window.addEventListener('hashchange', parseHashAndLoad);
   </script>
-
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
   <script>
     // Mobile menu toggle

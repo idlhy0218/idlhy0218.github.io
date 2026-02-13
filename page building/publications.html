@@ -5,13 +5,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Publications - Heeyoung Lee</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link
-        href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap"
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
         rel="stylesheet">
 
     <style>
@@ -45,7 +43,7 @@
         h4,
         h5,
         h6 {
-            font-family: 'Playfair Display', serif;
+            font-family: 'Inter', sans-serif;
             font-weight: 600;
         }
 
@@ -70,7 +68,7 @@
         }
 
         .logo {
-            font-family: 'Playfair Display', serif;
+            font-family: 'Inter', sans-serif;
             font-size: 1.35rem;
             font-weight: 700;
             color: var(--text-primary);
@@ -133,34 +131,47 @@
             border: 1px solid var(--border);
         }
 
-        .nav-pills {
+        .nav-tabs {
             border-bottom: 2px solid var(--border);
             gap: 0;
             margin-bottom: 2rem;
+            display: flex;
+            list-style: none;
+            padding: 0;
         }
 
-        .nav-pills .nav-link {
+        .nav-tabs button {
             font-family: 'Inter', sans-serif;
             border: none;
             border-bottom: 2px solid transparent;
-            border-radius: 0;
+            background: transparent;
             color: var(--text-secondary);
             font-weight: 600;
             padding: 0.75rem 1.5rem;
-            background: transparent;
-            transition: all 0.2s ease;
-            font-size: 1.1rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
         }
 
-        .nav-pills .nav-link:hover {
+        .nav-tabs button:hover {
             color: var(--primary);
             border-bottom-color: var(--primary);
         }
 
-        .nav-pills .nav-link.active {
+        .nav-tabs button.active {
             color: var(--primary);
             border-bottom-color: var(--primary);
-            background: transparent;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
         }
 
         .year-header {
@@ -307,11 +318,11 @@
                 position: relative;
             }
 
-            .nav-pills {
+            .nav-tabs {
                 flex-wrap: wrap;
             }
 
-            .nav-pills .nav-link {
+            .nav-tabs button {
                 font-size: 0.9rem;
                 padding: 0.6rem 1rem;
             }
@@ -367,488 +378,496 @@
     <div class="container">
 
         <div class="content-section">
-            <ul class="nav nav-pills mb-4" id="publicationTabs" role="tablist">
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link active" id="published-tab" data-bs-toggle="pill" data-bs-target="#published"
-                        type="button">
-                        <i class="bi bi-journal-text me-1"></i> Published Papers
+            <ul class="nav-tabs" role="tablist">
+                <li role="presentation">
+                    <button class="active" data-tab="published">
+                        <i class="bi bi-journal-text"></i> Published Papers
                     </button>
                 </li>
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="review-tab" data-bs-toggle="pill" data-bs-target="#review"
-                        type="button">
-                        <i class="bi bi-hourglass-split me-1"></i> Under Review
+                <li role="presentation">
+                    <button data-tab="review">
+                        <i class="bi bi-hourglass-split"></i> Under Review
                     </button>
                 </li>
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="preparation-tab" data-bs-toggle="pill" data-bs-target="#preparation"
-                        type="button">
-                        <i class="bi bi-pencil-square me-1"></i> In Preparation
+                <li role="presentation">
+                    <button data-tab="preparation">
+                        <i class="bi bi-pencil-square"></i> In Preparation
                     </button>
                 </li>
             </ul>
 
-            <div class="tab-content" id="publicationTabsContent">
-                <!-- Published Papers -->
-                <div class="tab-pane fade show active" id="published" role="tabpanel">
+            <div class="tab-content active" id="published">
 
-                    <!-- 2025 -->
-                    <div class="year-header">2025</div>
+                <!-- 2025 -->
+                <div class="year-header">2025</div>
 
-                    <div class="publication-card">
-                        <div class="publication-authors">
-                            <strong class="author-highlight">Heeyoung Lee</strong> and Tse-Chuan Yang
-                        </div>
-                        <div class="publication-title">
-                            "How Does County Educational Composition Affect Mortality?"
-                        </div>
-                        <div class="publication-venue">
-                            Lerner Center Population Health Research Brief Series, Research Brief #139
-                        </div>
+                <div class="publication-card">
+                    <div class="publication-authors">
+                        <strong class="author-highlight">Heeyoung Lee</strong> and Tse-Chuan Yang
                     </div>
-
-                    <div class="publication-card">
-                        <div class="publication-authors">
-                            <strong class="author-highlight">Heeyoung Lee</strong> and Tse-Chuan Yang
-                        </div>
-                        <div class="publication-title">
-                            "Unequal Spillover of Human Capital: Longitudinal Analysis of Mortality Among Populations by
-                            College Degree in US Counties, 2010-2022"
-                        </div>
-                        <div class="publication-venue">
-                            American Journal of Preventive Medicine
-                        </div>
+                    <div class="publication-title">
+                        "How Does County Educational Composition Affect Mortality?"
                     </div>
-
-                    <div class="publication-card">
-                        <div class="publication-authors">
-                            <strong class="author-highlight">Heeyoung Lee</strong> and Matt Vogel
-                        </div>
-                        <div class="publication-title">
-                            "Exposure to Police Killing and Adolescents' Self-Concept: Diverging Effects for Black and
-                            White American Youths"
-                        </div>
-                        <div class="publication-venue">
-                            Journal of Adolescence
-                        </div>
-                    </div>
-
-                    <div class="publication-card">
-                        <div class="publication-authors">
-                            <strong class="author-highlight">Heeyoung Lee</strong> and Seong-Jo Jung
-                        </div>
-                        <div class="publication-title">
-                            "Gender Differences in the Relationship between Coming Out as LGB to Family and Depression
-                            in South Korea"
-                        </div>
-                        <div class="publication-venue">
-                            Society and Mental Health
-                        </div>
-                        <div class="award">
-                            🏆 2024 Paul Meadows, Excellence in Research Award Winner, Sociology Department, University
-                            at
-                            Albany, SUNY
-                        </div>
-                    </div>
-
-                    <div class="publication-card">
-                        <div class="publication-authors">
-                            Tse-Chuan Yang, Carla Shoff, Kate Strully, and <strong class="author-highlight">Heeyoung
-                                Lee</strong>
-                        </div>
-                        <div class="publication-title">
-                            "Features of Residential Counties and Individual Health Conditions for Opioid Use Disorder
-                            Among Older Medicare Beneficiaries"
-                        </div>
-                        <div class="publication-venue">
-                            The Journals of Gerontology, Series B: Psychological Sciences and Social Sciences
-                        </div>
-                    </div>
-
-                    <div class="publication-card">
-                        <div class="publication-authors">
-                            Seong-Jo Jung, <strong class="author-highlight">Heeyoung Lee</strong>, and Chan S. Suh
-                        </div>
-                        <div class="publication-title">
-                            "Moving Apart and Coming Together: The Dynamics of Coalition Building in the Case of South
-                            Korean LGBTQ Movement"
-                        </div>
-                        <div class="publication-venue">
-                            Journal of Homosexuality
-                        </div>
-                    </div>
-
-                    <!-- 2024 -->
-                    <div class="year-header">2024</div>
-
-                    <div class="publication-card">
-                        <div class="publication-authors">
-                            <strong class="author-highlight">Heeyoung Lee</strong> and Tse-Chuan Yang
-                        </div>
-                        <div class="publication-title">
-                            "Spatial and Temporal Dimension of Black-White Mental Health Paradox in the US: Effect of
-                            Cumulative Neighborhood Disadvantage"
-                        </div>
-                        <div class="publication-venue">
-                            Population Research & Policy Review
-                        </div>
-                    </div>
-
-                    <div class="publication-card">
-                        <div class="publication-authors">
-                            <strong class="author-highlight">Heeyoung Lee</strong>
-                        </div>
-                        <div class="publication-title">
-                            "State-Level Structural Sexism and Adolescent Sexual Violence Victimization in the US"
-                        </div>
-                        <div class="publication-venue">
-                            Child Abuse and Neglect
-                        </div>
-                    </div>
-
-                    <div class="publication-card">
-                        <div class="publication-authors">
-                            <strong class="author-highlight">Heeyoung Lee</strong>
-                        </div>
-                        <div class="publication-title">
-                            "Delinquency During Puberty as a Biosocial Behavior: Time-Varying Effects of Social Contexts
-                            on Girl's Delinquency in South Korea"
-                        </div>
-                        <div class="publication-venue">
-                            Criminal Justice and Behaviors
-                        </div>
-                        <div class="award">
-                            🏆 2022 Paul Meadows, Excellence in Research Award Winner, Sociology Department, University
-                            at
-                            Albany, SUNY
-                        </div>
-                    </div>
-
-                    <div class="publication-card">
-                        <div class="publication-authors">
-                            <strong class="author-highlight">Heeyoung Lee</strong>, Sooyeon Moon, and Na-Young Lee
-                        </div>
-                        <div class="publication-title">
-                            "Industry Culture Matters: Sexual Harassment in the South Korean Film Industry"
-                        </div>
-                        <div class="publication-venue">
-                            Violence Against Women
-                        </div>
-                    </div>
-
-                    <!-- 2023 -->
-                    <div class="year-header">2023</div>
-
-                    <div class="publication-card">
-                        <div class="publication-authors">
-                            Seong-Jo Jung and <strong class="author-highlight">Heeyoung Lee</strong>
-                        </div>
-                        <div class="publication-title">
-                            "Open, Discreet, and Repressive Closet: Latent Class Analysis on the Patterns of LGBTQ+
-                            Youth's Coming Out"
-                        </div>
-                        <div class="publication-venue">
-                            The Korean Journal of Sociology [in Korean]
-                        </div>
-                        <div class="award">
-                            🏆 2023 Graduate Student Research Award Winner, Sociology Department, Chung-Ang University
-                        </div>
-                    </div>
-
-                    <!-- 2021 -->
-                    <div class="year-header">2021</div>
-
-                    <div class="publication-card">
-                        <div class="publication-authors">
-                            <strong class="author-highlight">Heeyoung Lee</strong>, Dawool Cheong, and Seong-Jo Jung
-                        </div>
-                        <div class="publication-title">
-                            "A Democratic Response to COVID-19 or Governance with People Without Rights"
-                        </div>
-                        <div class="publication-venue">
-                            Memory & Vision [in Korean]
-                        </div>
-                        <div class="award">
-                            🏆 2021 Democracy Academic Paper Contest Winner, Korean Democracy Foundation<br>
-                            🏆 2022 Academic Paper Award Winner, People's Solidarity for Participatory Democracy
-                        </div>
-                    </div>
-
-                    <!-- 2019 -->
-                    <div class="year-header">2019</div>
-
-                    <div class="publication-card">
-                        <div class="publication-authors">
-                            <strong class="author-highlight">Heeyoung Lee</strong> and Na-Young Lee
-                        </div>
-                        <div class="publication-title">
-                            "Constituting 'Premature Girls' during the 1960s-70s in South Korea: A Gendered Regime of
-                            Sexual Efficiency"
-                        </div>
-                        <div class="publication-venue">
-                            The Journal of Asian Women [in Korean]
-                        </div>
-                    </div>
-
-                    <div class="publication-card">
-                        <div class="publication-authors">
-                            <strong class="author-highlight">Heeyoung Lee</strong> and Na-Young Lee
-                        </div>
-                        <div class="publication-title">
-                            "Constructing the National Body: Child Development in the Postcolonial Nation-State during
-                            the 1960s-1970s"
-                        </div>
-                        <div class="publication-venue">
-                            Society and History [in Korean]
-                        </div>
-                    </div>
-
-                    <!-- Technical Reports -->
-                    <div class="year-header">Technical Reports</div>
-
-                    <div class="publication-card">
-                        <div class="publication-authors">
-                            Korean Film Council (PI: Na-Young Lee)
-                        </div>
-                        <div class="publication-title">
-                            "2023 Sexual Harassment in the Film Industry Survey"
-                        </div>
-                        <div class="publication-venue">
-                            2024
-                        </div>
-                    </div>
-
-                    <div class="publication-card">
-                        <div class="publication-authors">
-                            Korean Film Council (PI: Na-Young Lee)
-                        </div>
-                        <div class="publication-title">
-                            "2020 Sexual Harassment in the Film Industry Survey"
-                        </div>
-                        <div class="publication-venue">
-                            2021
-                        </div>
-                    </div>
-
-                    <div class="publication-card">
-                        <div class="publication-authors">
-                            Democratic Party of Korea (PI: Na-Young Lee)
-                        </div>
-                        <div class="publication-title">
-                            "Youth's Attitude Towards Gender"
-                        </div>
-                        <div class="publication-venue">
-                            2019
-                        </div>
+                    <div class="publication-venue">
+                        Lerner Center Population Health Research Brief Series, Research Brief #139
                     </div>
                 </div>
 
-                <!-- Papers Under Review -->
-                <div class="tab-pane fade" id="review" role="tabpanel">
-
-                    <div class="publication-card">
-                        <div class="publication-authors">
-                            <strong class="author-highlight">Heeyoung Lee</strong>
-                        </div>
-                        <div class="publication-title">
-                            "Permeable Boundaries: How Neighboring States' Policy Environments Shape Local Mortality
-                            Rates in The United States"
-                        </div>
-                        <span class="status-badge status-rnr">Revise and Resubmit</span>
+                <div class="publication-card">
+                    <div class="publication-authors">
+                        <strong class="author-highlight">Heeyoung Lee</strong> and Tse-Chuan Yang
                     </div>
-
-                    <div class="publication-card">
-                        <div class="publication-authors">
-                            Tse-Chuan Yang, Carla Shoff, <strong class="author-highlight">Heeyoung Lee</strong>, and
-                            Kiwoong Park
-                        </div>
-                        <div class="publication-title">
-                            "Research Note: Opioid Use Disorder Diagnosis during the COVID-19 Pandemic and Mortality
-                            Rates among Older Medicare Beneficiaries in the US"
-                        </div>
-                        <span class="status-badge status-rnr">Revise and Resubmit</span>
+                    <div class="publication-title">
+                        "Unequal Spillover of Human Capital: Longitudinal Analysis of Mortality Among Populations by
+                        College Degree in US Counties, 2010-2022"
                     </div>
-
-                    <div class="publication-card">
-                        <div class="publication-authors">
-                            Tse-Chuan Yang, <strong class="author-highlight">Heeyoung Lee</strong>, and Golam Morshed
-                            Suhel
-                        </div>
-                        <div class="publication-title">
-                            "Age Segregation and Deaths of Despair among Older Adults, 2010-2022: Rural/Urban County
-                            Comparisons"
-                        </div>
-                        <span class="status-badge status-rnr">Revise and Resubmit</span>
-                    </div>
-
-                    <div class="publication-card">
-                        <div class="publication-authors">
-                            <strong class="author-highlight">Heeyoung Lee</strong>, Jungmin Shin, and Jonathan Dirlam
-                        </div>
-                        <div class="publication-title">
-                            "Structural Sexism and Sexual Harassment"
-                        </div>
-                        <span class="status-badge status-rnr">Revise and Resubmit</span>
-                    </div>
-
-                    <div class="publication-card">
-                        <div class="publication-authors">
-                            <strong class="author-highlight">Heeyoung Lee</strong>
-                        </div>
-                        <div class="publication-title">
-                            "Geographic Structure of Health Disparities in the US: Decomposing Compositional and
-                            Contextual Effects Across Census Tracts, Counties, and States"
-                        </div>
-                        <span class="status-badge status-review">Under Review</span>
-                    </div>
-
-                    <div class="publication-card">
-                        <div class="publication-authors">
-                            Matt Vogel, <strong class="author-highlight">Heeyoung Lee</strong>, Taylor Kaser, and Yoobin
-                            Kim
-                        </div>
-                        <div class="publication-title">
-                            "Misappropriating Vulnerability: Assessing the Social Vulnerability Index as a Predictor of
-                            Firearm Violence"
-                        </div>
-                        <span class="status-badge status-review">Under Review</span>
-                    </div>
-
-                    <div class="publication-card">
-                        <div class="publication-authors">
-                            Seong-Jo Jeong, Bomi Kim, <strong class="author-highlight">Heeyoung Lee</strong>, and Hyemin
-                            Lee
-                        </div>
-                        <div class="publication-title">
-                            "Substance Use and Mental Health Outcomes among Gay and Bisexual Men in South Korea: A
-                            Cross-Sectional Study"
-                        </div>
-                        <span class="status-badge status-review">Under Review</span>
+                    <div class="publication-venue">
+                        American Journal of Preventive Medicine
                     </div>
                 </div>
 
-                <!-- Papers in Preparation -->
-                <div class="tab-pane fade" id="preparation" role="tabpanel">
-
-                    <div class="publication-card">
-                        <div class="publication-authors">
-                            <strong class="author-highlight">Heeyoung Lee</strong> and Patricia Homan
-                        </div>
-                        <div class="publication-title">
-                            "Long-Term Effect of Structural Racism on Cardiopulmonary Symptoms in The U.S."
-                        </div>
-                        <div class="publication-details">
-                            (draft available)
-                        </div>
+                <div class="publication-card">
+                    <div class="publication-authors">
+                        <strong class="author-highlight">Heeyoung Lee</strong> and Matt Vogel
                     </div>
-
-                    <div class="publication-card">
-                        <div class="publication-authors">
-                            <strong class="author-highlight">Heeyoung Lee</strong> and Matt Vogel
-                        </div>
-                        <div class="publication-title">
-                            "Privilege or Threat: American Youth Responses to Contested Racial Boundaries"
-                        </div>
-                        <div class="publication-details">
-                            (draft available)
-                        </div>
+                    <div class="publication-title">
+                        "Exposure to Police Killing and Adolescents' Self-Concept: Diverging Effects for Black and
+                        White American Youths"
                     </div>
-
-                    <div class="publication-card">
-                        <div class="publication-authors">
-                            <strong class="author-highlight">Heeyoung Lee</strong>
-                        </div>
-                        <div class="publication-title">
-                            "Impacts of State Policies Spatial Spillover on Educational Health Disparities"
-                        </div>
-                        <div class="publication-details">
-                            (drafting)
-                        </div>
+                    <div class="publication-venue">
+                        Journal of Adolescence
                     </div>
+                </div>
 
-                    <div class="publication-card">
-                        <div class="publication-authors">
-                            <strong class="author-highlight">Heeyoung Lee</strong>
-                        </div>
-                        <div class="publication-title">
-                            "Longitudinal Relationship between Macro-Social Context and Educational Mortality
-                            Disparities"
-                        </div>
-                        <div class="publication-details">
-                            (drafting)
-                        </div>
+                <div class="publication-card">
+                    <div class="publication-authors">
+                        <strong class="author-highlight">Heeyoung Lee</strong> and Seong-Jo Jung
                     </div>
-
-                    <div class="publication-card">
-                        <div class="publication-authors">
-                            <strong class="author-highlight">Heeyoung Lee</strong>
-                        </div>
-                        <div class="publication-title">
-                            "Cognitive Decline after Partner Loss in the US: Heterogeneous Impacts across States"
-                        </div>
-                        <div class="publication-details">
-                            (drafting)
-                        </div>
+                    <div class="publication-title">
+                        "Gender Differences in the Relationship between Coming Out as LGB to Family and Depression
+                        in South Korea"
                     </div>
-
-                    <div class="publication-card">
-                        <div class="publication-authors">
-                            Scott Schieman and <strong class="author-highlight">Heeyoung Lee</strong>
-                        </div>
-                        <div class="publication-title">
-                            "Social Distance Fallout: Isolation During and After the COVID-19 Pandemic"
-                        </div>
-                        <div class="publication-details">
-                            (drafting)
-                        </div>
+                    <div class="publication-venue">
+                        Society and Mental Health
                     </div>
-
-                    <div class="publication-card">
-                        <div class="publication-authors">
-                            Chris Lowenstein, David H. Rehkopf, <strong class="author-highlight">Heeyoung Lee</strong>,
-                            Xiaoyu Yao, and Kate Strully
-                        </div>
-                        <div class="publication-title">
-                            "The Earned Income Tax Credit and Racial and Ethnic Health Disparities across Labor Market
-                            Contexts"
-                        </div>
-                        <div class="publication-details">
-                            (drafting)
-                        </div>
+                    <div class="award">
+                        🏆 2024 Paul Meadows, Excellence in Research Award Winner, Sociology Department, University
+                        at
+                        Albany, SUNY
                     </div>
+                </div>
 
-                    <div class="publication-card">
-                        <div class="publication-authors">
-                            Kate Strully, <strong class="author-highlight">Heeyoung Lee</strong>, Chris Lowenstein, and
-                            David Rehkoph
-                        </div>
-                        <div class="publication-title">
-                            "Refundable Tax Credits and Income Inequality Across the United States"
-                        </div>
-                        <div class="publication-details">
-                            (drafting)
-                        </div>
+                <div class="publication-card">
+                    <div class="publication-authors">
+                        Tse-Chuan Yang, Carla Shoff, Kate Strully, and <strong class="author-highlight">Heeyoung
+                            Lee</strong>
                     </div>
+                    <div class="publication-title">
+                        "Features of Residential Counties and Individual Health Conditions for Opioid Use Disorder
+                        Among Older Medicare Beneficiaries"
+                    </div>
+                    <div class="publication-venue">
+                        The Journals of Gerontology, Series B: Psychological Sciences and Social Sciences
+                    </div>
+                </div>
 
-                    <div class="publication-card">
-                        <div class="publication-authors">
-                            Yuna Lee and <strong class="author-highlight">Heeyoung Lee</strong>
-                        </div>
-                        <div class="publication-title">
-                            "Policing at Racial Boundaries in NYC"
-                        </div>
-                        <div class="publication-details">
-                            (drafting)
-                        </div>
+                <div class="publication-card">
+                    <div class="publication-authors">
+                        Seong-Jo Jung, <strong class="author-highlight">Heeyoung Lee</strong>, and Chan S. Suh
+                    </div>
+                    <div class="publication-title">
+                        "Moving Apart and Coming Together: The Dynamics of Coalition Building in the Case of South
+                        Korean LGBTQ Movement"
+                    </div>
+                    <div class="publication-venue">
+                        Journal of Homosexuality
+                    </div>
+                </div>
+
+                <!-- 2024 -->
+                <div class="year-header">2024</div>
+
+                <div class="publication-card">
+                    <div class="publication-authors">
+                        <strong class="author-highlight">Heeyoung Lee</strong> and Tse-Chuan Yang
+                    </div>
+                    <div class="publication-title">
+                        "Spatial and Temporal Dimension of Black-White Mental Health Paradox in the US: Effect of
+                        Cumulative Neighborhood Disadvantage"
+                    </div>
+                    <div class="publication-venue">
+                        Population Research & Policy Review
+                    </div>
+                </div>
+
+                <div class="publication-card">
+                    <div class="publication-authors">
+                        <strong class="author-highlight">Heeyoung Lee</strong>
+                    </div>
+                    <div class="publication-title">
+                        "State-Level Structural Sexism and Adolescent Sexual Violence Victimization in the US"
+                    </div>
+                    <div class="publication-venue">
+                        Child Abuse and Neglect
+                    </div>
+                </div>
+
+                <div class="publication-card">
+                    <div class="publication-authors">
+                        <strong class="author-highlight">Heeyoung Lee</strong>
+                    </div>
+                    <div class="publication-title">
+                        "Delinquency During Puberty as a Biosocial Behavior: Time-Varying Effects of Social Contexts
+                        on Girl's Delinquency in South Korea"
+                    </div>
+                    <div class="publication-venue">
+                        Criminal Justice and Behaviors
+                    </div>
+                    <div class="award">
+                        🏆 2022 Paul Meadows, Excellence in Research Award Winner, Sociology Department, University
+                        at
+                        Albany, SUNY
+                    </div>
+                </div>
+
+                <div class="publication-card">
+                    <div class="publication-authors">
+                        <strong class="author-highlight">Heeyoung Lee</strong>, Sooyeon Moon, and Na-Young Lee
+                    </div>
+                    <div class="publication-title">
+                        "Industry Culture Matters: Sexual Harassment in the South Korean Film Industry"
+                    </div>
+                    <div class="publication-venue">
+                        Violence Against Women
+                    </div>
+                </div>
+
+                <!-- 2023 -->
+                <div class="year-header">2023</div>
+
+                <div class="publication-card">
+                    <div class="publication-authors">
+                        Seong-Jo Jung and <strong class="author-highlight">Heeyoung Lee</strong>
+                    </div>
+                    <div class="publication-title">
+                        "Open, Discreet, and Repressive Closet: Latent Class Analysis on the Patterns of LGBTQ+
+                        Youth's Coming Out"
+                    </div>
+                    <div class="publication-venue">
+                        The Korean Journal of Sociology [in Korean]
+                    </div>
+                    <div class="award">
+                        🏆 2023 Graduate Student Research Award Winner, Sociology Department, Chung-Ang University
+                    </div>
+                </div>
+
+                <!-- 2021 -->
+                <div class="year-header">2021</div>
+
+                <div class="publication-card">
+                    <div class="publication-authors">
+                        <strong class="author-highlight">Heeyoung Lee</strong>, Dawool Cheong, and Seong-Jo Jung
+                    </div>
+                    <div class="publication-title">
+                        "A Democratic Response to COVID-19 or Governance with People Without Rights"
+                    </div>
+                    <div class="publication-venue">
+                        Memory & Vision [in Korean]
+                    </div>
+                    <div class="award">
+                        🏆 2021 Democracy Academic Paper Contest Winner, Korean Democracy Foundation<br>
+                        🏆 2022 Academic Paper Award Winner, People's Solidarity for Participatory Democracy
+                    </div>
+                </div>
+
+                <!-- 2019 -->
+                <div class="year-header">2019</div>
+
+                <div class="publication-card">
+                    <div class="publication-authors">
+                        <strong class="author-highlight">Heeyoung Lee</strong> and Na-Young Lee
+                    </div>
+                    <div class="publication-title">
+                        "Constituting 'Premature Girls' during the 1960s-70s in South Korea: A Gendered Regime of
+                        Sexual Efficiency"
+                    </div>
+                    <div class="publication-venue">
+                        The Journal of Asian Women [in Korean]
+                    </div>
+                </div>
+
+                <div class="publication-card">
+                    <div class="publication-authors">
+                        <strong class="author-highlight">Heeyoung Lee</strong> and Na-Young Lee
+                    </div>
+                    <div class="publication-title">
+                        "Constructing the National Body: Child Development in the Postcolonial Nation-State during
+                        the 1960s-1970s"
+                    </div>
+                    <div class="publication-venue">
+                        Society and History [in Korean]
+                    </div>
+                </div>
+
+                <!-- Technical Reports -->
+                <div class="year-header">Technical Reports</div>
+
+                <div class="publication-card">
+                    <div class="publication-authors">
+                        Korean Film Council (PI: Na-Young Lee)
+                    </div>
+                    <div class="publication-title">
+                        "2023 Sexual Harassment in the Film Industry Survey"
+                    </div>
+                    <div class="publication-venue">
+                        2024
+                    </div>
+                </div>
+
+                <div class="publication-card">
+                    <div class="publication-authors">
+                        Korean Film Council (PI: Na-Young Lee)
+                    </div>
+                    <div class="publication-title">
+                        "2020 Sexual Harassment in the Film Industry Survey"
+                    </div>
+                    <div class="publication-venue">
+                        2021
+                    </div>
+                </div>
+
+                <div class="publication-card">
+                    <div class="publication-authors">
+                        Democratic Party of Korea (PI: Na-Young Lee)
+                    </div>
+                    <div class="publication-title">
+                        "Youth's Attitude Towards Gender"
+                    </div>
+                    <div class="publication-venue">
+                        2019
+                    </div>
+                </div>
+            </div>
+
+            <!-- Papers Under Review -->
+            <div class="tab-content" id="review">
+
+                <div class="publication-card">
+                    <div class="publication-authors">
+                        <strong class="author-highlight">Heeyoung Lee</strong>
+                    </div>
+                    <div class="publication-title">
+                        "Permeable Boundaries: How Neighboring States' Policy Environments Shape Local Mortality
+                        Rates in The United States"
+                    </div>
+                    <span class="status-badge status-rnr">Revise and Resubmit</span>
+                </div>
+
+                <div class="publication-card">
+                    <div class="publication-authors">
+                        Tse-Chuan Yang, Carla Shoff, <strong class="author-highlight">Heeyoung Lee</strong>, and
+                        Kiwoong Park
+                    </div>
+                    <div class="publication-title">
+                        "Research Note: Opioid Use Disorder Diagnosis during the COVID-19 Pandemic and Mortality
+                        Rates among Older Medicare Beneficiaries in the US"
+                    </div>
+                    <span class="status-badge status-rnr">Revise and Resubmit</span>
+                </div>
+
+                <div class="publication-card">
+                    <div class="publication-authors">
+                        Tse-Chuan Yang, <strong class="author-highlight">Heeyoung Lee</strong>, and Golam Morshed
+                        Suhel
+                    </div>
+                    <div class="publication-title">
+                        "Age Segregation and Deaths of Despair among Older Adults, 2010-2022: Rural/Urban County
+                        Comparisons"
+                    </div>
+                    <span class="status-badge status-rnr">Revise and Resubmit</span>
+                </div>
+
+                <div class="publication-card">
+                    <div class="publication-authors">
+                        <strong class="author-highlight">Heeyoung Lee</strong>, Jungmin Shin, and Jonathan Dirlam
+                    </div>
+                    <div class="publication-title">
+                        "Structural Sexism and Sexual Harassment"
+                    </div>
+                    <span class="status-badge status-rnr">Revise and Resubmit</span>
+                </div>
+
+                <div class="publication-card">
+                    <div class="publication-authors">
+                        <strong class="author-highlight">Heeyoung Lee</strong>
+                    </div>
+                    <div class="publication-title">
+                        "Geographic Structure of Health Disparities in the US: Decomposing Compositional and
+                        Contextual Effects Across Census Tracts, Counties, and States"
+                    </div>
+                    <span class="status-badge status-review">Under Review</span>
+                </div>
+
+                <div class="publication-card">
+                    <div class="publication-authors">
+                        Matt Vogel, <strong class="author-highlight">Heeyoung Lee</strong>, Taylor Kaser, and Yoobin
+                        Kim
+                    </div>
+                    <div class="publication-title">
+                        "Misappropriating Vulnerability: Assessing the Social Vulnerability Index as a Predictor of
+                        Firearm Violence"
+                    </div>
+                    <span class="status-badge status-review">Under Review</span>
+                </div>
+
+                <div class="publication-card">
+                    <div class="publication-authors">
+                        Seong-Jo Jeong, Bomi Kim, <strong class="author-highlight">Heeyoung Lee</strong>, and Hyemin
+                        Lee
+                    </div>
+                    <div class="publication-title">
+                        "Substance Use and Mental Health Outcomes among Gay and Bisexual Men in South Korea: A
+                        Cross-Sectional Study"
+                    </div>
+                    <span class="status-badge status-review">Under Review</span>
+                </div>
+            </div>
+
+            <!-- Papers in Preparation -->
+            <div class="tab-content" id="preparation">
+
+                <div class="publication-card">
+                    <div class="publication-authors">
+                        <strong class="author-highlight">Heeyoung Lee</strong> and Patricia Homan
+                    </div>
+                    <div class="publication-title">
+                        "Long-Term Effect of Structural Racism on Cardiopulmonary Symptoms in The U.S."
+                    </div>
+                    <div class="publication-details">
+                        (draft available)
+                    </div>
+                </div>
+
+                <div class="publication-card">
+                    <div class="publication-authors">
+                        <strong class="author-highlight">Heeyoung Lee</strong> and Matt Vogel
+                    </div>
+                    <div class="publication-title">
+                        "Privilege or Threat: American Youth Responses to Contested Racial Boundaries"
+                    </div>
+                    <div class="publication-details">
+                        (draft available)
+                    </div>
+                </div>
+
+                <div class="publication-card">
+                    <div class="publication-authors">
+                        <strong class="author-highlight">Heeyoung Lee</strong>
+                    </div>
+                    <div class="publication-title">
+                        "Impacts of State Policies Spatial Spillover on Educational Health Disparities"
+                    </div>
+                    <div class="publication-details">
+                        (drafting)
+                    </div>
+                </div>
+
+                <div class="publication-card">
+                    <div class="publication-authors">
+                        <strong class="author-highlight">Heeyoung Lee</strong>
+                    </div>
+                    <div class="publication-title">
+                        "Longitudinal Relationship between Macro-Social Context and Educational Mortality
+                        Disparities"
+                    </div>
+                    <div class="publication-details">
+                        (drafting)
+                    </div>
+                </div>
+
+                <div class="publication-card">
+                    <div class="publication-authors">
+                        <strong class="author-highlight">Heeyoung Lee</strong>
+                    </div>
+                    <div class="publication-title">
+                        "Cognitive Decline after Partner Loss in the US: Heterogeneous Impacts across States"
+                    </div>
+                    <div class="publication-details">
+                        (drafting)
+                    </div>
+                </div>
+
+                <div class="publication-card">
+                    <div class="publication-authors">
+                        Scott Schieman and <strong class="author-highlight">Heeyoung Lee</strong>
+                    </div>
+                    <div class="publication-title">
+                        "Social Distance Fallout: Isolation During and After the COVID-19 Pandemic"
+                    </div>
+                    <div class="publication-details">
+                        (drafting)
+                    </div>
+                </div>
+
+                <div class="publication-card">
+                    <div class="publication-authors">
+                        Chris Lowenstein, David H. Rehkopf, <strong class="author-highlight">Heeyoung Lee</strong>,
+                        Xiaoyu Yao, and Kate Strully
+                    </div>
+                    <div class="publication-title">
+                        "The Earned Income Tax Credit and Racial and Ethnic Health Disparities across Labor Market
+                        Contexts"
+                    </div>
+                    <div class="publication-details">
+                        (drafting)
+                    </div>
+                </div>
+
+                <div class="publication-card">
+                    <div class="publication-authors">
+                        Kate Strully, <strong class="author-highlight">Heeyoung Lee</strong>, Chris Lowenstein, and
+                        David Rehkoph
+                    </div>
+                    <div class="publication-title">
+                        "Refundable Tax Credits and Income Inequality Across the United States"
+                    </div>
+                    <div class="publication-details">
+                        (drafting)
+                    </div>
+                </div>
+
+                <div class="publication-card">
+                    <div class="publication-authors">
+                        Yuna Lee and <strong class="author-highlight">Heeyoung Lee</strong>
+                    </div>
+                    <div class="publication-title">
+                        "Policing at Racial Boundaries in NYC"
+                    </div>
+                    <div class="publication-details">
+                        (drafting)
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-
     <script>
+        // Tab functionality
+        document.querySelectorAll('.nav-tabs button').forEach(button => {
+            button.addEventListener('click', () => {
+                // Remove active class from all buttons and contents
+                document.querySelectorAll('.nav-tabs button').forEach(btn => btn.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+
+                // Add active class to clicked button
+                button.classList.add('active');
+
+                // Show corresponding content
+                const tabId = button.getAttribute('data-tab');
+                document.getElementById(tabId).classList.add('active');
+            });
+        });
+
         // Mobile menu toggle
         document.addEventListener('DOMContentLoaded', function () {
             const mobileMenuToggle = document.querySelector('.mobile-menu-toggle');
