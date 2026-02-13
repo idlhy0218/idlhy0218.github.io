@@ -6,18 +6,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Blog - Heeyoung Lee</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" />
-
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-
+    * { margin: 0; padding: 0; box-sizing: border-box; }
     :root {
       --primary: #2563eb;
       --primary-dark: #1e40af;
@@ -27,6 +21,12 @@
       --bg-secondary: #f8fafc;
       --border: #e2e8f0;
       --accent: #3b82f6;
+      --ft-paper: #fff1e5; 
+      --ft-border: #e2e8f0;
+      --ft-card: #ffffff;
+      --ft-text-primary: #1e293b;
+      --accent-claret: #990f3d;
+      --accent-dark: #1e293b;
     }
 
     body {
@@ -35,17 +35,6 @@
       color: var(--text-primary);
       line-height: 1.6;
       min-height: 100vh;
-    }
-
-    h1,
-    h2,
-    h3,
-    h4,
-    h5,
-    h6 {
-      font-family: 'Inter', sans-serif;
-      font-weight: 600;
-      color: var(--text-primary);
     }
 
     /* Navigation */
@@ -69,101 +58,59 @@
     }
 
     .logo {
-      font-family: 'Inter', sans-serif;
       font-size: 1.35rem;
       font-weight: 700;
       color: var(--text-primary);
+      text-decoration: none;
       display: flex;
       align-items: center;
       gap: 0.75rem;
-      text-decoration: none;
     }
 
-    .logo img {
-      height: 40px;
-      width: auto;
-    }
-
-    .nav-links {
-      display: flex;
-      gap: 2rem;
-      list-style: none;
-      margin: 0;
-      padding: 0;
-    }
-
+    .nav-links { display: flex; gap: 2rem; list-style: none; }
     .nav-links a {
       color: var(--text-secondary);
       text-decoration: none;
       font-weight: 500;
-      font-size: 1.05rem;
       transition: color 0.2s;
-      display: flex;
-      align-items: center;
-      gap: 0.4rem;
     }
+    .nav-links a:hover, .nav-links a.active { color: var(--primary); }
 
-    .nav-links a:hover,
-    .nav-links a.active {
-      color: var(--primary);
-    }
-
-    /* Mobile Menu Toggle */
     .mobile-menu-toggle {
       display: none;
       background: none;
       border: none;
       font-size: 1.5rem;
-      color: var(--text-primary);
       cursor: pointer;
-      padding: 0.5rem;
-      z-index: 1001;
     }
 
-    .container {
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 3rem 2rem;
-    }
+    .container { max-width: 1200px; margin: 0 auto; padding: 3rem 2rem; }
 
-    /* Tab Container */
+    /* Tabs */
     .tab-container {
       background: var(--bg-primary);
       border: 1px solid var(--border);
       border-radius: 12px;
-      padding: 2.5rem;
+      padding: 2rem;
       margin-bottom: 2rem;
     }
 
     .nav-tabs {
-      border-bottom: 2px solid var(--border);
-      gap: 0;
-      justify-content: center;
-      margin-bottom: 2rem;
       display: flex;
+      justify-content: center;
       list-style: none;
-      padding: 0;
+      border-bottom: 2px solid var(--border);
+      margin-bottom: 2rem;
     }
 
     .nav-tabs button {
-      font-family: 'Inter', sans-serif;
       border: none;
-      border-bottom: 2px solid transparent;
       background: transparent;
-      color: var(--text-secondary);
-      font-weight: 600;
       padding: 0.75rem 1.5rem;
+      font-weight: 600;
+      color: var(--text-secondary);
       cursor: pointer;
-      transition: all 0.2s;
-      font-size: 1.05rem;
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
-
-    .nav-tabs button:hover {
-      color: var(--primary);
-      border-bottom-color: var(--primary);
+      border-bottom: 2px solid transparent;
     }
 
     .nav-tabs button.active {
@@ -171,548 +118,51 @@
       border-bottom-color: var(--primary);
     }
 
-    .nav-tabs button i {
-      margin-right: 0.5rem;
-      font-size: 1.1rem;
-    }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
 
-    .tab-content {
-      display: none;
-    }
-
-    .tab-content.active {
-      display: block;
-    }
-
-    /* Back Button */
-    .back-button {
-      font-family: 'Inter', sans-serif;
-      text-decoration: none;
-      color: #6c757d;
-      display: inline-flex;
-      align-items: center;
-      margin-bottom: 1.5rem;
-      padding: 0.5rem 1rem;
-      border-radius: 0;
-      transition: all 0.2s ease;
-      font-weight: 600;
-      font-size: 0.95rem;
-    }
-
-    .back-button:hover {
-      color: var(--accent-dark);
-    }
-
-    .back-button i {
-      transition: transform 0.2s ease;
-    }
-
-    .back-button:hover i {
-      transform: translateX(-4px);
-    }
-
-    /* Blog Cards - Single Column */
-    .blog-grid {
-      display: flex;
-      flex-direction: column;
-      gap: 1.5rem;
-      padding: 0;
-    }
-
+    /* Blog Grid & Cards */
+    .blog-grid { display: flex; flex-direction: column; gap: 1.5rem; }
     .blog-card {
       background: var(--bg-primary);
       border: 1px solid var(--border);
       border-radius: 8px;
       padding: 1.5rem;
-      transition: all 0.2s ease;
       cursor: pointer;
-      position: relative;
-      overflow: hidden;
+      transition: all 0.2s;
     }
+    .blog-card:hover { border-color: var(--primary); transform: translateY(-2px); }
+    .blog-card-title { color: var(--primary); font-size: 1.25rem; margin-bottom: 0.5rem; }
 
-    .blog-card:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.1);
-      border-color: var(--primary);
-    }
+    /* Detail View */
+    .blog-detail { display: none; }
+    .blog-detail.active { display: block; }
+    .blog-overview.hidden { display: none; }
+    
+    .blog-content-container { border: 1px solid var(--border); margin-top: 1rem; }
+    .blog-content { width: 100%; min-height: 800px; border: none; background: var(--ft-paper); }
 
-    .blog-card-header {
-      margin-bottom: 1rem;
-    }
-
-    .blog-card-title {
-      font-family: 'Inter', sans-serif;
-      font-size: 1.25rem;
-      font-weight: 700;
-      color: var(--primary);
-      margin-bottom: 0.5rem;
-      line-height: 1.4;
-      display: -webkit-box;
-      -webkit-line-clamp: 2;
-      line-clamp: 2;
-      -webkit-box-orient: vertical;
-      overflow: hidden;
-    }
-
-    .blog-card-date {
-      color: var(--text-secondary);
-      font-size: 0.85rem;
-      font-weight: 500;
-      display: flex;
+    .back-button {
+      display: inline-flex;
       align-items: center;
       gap: 0.5rem;
-    }
-
-    .blog-card-description {
-      color: var(--text-primary);
-      font-size: 0.95rem;
-      line-height: 1.6;
-      margin-bottom: 1rem;
-      display: -webkit-box;
-      -webkit-line-clamp: 3;
-      line-clamp: 3;
-      -webkit-box-orient: vertical;
-      overflow: hidden;
-    }
-
-    .blog-card-footer {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-top: auto;
-      padding-top: 1rem;
-      border-top: 1px solid rgba(51, 51, 51, 0.2);
-    }
-
-    .blog-card-category {
-      display: none;
-    }
-
-    .blog-card-arrow {
-      color: #6c757d;
-      font-size: 1.2rem;
-      transition: all 0.2s ease;
-    }
-
-    .blog-card:hover .blog-card-arrow {
-      color: var(--accent-claret);
-    }
-
-    /* Gallery - Single Column */
-    .gallery-grid {
-      display: flex;
-      flex-direction: column;
-      gap: 1.5rem;
-      padding: 0;
-    }
-
-    .gallery-item {
-      background: var(--ft-paper);
-      border: 1px solid rgba(51, 51, 51, 0.2);
-      border-radius: 0;
-      overflow: hidden;
-      box-shadow: none;
-      transition: border-color 0.2s ease;
-      cursor: pointer;
-      position: relative;
-    }
-
-    .gallery-item:hover {
-      border-color: var(--ft-border);
-    }
-
-    .gallery-item-image {
-      width: 100%;
-      height: 250px;
-      object-fit: cover;
-      display: block;
-    }
-
-    .gallery-item-overlay {
-      position: absolute;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      background: linear-gradient(transparent, rgba(0, 0, 0, 0.8));
-      padding: 2rem 1.5rem 1.5rem;
-      color: white;
-      transform: translateY(100%);
-      transition: transform 0.3s ease;
-    }
-
-    .gallery-item:hover .gallery-item-overlay {
-      transform: translateY(0);
-    }
-
-    .gallery-item-title {
-      font-size: 1.1rem;
-      font-weight: 700;
-      margin-bottom: 0.5rem;
-      line-height: 1.3;
-    }
-
-    .gallery-item-description {
-      font-size: 0.9rem;
-      opacity: 0.9;
-      line-height: 1.4;
-    }
-
-    /* Modal for gallery images */
-    .gallery-modal {
-      display: none;
-      position: fixed;
-      z-index: 1000;
-      left: 0;
-      top: 0;
-      width: 100%;
-      height: 100%;
-      background-color: rgba(0, 0, 0, 0.9);
-      animation: fadeIn 0.3s ease;
-    }
-
-    .gallery-modal.active {
-      display: block;
-    }
-
-    .gallery-modal-content {
-      position: relative;
-      max-width: 90%;
-      max-height: 90%;
-      margin: auto;
-      top: 50%;
-      transform: translateY(-50%);
-    }
-
-    .gallery-modal-image {
-      width: 100%;
-      height: auto;
-      border-radius: 0;
-      box-shadow: none;
-    }
-
-    .gallery-modal-close {
-      position: absolute;
-      top: -40px;
-      right: 0;
-      color: white;
-      font-size: 2rem;
-      font-weight: bold;
-      cursor: pointer;
-      transition: color 0.2s ease;
-    }
-
-    .gallery-modal-close:hover {
-      color: var(--accent-claret);
-    }
-
-    .gallery-modal-info {
-      background: var(--ft-card);
-      padding: 1.5rem;
-      margin-top: 1rem;
-      border-radius: 0;
-      box-shadow: none;
-      border: 1px solid var(--ft-border);
-    }
-
-    .gallery-modal-title {
-      font-size: 1.5rem;
-      font-weight: 700;
-      color: var(--accent-dark);
-      margin-bottom: 0.5rem;
-    }
-
-    .gallery-modal-description {
-      color: var(--ft-text-primary);
-      line-height: 1.6;
-    }
-
-    /* Introduction Section */
-    .introduction-section {
-      text-align: center;
-      padding: 3rem 1rem;
-      max-width: 800px;
-      margin: 0 auto 3rem auto;
-    }
-
-    .introduction-section h2 {
-      font-size: 2.2rem;
-      font-weight: 700;
-      color: var(--accent-dark);
-      margin-bottom: 1rem;
-    }
-
-    .introduction-section p {
-      font-size: 1.1rem;
-      color: var(--ft-text-primary);
-      line-height: 1.7;
-      margin-bottom: 1rem;
-    }
-
-    .introduction-section strong {
-      color: var(--accent-claret);
+      text-decoration: none;
+      color: var(--text-secondary);
       font-weight: 600;
+      margin-bottom: 1rem;
     }
 
-    /* Blog Content Container for iframe */
-    .blog-content-container {
-      background: var(--ft-card);
-      border: 1px solid var(--ft-border);
-      border-radius: 0;
-      padding: 0;
-      margin-top: 2rem;
-      box-shadow: none;
-      overflow: hidden;
-    }
+    /* Gallery */
+    .gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.5rem; }
+    .gallery-item { border: 1px solid var(--border); cursor: pointer; overflow: hidden; }
+    .gallery-item img { width: 100%; height: 250px; object-fit: cover; }
 
-    .blog-content {
-      width: 100%;
-      min-height: 700px;
-      border: none;
-      background-color: var(--ft-paper);
-    }
-
-    /* Loading state */
-    .content-loading {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      min-height: 400px;
-      color: #6c757d;
-    }
-
-    .content-loading::after {
-      content: '';
-      width: 30px;
-      height: 30px;
-      border: 3px solid rgba(51, 51, 51, 0.2);
-      border-top-color: var(--accent-claret);
-      border-radius: 50%;
-      animation: spin 0.8s linear infinite;
-    }
-
-    @keyframes spin {
-      to {
-        transform: rotate(360deg);
-      }
-    }
-
-    /* Hide/Show States */
-    .blog-overview {
-      display: block;
-    }
-
-    .blog-detail {
-      display: none;
-    }
-
-    .blog-detail.active {
-      display: block;
-    }
-
-    .blog-overview.hidden {
-      display: none;
-    }
-
-    /* Animations */
-    @keyframes fadeIn {
-      from {
-        opacity: 0;
-        transform: translateY(10px);
-      }
-
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-
-    /* Responsive Design */
     @media (max-width: 768px) {
-      .mobile-menu-toggle {
-        display: block;
-      }
-
-      .nav-links {
-        display: none;
-        position: absolute;
-        top: 100%;
-        left: 0;
-        right: 0;
-        background: var(--bg-primary);
-        flex-direction: column;
-        padding: 1rem 2rem;
-        border-top: 1px solid var(--border);
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        gap: 0;
-        z-index: 999;
-      }
-
+      .mobile-menu-toggle { display: block; }
+      .nav-links { display: none; }
       .nav-links.active {
-        display: flex;
-      }
-
-      .nav-links li {
-        padding: 0.75rem 0;
-        border-bottom: 1px solid var(--border);
-      }
-
-      .nav-links li:last-child {
-        border-bottom: none;
-      }
-
-      nav {
-        position: relative;
-      }
-    }
-
-    /* Mobile Typography & Spacing */
-    @media (max-width: 768px) {
-      html {
-        font-size: 16px;
-      }
-
-      body {
-        font-size: 1.05rem;
-        line-height: 1.7;
-      }
-
-      p {
-        font-size: 1.05rem;
-        margin-bottom: 1.25rem;
-      }
-
-      .container {
-        padding: 0 1rem;
-      }
-
-      .tab-container {
-        padding: 1.5rem;
-      }
-
-      .blog-card-description {
-        font-size: 1rem;
-        -webkit-line-clamp: 4;
-        line-clamp: 4;
-      }
-    }
-
-    @media (max-width: 991.98px) {
-      .nav-tabs {
-        flex-wrap: wrap;
-      }
-
-      .gallery-grid {
-        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-      }
-    }
-
-    @media (max-width: 767.98px) {
-      .navbar {
-        padding: 1rem 0;
-      }
-
-      .navbar-brand {
-        font-size: 1.25rem;
-      }
-
-      .tab-container {
-        padding: 1rem;
-      }
-
-      .nav-tabs {
-        flex-direction: column;
-        align-items: stretch;
-      }
-
-      .nav-tabs button {
-        margin-bottom: 0.5rem;
-        text-align: center;
-        font-size: 1.05rem;
-        padding: 0.75rem 1.5rem;
-      }
-
-      .blog-grid {
-        grid-template-columns: 1fr;
-        gap: 1rem;
-      }
-
-      .gallery-grid {
-        grid-template-columns: 1fr;
-        gap: 1rem;
-      }
-
-      .blog-card {
-        padding: 1.25rem;
-      }
-
-      .introduction-section {
-        padding: 2rem 1rem;
-      }
-
-      .introduction-section h2 {
-        font-size: 2rem;
-      }
-
-      .introduction-section p {
-        font-size: 1rem;
-      }
-
-      .gallery-modal-content {
-        max-width: 95%;
-        max-height: 85%;
-      }
-    }
-
-    @media (max-width: 575.98px) {
-      .container {
-        padding: 0 1rem;
-      }
-
-      .blog-card-title {
-        font-size: 1.1rem;
-      }
-
-      .blog-card {
-        border-radius: 0;
-      }
-
-      .tab-container {
-        border-radius: 0;
-      }
-
-      .introduction-section h2 {
-        font-size: 1.75rem;
-      }
-
-      .gallery-item {
-        border-radius: 0;
-      }
-
-      .gallery-item-image {
-        height: 200px;
-      }
-    }
-
-    /* Focus states for accessibility */
-    .blog-card:focus,
-    .gallery-item:focus {
-      outline: 2px solid var(--accent-claret);
-      outline-offset: 2px;
-    }
-
-    a:focus,
-    button:focus {
-      outline: 2px solid var(--accent-claret);
-      outline-offset: 2px;
-    }
-
-    /* Print styles */
-    @media print {
-
-      .navbar,
-      .back-button,
-      .tab-container {
-        display: none;
+        display: flex; flex-direction: column; position: absolute;
+        top: 100%; left: 0; right: 0; background: white; padding: 1rem;
       }
     }
   </style>
@@ -721,456 +171,138 @@
 <body>
   <nav>
     <div class="nav-container">
-      <a href="../index.html" class="logo">
-        <span>Heeyoung Lee</span>
-      </a>
-      <button class="mobile-menu-toggle" aria-label="Toggle menu">
-        <i class="bi bi-list"></i>
-      </button>
+      <a href="../index.html" class="logo">Heeyoung Lee</a>
+      <button class="mobile-menu-toggle"><i class="bi bi-list"></i></button>
       <ul class="nav-links">
-        <li><a href="about.html"><i class="bi bi-person-lines-fill"></i> About</a></li>
-        <li><a href="publications.html"><i class="bi bi-file-earmark-text"></i> Publications</a></li>
-        <li><a href="teaching.html"><i class="bi bi-easel2"></i> Teaching</a></li>
-        <li><a href="blog.html" class="active"><i class="bi bi-bar-chart-steps"></i> Blog</a></li>
-        <li><a href="cv.html"><i class="bi bi-file-text"></i> CV</a></li>
-        <li><a href="contact.html"><i class="bi bi-envelope"></i> Contact</a></li>
+        <li><a href="about.html">About</a></li>
+        <li><a href="publications.html">Publications</a></li>
+        <li><a href="teaching.html">Teaching</a></li>
+        <li><a href="blog.html" class="active">Blog</a></li>
+        <li><a href="cv.html">CV</a></li>
+        <li><a href="contact.html">Contact</a></li>
       </ul>
     </div>
   </nav>
 
   <div class="container">
-
     <div class="tab-container">
-      <ul class="nav-tabs" role="tablist">
-        <li role="presentation">
-          <button class="active" data-tab="statslab">
-            <i class="bi bi-graph-up"></i> Stats Lab
-          </button>
-        </li>
-        <li role="presentation">
-          <button data-tab="studynotes">
-            <i class="bi bi-journal-text"></i> Study Notes
-          </button>
-        </li>
-        <li role="presentation">
-          <button data-tab="gallery">
-            <i class="bi bi-image"></i> Gallery
-          </button>
-        </li>
+      <ul class="nav-tabs">
+        <li><button class="active" data-tab="statslab">Stats Lab</button></li>
+        <li><button data-tab="studynotes">Study Notes</button></li>
+        <li><button data-tab="gallery">Gallery</button></li>
       </ul>
     </div>
 
     <div class="tab-content active" id="statslab">
       <div class="blog-overview" id="statslab-overview">
-        <div class="introduction-section">
-          <h2>Stats Lab</h2>
-          <p>Here you'll find my statistical labs with R. I post on random topics but with a consistent theme:
-            "frequently used statistical concepts that are <strong>easy to forget the underlying logic of</strong>."
-          </p>
-          <p>Feel free to contact me if you find any errors or have any suggestions for topics.</p>
-        </div>
-
         <div class="blog-grid" id="statsLabGrid"></div>
       </div>
-
       <div class="blog-detail" id="statslab-detail">
-        <div class="blog-content-container">
-          <div id="statsLabContent"></div>
-        </div>
+        <a href="#" class="back-button" onclick="showOverview('statsLab'); return false;"><i class="bi bi-arrow-left"></i> Back</a>
+        <div class="blog-content-container" id="statsLabContent"></div>
       </div>
     </div>
 
     <div class="tab-content" id="studynotes">
       <div class="blog-overview" id="studynotes-overview">
-        <div class="introduction-section">
-          <h2>Study Notes</h2>
-          <p>These notes summarize important readings, lectures, and research papers I've studied. They serve as a
-            personal reference and might be helpful for others exploring similar topics in sociology and statistics.
-          </p>
-          <p>Each note is a distilled version of key concepts and insights from various academic sources.</p>
-        </div>
-
         <div class="blog-grid" id="studyNotesGrid"></div>
       </div>
-
       <div class="blog-detail" id="studynotes-detail">
-        <div class="blog-content-container">
-          <div id="studyNotesContent"></div>
-        </div>
+        <a href="#" class="back-button" onclick="showOverview('studyNotes'); return false;"><i class="bi bi-arrow-left"></i> Back</a>
+        <div class="blog-content-container" id="studyNotesContent"></div>
       </div>
     </div>
 
     <div class="tab-content" id="gallery">
-      <div class="introduction-section">
-        <h2>Gallery</h2>
-        <p>A collection of visualizations, charts, and images I've created for my research and projects. Each piece
-          represents a different approach to <strong>visual storytelling with data</strong>.</p>
-        <p>Click on any image to view it in full size with additional details.</p>
-      </div>
-
       <div class="gallery-grid" id="galleryGrid"></div>
     </div>
   </div>
 
-  <div class="gallery-modal" id="galleryModal">
-    <div class="gallery-modal-content">
-      <span class="gallery-modal-close" id="galleryModalClose">&times;</span>
-      <img class="gallery-modal-image" id="galleryModalImage" src="" alt="">
-      <div class="gallery-modal-info" id="galleryModalInfo">
-        <h3 class="gallery-modal-title" id="galleryModalTitle"></h3>
-        <p class="gallery-modal-description" id="galleryModalDescription"></p>
-      </div>
-    </div>
-  </div>
-
   <script>
+    // [모범 사례 적용] 모든 파일 경로를 GitHub Pages 절대 URL로 설정
+    const BASE_URL = "https://idlhy0218.github.io/page%20building";
+    
     const blogConfig = {
       statsLab: {
         posts: [
-          {
-            id: 'did_tutorial',
-            title: 'Understanding Basic Difference-in-Differences',
-            date: 'Nov 30, 2025',
-            description: 'Understanding the basic concepts of Difference-in-Differences with an example using John Snow cholera data.',
-            file: 'blog/statslab/did_tutorial.html'
-          },
-          {
-            id: 'event_history',
-            title: 'Understanding Event History Analysis',
-            date: 'Nov 24, 2025',
-            description: 'Understanding basic concept of Event History Analysis (also known as Survival Analysis).',
-            file: 'blog/statslab/event_history.html'
-          },
-          {
-            id: 'staggered_did',
-            title: 'Hands-on Practice for Staggered Diff-in-Diff in R',
-            date: 'Nov 12, 2025',
-            description: 'Compares modern difference-in-differences (DiD) estimators designed to handle staggered treatment adoption.',
-            file: 'blog/statslab/staggered_did.html'
-          },
-          {
-            id: 'multilevel',
-            title: 'Understanding Multilevel Analysis',
-            date: 'Sep 1, 2025',
-            description: 'Explore the fundamentals of multilevel modeling and when to use hierarchical data structures in statistical analysis.',
-            file: 'blog/statslab/multilevel.html'
-          },
-          {
-            id: 'twfe',
-            title: 'What is The Logic Behind a Two-Way Fixed Effects Analysis?',
-            date: 'May 28, 2025',
-            description: 'Demystify the two-way fixed effects approach and understand the underlying statistical logic for causal inference.',
-            file: 'blog/statslab/twfe.html'
-          },
-          {
-            id: 'fe_be_re',
-            title: 'Fixed vs Between vs Random Effect',
-            date: 'May 15, 2025',
-            description: 'Clear up the confusion between different types of effects in panel data analysis with practical examples.',
-            file: 'blog/statslab/fe_be_re.html'
-          },
-          {
-            id: 'control',
-            title: 'Understanding "Control" in Statistical Analysis',
-            date: 'May 18, 2025',
-            description: 'Learn what it really means to "control for" variables and how it affects your statistical interpretations.',
-            file: 'blog/statslab/what_is_control.html'
-          }
+          { id: 'did_tutorial', title: 'Difference-in-Differences', file: `${BASE_URL}/statslab/did_tutorial.html` },
+          { id: 'event_history', title: 'Event History Analysis', file: `${BASE_URL}/statslab/event_history.html` },
+          { id: 'staggered_did', title: 'Staggered DiD in R', file: `${BASE_URL}/statslab/staggered_did.html` },
+          { id: 'multilevel', title: 'Multilevel Analysis', file: `${BASE_URL}/statslab/multilevel.html` },
+          { id: 'twfe', title: 'Two-Way Fixed Effects', file: `${BASE_URL}/statslab/twfe.html` },
+          { id: 'fe_be_re', title: 'Fixed vs Random Effects', file: `${BASE_URL}/statslab/fe_be_re.html` },
+          { id: 'control', title: 'Statistical "Control"', file: `${BASE_URL}/statslab/what_is_control.html` }
         ],
-        tabId: 'statslab',
-        contentId: 'statsLabContent',
-        gridId: 'statsLabGrid',
-        overviewId: 'statslab-overview',
-        detailId: 'statslab-detail'
+        gridId: 'statsLabGrid', contentId: 'statsLabContent', overviewId: 'statslab-overview', detailId: 'statslab-detail'
       },
       studyNotes: {
         posts: [
-          {
-            id: 'opportunity_insights',
-            title: 'Opportunity Insights',
-            date: 'June 16, 2025',
-            description: 'Key findings and methodological insights from Raj Chetty\'s research on economic mobility and opportunity in America.',
-            file: 'blog/studynotes/chetty.html'
-          }
+          { id: 'opportunity_insights', title: 'Opportunity Insights (Raj Chetty)', file: `${BASE_URL}/studynotes/chetty.html` }
         ],
-        tabId: 'studynotes',
-        contentId: 'studyNotesContent',
-        gridId: 'studyNotesGrid',
-        overviewId: 'studynotes-overview',
-        detailId: 'studynotes-detail'
+        gridId: 'studyNotesGrid', contentId: 'studyNotesContent', overviewId: 'studynotes-overview', detailId: 'studynotes-detail'
       },
       gallery: {
         images: [
-          {
-            id: 'map_art_1',
-            title: 'Albany Metro Area',
-            description: '',
-            file: 'blog/gallery/albany_metro_white.png',
-            date: 'Sep 9th, 2025'
-          },
-          {
-            id: 'map_art_2',
-            title: 'NYS Water Map',
-            description: '',
-            file: 'blog/gallery/nys_water.png',
-            date: 'Sep 9th, 2025'
-          }
+          { title: 'Albany Metro Area', file: `${BASE_URL}/gallery/albany_metro_white.png` },
+          { title: 'NYS Water Map', file: `${BASE_URL}/gallery/nys_water.png` }
         ]
       }
     };
 
     function generateBlogGrid(section) {
       const config = blogConfig[section];
-      const gridElement = document.getElementById(config.gridId);
-      gridElement.innerHTML = '';
-
+      const grid = document.getElementById(config.gridId);
       config.posts.forEach(post => {
-        const cardElement = document.createElement('div');
-        cardElement.className = 'blog-card';
-        cardElement.setAttribute('tabindex', '0');
-        cardElement.setAttribute('role', 'button');
-        cardElement.innerHTML = `
-          <div class="blog-card-header">
-            <h3 class="blog-card-title">${post.title}</h3>
-            <div class="blog-card-date">
-              <i class="bi bi-calendar3"></i>
-              ${post.date}
-            </div>
-          </div>
-          <div class="blog-card-description">${post.description}</div>
-          <div class="blog-card-footer">
-            <span class="blog-card-category">${section === 'statsLab' ? 'Stats Lab' : 'Study Notes'}</span>
-            <i class="bi bi-arrow-right blog-card-arrow"></i>
-          </div>
-        `;
-
-        cardElement.addEventListener('click', () => loadBlogPost(section, post.id));
-        cardElement.addEventListener('keydown', (e) => {
-          if (e.key === 'Enter' || e.key === ' ') {
-            e.preventDefault();
-            loadBlogPost(section, post.id);
-          }
-        });
-
-        gridElement.appendChild(cardElement);
+        const card = document.createElement('div');
+        card.className = 'blog-card';
+        card.innerHTML = `<h3 class="blog-card-title">${post.title}</h3><p>Click to read more...</p>`;
+        card.onclick = () => loadBlogPost(section, post.id);
+        grid.appendChild(card);
       });
-    }
-
-    function generateGallery() {
-      const galleryGrid = document.getElementById('galleryGrid');
-      galleryGrid.innerHTML = '';
-
-      blogConfig.gallery.images.forEach(image => {
-        const galleryItem = document.createElement('div');
-        galleryItem.className = 'gallery-item';
-        galleryItem.setAttribute('tabindex', '0');
-        galleryItem.setAttribute('role', 'button');
-        galleryItem.innerHTML = `
-          <img src="${image.file}" alt="${image.title}" class="gallery-item-image" loading="lazy">
-          <div class="gallery-item-overlay">
-            <div class="gallery-item-title">${image.title}</div>
-            <div class="gallery-item-description">${image.description}</div>
-          </div>
-        `;
-
-        galleryItem.addEventListener('click', () => openGalleryModal(image));
-        galleryItem.addEventListener('keydown', (e) => {
-          if (e.key === 'Enter' || e.key === ' ') {
-            e.preventDefault();
-            openGalleryModal(image);
-          }
-        });
-
-        galleryGrid.appendChild(galleryItem);
-      });
-    }
-
-    function openGalleryModal(image) {
-      const modal = document.getElementById('galleryModal');
-      const modalImage = document.getElementById('galleryModalImage');
-      const modalTitle = document.getElementById('galleryModalTitle');
-      const modalDescription = document.getElementById('galleryModalDescription');
-
-      modalImage.src = image.file;
-      modalImage.alt = image.title;
-      modalTitle.textContent = image.title;
-      modalDescription.textContent = image.description;
-
-      modal.classList.add('active');
-
-      // Focus management for accessibility
-      modalImage.focus();
-    }
-
-    function closeGalleryModal() {
-      const modal = document.getElementById('galleryModal');
-      modal.classList.remove('active');
     }
 
     function loadBlogPost(section, postId) {
       const config = blogConfig[section];
       const post = config.posts.find(p => p.id === postId);
-      if (!post) return;
-
-      // Hide overview, show detail
       document.getElementById(config.overviewId).classList.add('hidden');
       document.getElementById(config.detailId).classList.add('active');
-
-      // Load content with loading state
-      const contentTarget = document.getElementById(config.contentId);
-      contentTarget.innerHTML = '<div class="content-loading"></div>';
-
-      // Add back button
-      setTimeout(() => {
-        contentTarget.innerHTML = `
-          <div style="padding: 1.5rem 1.5rem 0 1.5rem;">
-            <a href="#" class="back-button" onclick="showOverview('${section}'); return false;">
-              <i class="bi bi-arrow-left me-2"></i> Back to ${section === 'statsLab' ? 'Stats Lab' : 'Study Notes'}
-            </a>
-          </div>
-          <iframe src="${post.file}" class="blog-content" title="${post.title}"></iframe>
-        `;
-      }, 300);
-
-      // Update URL hash
-      window.location.hash = `${section}__${postId}`;
+      document.getElementById(config.contentId).innerHTML = `<iframe src="${post.file}" class="blog-content"></iframe>`;
     }
 
     function showOverview(section) {
       const config = blogConfig[section];
-
-      // Show overview, hide detail
       document.getElementById(config.overviewId).classList.remove('hidden');
       document.getElementById(config.detailId).classList.remove('active');
-
-      // Clear hash
-      window.location.hash = '';
     }
 
-    function parseHashAndLoad() {
-      const hash = window.location.hash.substring(1);
-
-      let section, postId;
-
-      if (hash.includes('__')) {
-        [section, postId] = hash.split('__');
-      } else if (hash.includes('-')) {
-        const parts = hash.split('-');
-        if (parts.length >= 2) {
-          section = parts[0];
-          postId = parts.slice(1).join('-');
-        }
-      }
-
-      if (section && postId) {
-        const sectionKey = Object.keys(blogConfig).find(key =>
-          key.toLowerCase() === section.toLowerCase() && key !== 'gallery'
-        );
-
-        if (sectionKey && blogConfig[sectionKey]) {
-          const tabButton = document.querySelector(`button[data-tab="${blogConfig[sectionKey].tabId}"]`);
-          if (tabButton) {
-            tabButton.click();
-          }
-
-          setTimeout(() => {
-            loadBlogPost(sectionKey, postId);
-          }, 100);
-        }
-      }
+    function generateGallery() {
+      const grid = document.getElementById('galleryGrid');
+      blogConfig.gallery.images.forEach(img => {
+        const item = document.createElement('div');
+        item.className = 'gallery-item';
+        item.innerHTML = `<img src="${img.file}" alt="${img.title}">`;
+        grid.appendChild(item);
+      });
     }
 
-    document.addEventListener('DOMContentLoaded', function () {
-      // Generate grids for blog sections
+    document.addEventListener('DOMContentLoaded', () => {
       generateBlogGrid('statsLab');
       generateBlogGrid('studyNotes');
-
-      // Generate gallery
       generateGallery();
 
-      // Parse hash and load if necessary
-      parseHashAndLoad();
-
-      // Tab functionality
-      document.querySelectorAll('.nav-tabs button').forEach(button => {
-        button.addEventListener('click', () => {
-          // Remove active class from all buttons and contents
-          document.querySelectorAll('.nav-tabs button').forEach(btn => btn.classList.remove('active'));
-          document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
-
-          // Add active class to clicked button
-          button.classList.add('active');
-
-          // Show corresponding content
-          const tabId = button.getAttribute('data-tab');
-          document.getElementById(tabId).classList.add('active');
-
-          // Always show overview when switching tabs (only for blog sections)
-          if (tabId === 'statslab') {
-            showOverview('statsLab');
-          } else if (tabId === 'studynotes') {
-            showOverview('studyNotes');
-          }
-        });
+      document.querySelectorAll('.nav-tabs button').forEach(btn => {
+        btn.onclick = () => {
+          document.querySelectorAll('.nav-tabs button').forEach(b => b.classList.remove('active'));
+          document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+          btn.classList.add('active');
+          document.getElementById(btn.dataset.tab).classList.add('active');
+        };
       });
 
-      // Gallery modal event listeners
-      const galleryModal = document.getElementById('galleryModal');
-      const galleryModalClose = document.getElementById('galleryModalClose');
-
-      galleryModalClose.addEventListener('click', closeGalleryModal);
-
-      // Close modal when clicking outside the image
-      galleryModal.addEventListener('click', function (e) {
-        if (e.target === galleryModal) {
-          closeGalleryModal();
-        }
-      });
-
-      // Close modal with Escape key
-      document.addEventListener('keydown', function (e) {
-        if (e.key === 'Escape' && galleryModal.classList.contains('active')) {
-          closeGalleryModal();
-        }
-      });
-    });
-
-    // Listen for hash changes
-    window.addEventListener('hashchange', parseHashAndLoad);
-  </script>
-
-  <script>
-    // Mobile menu toggle
-    document.addEventListener('DOMContentLoaded', function () {
-      const mobileMenuToggle = document.querySelector('.mobile-menu-toggle');
-      const navLinks = document.querySelector('.nav-links');
-
-      if (mobileMenuToggle) {
-        mobileMenuToggle.addEventListener('click', function () {
-          navLinks.classList.toggle('active');
-          const icon = this.querySelector('i');
-          if (navLinks.classList.contains('active')) {
-            icon.classList.remove('bi-list');
-            icon.classList.add('bi-x');
-          } else {
-            icon.classList.remove('bi-x');
-            icon.classList.add('bi-list');
-          }
-        });
-
-        // Close menu when clicking on a link
-        const menuLinks = navLinks.querySelectorAll('a');
-        menuLinks.forEach(link => {
-          link.addEventListener('click', function () {
-            navLinks.classList.remove('active');
-            const icon = mobileMenuToggle.querySelector('i');
-            icon.classList.remove('bi-x');
-            icon.classList.add('bi-list');
-          });
-        });
-      }
+      document.querySelector('.mobile-menu-toggle').onclick = () => {
+        document.querySelector('.nav-links').classList.toggle('active');
+      };
     });
   </script>
 </body>
-
 </html>
