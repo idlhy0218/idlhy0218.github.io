@@ -6,196 +6,174 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Heeyoung Lee - Curriculum Vitae">
     <title>CV - Heeyoung Lee</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-
-    <!-- Academic Newspaper Typography -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
     <link
-        href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&family=PT+Serif:ital,wght@0,400;0,700;1,400;1,700&display=swap"
+        href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap"
         rel="stylesheet">
-
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         :root {
-            /* FT Theme Colors */
-            --ft-paper: #FFF1E5;
-            --ft-card: #F2DFCE;
-            --ft-text-primary: #333333;
-            --ft-border: #333333;
-
-            /* Accent Palette */
-            --accent-teal: #0D7680;
-            --accent-claret: #990F3D;
-            --accent-dark: #262A33;
-
-            /* Typography */
-            --font-newspaper-headline: 'Libre Baskerville', serif;
-            --font-newspaper-body: 'PT Serif', serif;
-            --font-ui: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            --primary: #2563eb;
+            --primary-dark: #1e40af;
+            --text-primary: #1e293b;
+            --text-secondary: #64748b;
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8fafc;
+            --border: #e2e8f0;
+            --accent: #3b82f6;
         }
 
         body {
-            background-color: var(--ft-paper);
-            color: var(--ft-text-primary);
-            font-family: var(--font-newspaper-body);
-            line-height: 1.8;
+            font-family: 'Inter', sans-serif;
+            color: var(--text-primary);
+            background: var(--bg-secondary);
+            line-height: 1.6;
         }
 
-        /* Navbar: FT Paper Style */
-        .navbar {
-            background-color: var(--ft-paper);
-            border-bottom: 2px solid var(--ft-border);
-            padding: 1rem 0;
-        }
-
-        .navbar-brand {
-            font-family: var(--font-newspaper-headline);
-            color: var(--accent-dark) !important;
-            font-weight: 700;
-            font-size: 1.4rem;
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-        }
-
-        .navbar-logo {
-            height: 48px;
-            width: auto;
-            object-fit: contain;
-            background: transparent;
-        }
-
-        .nav-link {
-            font-family: var(--font-newspaper-headline);
-            color: var(--accent-claret) !important;
-            font-weight: 700;
-            font-size: 0.95rem;
-            padding: 0.5rem 1rem !important;
-            transition: color 0.3s ease;
-        }
-
-        .nav-link:hover {
-            color: var(--accent-dark) !important;
-        }
-
-        .nav-link.active {
-            color: var(--accent-dark) !important;
-            border-bottom: 2px solid var(--accent-claret);
-        }
-
-        .navbar-toggler {
-            border-color: var(--ft-border);
-        }
-
-        .navbar-toggler-icon {
-            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='%23333333' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
-        }
-
-        @media (max-width: 991.98px) {
-            .navbar-collapse {
-                background-color: var(--ft-card);
-                padding: 1rem;
-                margin-top: 1rem;
-                border: 1px solid var(--ft-border);
-            }
-        }
-
-        .content-section {
-            background: var(--ft-card);
-            border: 1px solid var(--ft-border);
-            border-radius: 0;
-            box-shadow: none;
-            padding: 2.5rem;
-            margin: 2rem auto;
-        }
-
-        .back-button {
-            font-family: var(--font-ui);
-            text-decoration: none;
-            color: #6c757d;
-            display: inline-flex;
-            align-items: center;
-            margin-bottom: 1.5rem;
-            padding: 0.5rem 1rem;
-            border-radius: 0;
-            transition: all 0.2s ease;
+        h1,
+        h2,
+        h3,
+        h4,
+        h5,
+        h6 {
+            font-family: 'Playfair Display', serif;
             font-weight: 600;
         }
 
-        .back-button:hover {
-            color: var(--accent-dark);
+        /* Navigation */
+        nav {
+            background: var(--bg-primary);
+            border-bottom: 1px solid var(--border);
+            padding: 1rem 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.35rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            text-decoration: none;
+        }
+
+        .logo img {
+            height: 40px;
+            width: auto;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 1.05rem;
+            transition: color 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .nav-links a:hover,
+        .nav-links a.active {
+            color: var(--primary);
+        }
+
+        /* Container */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 3rem 2rem;
+        }
+
+        .content-section {
+            background: var(--bg-primary);
+            border-radius: 12px;
+            padding: 3rem;
+            border: 1px solid var(--border);
+        }
+
+        .download-button {
+            background: var(--primary);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 6px;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.2s;
+            margin-bottom: 1.5rem;
+            font-weight: 600;
+            border: none;
+        }
+
+        .download-button:hover {
+            background: var(--primary-dark);
+            color: white;
         }
 
         .pdf-container {
             width: 100%;
             height: 800px;
-            border: 1px solid var(--ft-border);
-            border-radius: 0;
-            margin-top: 1rem;
-        }
-
-        .download-button {
-            font-family: var(--font-ui);
-            background-color: var(--accent-claret);
-            color: white;
-            padding: 0.75rem 1.5rem;
-            border-radius: 0;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            transition: all 0.2s ease;
-            margin-bottom: 1rem;
-            font-weight: 700;
-            border: 1px solid var(--accent-claret);
-        }
-
-        .download-button:hover {
-            background-color: var(--accent-dark);
-            border-color: var(--accent-dark);
-            color: white;
+            border: 1px solid var(--border);
+            border-radius: 8px;
         }
 
         @media (max-width: 768px) {
             .pdf-container {
                 height: 500px;
             }
+
+            .nav-links {
+                display: none;
+            }
         }
     </style>
 </head>
 
 <body>
-    <nav class="navbar navbar-expand-lg">
-        <div class="container">
-            <a class="navbar-brand" href="../index.html">
-                <img src="../images/logo image.png" alt="Logo" class="navbar-logo">
-                <span>Heeyoung Lee | Sociology</span>
+    <nav>
+        <div class="nav-container">
+            <a href="../index.html" class="logo">
+                <span>Heeyoung Lee</span>
             </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav">
-                    <li class="nav-item"><a class="nav-link" href="about.html"><i
-                                class="bi bi-person-lines-fill me-1"></i> About Me</a></li>
-                    <li class="nav-item"><a class="nav-link" href="publications.html"><i
-                                class="bi bi-file-earmark-text me-1"></i> Publications</a></li>
-                    <li class="nav-item"><a class="nav-link" href="teaching.html"><i class="bi bi-easel2 me-1"></i>
-                            Teaching</a></li>
-                    <li class="nav-item"><a class="nav-link" href="blog.html"><i class="bi bi-bar-chart-steps me-1"></i>
-                            Blog</a></li>
-                    <li class="nav-item"><a class="nav-link active" href="cv.html"><i class="bi bi-file-text me-1"></i>
-                            CV</a></li>
-                    <li class="nav-item"><a class="nav-link" href="contact.html"><i class="bi bi-envelope me-1"></i>
-                            Contact</a></li>
-                </ul>
-            </div>
+            <ul class="nav-links">
+                <li><a href="about.html"><i class="bi bi-person-lines-fill"></i> About</a></li>
+                <li><a href="publications.html"><i class="bi bi-file-earmark-text"></i> Publications</a></li>
+                <li><a href="teaching.html"><i class="bi bi-easel2"></i> Teaching</a></li>
+                <li><a href="blog.html"><i class="bi bi-bar-chart-steps"></i> Blog</a></li>
+                <li><a href="cv.html" class="active"><i class="bi bi-file-text"></i> CV</a></li>
+                <li><a href="contact.html"><i class="bi bi-envelope"></i> Contact</a></li>
+            </ul>
         </div>
     </nav>
 
-    <div class="container mt-4">
-
+    <div class="container">
         <div class="content-section">
             <a href="../pdf/Heeyoung_Lee_CV.pdf" download class="download-button">
                 <i class="bi bi-download"></i> Download CV
@@ -209,8 +187,6 @@
             </iframe>
         </div>
     </div>
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 
 </html>

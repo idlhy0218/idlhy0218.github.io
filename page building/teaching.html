@@ -8,158 +8,169 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
 
-    <!-- Academic Newspaper Typography -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
-        href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&family=PT+Serif:ital,wght@0,400;0,700;1,400;1,700&display=swap"
+        href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap"
         rel="stylesheet">
 
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         :root {
-            /* FT Theme Colors */
-            --ft-paper: #FFF1E5;
-            --ft-card: #F2DFCE;
-            --ft-text-primary: #333333;
-            --ft-border: #333333;
-
-            /* Accent Palette */
-            --accent-teal: #0D7680;
-            --accent-claret: #990F3D;
-            --accent-dark: #262A33;
-
-            /* Typography */
-            --font-newspaper-headline: 'Libre Baskerville', serif;
-            --font-newspaper-body: 'PT Serif', serif;
-            --font-ui: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            --primary: #2563eb;
+            --primary-dark: #1e40af;
+            --text-primary: #1e293b;
+            --text-secondary: #64748b;
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8fafc;
+            --border: #e2e8f0;
+            --accent: #3b82f6;
         }
 
         body {
-            background-color: var(--ft-paper);
-            color: var(--ft-text-primary);
-            font-family: var(--font-newspaper-body);
-            line-height: 1.8;
+            font-family: 'Inter', sans-serif;
+            color: var(--text-primary);
+            background: var(--bg-secondary);
+            line-height: 1.6;
         }
 
-        /* Navbar: FT Paper Style */
-        .navbar {
-            background-color: var(--ft-paper);
-            border-bottom: 2px solid var(--ft-border);
+        h1,
+        h2,
+        h3,
+        h4,
+        h5,
+        h6 {
+            font-family: 'Playfair Display', serif;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        /* Navigation */
+        nav {
+            background: var(--bg-primary);
+            border-bottom: 1px solid var(--border);
             padding: 1rem 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
         }
 
-        .navbar-brand {
-            font-family: var(--font-newspaper-headline);
-            color: var(--accent-dark) !important;
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.35rem;
             font-weight: 700;
-            font-size: 1.4rem;
+            color: var(--text-primary);
             display: flex;
             align-items: center;
             gap: 0.75rem;
+            text-decoration: none;
         }
 
-        .navbar-logo {
-            height: 48px;
+        .logo img {
+            height: 40px;
             width: auto;
-            object-fit: contain;
-            background: transparent;
         }
 
-        .nav-link {
-            font-family: var(--font-newspaper-headline);
-            color: var(--accent-claret) !important;
-            font-weight: 700;
-            font-size: 0.95rem;
-            padding: 0.5rem 1rem !important;
-            transition: color 0.3s ease;
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            list-style: none;
         }
 
-        .nav-link:hover {
-            color: var(--accent-dark) !important;
+        .nav-links a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 1.05rem;
+            transition: color 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
         }
 
-        .nav-link.active {
-            color: var(--accent-dark) !important;
-            border-bottom: 2px solid var(--accent-claret);
+        .nav-links a:hover,
+        .nav-links a.active {
+            color: var(--primary);
         }
 
-        .navbar-toggler {
-            border-color: var(--ft-border);
-        }
-
-        .navbar-toggler-icon {
-            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='%23333333' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
-        }
-
-        @media (max-width: 991.98px) {
-            .navbar-collapse {
-                background-color: var(--ft-card);
-                padding: 1rem;
-                margin-top: 1rem;
-                border: 1px solid var(--ft-border);
-            }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 3rem 2rem;
         }
 
         .section-container {
-            background: var(--ft-card);
-            border: 1px solid var(--ft-border);
-            border-radius: 0;
-            box-shadow: none;
-            padding: 2.5rem;
-            margin: 2rem auto;
+            background: var(--bg-primary);
+            border-radius: 12px;
+            padding: 3rem;
+            border: 1px solid var(--border);
         }
 
-        .course-card {
-            border-left: 3px solid var(--accent-teal);
-            padding: 1.5rem;
-            margin-bottom: 1.5rem;
-            background: var(--ft-paper);
-            border-radius: 0;
-        }
-
-        .course-title {
-            font-family: var(--font-newspaper-headline);
-            font-weight: 700;
-            color: var(--accent-claret);
-            margin-bottom: 0.5rem;
-            font-size: 1.25rem;
+        .nav-pills {
+            border-bottom: 2px solid var(--border);
+            gap: 0;
+            margin-bottom: 2rem;
         }
 
         .nav-pills .nav-link {
-            font-family: var(--font-newspaper-headline);
+            font-family: 'Inter', sans-serif;
             border: none;
             border-bottom: 2px solid transparent;
             border-radius: 0;
-            color: var(--ft-text-primary);
-            font-weight: 700;
+            color: var(--text-secondary);
+            font-weight: 600;
             padding: 0.75rem 1.5rem;
             background: transparent;
             transition: all 0.2s ease;
-            font-size: 0.95rem;
+            font-size: 1.1rem;
         }
 
         .nav-pills .nav-link:hover {
-            color: var(--accent-claret);
-            border-bottom-color: var(--accent-claret);
+            color: var(--primary);
+            border-bottom-color: var(--primary);
         }
 
         .nav-pills .nav-link.active {
-            color: var(--accent-claret);
-            border-bottom-color: var(--accent-claret);
+            color: var(--primary);
+            border-bottom-color: var(--primary);
             background: transparent;
         }
 
-        .back-link {
-            font-family: var(--font-ui);
-            color: #6c757d;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            font-weight: 600;
+        .course-card {
+            border-left: 3px solid var(--primary);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            background: var(--bg-secondary);
+            border-radius: 8px;
+            transition: all 0.2s ease;
         }
 
-        .back-link:hover {
-            color: var(--accent-dark);
+        .course-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.1);
+        }
+
+        .course-title {
+            font-family: 'Playfair Display', serif;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 0.5rem;
+            font-size: 1.25rem;
         }
 
         .chart-container {
@@ -169,53 +180,66 @@
         .comment-item {
             padding: 0.75rem;
             margin-bottom: 0.5rem;
-            background-color: rgba(255, 255, 255, 0.5);
-            border-radius: 0;
-            border-left: 2px solid var(--accent-teal);
+            background-color: rgba(255, 255, 255, 0.8);
+            border-radius: 6px;
+            border-left: 2px solid var(--primary);
         }
 
-        h6 {
-            font-family: var(--font-newspaper-headline);
-            color: var(--accent-dark);
-            font-weight: 700;
+        .nav-tabs .nav-link {
+            font-family: 'Inter', sans-serif;
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            border: 1px solid transparent;
+            border-radius: 6px 6px 0 0;
         }
 
-        small {
-            font-family: var(--font-ui);
+        .nav-tabs .nav-link:hover {
+            color: var(--primary);
+            border-color: var(--border);
+        }
+
+        .nav-tabs .nav-link.active {
+            color: var(--primary);
+            background-color: var(--bg-primary);
+            border-color: var(--border) var(--border) var(--bg-primary);
+        }
+
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+            }
+
+            .nav-pills {
+                flex-wrap: wrap;
+            }
+
+            .nav-pills .nav-link {
+                font-size: 0.9rem;
+                padding: 0.6rem 1rem;
+            }
         }
     </style>
 </head>
 
 <body>
-    <nav class="navbar navbar-expand-lg">
-        <div class="container">
-            <a class="navbar-brand" href="../index.html">
-                <img src="../images/logo image.png" alt="Logo" class="navbar-logo">
-                <span>Heeyoung Lee | Sociology</span>
+    <nav>
+        <div class="nav-container">
+            <a href="../index.html" class="logo">
+                <span>Heeyoung Lee</span>
             </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav">
-                    <li class="nav-item"><a class="nav-link" href="about.html"><i
-                                class="bi bi-person-lines-fill me-1"></i> About Me</a></li>
-                    <li class="nav-item"><a class="nav-link" href="publications.html"><i
-                                class="bi bi-file-earmark-text me-1"></i> Publications</a></li>
-                    <li class="nav-item"><a class="nav-link active" href="teaching.html"><i
-                                class="bi bi-easel2 me-1"></i> Teaching</a></li>
-                    <li class="nav-item"><a class="nav-link" href="blog.html"><i class="bi bi-bar-chart-steps me-1"></i>
-                            Blog</a></li>
-                    <li class="nav-item"><a class="nav-link" href="cv.html"><i class="bi bi-file-text me-1"></i> CV</a>
-                    </li>
-                    <li class="nav-item"><a class="nav-link" href="contact.html"><i class="bi bi-envelope me-1"></i>
-                            Contact</a></li>
-                </ul>
-            </div>
+            <ul class="nav-links">
+                <li><a href="about.html"><i class="bi bi-person-lines-fill"></i> About</a></li>
+                <li><a href="publications.html"><i class="bi bi-file-earmark-text"></i> Publications</a></li>
+                <li><a href="teaching.html" class="active"><i class="bi bi-easel2"></i> Teaching</a></li>
+                <li><a href="blog.html"><i class="bi bi-bar-chart-steps"></i> Blog</a></li>
+                <li><a href="cv.html"><i class="bi bi-file-text"></i> CV</a></li>
+                <li><a href="contact.html"><i class="bi bi-envelope"></i> Contact</a></li>
+            </ul>
         </div>
     </nav>
 
-    <div class="container mt-3">
+    <div class="container">
 
         <div class="section-container">
             <ul class="nav nav-pills mb-3" id="courseTabs" role="tablist">

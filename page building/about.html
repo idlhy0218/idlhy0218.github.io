@@ -5,42 +5,33 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>About - Heeyoung Lee</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-
-    <!-- Academic Newspaper Typography -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
     <link
-        href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&family=PT+Serif:ital,wght@0,400;0,700;1,400;1,700&display=swap"
+        href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap"
         rel="stylesheet">
-
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         :root {
-            /* FT Theme Colors */
-            --ft-paper: #FFF1E5;
-            --ft-card: #F2DFCE;
-            --ft-text-primary: #333333;
-            --ft-border: #333333;
-
-            /* Accent Palette */
-            --accent-teal: #0D7680;
-            --accent-claret: #990F3D;
-            --accent-dark: #262A33;
-
-            /* Typography */
-            --font-newspaper-headline: 'Libre Baskerville', serif;
-            --font-newspaper-body: 'PT Serif', serif;
-            --font-ui: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            --primary: #2563eb;
+            --primary-dark: #1e40af;
+            --text-primary: #1e293b;
+            --text-secondary: #64748b;
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8fafc;
+            --border: #e2e8f0;
+            --accent: #3b82f6;
         }
 
         body {
-            background-color: var(--ft-paper);
-            color: var(--ft-text-primary);
-            font-family: var(--font-newspaper-body);
-            line-height: 1.8;
-            margin: 0;
-            padding: 0;
+            font-family: 'Inter', sans-serif;
+            color: var(--text-primary);
+            background: var(--bg-secondary);
+            line-height: 1.6;
         }
 
         h1,
@@ -49,346 +40,356 @@
         h4,
         h5,
         h6 {
-            font-family: var(--font-newspaper-headline);
-            font-weight: 700;
-            color: var(--accent-dark);
+            font-family: 'Playfair Display', serif;
+            font-weight: 600;
         }
 
-        /* Navbar: FT Paper Style */
-        .navbar {
-            background-color: var(--ft-paper);
-            border-bottom: 2px solid var(--ft-border);
+        /* Navigation */
+        nav {
+            background: var(--bg-primary);
+            border-bottom: 1px solid var(--border);
             padding: 1rem 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
         }
 
-        .navbar-brand {
-            font-family: var(--font-newspaper-headline);
-            color: var(--accent-dark) !important;
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.35rem;
             font-weight: 700;
-            font-size: 1.4rem;
+            color: var(--text-primary);
             display: flex;
             align-items: center;
             gap: 0.75rem;
+            text-decoration: none;
         }
 
-        .navbar-logo {
-            height: 48px;
+        .logo img {
+            height: 40px;
             width: auto;
-            object-fit: contain;
-            background: transparent;
         }
 
-        .nav-link {
-            font-family: var(--font-newspaper-headline);
-            color: var(--accent-claret) !important;
-            font-weight: 700;
-            font-size: 0.95rem;
-            padding: 0.5rem 1rem !important;
-            transition: color 0.3s ease;
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            list-style: none;
         }
 
-        .nav-link:hover {
-            color: var(--accent-dark) !important;
+        .nav-links a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 1.05rem;
+            transition: color 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
         }
 
-        .nav-link.active {
-            color: var(--accent-dark) !important;
-            border-bottom: 2px solid var(--accent-claret);
+        .nav-links a:hover,
+        .nav-links a.active {
+            color: var(--primary);
         }
 
-        .navbar-toggler {
-            border-color: var(--ft-border);
-        }
-
-        .navbar-toggler-icon {
-            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='%23333333' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
-        }
-
-        @media (max-width: 991.98px) {
-            .navbar-collapse {
-                background-color: var(--ft-card);
-                padding: 1rem;
-                margin-top: 1rem;
-                border: 1px solid var(--ft-border);
-            }
+        /* Container */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 3rem 2rem;
         }
 
         .content-section {
-            background: var(--ft-card);
-            border: 1px solid var(--ft-border);
-            border-radius: 0;
-            box-shadow: none;
-            padding: 2.5rem;
-            margin: 2rem auto;
-        }
-
-        .info-card {
-            background: var(--ft-paper);
-            border: 1px solid rgba(51, 51, 51, 0.2);
-            border-radius: 0;
-            padding: 1.5rem;
-            margin-bottom: 1.5rem;
-            transition: border-color 0.2s ease;
-        }
-
-        .info-card:hover {
-            border-color: var(--ft-border);
-        }
-
-        .info-card h4 {
-            color: var(--accent-claret);
-            margin-bottom: 0.75rem;
-            font-weight: 700;
-            font-size: 1.25rem;
-        }
-
-        .info-card i {
-            color: var(--accent-teal);
-            margin-right: 0.5rem;
-        }
-
-        .info-card p {
-            color: var(--ft-text-primary);
-            margin-bottom: 0.5rem;
-        }
-
-        .info-card p strong {
-            color: var(--accent-dark);
-            font-weight: 700;
-        }
-
-        .info-card .text-muted-small {
-            font-family: var(--font-ui);
-            font-size: 0.9rem;
-            color: #6c757d;
-        }
-
-        .info-card ul {
-            color: var(--ft-text-primary);
-        }
-
-        .back-button {
-            font-family: var(--font-ui);
-            text-decoration: none;
-            color: #6c757d;
-            display: inline-flex;
-            align-items: center;
-            margin-bottom: 1.5rem;
-            font-weight: 600;
-            font-size: 0.95rem;
-        }
-
-        .back-button:hover {
-            color: var(--accent-dark);
-        }
-
-        .back-button i {
-            transition: transform 0.2s ease;
-        }
-
-        .back-button:hover i {
-            transform: translateX(-4px);
-        }
-
-        /* Tab Styling - FT Newspaper Style */
-        .nav-tabs {
-            border-bottom: 1px solid rgba(51, 51, 51, 0.2);
-            gap: 0;
-            margin-bottom: 2rem;
-        }
-
-        .nav-tabs .nav-link {
-            font-family: var(--font-newspaper-headline);
-            border: none;
-            border-bottom: 2px solid transparent;
-            border-radius: 0;
-            color: var(--ft-text-primary);
-            font-weight: 700;
-            padding: 0.75rem 1.5rem;
-            background: transparent;
-            transition: all 0.2s ease;
-            font-size: 0.95rem;
-        }
-
-        .nav-tabs .nav-link:hover {
-            color: var(--accent-claret);
-            border-bottom-color: var(--accent-claret);
-        }
-
-        .nav-tabs .nav-link.active {
-            color: var(--accent-claret);
-            border-bottom-color: var(--accent-claret);
-            background: transparent;
-        }
-
-        .nav-tabs .nav-link i {
-            margin-right: 0.5rem;
+            background: var(--bg-primary);
+            border-radius: 12px;
+            padding: 3rem;
+            border: 1px solid var(--border);
         }
 
         .lead {
-            font-size: 1.15rem;
-            color: var(--ft-text-primary);
+            font-size: 1.1rem;
+            color: var(--text-secondary);
             line-height: 1.8;
+            margin-bottom: 2rem;
+        }
+
+        /* Tabs */
+        .nav-tabs {
+            border-bottom: 2px solid var(--border);
+            gap: 0;
+            margin-bottom: 2rem;
+            display: flex;
+            list-style: none;
+            padding: 0;
+        }
+
+        .nav-tabs button {
+            font-family: 'Playfair Display', serif;
+            border: none;
+            border-bottom: 2px solid transparent;
+            background: transparent;
+            color: var(--text-secondary);
+            font-weight: 600;
+            padding: 0.75rem 1.5rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .nav-tabs button:hover {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+        }
+
+        .nav-tabs button.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Info Cards */
+        .info-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 2rem;
+            margin-bottom: 1.5rem;
+            transition: all 0.2s;
+        }
+
+        .info-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.1);
+        }
+
+        .info-card h4 {
+            color: var(--primary);
+            margin-bottom: 1rem;
+            font-weight: 600;
+            font-size: 1.25rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .info-card h4 i {
+            color: var(--accent);
+        }
+
+        .info-card p {
+            color: var(--text-primary);
+            margin-bottom: 0.75rem;
+            line-height: 1.7;
+        }
+
+        .info-card p strong {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        .info-card ul {
+            color: var(--text-primary);
+            padding-left: 1.5rem;
+            line-height: 1.8;
+        }
+
+        .text-muted-small {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            font-style: italic;
+        }
+
+        /* Responsive */
+        @media (max-width: 968px) {
+            .nav-links {
+                display: none;
+            }
+
+            .nav-tabs {
+                flex-wrap: wrap;
+            }
+
+            .nav-tabs button {
+                font-size: 0.9rem;
+                padding: 0.6rem 1rem;
+            }
         }
     </style>
 </head>
 
 <body>
-    <nav class="navbar navbar-expand-lg">
-        <div class="container">
-            <a class="navbar-brand" href="../index.html">
-                <img src="../images/logo image.png" alt="Logo" class="navbar-logo">
-                <span>Heeyoung Lee | Sociology</span>
+    <nav>
+        <div class="nav-container">
+            <a href="../index.html" class="logo">
+                <span>Heeyoung Lee</span>
             </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav">
-                    <li class="nav-item"><a class="nav-link active" href="about.html"><i
-                                class="bi bi-person-lines-fill me-1"></i> About Me</a></li>
-                    <li class="nav-item"><a class="nav-link" href="publications.html"><i
-                                class="bi bi-file-earmark-text me-1"></i> Publications</a></li>
-                    <li class="nav-item"><a class="nav-link" href="teaching.html"><i class="bi bi-easel2 me-1"></i>
-                            Teaching</a></li>
-                    <li class="nav-item"><a class="nav-link" href="blog.html"><i class="bi bi-bar-chart-steps me-1"></i>
-                            Blog</a></li>
-                    <li class="nav-item"><a class="nav-link" href="cv.html"><i class="bi bi-file-text me-1"></i> CV</a>
-                    </li>
-                    <li class="nav-item"><a class="nav-link" href="contact.html"><i class="bi bi-envelope me-1"></i>
-                            Contact</a></li>
-                </ul>
-            </div>
+            <ul class="nav-links">
+                <li><a href="about.html" class="active"><i class="bi bi-person-lines-fill"></i> About</a></li>
+                <li><a href="publications.html"><i class="bi bi-file-earmark-text"></i> Publications</a></li>
+                <li><a href="teaching.html"><i class="bi bi-easel2"></i> Teaching</a></li>
+                <li><a href="blog.html"><i class="bi bi-bar-chart-steps"></i> Blog</a></li>
+                <li><a href="cv.html"><i class="bi bi-file-text"></i> CV</a></li>
+                <li><a href="contact.html"><i class="bi bi-envelope"></i> Contact</a></li>
+            </ul>
         </div>
     </nav>
 
-    <div class="container mt-4">
-
+    <div class="container">
         <div class="content-section">
-            <p class="lead mb-4">I am a Ph.D. Candidate in Sociology at the University at Albany, SUNY. My research
+            <p class="lead">I am a Ph.D. Candidate in Sociology at the University at Albany, SUNY. My research
                 focuses on population health, criminology, and life-course analysis, with particular emphasis on spatial
                 methods and longitudinal analysis.</p>
 
-            <ul class="nav nav-tabs mb-4" id="aboutTabs" role="tablist">
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link active" id="research-tab" data-bs-toggle="tab" data-bs-target="#research"
-                        type="button" role="tab" aria-controls="research" aria-selected="true">
-                        <i class="bi bi-graph-up me-1"></i> Research Interests
+            <ul class="nav-tabs" role="tablist">
+                <li role="presentation">
+                    <button class="active" data-tab="research">
+                        <i class="bi bi-graph-up"></i> Research Interests
                     </button>
                 </li>
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="teaching-tab" data-bs-toggle="tab" data-bs-target="#teaching"
-                        type="button" role="tab" aria-controls="teaching" aria-selected="false">
-                        <i class="bi bi-book me-1"></i> Teaching
+                <li role="presentation">
+                    <button data-tab="teaching">
+                        <i class="bi bi-book"></i> Teaching
                     </button>
                 </li>
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="service-tab" data-bs-toggle="tab" data-bs-target="#service"
-                        type="button" role="tab" aria-controls="service" aria-selected="false">
-                        <i class="bi bi-people me-1"></i> Service
+                <li role="presentation">
+                    <button data-tab="service">
+                        <i class="bi bi-people"></i> Service
                     </button>
                 </li>
             </ul>
 
-            <div class="tab-content" id="aboutTabsContent">
-                <div class="tab-pane fade show active" id="research" role="tabpanel" aria-labelledby="research-tab">
-                    <div class="info-card">
-                        <h4><i class="bi bi-heart-pulse"></i>Population Health & Life-Course</h4>
-                        <p class="mb-2"><strong>Focus:</strong> Health Inequalities and Social Determinants</p>
-                        <p>Investigating temporal and spatial dimensions of health inequalities. My work examines how
-                            life-course events and neighborhood contexts shape health outcomes across different
-                            populations, with particular attention to racial and socioeconomic disparities in health.
-                        </p>
-                    </div>
-
-                    <div class="info-card">
-                        <h4><i class="bi bi-journal-text"></i>Crime and Deviance</h4>
-                        <p class="mb-2"><strong>Focus:</strong> Youth Development and Violence</p>
-                        <p>Studying adolescent behavior, sexual violence, and the effects of police interactions on
-                            youth development. My research incorporates both quantitative and spatial approaches to
-                            understanding crime patterns and their societal impacts.</p>
-                    </div>
-
-                    <div class="info-card">
-                        <h4><i class="bi bi-bar-chart-line"></i>Methods</h4>
-                        <p class="mb-2"><strong>Focus:</strong> Longitudinal and Spatial Analysis</p>
-                        <p>Specializing in longitudinal methods, spatial analysis, and advanced statistical techniques
-                            using R, STATA, and ArcGIS to analyze complex social phenomena through quantitative
-                            methodologies.</p>
-                    </div>
+            <div class="tab-content active" id="research">
+                <div class="info-card">
+                    <h4><i class="bi bi-heart-pulse"></i>Population Health & Life-Course</h4>
+                    <p><strong>Focus:</strong> Health Inequalities and Social Determinants</p>
+                    <p>Investigating temporal and spatial dimensions of health inequalities. My work examines how
+                        life-course events and neighborhood contexts shape health outcomes across different
+                        populations, with particular attention to racial and socioeconomic disparities in health.
+                    </p>
                 </div>
 
-                <div class="tab-pane fade" id="teaching" role="tabpanel" aria-labelledby="teaching-tab">
-
-                    <div class="info-card">
-                        <h4><i class="bi bi-book-half"></i>Medical Sociology</h4>
-                        <p class="mb-2"><strong>Role:</strong> Instructor of Record</p>
-                        <p class="text-muted-small mb-2">Fall 2025, Spring 2025, Fall 2024, Summer 2024</p>
-                        <p>Developed and delivered comprehensive curriculum covering social determinants of health,
-                            healthcare systems, and medical institutions.</p>
-                    </div>
-
-                    <div class="info-card">
-                        <h4><i class="bi bi-book-half"></i>Criminology</h4>
-                        <p class="mb-2"><strong>Role:</strong> Instructor of Record</p>
-                        <p class="text-muted-small mb-2">Fall 2025, Summer 2025</p>
-                        <p>Taught foundational theories of criminology, covering the social roots of crime, deviance,
-                            and the justice system.</p>
-                    </div>
-
-                    <div class="info-card">
-                        <h4><i class="bi bi-calculator"></i>Statistics for Sociologists</h4>
-                        <p class="mb-2"><strong>Role:</strong> Co-Instructor</p>
-                        <p class="text-muted-small mb-2">Spring 2023</p>
-                        <p>Collaborated in teaching statistical methods, research design, and data analysis using R and
-                            STATA.</p>
-                    </div>
-
-                    <div class="info-card">
-                        <h4><i class="bi bi-person-video3"></i>Summer Seminar on Population</h4>
-                        <p class="mb-2"><strong>Role:</strong> Teaching Assistant</p>
-                        <p class="text-muted-small mb-2">Summer 2025</p>
-                        <p>Assisted with The 12th KOSTAT-UNFPA Summer Seminar, supporting instruction on global
-                            population dynamics.</p>
-                    </div>
+                <div class="info-card">
+                    <h4><i class="bi bi-journal-text"></i>Crime and Deviance</h4>
+                    <p><strong>Focus:</strong> Youth Development and Violence</p>
+                    <p>Studying adolescent behavior, sexual violence, and the effects of police interactions on
+                        youth development. My research incorporates both quantitative and spatial approaches to
+                        understanding crime patterns and their societal impacts.</p>
                 </div>
 
-                <div class="tab-pane fade" id="service" role="tabpanel" aria-labelledby="service-tab">
-                    <div class="info-card">
-                        <h4><i class="bi bi-journal-check"></i>Peer Review</h4>
-                        <p>Regular reviewer for journals including:</p>
-                        <ul class="mb-0 mt-2" style="padding-left: 1.2rem;">
-                            <li>Social Science and Research</li>
-                            <li>Population Research and Policy Review</li>
-                            <li>Socius</li>
-                            <li>Society and Mental Health</li>
-                            <li>American Journal of Preventive Medicine Focus</li>
-                            <li>Journal of Homosexuality</li>
-                        </ul>
-                    </div>
+                <div class="info-card">
+                    <h4><i class="bi bi-bar-chart-line"></i>Methods</h4>
+                    <p><strong>Focus:</strong> Longitudinal and Spatial Analysis</p>
+                    <p>Specializing in longitudinal methods, spatial analysis, and advanced statistical techniques
+                        using R, STATA, and ArcGIS to analyze complex social phenomena through quantitative
+                        methodologies.</p>
+                </div>
+            </div>
 
-                    <div class="info-card">
-                        <h4><i class="bi bi-people-fill"></i>Academic Leadership</h4>
-                        <p class="mb-2"><strong>Role:</strong> Founding Member, Quantitative Research Group (QRG)</p>
-                        <p>Lead methodology workshops and research presentations at University at Albany, SUNY,
-                            fostering collaborative learning and research development among graduate students
-                            (2023-2025).</p>
-                    </div>
+            <div class="tab-content" id="teaching">
+                <div class="info-card">
+                    <h4><i class="bi bi-book-half"></i>Medical Sociology</h4>
+                    <p><strong>Role:</strong> Instructor of Record</p>
+                    <p class="text-muted-small">Fall 2025, Spring 2025, Fall 2024, Summer 2024</p>
+                    <p>Developed and delivered comprehensive curriculum covering social determinants of health,
+                        healthcare systems, and medical institutions.</p>
+                </div>
 
-                    <div class="info-card">
-                        <h4><i class="bi bi-building"></i>Professional Memberships</h4>
-                        <ul class="mb-0" style="padding-left: 1.2rem;">
-                            <li>American Sociological Association (ASA)</li>
-                            <li>International Sociological Association (ISA)</li>
-                            <li>Korean Sociological Association (KSA)</li>
-                        </ul>
-                    </div>
+                <div class="info-card">
+                    <h4><i class="bi bi-book-half"></i>Criminology</h4>
+                    <p><strong>Role:</strong> Instructor of Record</p>
+                    <p class="text-muted-small">Fall 2025, Summer 2025</p>
+                    <p>Taught foundational theories of criminology, covering the social roots of crime, deviance,
+                        and the justice system.</p>
+                </div>
+
+                <div class="info-card">
+                    <h4><i class="bi bi-calculator"></i>Statistics for Sociologists</h4>
+                    <p><strong>Role:</strong> Co-Instructor</p>
+                    <p class="text-muted-small">Spring 2023</p>
+                    <p>Collaborated in teaching statistical methods, research design, and data analysis using R and
+                        STATA.</p>
+                </div>
+
+                <div class="info-card">
+                    <h4><i class="bi bi-person-video3"></i>Summer Seminar on Population</h4>
+                    <p><strong>Role:</strong> Teaching Assistant</p>
+                    <p class="text-muted-small">Summer 2025</p>
+                    <p>Assisted with The 12th KOSTAT-UNFPA Summer Seminar, supporting instruction on global
+                        population dynamics.</p>
+                </div>
+            </div>
+
+            <div class="tab-content" id="service">
+                <div class="info-card">
+                    <h4><i class="bi bi-journal-check"></i>Peer Review</h4>
+                    <p>Regular reviewer for journals including:</p>
+                    <ul>
+                        <li>Social Science and Research</li>
+                        <li>Population Research and Policy Review</li>
+                        <li>Socius</li>
+                        <li>Society and Mental Health</li>
+                        <li>American Journal of Preventive Medicine Focus</li>
+                        <li>Journal of Homosexuality</li>
+                    </ul>
+                </div>
+
+                <div class="info-card">
+                    <h4><i class="bi bi-people-fill"></i>Academic Leadership</h4>
+                    <p><strong>Role:</strong> Founding Member, Quantitative Research Group (QRG)</p>
+                    <p>Lead methodology workshops and research presentations at University at Albany, SUNY,
+                        fostering collaborative learning and research development among graduate students
+                        (2023-2025).</p>
+                </div>
+
+                <div class="info-card">
+                    <h4><i class="bi bi-building"></i>Professional Memberships</h4>
+                    <ul>
+                        <li>American Sociological Association (ASA)</li>
+                        <li>International Sociological Association (ISA)</li>
+                        <li>Korean Sociological Association (KSA)</li>
+                    </ul>
                 </div>
             </div>
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Tab functionality
+        document.querySelectorAll('.nav-tabs button').forEach(button => {
+            button.addEventListener('click', () => {
+                // Remove active class from all buttons and contents
+                document.querySelectorAll('.nav-tabs button').forEach(btn => btn.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+
+                // Add active class to clicked button
+                button.classList.add('active');
+
+                // Show corresponding content
+                const tabId = button.getAttribute('data-tab');
+                document.getElementById(tabId).classList.add('active');
+            });
+        });
+    </script>
 </body>
 
 </html>
