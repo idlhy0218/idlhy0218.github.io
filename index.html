@@ -9,6 +9,7 @@
     <link
         href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
         rel="stylesheet">
+    <script src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -377,6 +378,15 @@
             font-style: italic;
         }
 
+        /* Network Graph Container */
+        #network-container {
+            width: 100%;
+            height: 600px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: #ffffff;
+        }
+
         /* Responsive */
         @media (max-width: 968px) {
             .row {
@@ -421,6 +431,10 @@
 
             nav {
                 position: relative;
+            }
+
+            #network-container {
+                height: 400px;
             }
         }
 
@@ -498,7 +512,7 @@
                 <div class="contact-info">
                     <p>
                         <i class="bi bi-envelope-fill"></i>
-                        <span>hlee25@albany.edu</span>
+                        <span><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="670f0b0202555227060b0506091e49020312">[email&#160;protected]</a></span>
                     </p>
                     <p>
                         <i class="bi bi-mortarboard-fill"></i>
@@ -537,6 +551,15 @@
                     <p>My work investigates the <span style="color: darkred;">unequal distribution of health and crime</span> across temporal and spatial dimensions, specifically examining how socio-ecological factors shape these outcomes. I employ advanced quantitative methods, including multilevel modeling, spatial analysis, and longitudinal techniques, to understand these complex social processes.</p>
 
                     <p>I have published in leading journals including the <i>American Journal of Preventive Medicine</i>, <i>The Journals of Gerontology</i>, <i>Society and Mental Health</i>, <i>Journal of Adolescence</i>, <i>Population Research & Policy Review</i>, <i>Child Abuse and Neglect</i>, and <i>Criminal Justice and Behavior</i>.</p>
+                </div>
+
+                <!-- Research Network -->
+                <div class="card">
+                    <h2>My Research Network</h2>
+                    <p style="color: var(--text-secondary); margin-bottom: 1.5rem;">
+                        Interactive visualization of my research publications connected by shared keywords and themes. Hover over nodes to see details.
+                    </p>
+                    <div id="network-container"></div>
                 </div>
 
                 <!-- Academic Growth -->
@@ -669,7 +692,7 @@
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
         // Scholar Metrics Data
         const scholarData = {
@@ -839,7 +862,235 @@
                     }
                 }
             });
+
+            // Research Network Graph
+            initializeNetworkGraph();
         });
+
+        // Research Network Graph
+        function initializeNetworkGraph() {
+            const publications = [
+                {
+                    id: 'pub1',
+                    title: 'County Educational Composition & Mortality',
+                    shortTitle: 'Education & Mortality',
+                    year: 2025,
+                    keywords: ['education', 'neighborhood', 'health-disparity']
+                },
+                {
+                    id: 'pub2',
+                    title: 'Unequal Spillover of Human Capital',
+                    shortTitle: 'Education Spillover',
+                    year: 2025,
+                    keywords: ['education', 'neighborhood', 'health-disparity']
+                },
+                {
+                    id: 'pub3',
+                    title: 'Police Killing & Adolescents Self-Concept',
+                    shortTitle: 'Police Violence & Youth',
+                    year: 2025,
+                    keywords: ['police-violence', 'adolescent', 'race', 'neighborhood']
+                },
+                {
+                    id: 'pub4',
+                    title: 'Coming Out & Depression in South Korea',
+                    shortTitle: 'Coming Out & Depression',
+                    year: 2025,
+                    keywords: ['LGBTQ', 'mental-health', 'coming-out', 'health-disparity']
+                },
+                {
+                    id: 'pub5',
+                    title: 'Opioid Use Disorder Among Older Adults',
+                    shortTitle: 'Opioid & Aging',
+                    year: 2025,
+                    keywords: ['opioid', 'aging', 'neighborhood', 'health-disparity']
+                },
+                {
+                    id: 'pub6',
+                    title: 'LGBTQ Movement Coalition Building',
+                    shortTitle: 'LGBTQ Movement',
+                    year: 2025,
+                    keywords: ['LGBTQ', 'social-movement', 'network-analysis']
+                },
+                {
+                    id: 'pub7',
+                    title: 'Black-White Mental Health Paradox',
+                    shortTitle: 'Mental Health Paradox',
+                    year: 2024,
+                    keywords: ['race', 'mental-health', 'neighborhood', 'health-disparity']
+                },
+                {
+                    id: 'pub8',
+                    title: 'Structural Sexism & Sexual Violence',
+                    shortTitle: 'Sexism & Violence',
+                    year: 2024,
+                    keywords: ['gender', 'sexual-violence', 'adolescent']
+                },
+                {
+                    id: 'pub9',
+                    title: 'Puberty & Delinquency',
+                    shortTitle: 'Puberty & Delinquency',
+                    year: 2024,
+                    keywords: ['delinquency', 'puberty', 'adolescent']
+                },
+                {
+                    id: 'pub10',
+                    title: 'Sexual Harassment in Film Industry',
+                    shortTitle: 'Film Industry Harassment',
+                    year: 2024,
+                    keywords: ['sexual-violence', 'workplace', 'film-industry']
+                },
+                {
+                    id: 'pub11',
+                    title: 'LGBTQ Youth Coming Out Patterns',
+                    shortTitle: 'Youth Coming Out',
+                    year: 2023,
+                    keywords: ['LGBTQ', 'LCA', 'coming-out']
+                },
+                {
+                    id: 'pub12',
+                    title: 'Democratic Response to COVID-19',
+                    shortTitle: 'COVID-19 & Democracy',
+                    year: 2021,
+                    keywords: ['COVID-19', 'medical-system', 'bio-politics']
+                },
+                {
+                    id: 'pub13',
+                    title: 'Premature Girls in 1960s-70s',
+                    shortTitle: 'Premature Girls',
+                    year: 2019,
+                    keywords: ['gender', 'historical-analysis', 'puberty']
+                },
+                {
+                    id: 'pub14',
+                    title: 'Child Development & Nation-State',
+                    shortTitle: 'Child Development',
+                    year: 2019,
+                    keywords: ['nationalism', 'historical-analysis', 'puberty']
+                }
+            ];
+
+            const allKeywords = [...new Set(publications.flatMap(p => p.keywords))];
+
+            const nodes = [];
+            const edges = [];
+
+            // Add publication nodes (primary blue circles)
+            publications.forEach(pub => {
+                nodes.push({
+                    id: pub.id,
+                    label: pub.shortTitle,
+                    title: `${pub.title} (${pub.year})`,
+                    group: 'publication',
+                    color: {
+                        background: '#2563eb',
+                        border: '#000000',
+                        highlight: {
+                            background: '#1e40af',
+                            border: '#000000'
+                        },
+                        hover: {
+                            background: '#1e40af',
+                            border: '#000000'
+                        }
+                    },
+                    size: 25,
+                    shape: 'dot',
+                    font: { size: 13, color: '#1e293b', face: 'Inter' }
+                });
+
+                pub.keywords.forEach(keyword => {
+                    edges.push({
+                        from: pub.id,
+                        to: keyword,
+                        color: { 
+                            color: '#a9a9a9', 
+                            opacity: 0.7,
+                            highlight: '#000000',
+                            hover: '#a9a9a9'
+                        },
+                        width: 2,
+                        smooth: {
+                            smooth: false
+                        }
+                    });
+                });
+            });
+
+            // Add keyword nodes (light gray circles) - size based on number of connections
+            allKeywords.forEach(keyword => {
+                // Count how many publications use this keyword
+                const connectionCount = publications.filter(p => p.keywords.includes(keyword)).length;
+                // Size scales with connections: base 10 + 3 per connection
+                const nodeSize = 10 + (connectionCount * 3);
+                
+                nodes.push({
+                    id: keyword,
+                    label: `#${keyword}`,
+                    title: `${keyword} (${connectionCount} publications)`,
+                    group: 'keyword',
+                    color: {
+                        background: '#8b0000',
+                        border: '#000000',
+                        highlight: {
+                            background: '#8b0000',
+                            border: '#000000'
+                        },
+                        hover: {
+                            background: '#8b0000',
+                            border: '#000000'
+                        }
+                    },
+                    size: nodeSize,
+                    shape: 'dot',
+                    font: { size: 11, color: '#64748b', face: 'Inter' }
+                });
+            });
+
+            const container = document.getElementById('network-container');
+            const data = { nodes: nodes, edges: edges };
+            const options = {
+                physics: {
+                    enabled: true,
+                    barnesHut: {
+                        gravitationalConstant: -2000,
+                        centralGravity: 0.3,
+                        springLength: 120,
+                        springConstant: 0.04,
+                        damping: 0.09,
+                        avoidOverlap: 0.3
+                    },
+                    stabilization: {
+                        iterations: 150
+                    }
+                },
+                interaction: {
+                    hover: true,
+                    tooltipDelay: 100
+                },
+                nodes: {
+                    borderWidth: 2,
+                    borderWidthSelected: 3,
+                    shadow: {
+                        enabled: true,
+                        color: 'rgba(0,0,0,0.1)',
+                        size: 8,
+                        x: 0,
+                        y: 2
+                    },
+                    shapeProperties: {
+                        interpolation: true
+                    }
+                },
+                edges: {
+                    smooth: {
+                        smooth: false
+                    }
+                }
+            };
+
+            new vis.Network(container, data, options);
+        }
     </script>
 
     <script>
@@ -861,7 +1112,6 @@
                     }
                 });
 
-                // Close menu when clicking on a link
                 const menuLinks = navLinks.querySelectorAll('a');
                 menuLinks.forEach(link => {
                     link.addEventListener('click', function () {
