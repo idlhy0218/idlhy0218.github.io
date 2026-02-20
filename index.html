@@ -6,9 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Heeyoung Lee - Sociology Researcher</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
-    <link
-        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
-        rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
     <style>
         * {
@@ -546,18 +544,28 @@
                 <!-- About -->
                 <div class="card">
                     <h2>About Me</h2>
-                    <p>I am a Ph.D. Candidate in Sociology at the University at Albany, SUNY. My research focuses on population health, crime and deviance, and the intersection of neighborhood and life-course perspectives, with a particular emphasis on longitudinal and spatial methods.</p>
+                    <p>I am a Ph.D. Candidate in Sociology at the University at Albany, SUNY. My research focuses on
+                        population health, crime and deviance, and the intersection of neighborhood and life-course
+                        perspectives, with a particular emphasis on longitudinal and spatial methods.</p>
 
-                    <p>My work investigates the <span style="color: darkred;">unequal distribution of health and crime</span> across temporal and spatial dimensions, specifically examining how socio-ecological factors shape these outcomes. I employ advanced quantitative methods, including multilevel modeling, spatial analysis, and longitudinal techniques, to understand these complex social processes.</p>
+                    <p>My work investigates the <span style="color: darkred;">unequal distribution of health and
+                            crime</span> across temporal and spatial dimensions, specifically examining how
+                        socio-ecological factors shape these outcomes. I employ advanced quantitative methods, including
+                        multilevel modeling, spatial analysis, and longitudinal techniques, to understand these complex
+                        social processes.</p>
 
-                    <p>I have published in leading journals including the <i>American Journal of Preventive Medicine</i>, <i>The Journals of Gerontology</i>, <i>Society and Mental Health</i>, <i>Journal of Adolescence</i>, <i>Population Research & Policy Review</i>, <i>Child Abuse and Neglect</i>, and <i>Criminal Justice and Behavior</i>.</p>
+                    <p>I have published in leading journals including the <i>American Journal of Preventive
+                            Medicine</i>, <i>The Journals of Gerontology</i>, <i>Society and Mental Health</i>,
+                        <i>Journal of Adolescence</i>, <i>Population Research & Policy Review</i>, <i>Child Abuse and
+                            Neglect</i>, and <i>Criminal Justice and Behavior</i>.</p>
                 </div>
 
                 <!-- Research Network -->
                 <div class="card">
                     <h2>My Research Network</h2>
                     <p style="color: var(--text-secondary); margin-bottom: 1.5rem;">
-                        Interactive visualization of my research publications connected by shared keywords and themes. Zoom in and hover over nodes to see details.
+                        Interactive visualization of my research publications connected by shared keywords and themes.
+                        Zoom in and hover over nodes to see details.
                     </p>
                     <div id="network-container"></div>
                 </div>
@@ -567,7 +575,7 @@
                     <h2>My Academic Growth</h2>
                     <div class="stats-grid">
                         <div class="stat-card">
-                            <div class="stat-value" id="totalCitations">28</div>
+                            <div class="stat-value" id="totalCitations">31</div>
                             <div class="stat-label">Citations</div>
                         </div>
                         <div class="stat-card">
@@ -692,18 +700,19 @@
         </div>
     </div>
 
-    <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
         // Scholar Metrics Data
         const scholarData = {
             summary: {
-                totalCitations: 28,
+                totalCitations: 31,
                 totalPublications: 14,
                 hIndex: 4,
                 i10Index: 0
             },
             years: [2020, 2021, 2022, 2023, 2024, 2025, 2026],
-            citations: [1, 1, 2, 4, 9, 24, 28],
+            citations: [1, 1, 2, 4, 9, 24, 31],
             publications: [2, 3, 3, 4, 8, 14, 14]
         };
 
@@ -1003,8 +1012,8 @@
                     edges.push({
                         from: pub.id,
                         to: keyword,
-                        color: { 
-                            color: '#a9a9a9', 
+                        color: {
+                            color: '#a9a9a9',
                             opacity: 0.7,
                             highlight: '#000000',
                             hover: '#a9a9a9'
@@ -1023,7 +1032,7 @@
                 const connectionCount = publications.filter(p => p.keywords.includes(keyword)).length;
                 // Size scales with connections: base 10 + 3 per connection
                 const nodeSize = 10 + (connectionCount * 3);
-                
+
                 nodes.push({
                     id: keyword,
                     label: `#${keyword}`,
