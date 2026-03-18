@@ -35,7 +35,7 @@ library(broom)
 
 In statistical analysis, "controlling" for a variable means accounting for its effect when examining the relationship between other variables. This helps us understand the true relationship between an independent variable (X) and a dependent variable (Y) by removing the influence of potentially confounding factors (Z). As a result, when we interpret the coefficient of X, we can say *"after considering the relationship between Z and X as well as Z and Y, the estimated effect of X on Y is..."*
 
-![Confounding Variable](C:/Users/User/OneDrive/R FILE/image/confounding variable.png)
+![Confounding Variable](C:/Users/User/OneDrive/Github Desktop/idlhy0218.github.io/images/control variable.png)
 
 
 Mathematically, we move from a simple bivariate model:

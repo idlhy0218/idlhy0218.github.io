@@ -31,7 +31,7 @@ In 1854, London faced a devastating cholera outbreak in Soho. The prevailing the
 
 Snow found his natural experiment: two water companies served the same neighborhoods. The Lambeth Company had recently moved its water intake upstream (away from sewage), while Southwark & Vauxhall continued drawing contaminated water. Crucially, households on the same street received water from different companies based on historical contracts—not health or wealth.
 
-![**Figure 1.** Water Supply of the Southwark and Vauxhall and Lambeth Companies, London, 1855. This map shows neighborhoods supplied by two different water companies. People consuming water from the Southwark and Vauxhall Company (blue) became ill with cholera, while those consuming water from the Lambeth Company (pink) did not. Thus, the water supply, not social class or behavior, caused the disease. (source: https://www.cooperhewitt.org/)](C:/Users/User/OneDrive/R FILE/Github Blog Posts/image/cholera map2.jpeg)
+![**Figure 1.** Water Supply of the Southwark and Vauxhall and Lambeth Companies, London, 1855. This map shows neighborhoods supplied by two different water companies. People consuming water from the Southwark and Vauxhall Company (blue) became ill with cholera, while those consuming water from the Lambeth Company (pink) did not. Thus, the water supply, not social class or behavior, caused the disease. (source: https://www.cooperhewitt.org/2021/12/10/john-snows-cholera-maps/)](C:/Users/User/OneDrive/Github Desktop/idlhy0218.github.io/images/cholera map.jpg)
 
 ```{r library-imports, message=FALSE, warning=FALSE}
 library(HistData)
