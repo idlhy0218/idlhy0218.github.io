@@ -1,0 +1,669 @@
+---
+title: "Understanding Decomposition Methods: Kitagawa and Oaxaca-Blinder"
+author: "Heeyoung Lee"
+date: "March 17, 2026"
+format: 
+  html:
+    theme: cosmo
+    css: custom.css
+    page-layout: full
+    code-fold: true
+    code-tools: true
+    toc: true
+    toc-depth: 5
+    toc-location: left
+    self-contained: true
+    fig-width: 8
+    fig-height: 6
+    fig-dpi: 300
+    smooth-scroll: true
+    highlight-style: github
+---
+
+## Understanding Decomposition Methods: Kitagawa and Oaxaca-Blinder
+
+Imagine you are comparing two groups — say, U.S.-born and foreign-born adults — and you find that their mortality rates differ. The natural next question is: **why?** Is it because immigrants are younger on average (a compositional difference)? Or is it because immigrants at each age actually have lower mortality rates (a rate difference)? Or both?
+
+This is exactly the kind of question **decomposition methods** are designed to answer. In this post, I walk through two of the most widely used decomposition approaches in population health research:
+
+- **Kitagawa decomposition** (1955): A demographic approach for decomposing differences in *rates*
+- **Oaxaca-Blinder decomposition** (1973): A regression-based approach for decomposing differences in *means*
+
+Both methods share the same intuition — any gap between two groups can be broken into a **composition part** and a **rate/coefficient part** — but they differ in how they get there and what they can handle.
+
+---
+
+## 1. The Core Intuition
+
+### Why We Need Decomposition
+
+Suppose we observe:
+
+- U.S.-born adults: mortality rate = **12 per 1,000**
+- Foreign-born adults: mortality rate = **8 per 1,000**
+
+A raw gap of **4 per 1,000** exists. But this gap could stem from multiple sources:
+
+1. **Composition**: Foreign-born adults tend to be younger, and younger people have lower mortality regardless of nativity
+2. **Rates**: Even within the same age group, foreign-born adults may have lower mortality (e.g., due to the healthy immigrant effect)
+
+Without decomposition, we cannot distinguish these two explanations. With decomposition, we can quantify each contribution precisely.
+
+---
+
+## 2. Kitagawa Decomposition
+
+### 2.1 The Setup
+
+The Kitagawa method applies when:
+
+- You have a summary rate (e.g., overall mortality rate) for two groups
+- The rate is computed as a **weighted average of subgroup-specific rates**
+- Subgroups are defined by a categorical variable (e.g., age groups, education levels)
+
+In our running example:
+
+- **Groups**: U.S.-born ($A$) vs. foreign-born ($B$) adults
+- **Subgroups**: Age groups (e.g., 18-39, 40-59, 60+)
+- **Summary measure**: Overall mortality rate
+
+The overall mortality rate for group $A$ is:
+
+$$\bar{R}_A = \sum_i P_{iA} \cdot r_{iA}$$
+
+Where:
+
+- $P_{iA}$ = proportion of group $A$ in age group $i$ (composition)
+- $r_{iA}$ = mortality rate of group $A$ in age group $i$ (rate)
+
+Same for group $B$: $\bar{R}_B = \sum_i P_{iB} \cdot r_{iB}$
+
+### 2.2 The Decomposition Formula
+
+The gap between the two groups is:
+
+$$\bar{R}_A - \bar{R}_B = \underbrace{\sum_i r_i^* (P_{iA} - P_{iB})}_{\text{Composition Effect}} + \underbrace{\sum_i P_i^* (r_{iA} - r_{iB})}_{\text{Rate Effect}}$$
+
+Where:
+
+- $r_i^* = \frac{r_{iA} + r_{iB}}{2}$ — the **average rate** in subgroup $i$ across both groups (reference rate)
+- $P_i^* = \frac{P_{iA} + P_{iB}}{2}$ — the **average proportion** in subgroup $i$ across both groups (reference composition)
+
+### 2.3 Step-by-Step Numeric Walkthrough
+
+To make the formula concrete, let's compute the decomposition by hand using our simulated data before running the R code.
+
+**Our data:**
+
+| Age Group | $P_{iA}$ (US-born) | $P_{iB}$ (Foreign-born) | $r_{iA}$ (US-born) | $r_{iB}$ (Foreign-born) |
+|-----------|---------|------------|--------|-----------|
+| 18–39 | 0.30 | 0.45 | 1.5 | 1.0 |
+| 40–59 | 0.40 | 0.38 | 6.0 | 4.5 |
+| 60+   | 0.30 | 0.17 | 30.0 | 25.0 |
+
+**Step 1: Compute the overall rates.**
+
+$$\bar{R}_A = (0.30 \times 1.5) + (0.40 \times 6.0) + (0.30 \times 30.0) = 0.45 + 2.40 + 9.00 = 11.85$$
+
+$$\bar{R}_B = (0.45 \times 1.0) + (0.38 \times 4.5) + (0.17 \times 25.0) = 0.45 + 1.71 + 4.25 = 6.41$$
+
+$$\text{Total gap} = 11.85 - 6.41 = 5.44 \text{ per 1,000}$$
+
+**Step 2: Compute reference rates ($r_i^*$) and reference proportions ($P_i^*$).**
+
+$$r_{18-39}^* = \frac{1.5 + 1.0}{2} = 1.25, \quad r_{40-59}^* = \frac{6.0 + 4.5}{2} = 5.25, \quad r_{60+}^* = \frac{30.0 + 25.0}{2} = 27.5$$
+
+$$P_{18-39}^* = \frac{0.30 + 0.45}{2} = 0.375, \quad P_{40-59}^* = \frac{0.40 + 0.38}{2} = 0.390, \quad P_{60+}^* = \frac{0.30 + 0.17}{2} = 0.235$$
+
+**Step 3: Compute the composition effect for each age group.**
+
+The composition effect asks: *if both groups had the same mortality rates (at the reference rate), how much of the gap comes from their different age structures?*
+
+$$\text{Composition}_{18-39} = r_{18-39}^* \times (P_{18-39,A} - P_{18-39,B}) = 1.25 \times (0.30 - 0.45) = 1.25 \times (-0.15) = -0.188$$
+
+$$\text{Composition}_{40-59} = 5.25 \times (0.40 - 0.38) = 5.25 \times 0.02 = 0.105$$
+
+$$\text{Composition}_{60+} = 27.5 \times (0.30 - 0.17) = 27.5 \times 0.13 = 3.575$$
+
+$$\text{Total composition effect} = -0.188 + 0.105 + 3.575 = \mathbf{3.492}$$
+
+The 60+ age group dominates this term: U.S.-born adults have a much larger share in the oldest (highest-mortality) age group. This alone accounts for a large part of the overall gap. Note that the 18–39 term is *negative* — foreign-born adults are more concentrated in this young, low-mortality age group, which actually works to widen the gap from the other direction.
+
+**Step 4: Compute the rate effect for each age group.**
+
+The rate effect asks: *if both groups had the same age structure (at the reference proportions), how much of the gap comes from their different within-age mortality rates?*
+
+$$\text{Rate}_{18-39} = P_{18-39}^* \times (r_{18-39,A} - r_{18-39,B}) = 0.375 \times (1.5 - 1.0) = 0.375 \times 0.5 = 0.188$$
+
+$$\text{Rate}_{40-59} = 0.390 \times (6.0 - 4.5) = 0.390 \times 1.5 = 0.585$$
+
+$$\text{Rate}_{60+} = 0.235 \times (30.0 - 25.0) = 0.235 \times 5.0 = 1.175$$
+
+$$\text{Total rate effect} = 0.188 + 0.585 + 1.175 = \mathbf{1.948}$$
+
+**Step 5: Verify the decomposition sums to the total gap.**
+
+$$3.492 + 1.948 = 5.440 \approx \bar{R}_A - \bar{R}_B \checkmark$$
+
+**What this tells us:** About 64% of the mortality gap ($3.492 / 5.44$) is attributable to age structure — U.S.-born adults are older on average and therefore have higher overall mortality for compositional reasons alone. The remaining 36% ($1.948 / 5.44$) reflects genuine within-age mortality differences, consistent with a healthy immigrant effect.
+
+### 2.4 Interpreting Each Term
+
+| Component | What It Asks | What It Means |
+|-----------|-------------|---------------|
+| **Composition Effect** | If both groups had the *same* age-specific rates, how much of the gap would remain due to differences in age structure? | Captures the role of *who is in each group* |
+| **Rate Effect** | If both groups had the *same* age distribution, how much of the gap would remain due to differences in mortality rates? | Captures the role of *how each group fares within subgroups* |
+
+**Intuitive Example**: 
+
+> If foreign-born adults are younger than U.S.-born adults on average, some of the mortality gap exists *just because of age structure* — even if age-specific mortality rates were identical. That's the composition effect. If, after accounting for age, foreign-born adults still have lower mortality within each age group (healthy immigrant effect), that's the rate effect.
+
+### 2.5 Simulating and Visualizing the Kitagawa Decomposition in R
+
+```{r kitagawa-setup, message=FALSE, warning=FALSE}
+library(dplyr)
+library(ggplot2)
+library(kableExtra)
+library(tidyr)
+library(gridExtra)
+
+# ── Simulated Data ──────────────────────────────────────────────────────────
+# Three age groups: 18-39, 40-59, 60+
+# Two nativity groups: US-born (A) and Foreign-born (B)
+
+kitagawa_data <- data.frame(
+  age_group  = c("18-39", "40-59", "60+"),
+  # Proportions within each group (must sum to 1)
+  P_A        = c(0.30, 0.40, 0.30),   # US-born: older age structure
+  P_B        = c(0.45, 0.38, 0.17),   # Foreign-born: younger age structure
+  # Age-specific mortality rates per 1,000
+  r_A        = c(1.5, 6.0, 30.0),     # US-born rates
+  r_B        = c(1.0, 4.5, 25.0)      # Foreign-born rates (lower: healthy immigrant effect)
+)
+
+# ── Kitagawa Decomposition ────────────────────────────────────────────────
+kitagawa_data <- kitagawa_data %>%
+  mutate(
+    r_star = (r_A + r_B) / 2,     # Reference rate
+    P_star = (P_A + P_B) / 2,     # Reference composition
+    composition_effect = r_star * (P_A - P_B),
+    rate_effect        = P_star   * (r_A - r_B)
+  )
+
+# Overall rates
+R_A <- sum(kitagawa_data$P_A * kitagawa_data$r_A)
+R_B <- sum(kitagawa_data$P_B * kitagawa_data$r_B)
+total_gap          <- R_A - R_B
+total_composition  <- sum(kitagawa_data$composition_effect)
+total_rate         <- sum(kitagawa_data$rate_effect)
+
+cat("Overall mortality rate - US-born:      ", round(R_A, 3), "per 1,000\n")
+cat("Overall mortality rate - Foreign-born: ", round(R_B, 3), "per 1,000\n")
+cat("Total gap:                             ", round(total_gap, 3), "\n")
+cat("  Composition effect:                  ", round(total_composition, 3),
+    sprintf("(%.1f%%)", 100 * total_composition / total_gap), "\n")
+cat("  Rate effect:                         ", round(total_rate, 3),
+    sprintf("(%.1f%%)", 100 * total_rate / total_gap), "\n")
+```
+
+```{r kitagawa-table, message=FALSE, warning=FALSE}
+# ── Summary Table ─────────────────────────────────────────────────────────
+kitagawa_data %>%
+  select(age_group, P_A, P_B, r_A, r_B, composition_effect, rate_effect) %>%
+  rename(
+    `Age Group`            = age_group,
+    `Prop (US-born)`       = P_A,
+    `Prop (Foreign-born)`  = P_B,
+    `Rate (US-born)`       = r_A,
+    `Rate (Foreign-born)`  = r_B,
+    `Composition Effect`   = composition_effect,
+    `Rate Effect`          = rate_effect
+  ) %>%
+  kable(digits = 3,
+        caption = "Kitagawa Decomposition: Mortality Gap by Age Group") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed")) %>%
+  add_header_above(c(" " = 1, "Composition (P)" = 2, "Rates (r)" = 2, "Decomposition" = 2))
+```
+
+```{r kitagawa-plots, message=FALSE, warning=FALSE}
+# ── Plot 1: Age Structure Comparison ─────────────────────────────────────
+p1 <- kitagawa_data %>%
+  select(age_group, P_A, P_B) %>%
+  pivot_longer(cols = c(P_A, P_B),
+               names_to  = "group",
+               values_to = "proportion") %>%
+  mutate(group = recode(group, P_A = "US-born", P_B = "Foreign-born"),
+         age_group = factor(age_group, levels = c("18-39", "40-59", "60+"))) %>%
+  ggplot(aes(x = age_group, y = proportion, fill = group)) +
+  geom_col(position = "dodge", alpha = 0.85) +
+  scale_fill_manual(values = c("US-born" = "steelblue", "Foreign-born" = "tomato")) +
+  scale_y_continuous(labels = scales::percent) +
+  labs(title    = "Age Composition by Nativity",
+       subtitle = "Foreign-born adults skew younger",
+       x = "Age Group", y = "Proportion", fill = "Nativity") +
+  theme_minimal()
+
+# ── Plot 2: Age-Specific Mortality Rates ──────────────────────────────────
+p2 <- kitagawa_data %>%
+  select(age_group, r_A, r_B) %>%
+  pivot_longer(cols = c(r_A, r_B),
+               names_to  = "group",
+               values_to = "rate") %>%
+  mutate(group = recode(group, r_A = "US-born", r_B = "Foreign-born"),
+         age_group = factor(age_group, levels = c("18-39", "40-59", "60+"))) %>%
+  ggplot(aes(x = age_group, y = rate, color = group, group = group)) +
+  geom_line(size = 1.2) +
+  geom_point(size = 3) +
+  scale_color_manual(values = c("US-born" = "steelblue", "Foreign-born" = "tomato")) +
+  labs(title    = "Age-Specific Mortality Rates",
+       subtitle = "Foreign-born adults have lower rates within each age group",
+       x = "Age Group", y = "Mortality Rate (per 1,000)", color = "Nativity") +
+  theme_minimal()
+
+# ── Plot 3: Decomposition Bar ─────────────────────────────────────────────
+decomp_summary <- data.frame(
+  Component = c("Composition Effect\n(Age Structure)", "Rate Effect\n(Within-Age Rates)"),
+  Value     = c(total_composition, total_rate),
+  Share     = c(total_composition / total_gap, total_rate / total_gap)
+)
+
+p3 <- ggplot(decomp_summary, aes(x = Component, y = Value, fill = Component)) +
+  geom_col(alpha = 0.85, width = 0.5) +
+  geom_text(aes(label = sprintf("%.3f\n(%.1f%%)", Value, Share * 100)),
+            vjust = -0.4, fontface = "bold", size = 4) +
+  scale_fill_manual(values = c("Composition Effect\n(Age Structure)" = "darkorange",
+                                "Rate Effect\n(Within-Age Rates)"    = "darkgreen")) +
+  geom_hline(yintercept = total_gap, linetype = "dashed", color = "grey40") +
+  annotate("text", x = 2.55, y = total_gap + 0.05,
+           label = paste0("Total gap = ", round(total_gap, 3)),
+           color = "grey40", size = 3.5) +
+  labs(title    = "Kitagawa Decomposition: Mortality Gap",
+       subtitle = "How much is age structure vs. within-age mortality differences?",
+       x = NULL, y = "Contribution to Mortality Gap (per 1,000)") +
+  theme_minimal() +
+  theme(legend.position = "none")
+
+# ── Arrange: p1 and p2 side by side (top row), p3 centered below ──────────
+grid.arrange(p1, p2, p3, layout_matrix = rbind(c(1, 2), c(3, 3)))
+```
+
+### 2.6 Reading the Results
+
+The total mortality gap between U.S.-born and foreign-born adults breaks down as follows:
+
+- **Composition effect**: Foreign-born adults are younger on average, so part of their lower overall mortality is simply because *younger people die less* — regardless of nativity.
+- **Rate effect**: Even within each age group, foreign-born adults have lower mortality rates. This is consistent with the *healthy immigrant effect* — immigrants tend to be positively selected for health at arrival.
+
+Both effects work in the same direction here, but their relative sizes tell us *which mechanism dominates*.
+
+---
+
+## 3. Oaxaca-Blinder Decomposition
+
+### 3.1 Why Go Regression-Based?
+
+The Kitagawa method works well for a single categorical grouping variable (like age). But what if you want to decompose a gap while **simultaneously controlling for multiple predictors** — age, education, income, and health behaviors all at once? That's where the **Oaxaca-Blinder (OB)** decomposition comes in.
+
+OB decomposition is regression-based: it uses linear regression models fit separately for each group, then decomposes the predicted mean difference.
+
+### 3.2 The Setup
+
+We now want to explain a gap in a **continuous outcome** — say, **self-rated health (SRH)** score (higher = better health, scale 1–5) — between U.S.-born and foreign-born adults.
+
+We model SRH as a function of several predictors:
+
+$$\text{SRH}_i = \beta_0 + \beta_1 \text{Age}_i + \beta_2 \text{Education}_i + \beta_3 \text{Income}_i + \epsilon_i$$
+
+We fit this model **separately** for U.S.-born ($A$) and foreign-born ($B$) adults, yielding two sets of coefficients: $\hat{\boldsymbol{\beta}}_A$ and $\hat{\boldsymbol{\beta}}_B$.
+
+### 3.3 The Decomposition Formula
+
+The mean difference in SRH between groups can be written as:
+
+$$\bar{Y}_A - \bar{Y}_B = \underbrace{(\bar{\mathbf{X}}_A - \bar{\mathbf{X}}_B)'\hat{\boldsymbol{\beta}}^*}_{\text{Endowment (Composition) Effect}} + \underbrace{\bar{\mathbf{X}}_A'(\hat{\boldsymbol{\beta}}_A - \hat{\boldsymbol{\beta}}^*) + \bar{\mathbf{X}}_B'(\hat{\boldsymbol{\beta}}^* - \hat{\boldsymbol{\beta}}_B)}_{\text{Coefficient (Rate) Effect}}$$
+
+In the simpler two-group form often used in practice:
+
+$$\bar{Y}_A - \bar{Y}_B = \underbrace{(\bar{\mathbf{X}}_A - \bar{\mathbf{X}}_B)'\hat{\boldsymbol{\beta}}_B}_{\text{Endowment Effect}} + \underbrace{\bar{\mathbf{X}}_B'(\hat{\boldsymbol{\beta}}_A - \hat{\boldsymbol{\beta}}_B)}_{\text{Coefficient Effect}} + \underbrace{(\bar{\mathbf{X}}_A - \bar{\mathbf{X}}_B)'(\hat{\boldsymbol{\beta}}_A - \hat{\boldsymbol{\beta}}_B)}_{\text{Interaction}}$$
+
+### 3.4 Step-by-Step Numeric Walkthrough
+
+The matrix notation can feel abstract. Let's unpack it variable by variable using hypothetical coefficient estimates to see exactly what the formula computes.
+
+Suppose our separate regression models yield the following group means and coefficients:
+
+**Group means ($\bar{X}$):**
+
+| Variable | US-born ($\bar{X}_A$) | Foreign-born ($\bar{X}_B$) | Difference ($\bar{X}_A - \bar{X}_B$) |
+|----------|-----------|--------------|------------|
+| Age | 45.0 | 38.0 | +7.0 |
+| Education (years) | 14.0 | 12.5 | +1.5 |
+| Income ($10k) | 5.5 | 4.2 | +1.3 |
+
+**Regression coefficients:**
+
+| Variable | US-born ($\hat{\beta}_A$) | Foreign-born ($\hat{\beta}_B$) | Difference ($\hat{\beta}_A - \hat{\beta}_B$) |
+|----------|------------|---------------|------------|
+| Age | −0.005 | −0.005 | 0.000 |
+| Education | +0.120 | +0.070 | +0.050 |
+| Income | +0.010 | +0.010 | 0.000 |
+
+**Computing the endowment effect** $(\bar{\mathbf{X}}_A - \bar{\mathbf{X}}_B)'\hat{\boldsymbol{\beta}}_B$:
+
+This asks: *how much of the SRH gap would disappear if foreign-born adults had the same characteristics as U.S.-born adults, evaluated at foreign-born returns?* Each covariate's contribution is simply its mean difference multiplied by the foreign-born coefficient — the reference return everyone would receive.
+
+$$\text{Age contribution} = (45.0 - 38.0) \times (-0.005) = 7.0 \times (-0.005) = -0.035$$
+
+$$\text{Education contribution} = (14.0 - 12.5) \times 0.070 = 1.5 \times 0.070 = +0.105$$
+
+$$\text{Income contribution} = (5.5 - 4.2) \times 0.010 = 1.3 \times 0.010 = +0.013$$
+
+$$\text{Total endowment effect} = -0.035 + 0.105 + 0.013 = \mathbf{+0.083}$$
+
+Education is the dominant driver here: U.S.-born adults have 1.5 more years of education, which pays off in health. The age difference works in the *opposite* direction — U.S.-born adults are older, and older age is associated with lower SRH, so the age endowment actually slightly *narrows* the gap.
+
+**Computing the coefficient effect** $\bar{\mathbf{X}}_B'(\hat{\boldsymbol{\beta}}_A - \hat{\boldsymbol{\beta}}_B)$:
+
+This asks: *how much of the gap is due to the two groups getting different health returns from the same characteristics?* Each covariate's contribution is foreign-born adults' mean multiplied by the difference in returns between groups.
+
+$$\text{Age contribution} = 38.0 \times (-0.005 - (-0.005)) = 38.0 \times 0 = 0$$
+
+$$\text{Education contribution} = 12.5 \times (0.120 - 0.070) = 12.5 \times 0.050 = +0.625$$
+
+$$\text{Income contribution} = 4.2 \times (0.010 - 0.010) = 4.2 \times 0 = 0$$
+
+$$\text{Total coefficient effect} = 0 + 0.625 + 0 = \mathbf{+0.625}$$
+
+The coefficient effect is large and driven entirely by education: U.S.-born adults get a higher health return per year of education (+0.12 per year) compared to foreign-born adults (+0.07 per year). This is consistent with credential devaluation and occupational mismatch — immigrants may hold the same degree but work in lower-skill jobs, limiting how much education translates into health-promoting resources.
+
+**Key insight from the walkthrough:** The endowment effect tells us U.S.-born adults have *more* health-promoting characteristics. The coefficient effect tells us those same characteristics *pay off more* for U.S.-born adults. Both contribute to the overall SRH gap, but the coefficient effect dominates here — pointing to structural barriers rather than simple compositional differences.
+
+### 3.5 Interpreting Each Term
+
+| Component | What It Asks | Analogy to Kitagawa |
+|-----------|-------------|---------------------|
+| **Endowment Effect** | How much of the gap is due to group differences in *characteristics* (age, education, income)? | ≈ Composition Effect |
+| **Coefficient Effect** | How much is due to differences in the *returns* to those characteristics? | ≈ Rate Effect |
+| **Interaction** | How much is due to both differing simultaneously? | (Not in Kitagawa) |
+
+**Intuitive Example**:
+
+> U.S.-born adults report higher SRH on average. Some of this gap may exist because U.S.-born adults have higher education on average — and higher education is associated with better health for everyone. That's the **endowment effect**: U.S.-born adults have more of a health-promoting characteristic. But some of the gap may exist because *education pays off differently* for health across nativity groups — perhaps due to credential devaluation or occupational segregation for immigrants. That's the **coefficient effect**.
+
+### 3.6 The Reference Group Choice
+
+One practical concern: which group's coefficients do you use as the **reference** ($\hat{\boldsymbol{\beta}}^*$)?
+
+- Using $\hat{\boldsymbol{\beta}}_B$ (foreign-born coefficients): asks "what if U.S.-born adults had foreign-born returns?"
+- Using $\hat{\boldsymbol{\beta}}_A$ (U.S.-born coefficients): asks "what if foreign-born adults had U.S.-born returns?"
+- Using pooled coefficients: a common compromise that avoids privileging either group
+
+This is known as the **index number problem** — results can differ depending on the reference. The pooled decomposition (used in the `oaxaca` package) addresses this.
+
+### 3.7 Simulating and Visualizing OB Decomposition in R
+
+```{r oaxaca-setup, message=FALSE, warning=FALSE}
+# Install oaxaca package if not available
+if (!requireNamespace("oaxaca", quietly = TRUE)) {
+  install.packages("oaxaca")
+}
+library(oaxaca)
+
+set.seed(42)
+n <- 1000
+
+# ── Simulate Data ─────────────────────────────────────────────────────────
+sim_data <- data.frame(
+  native = c(rep(1, 600), rep(0, 400)),   # 1 = US-born, 0 = Foreign-born
+  age    = c(rnorm(600, mean = 45, sd = 12),   # US-born: older on average
+             rnorm(400, mean = 38, sd = 11))    # Foreign-born: younger
+) %>%
+  mutate(
+    # Foreign-born have lower education on average (credential devaluation context)
+    education = case_when(
+      native == 1 ~ pmin(pmax(rnorm(n(), mean = 14, sd = 2.5), 8), 20),
+      native == 0 ~ pmin(pmax(rnorm(n(), mean = 12.5, sd = 3.0), 8), 20)
+    ),
+    # Income (in $10,000s)
+    income = case_when(
+      native == 1 ~ pmax(rnorm(n(), mean = 5.5, sd = 2), 1),
+      native == 0 ~ pmax(rnorm(n(), mean = 4.2, sd = 2), 1)
+    ),
+    # SRH: US-born get higher "returns" to education (coefficient effect)
+    srh = 2.0 +
+      ifelse(native == 1, 0.12, 0.07) * education +   # Returns differ by nativity
+      0.01 * income +
+      -0.005 * age +
+      0.4 * native +
+      rnorm(n(), 0, 0.4)
+  )
+
+# Check group means
+sim_data %>%
+  group_by(native) %>%
+  summarize(
+    n           = n(),
+    mean_srh    = mean(srh),
+    mean_age    = mean(age),
+    mean_educ   = mean(education),
+    mean_income = mean(income)
+  ) %>%
+  mutate(native = recode(native, `1` = "US-born", `0` = "Foreign-born")) %>%
+  rename(Group = native) %>%
+  kable(digits = 2,
+        caption = "Group Means: US-born vs. Foreign-born Adults") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"))
+```
+
+```{r oaxaca-decomp, message=FALSE, warning=FALSE}
+# ── Oaxaca-Blinder Decomposition ──────────────────────────────────────────
+ob_result <- oaxaca(
+  srh ~ age + education + income | native,
+  data = sim_data,
+  R    = 100
+)
+
+overall <- ob_result$threefold$overall
+
+decomp_df <- data.frame(
+  Component = c("Endowment Effect\n(Composition)",
+                "Coefficient Effect\n(Returns)",
+                "Interaction"),
+  Estimate  = c(overall["coef(endowments)"],
+                overall["coef(coefficients)"],
+                overall["coef(interaction)"]),
+  SE        = c(overall["se(endowments)"],
+                overall["se(coefficients)"],
+                overall["se(interaction)"])
+) %>%
+  mutate(
+    CI_low    = Estimate - 1.96 * SE,
+    CI_high   = Estimate + 1.96 * SE,
+    total_gap = ob_result$y$y.diff,
+    pct_share = round(100 * Estimate / total_gap, 1)
+  )
+
+decomp_df %>%
+  select(Component, Estimate, SE, CI_low, CI_high, pct_share) %>%
+  rename(`% of Gap` = pct_share,
+         `95% CI Low` = CI_low, `95% CI High` = CI_high) %>%
+  kable(digits = 3,
+        caption = sprintf("OB Decomposition: SRH Gap = %.3f", ob_result$y$y.diff)) %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"))
+```
+
+```{r oaxaca-plots, message=FALSE, warning=FALSE}
+# ── Plot 1: Covariate Mean Differences ────────────────────────────────────
+means_long <- sim_data %>%
+  group_by(native) %>%
+  summarize(Age = mean(age), Education = mean(education), Income = mean(income)) %>%
+  pivot_longer(-native, names_to = "Variable", values_to = "Mean") %>%
+  mutate(Group = recode(native, `1` = "US-born", `0` = "Foreign-born"))
+
+p_means <- ggplot(means_long, aes(x = Variable, y = Mean, fill = Group)) +
+  geom_col(position = "dodge", alpha = 0.85) +
+  scale_fill_manual(values = c("US-born" = "steelblue", "Foreign-born" = "tomato")) +
+  labs(title    = "Covariate Means by Nativity",
+       subtitle = "US-born adults are older, more educated, and higher income",
+       x = NULL, y = "Mean Value", fill = "Nativity") +
+  theme_minimal()
+
+# ── Plot 2: Decomposition Waterfall-style Bar ──────────────────────────────
+decomp_df2 <- decomp_df %>%
+  mutate(Component = factor(Component,
+    levels = c("Endowment Effect\n(Composition)",
+               "Coefficient Effect\n(Returns)",
+               "Interaction")))
+
+p_decomp <- ggplot(decomp_df2, aes(x = Component, y = Estimate, fill = Component)) +
+  geom_col(alpha = 0.85, width = 0.5) +
+  geom_errorbar(aes(ymin = CI_low, ymax = CI_high), width = 0.15, size = 0.8) +
+  geom_text(aes(label = sprintf("%.3f\n(%s%%)", Estimate, pct_share)),
+            vjust = -0.6, fontface = "bold", size = 3.8) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "grey50") +
+  scale_fill_manual(values = c(
+    "Endowment Effect\n(Composition)"  = "darkorange",
+    "Coefficient Effect\n(Returns)"    = "darkgreen",
+    "Interaction"                       = "orchid4"
+  )) +
+  labs(title    = "Oaxaca-Blinder Decomposition: SRH Gap",
+       subtitle = "Error bars = 95% bootstrapped confidence intervals",
+       x = NULL, y = "Contribution to SRH Gap") +
+  theme_minimal() +
+  theme(legend.position = "none")
+
+grid.arrange(p_means, p_decomp, ncol = 1)
+```
+
+```{r coef-comparison, message=FALSE, warning=FALSE}
+# ── Plot 3: Coefficient Comparison Across Groups ───────────────────────────
+m_native  <- lm(srh ~ age + education + income, data = filter(sim_data, native == 1))
+m_foreign <- lm(srh ~ age + education + income, data = filter(sim_data, native == 0))
+
+coef_compare <- data.frame(
+  Variable = c("Age", "Education", "Income"),
+  `US-born`      = coef(m_native)[c("age", "education", "income")],
+  `Foreign-born` = coef(m_foreign)[c("age", "education", "income")]
+) %>%
+  pivot_longer(-Variable, names_to = "Group", values_to = "Coefficient") %>%
+  mutate(Group = gsub("\\.", "-", Group))
+
+ggplot(coef_compare, aes(x = Variable, y = Coefficient, fill = Group)) +
+  geom_col(position = "dodge", alpha = 0.85) +
+  scale_fill_manual(values = c("US-born" = "steelblue", "Foreign-born" = "tomato")) +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  labs(title    = "Regression Coefficients: US-born vs. Foreign-born",
+       subtitle = "Coefficient differences drive the 'Returns' component of OB decomposition",
+       x = NULL, y = "Coefficient (effect on SRH)", fill = "Group") +
+  theme_minimal()
+```
+
+### 3.8 Reading the Results
+
+The OB decomposition breaks the SRH gap into:
+
+- **Endowment effect**: The portion explained by compositional differences — U.S.-born adults have higher education and income on average, which are associated with better health for *everyone*. If foreign-born adults had the same characteristics, part of the gap would disappear.
+- **Coefficient effect**: Even with the same education and income, foreign-born adults get *lower health returns* from those characteristics. This may reflect occupational mismatch, credential devaluation, or structural barriers that limit how much education and income "buy" in terms of health for immigrants.
+- **Interaction**: A small residual term reflecting simultaneous differences in both characteristics and returns.
+
+---
+
+## 4. Connecting the Two Methods: When Kitagawa = Oaxaca-Blinder
+
+It may not be obvious at first, but Kitagawa and OB are mathematically equivalent when two conditions are met: (1) there is a **single binary covariate** and (2) the outcome is the **group rate itself**. Seeing this equivalence deepens intuition for both methods.
+
+### 4.1 The Algebraic Bridge
+
+Suppose we simplify to just two age groups: young (18–59) and old (60+). Define $d_i = 1$ if the observation is in the 60+ group, $0$ otherwise. A linear regression of the mortality rate $r$ on $d$ within each group gives:
+
+$$r = \alpha + \beta \cdot d$$
+
+The predicted group mean at its own covariate mean $\bar{d}$ (= proportion in 60+) is:
+
+$$\hat{\bar{r}} = \hat{\alpha} + \hat{\beta} \cdot \bar{d}$$
+
+Now apply the OB decomposition using group $B$'s coefficients as reference:
+
+$$\bar{r}_A - \bar{r}_B = \underbrace{(\bar{d}_A - \bar{d}_B)\hat{\beta}_B}_{\text{OB Endowment}} + \underbrace{\bar{d}_B(\hat{\beta}_A - \hat{\beta}_B) + (\hat{\alpha}_A - \hat{\alpha}_B)}_{\text{OB Coefficient}}$$
+
+Now compare to Kitagawa. For two age groups where proportions sum to 1:
+
+$$\text{Kitagawa Composition} = r_{60+}^*(P_{60+,A} - P_{60+,B}) + r_{\text{young}}^*(P_{\text{young},A} - P_{\text{young},B})$$
+
+Since $P_{\text{young}} = 1 - P_{60+}$, the proportion differences are mirror images: $(P_{\text{young},A} - P_{\text{young},B}) = -(P_{60+,A} - P_{60+,B})$. This simplifies the Kitagawa composition term to:
+
+$$\text{Kitagawa Composition} = (r_{60+}^* - r_{\text{young}}^*)(P_{60+,A} - P_{60+,B})$$
+
+The quantity $(r_{60+}^* - r_{\text{young}}^*)$ is exactly the **reference slope** — the average mortality difference between old and young, which maps directly onto $\hat{\beta}_B$ in the OB endowment term. Both multiply a *composition difference* by a *reference rate or slope*. The parallel is exact:
+
+| Kitagawa Term | Oaxaca-Blinder Term | What It Captures |
+|---------------|---------------------|-----------------|
+| $r_i^* \cdot (P_{iA} - P_{iB})$ | $(\bar{X}_A - \bar{X}_B)'\hat{\beta}_B$ | Composition / Endowment |
+| $P_i^* \cdot (r_{iA} - r_{iB})$ | $\bar{X}_B'(\hat{\beta}_A - \hat{\beta}_B)$ | Rate / Coefficient |
+
+### 4.2 Where They Diverge
+
+The equivalence breaks down when:
+
+1. **Multiple covariates are needed**: OB handles age, education, and income simultaneously in one model. Kitagawa would require separate decompositions for each, or a multi-factor extension (Das Gupta method).
+
+2. **Covariates are continuous**: Kitagawa requires discrete subgroups with computable proportions. OB works naturally with continuous predictors via regression coefficients.
+
+3. **The outcome is non-linear**: Both methods assume linearity. For binary outcomes (e.g., any hospitalization), the Fairlie decomposition extends OB logic to logit/probit models.
+
+### 4.3 A Unified View
+
+Both methods decompose the same underlying quantity — a between-group difference in a health measure — using the same conceptual split:
+
+$$\underbrace{\text{What you bring to the table}}_{\text{Composition / Endowment}} + \underbrace{\text{How the table treats you}}_{\text{Rate / Coefficient}}$$
+
+Kitagawa answers this from raw demographic rates. OB answers it from regression coefficients. When the data are simple enough for both to apply, they tell the same story.
+
+---
+
+## 5. Kitagawa vs. Oaxaca-Blinder: A Side-by-Side Comparison
+
+| Feature | Kitagawa | Oaxaca-Blinder |
+|---------|----------|----------------|
+| **Outcome type** | Summary rate (e.g., mortality rate) | Mean of a continuous outcome |
+| **Subgroup variable** | Single categorical (e.g., age group) | Multiple continuous/categorical predictors |
+| **Method** | Direct rate standardization | Regression-based |
+| **Composition term** | Proportion differences × reference rates | Covariate mean differences × reference coefficients |
+| **Rate/Returns term** | Rate differences × reference proportions | Coefficient differences × reference covariates |
+| **Reference group issue** | Symmetric (uses average of both) | Yes — choice of reference matters |
+| **Interaction term** | No | Optional (threefold decomposition) |
+| **Typical use in health** | Age-standardized mortality, life expectancy | SRH, BMI, health behaviors, income gaps |
+
+### Shared Logic
+
+At heart, both methods ask the same question:
+
+$$\text{Gap} = \underbrace{\text{Composition Difference}}_{\text{"Who is in each group?"}} + \underbrace{\text{Rate/Returns Difference}}_{\text{"How does each group fare?"}}$$
+
+Kitagawa does this directly from group rates and proportions. OB does this via regression coefficients and covariate means. When the subgroup variable is categorical and you have a single grouping factor, the two methods give equivalent results.
+
+---
+
+## 6. Key Takeaways
+
+1. **Decomposition methods separate "who" from "how"**: They split group differences into what is attributable to compositional differences versus behavioral/structural differences in rates or returns.
+
+2. **Kitagawa is ideal for demographic rates**: When your outcome is an age-standardized mortality rate or any weighted rate across subgroups, Kitagawa gives a clean, interpretable decomposition.
+
+3. **Oaxaca-Blinder handles multiple covariates simultaneously**: When you want to control for age, education, income, and other factors at once, OB is more appropriate.
+
+4. **Both face a reference group problem**: Results depend on what you use as the "reference" (average of both groups, Group A's rates, Group B's rates). Be transparent about this choice and consider reporting both or using pooled references.
+
+5. **The two methods are algebraically equivalent for a single binary covariate**: Understanding this bridge clarifies that they are not competing approaches but rather different tools for the same inferential task, scaled to different levels of data complexity.
+
+6. **Neither method establishes causation**: Decomposition describes *where* a gap comes from statistically, but not *why* those differences exist. Causal interpretation requires additional theoretical and empirical work.
+
+---
+
+## Further Reading
+
+- Kitagawa, E. M. (1955). Components of a difference between two rates. *Journal of the American Statistical Association*, 50(272), 1168–1194.
+- Oaxaca, R. (1973). Male-female wage differentials in urban labor markets. *International Economic Review*, 14(3), 693–709.
+- Blinder, A. S. (1973). Wage discrimination: Reduced form and structural estimates. *Journal of Human Resources*, 8(4), 436–455.
+- Fairlie, R. W. (2005). An extension of the Blinder-Oaxaca decomposition technique to logit and probit models. *Journal of Economic and Social Measurement*, 30(4), 305–316.
+- Powers, D. A., Yoshioka, H., & Yun, M. S. (2011). mvdcmp: Multivariate decomposition for nonlinear response models. *Stata Journal*, 11(4), 556–576.

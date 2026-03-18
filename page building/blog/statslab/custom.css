@@ -1,0 +1,238 @@
+/* === Claude Theme for Quarto === */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+:root {
+  --bg:           #FAF9F5;
+  --surface:      #F5F2EC;
+  --border:       #E7E2D9;
+  --text:         #1C1917;
+  --text-muted:   #78716C;
+  --text-light:   #A8A29E;
+  --code-bg:      #F1EDE6;
+  --coral:        #1C1917;
+  --accent:       #5C4D42;
+  --radius:       5px;
+}
+
+/* --- Base --- */
+body {
+  font-family: 'Inter', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
+  font-size: 16px;
+  line-height: 1.75;
+  color: var(--text);
+  background-color: var(--bg);
+  -webkit-font-smoothing: antialiased;
+  word-break: keep-all;
+}
+
+/* --- Headings --- */
+h1 { font-size: 1.85rem; font-weight: 700; color: #DA7756; border-bottom: none; margin-top: 0; }
+h2 { font-size: 1.35rem; font-weight: 600; color: #C96442; border-bottom: 1.5px solid var(--border); padding-bottom: 0.35rem; }
+h3 { font-size: 1.1rem;  font-weight: 600; color: #C96442; }
+h4 { font-size: 0.95rem; font-weight: 600; color: #8B6E52; }
+h5 { font-size: 0.875rem; font-weight: 500; color: var(--text-muted); }
+h6 { font-size: 0.8rem;  font-weight: 500; color: var(--text-light); }
+
+h1, h2, h3, h4, h5, h6 {
+  line-height: 1.3;
+  margin-top: 1.8rem;
+  margin-bottom: 0.65rem;
+}
+
+/* --- Links (TOC 파란색 제거) --- */
+a, a:visited, a:link {
+  color: var(--coral) !important;
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: border-color 0.15s;
+}
+a:hover {
+  border-bottom-color: var(--coral);
+}
+
+/* --- TOC sidebar --- */
+#TOC,
+nav#TOC {
+  font-size: 0.82rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1rem 0.9rem;
+}
+
+#TOC .toc-title {
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-light);
+  margin-bottom: 0.6rem;
+}
+
+#TOC ul { list-style: none; padding-left: 0; margin: 0; }
+#TOC ul ul { padding-left: 0.85rem; }
+
+#TOC a, #TOC a:visited {
+  color: var(--text-muted) !important;
+  border-bottom: none;
+  display: block;
+  padding: 0.18rem 0.45rem;
+  border-radius: 3px;
+  transition: background 0.12s, color 0.12s;
+}
+#TOC a:hover, #TOC a.active {
+  background: #F1EDE6;
+  color: var(--accent) !important;
+  border-bottom: none;
+}
+
+/* --- Inline code --- */
+code {
+  font-family: 'JetBrains Mono', 'D2Coding', Consolas, monospace;
+  font-size: 0.82em;
+  background: var(--code-bg);
+  color: var(--accent);
+  padding: 0.15em 0.4em;
+  border-radius: 3px;
+  border: 1px solid var(--border);
+}
+
+/* --- Code blocks --- */
+pre {
+  background: var(--code-bg) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius) !important;
+  padding: 1rem 1.2rem !important;
+  margin: 1.2rem 0;
+  overflow-x: auto;
+}
+pre code {
+  background: transparent !important;
+  border: none !important;
+  padding: 0 !important;
+  color: inherit !important;
+  font-size: 0.83rem;
+  line-height: 1.65;
+}
+
+/* Code output */
+.cell-output pre {
+  background: #F7F4EF !important;
+  border-left: 3px solid var(--border) !important;
+  border-top: none !important;
+  border-right: none !important;
+  border-bottom: none !important;
+  border-radius: 0 0 var(--radius) var(--radius) !important;
+  color: var(--text-muted) !important;
+  font-size: 0.81rem;
+}
+
+/* --- Text emphasis --- */
+strong, b { color: var(--accent); font-weight: 600; }
+em, i { color: var(--coral); }
+
+/* --- Blockquote --- */
+blockquote {
+  border-left: 3px solid var(--coral);
+  margin: 1.4rem 0;
+  padding: 0.65rem 1.1rem;
+  background: #F7F2EC;
+  border-radius: 0 var(--radius) var(--radius) 0;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+/* --- Lists --- */
+ul li::marker,
+ol li::marker { color: var(--coral); }
+
+/* --- Tables --- */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+  margin: 1.4rem 0;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+thead tr { background: #EDE8E1; border-bottom: 2px solid var(--border); }
+th {
+  padding: 0.6rem 0.85rem;
+  font-weight: 600;
+  font-size: 0.77rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+  text-align: left;
+}
+td {
+  padding: 0.55rem 0.85rem;
+  border-bottom: 1px solid var(--border);
+  color: var(--text);
+  vertical-align: top;
+}
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: #F5F2EC; }
+
+/* --- Figures --- */
+figure { margin: 1.6rem 0; text-align: center; }
+figure img { max-width: 100%; border-radius: var(--radius); border: 1px solid var(--border); }
+figcaption, .figure-caption {
+  font-size: 0.81rem;
+  color: var(--text-muted);
+  margin-top: 0.5rem;
+  font-style: italic;
+  line-height: 1.5;
+}
+
+/* --- Callouts --- */
+.callout {
+  border-radius: var(--radius);
+  border-left-width: 4px;
+  padding: 0.9rem 1.1rem;
+  margin: 1.4rem 0;
+  font-size: 0.9rem;
+}
+.callout-note     { background: #F0F4FF; border-left-color: #6B8FD4; }
+.callout-tip      { background: #F0FAF4; border-left-color: #4CAF7D; }
+.callout-warning  { background: #FFF7ED; border-left-color: var(--coral); }
+.callout-important{ background: #FFF1F2; border-left-color: #D94F4F; }
+.callout-caution  { background: #FEF3C7; border-left-color: #D97706; }
+.callout-title { font-weight: 600; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 0.35rem; }
+
+/* --- HR --- */
+hr { border: none; border-top: 1px solid var(--border); margin: 2.2rem 0; }
+
+/* --- Title block --- */
+.quarto-title h1.title {
+  color: #B05535;
+  font-size: 1.9rem;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  border-bottom: none;
+}
+.quarto-title .author,
+.quarto-title .date { font-size: 0.875rem; color: var(--text-muted); margin-top: 0.2rem; }
+
+/* --- Scrollbar --- */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+/* --- Print --- */
+@media print {
+  * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+  body { background: var(--bg) !important; color: var(--text) !important; font-size: 11pt !important; }
+  h1 { color: #DA7756 !important; }
+  h2 { color: #C96442 !important; }
+  h3 { color: #C96442 !important; }
+}
+
+/* --- Responsive --- */
+@media (max-width: 768px) {
+  body { font-size: 15px; }
+  h1 { font-size: 1.5rem; }
+  h2 { font-size: 1.2rem; }
+}
