@@ -638,7 +638,7 @@ Kitagawa answers this from raw demographic rates. OB answers it from regression 
 
 At heart, both methods ask the same question:
 
-$$\text{Gap} = \underbrace{\text{Composition Difference}}_{\text{"Who is in each group?"}} + \underbrace{\text{Rate/Returns Difference}}_{\text{"How does each group fare?"}}$$
+$$\text{Gap} = \underbrace{\text{Composition Difference}}_{\text{Who is in each group?}} + \underbrace{\text{Rate/Returns Difference}}_{\text{How does each group fare?}}$$
 
 Kitagawa does this directly from group rates and proportions. OB does this via regression coefficients and covariate means. When the subgroup variable is categorical and you have a single grouping factor, the two methods give equivalent results.
 
