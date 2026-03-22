@@ -1,0 +1,773 @@
+---
+title: "Understanding Interaction Terms in Regression"
+author: "Heeyoung Lee"
+date: "March 2026"
+format: 
+  html:
+    theme: cosmo
+    css: custom.css
+    page-layout: full
+    code-fold: true
+    code-tools: true
+    toc: true
+    toc-depth: 5
+    toc-location: left
+    self-contained: true
+    fig-width: 12
+    fig-height: 8
+    fig-dpi: 300
+    smooth-scroll: true
+    highlight-style: github
+---
+
+## Understanding Interaction Terms in Regression
+
+Suppose you are studying the relationship between education and self-rated health (SRH). You find that education predicts better health — not surprising. But now ask: *does the effect of education on health differ by nativity?* Or by age? That is, does education matter **more** for some groups than others?
+
+This is what **interaction terms** are designed to test. An interaction term captures the idea that the effect of one variable depends on the value of another. Without interactions, regression assumes every predictor has a constant, additive effect regardless of the other variables in the model. With interactions, you relax that assumption and let the effect of $X_1$ vary as a function of $X_2$.
+
+This post walks through three core types of interactions in linear regression:
+
+- **Type 1 — Continuous × Continuous**: Does the effect of income on health vary by age?
+- **Type 2 — Categorical × Continuous**: Does the effect of education on health differ by nativity (immigrant vs. U.S.-born)?
+- **Type 3 — Categorical × Categorical**: Does the combination of nativity and insurance status predict health beyond their individual effects?
+
+Each section includes the regression formula, full algebraic derivation, a numeric walkthrough, and R code for simulation, tables, and visualization.
+
+---
+
+## Setup: Shared Packages
+
+```{r setup, message=FALSE, warning=FALSE}
+library(dplyr)
+library(ggplot2)
+library(tidyr)
+library(marginaleffects)
+library(stargazer)
+library(kableExtra)
+library(gridExtra)
+
+set.seed(42)
+```
+
+---
+
+## 1. Continuous × Continuous Interaction
+
+### 1.1 The Research Question
+
+**Does the effect of household income on self-rated health (SRH) vary by age?**
+
+We might expect that income matters more for health at older ages — younger adults can recover from deprivation more easily, while older adults rely more heavily on income to access healthcare, maintain housing stability, and manage chronic conditions.
+
+### 1.2 The Regression Model
+
+The baseline (no-interaction) model assumes income has a constant effect on SRH regardless of age:
+
+$$\text{SRH}_i = \beta_0 + \beta_1 \text{Income}_i + \beta_2 \text{Age}_i + \epsilon_i$$
+
+But if the effect of income *depends on* age, we need a product term:
+
+$$\text{SRH}_i = \beta_0 + \beta_1 \text{Income}_i + \beta_2 \text{Age}_i + \beta_3 (\text{Income}_i \times \text{Age}_i) + \epsilon_i$$
+
+### 1.3 Algebraic Interpretation
+
+The key insight is to collect terms involving Income:
+
+$$\text{SRH}_i = \beta_0 + \beta_2 \text{Age}_i + \underbrace{(\beta_1 + \beta_3 \text{Age}_i)}_{\text{Marginal effect of Income}} \times \text{Income}_i + \epsilon_i$$
+
+The **marginal effect of Income** on SRH is no longer a constant $\beta_1$. It is now:
+
+$$\frac{\partial \text{SRH}}{\partial \text{Income}} = \beta_1 + \beta_3 \times \text{Age}$$
+
+This means:
+
+- At **Age = 30**: marginal effect of Income $= \beta_1 + 30\beta_3$
+- At **Age = 50**: marginal effect of Income $= \beta_1 + 50\beta_3$
+- At **Age = 70**: marginal effect of Income $= \beta_1 + 70\beta_3$
+
+If $\beta_3 > 0$, the income-health association **strengthens** with age. If $\beta_3 < 0$, it **weakens**.
+
+Symmetrically, the marginal effect of Age also depends on Income:
+
+$$\frac{\partial \text{SRH}}{\partial \text{Age}} = \beta_2 + \beta_3 \times \text{Income}$$
+
+Both variables are simultaneously "moderated" by each other — continuous × continuous interactions are always symmetric in this sense.
+
+> **Marginal effect**: The marginal effect of a variable $X$ is the estimated change in the outcome $Y$ associated with a one-unit increase in $X$, holding all other variables constant. In a simple linear regression without interactions, this is just the slope coefficient $\hat{\beta}$ — a single number that applies uniformly across all observations. In a model with an interaction term, however, the marginal effect of $X_1$ is no longer constant. It depends on the value of the interacting variable $X_2$
+
+### 1.4 Step-by-Step Numeric Walkthrough
+
+Suppose a model yields the following estimates:
+
+| Parameter | Estimate |
+|-----------|----------|
+| $\hat{\beta}_0$ (Intercept) | 3.500 |
+| $\hat{\beta}_1$ (Income) | 0.080 |
+| $\hat{\beta}_2$ (Age) | −0.010 |
+| $\hat{\beta}_3$ (Income × Age) | 0.002 |
+
+**Predicted SRH for two individuals:**
+
+*Person A*: Income = \$30k ($= 3$ in \$10k units), Age = 30
+
+$$\hat{\text{SRH}}_A = 3.500 + 0.080(3) + (-0.010)(30) + 0.002(3 \times 30)$$
+$$= 3.500 + 0.240 - 0.300 + 0.180 = \mathbf{3.620}$$
+
+*Person B*: Income = \$30k, Age = 65
+
+$$\hat{\text{SRH}}_B = 3.500 + 0.080(3) + (-0.010)(65) + 0.002(3 \times 65)$$
+$$= 3.500 + 0.240 - 0.650 + 0.390 = \mathbf{3.480}$$
+
+**Marginal effect of a \$10k income increase:**
+
+At Age = 30: $\quad 0.080 + 0.002 \times 30 = 0.080 + 0.060 = \mathbf{0.140}$
+
+At Age = 65: $\quad 0.080 + 0.002 \times 65 = 0.080 + 0.130 = \mathbf{0.210}$
+
+The same \$10k income increase is associated with a 0.14-point SRH improvement at age 30, but a 0.21-point improvement at age 65 — 50% larger. This is the interaction at work: income matters more for health at older ages.
+
+**What $\beta_3 = 0.002$ means in plain language**: For each one-year increase in age, the income slope increases by 0.002 SRH points. Alternatively, for each \$10k increase in income, the age slope increases by 0.002 — the interpretation is symmetric.
+
+### 1.5 Simulating and Visualizing in R
+
+```{r cont-cont-sim, message=FALSE, warning=FALSE}
+n <- 800
+
+d1 <- data.frame(
+  age    = runif(n, 25, 75),
+  income = pmax(rnorm(n, mean = 4.5, sd = 2), 0.5)   # income in $10k
+) %>%
+  mutate(
+    srh = 3.5 +
+      0.080 * income +
+      -0.010 * age +
+      0.002 * income * age +          # true interaction
+      rnorm(n, 0, 0.5)
+  )
+
+# ── Models ─────────────────────────────────────────────────────────────────
+m1_no_int <- lm(srh ~ income + age,             data = d1)
+m1_int    <- lm(srh ~ income * age,             data = d1)
+```
+
+```{r cont-cont-table, message=FALSE, warning=FALSE, results='asis'}
+# ── Regression Table ────────────────────────────────────────────────────────
+stargazer(
+  m1_no_int, m1_int,
+  type          = "html",
+  title         = "OLS Regression: Self-Rated Health ~ Income × Age",
+  column.labels = c("No Interaction", "With Interaction"),
+  covariate.labels = c("Income ($10k)", "Age", "Income × Age"),
+  keep.stat     = c("n", "rsq"),
+  star.cutoffs  = c(0.05, 0.01, 0.001)
+)
+```
+
+```{r cont-cont-marginal, message=FALSE, warning=FALSE}
+# ── Marginal Effects at Representative Age Values ──────────────────────────
+age_vals <- c(30, 45, 60, 75)
+
+me1 <- slopes(
+  m1_int,
+  variables  = "income",
+  newdata    = datagrid(age = age_vals, income = mean(d1$income))
+)
+
+me1 %>%
+  select(age, estimate, conf.low, conf.high) %>%
+  rename(Age = age,
+         `ME of Income` = estimate,
+         `95% CI Low`   = conf.low,
+         `95% CI High`  = conf.high) %>%
+  kable(digits = 3,
+        caption = "Marginal Effect of Income on SRH at Different Ages") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"))
+```
+
+```{r cont-cont-plots, message=FALSE, warning=FALSE}
+# ── Plot 1: Predicted SRH across Income at 3 age values ───────────────────
+pred1 <- predictions(
+  m1_int,
+  newdata = datagrid(
+    income = seq(0.5, 10, length.out = 50),
+    age    = c(30, 50, 70)
+  )
+)
+
+p1a <- pred1 %>%
+  mutate(age_label = paste0("Age = ", age)) %>%
+  ggplot(aes(x = income, y = estimate, color = age_label, fill = age_label)) +
+  geom_line(size = 1.1) +
+  geom_ribbon(aes(ymin = conf.low, ymax = conf.high), alpha = 0.15, color = NA) +
+  scale_color_manual(values = c("Age = 30" = "#2166ac",
+                                 "Age = 50" = "#f4a582",
+                                 "Age = 70" = "#b2182b")) +
+  scale_fill_manual(values  = c("Age = 30" = "#2166ac",
+                                 "Age = 50" = "#f4a582",
+                                 "Age = 70" = "#b2182b")) +
+  labs(title    = "Predicted SRH by Income at Different Ages",
+       subtitle = "Steeper slopes at older ages indicate a positive interaction",
+       x = "Income ($10k)", y = "Predicted SRH", color = "Age Group", fill = "Age Group") +
+  theme_minimal()
+
+# ── Plot 2: Marginal effect of income across the age range ──────────────────
+me1_full <- slopes(
+  m1_int,
+  variables = "income",
+  newdata   = datagrid(age = seq(25, 75, by = 1), income = mean(d1$income))
+)
+
+p1b <- me1_full %>%
+  ggplot(aes(x = age, y = estimate)) +
+  geom_line(size = 1.1, color = "#2166ac") +
+  geom_ribbon(aes(ymin = conf.low, ymax = conf.high), alpha = 0.2, fill = "#2166ac") +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "grey50") +
+  labs(title    = "Marginal Effect of Income on SRH Across Age",
+       subtitle = "Effect grows stronger at older ages (positive β₃)",
+       x = "Age", y = "Marginal Effect of Income (per $10k)") +
+  theme_minimal()
+
+grid.arrange(p1a, p1b, ncol = 1)
+```
+
+### 1.6 Reading the Results
+
+- **$\hat{\beta}_1$ (Income)**: The effect of income on SRH *when age = 0* — not directly interpretable but needed for the formula.
+- **$\hat{\beta}_2$ (Age)**: The effect of age on SRH *when income = 0* — same caveat.
+- **$\hat{\beta}_3$ (Income × Age)**: The change in the income slope for each one-year increase in age (and vice versa). A positive $\hat{\beta}_3$ means income is a stronger health predictor at older ages.
+
+> **Tip**: For continuous × continuous interactions, the intercept and main effect coefficients are no longer interpretable on their own. Always evaluate them at substantively meaningful values of the moderating variable using marginal effects or predicted value plots.
+
+---
+
+## 2. Categorical × Continuous Interaction
+
+### 2.1 The Research Question
+
+**Does the effect of education on self-rated health differ between U.S.-born and immigrant adults?**
+
+This directly tests **effect heterogeneity by nativity**. The healthy immigrant effect suggests immigrants may translate educational credentials into health resources differently than U.S.-born adults — due to occupational mismatch, credential devaluation, or structural barriers. If so, each additional year of education would have a different marginal health payoff depending on nativity.
+
+### 2.2 The Regression Model
+
+Let $\text{Immigrant}_i = 1$ for foreign-born adults, $= 0$ for U.S.-born (the reference group).
+
+**Without interaction** (parallel slopes assumed):
+
+$$\text{SRH}_i = \beta_0 + \beta_1 \text{Education}_i + \beta_2 \text{Immigrant}_i + \epsilon_i$$
+
+This forces the education slope to be identical for both groups — only the intercepts differ.
+
+**With interaction** (slopes allowed to differ):
+
+$$\text{SRH}_i = \beta_0 + \beta_1 \text{Education}_i + \beta_2 \text{Immigrant}_i + \beta_3 (\text{Education}_i \times \text{Immigrant}_i) + \epsilon_i$$
+
+### 2.3 Algebraic Interpretation
+
+Collect terms separately for each group.
+
+**For U.S.-born adults** ($\text{Immigrant} = 0$):
+
+$$\text{SRH}_i = \beta_0 + \beta_1 \text{Education}_i + \beta_2(0) + \beta_3 \text{Education}_i(0) = \beta_0 + \beta_1 \text{Education}_i$$
+
+- Intercept: $\beta_0$
+- Education slope: $\beta_1$
+
+**For immigrant adults** ($\text{Immigrant} = 1$):
+
+$$\text{SRH}_i = \beta_0 + \beta_1 \text{Education}_i + \beta_2(1) + \beta_3 \text{Education}_i(1)$$
+$$= (\beta_0 + \beta_2) + (\beta_1 + \beta_3) \text{Education}_i$$
+
+- Intercept: $\beta_0 + \beta_2$
+- Education slope: $\beta_1 + \beta_3$
+
+This yields a clean interpretation for each coefficient:
+
+| Coefficient | What it represents |
+|-------------|--------------------|
+| $\beta_0$ | Predicted SRH for U.S.-born at Education = 0 (baseline intercept) |
+| $\beta_1$ | Education slope **for U.S.-born adults** |
+| $\beta_2$ | Intercept shift for immigrants vs. U.S.-born (at Education = 0) |
+| $\beta_3$ | **Difference in education slopes** between immigrants and U.S.-born |
+
+A negative $\beta_3$ means immigrants get a *smaller* health return per year of education relative to U.S.-born adults. This would be consistent with credential devaluation.
+
+### 2.4 Step-by-Step Numeric Walkthrough
+
+Suppose the model yields:
+
+| Parameter | Estimate |
+|-----------|----------|
+| $\hat{\beta}_0$ (Intercept) | 1.800 |
+| $\hat{\beta}_1$ (Education) | 0.120 |
+| $\hat{\beta}_2$ (Immigrant) | 0.400 |
+| $\hat{\beta}_3$ (Education × Immigrant) | −0.050 |
+
+**Education slope by group:**
+
+- U.S.-born: $\hat{\beta}_1 = 0.120$ → each additional year of education adds 0.120 SRH points
+- Immigrant: $\hat{\beta}_1 + \hat{\beta}_3 = 0.120 + (-0.050) = 0.070$ → each additional year adds only 0.070 SRH points
+
+**Predicted SRH for four profiles:**
+
+*U.S.-born, 12 years of education (high school)*:
+
+$$\hat{\text{SRH}} = 1.800 + 0.120(12) + 0.400(0) + (-0.050)(12)(0) = 1.800 + 1.440 = \mathbf{3.240}$$
+
+*U.S.-born, 16 years of education (BA)*:
+
+$$\hat{\text{SRH}} = 1.800 + 0.120(16) = 1.800 + 1.920 = \mathbf{3.720}$$
+
+*Immigrant, 12 years of education*:
+
+$$\hat{\text{SRH}} = 1.800 + 0.120(12) + 0.400(1) + (-0.050)(12)(1) = 1.800 + 1.440 + 0.400 - 0.600 = \mathbf{3.040}$$
+
+*Immigrant, 16 years of education*:
+
+$$\hat{\text{SRH}} = 1.800 + 0.120(16) + 0.400(1) + (-0.050)(16)(1) = 1.800 + 1.920 + 0.400 - 0.800 = \mathbf{3.320}$$
+
+**Summary table of predicted values:**
+
+| Group | 12 Years Educ | 16 Years Educ | Gain (BA vs. HS) |
+|-------|--------------|--------------|------------------|
+| U.S.-born | 3.240 | 3.720 | **+0.480** |
+| Immigrant | 3.040 | 3.320 | **+0.280** |
+
+The BA advantage in SRH is 0.480 for U.S.-born adults but only 0.280 for immigrants — a difference of 0.200 points, which is exactly $\hat{\beta}_3 \times (16 - 12) = -0.050 \times 4 = -0.200$.
+
+Also notice: at low education (12 years), immigrants actually have *lower* predicted SRH than U.S.-born (3.040 vs. 3.240), despite $\hat{\beta}_2 = +0.400$. Why? Because the intercept advantage for immigrants (+0.400) is offset by the slope disadvantage across 12 years of education ($-0.050 \times 12 = -0.600$). The intercept alone does not capture the immigrant health advantage — the slopes cross.
+
+### 2.5 Simulating and Visualizing in R
+
+```{r cat-cont-sim, message=FALSE, warning=FALSE}
+n2 <- 900
+
+d2 <- data.frame(
+  immigrant = c(rep(0, 550), rep(1, 350)),
+  education = c(
+    pmin(pmax(rnorm(550, mean = 14.0, sd = 2.5), 8), 20),
+    pmin(pmax(rnorm(350, mean = 12.5, sd = 3.0), 8), 20)
+  )
+) %>%
+  mutate(
+    srh = 1.800 +
+      0.120 * education +
+      0.400 * immigrant +
+      -0.050 * education * immigrant +   # true interaction: smaller slope for immigrants
+      rnorm(n(), 0, 0.45),
+    nativity = factor(immigrant, labels = c("U.S.-born", "Immigrant"))
+  )
+
+m2_no_int <- lm(srh ~ education + nativity,            data = d2)
+m2_int    <- lm(srh ~ education * nativity,            data = d2)
+```
+
+```{r cat-cont-table, message=FALSE, warning=FALSE, results='asis'}
+stargazer(
+  m2_no_int, m2_int,
+  type          = "html",
+  title         = "OLS Regression: Self-Rated Health ~ Education × Nativity",
+  column.labels = c("No Interaction", "With Interaction"),
+  covariate.labels = c("Education (years)", "Immigrant", "Education × Immigrant"),
+  keep.stat     = c("n", "rsq"),
+  star.cutoffs  = c(0.05, 0.01, 0.001)
+)
+```
+
+```{r cat-cont-marginal, message=FALSE, warning=FALSE}
+# ── Marginal Effect of Education by Nativity ────────────────────────────────
+me2 <- slopes(
+  m2_int,
+  variables = "education",
+  newdata   = datagrid(nativity = c("U.S.-born", "Immigrant"),
+                       education = mean(d2$education))
+)
+
+me2 %>%
+  select(nativity, estimate, conf.low, conf.high) %>%
+  rename(Nativity = nativity,
+         `ME of Education` = estimate,
+         `95% CI Low`      = conf.low,
+         `95% CI High`     = conf.high) %>%
+  kable(digits = 3,
+        caption = "Marginal Effect of Education on SRH by Nativity") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"))
+```
+
+```{r cat-cont-plots, message=FALSE, warning=FALSE}
+# ── Plot 1: Predicted SRH across Education by Nativity ─────────────────────
+pred2 <- predictions(
+  m2_int,
+  newdata = datagrid(
+    education = seq(8, 20, length.out = 50),
+    nativity  = c("U.S.-born", "Immigrant")
+  )
+)
+
+p2a <- pred2 %>%
+  ggplot(aes(x = education, y = estimate, color = nativity, fill = nativity)) +
+  geom_line(size = 1.2) +
+  geom_ribbon(aes(ymin = conf.low, ymax = conf.high), alpha = 0.15, color = NA) +
+  scale_color_manual(values = c("U.S.-born" = "steelblue", "Immigrant" = "tomato")) +
+  scale_fill_manual(values  = c("U.S.-born" = "steelblue", "Immigrant" = "tomato")) +
+  labs(title    = "Predicted SRH by Education and Nativity",
+       subtitle = "Non-parallel slopes indicate an interaction: immigrants get smaller health returns to education",
+       x = "Education (years)", y = "Predicted SRH",
+       color = "Nativity", fill = "Nativity") +
+  theme_minimal()
+
+# ── Plot 2: Marginal effect comparison (bar + CI) ──────────────────────────
+p2b <- me2 %>%
+  mutate(nativity = as.character(nativity)) %>%
+  ggplot(aes(x = nativity, y = estimate, fill = nativity)) +
+  geom_col(alpha = 0.85, width = 0.4) +
+  geom_errorbar(aes(ymin = conf.low, ymax = conf.high), width = 0.12, size = 0.8) +
+  geom_text(aes(label = sprintf("%.3f", estimate)), vjust = -0.6, fontface = "bold") +
+  scale_fill_manual(values = c("U.S.-born" = "steelblue", "Immigrant" = "tomato")) +
+  labs(title    = "Marginal Effect of Education on SRH by Nativity",
+       subtitle = "Error bars = 95% CI",
+       x = NULL, y = "ME of Education (per year)") +
+  theme_minimal() +
+  theme(legend.position = "none")
+
+grid.arrange(p2a, p2b, ncol = 2)
+```
+
+### 2.6 Reading the Results
+
+- **Non-parallel regression lines** in the predicted value plot are the visual signature of an interaction. If $\hat{\beta}_3 = 0$, the two lines would be perfectly parallel.
+- The **interaction coefficient** ($\hat{\beta}_3$) directly quantifies the difference in slopes — it is the amount by which the education-health slope changes when moving from the reference group (U.S.-born) to the comparison group (Immigrant).
+- A **negative $\hat{\beta}_3$** here is consistent with credential devaluation: immigrants accumulate education at a lower health return, possibly because their degrees translate less directly into health-promoting occupational and economic resources.
+
+> **Common mistake**: Interpreting $\hat{\beta}_2$ (the dummy coefficient for Immigrant) as the average group difference in SRH. When an interaction is present, $\hat{\beta}_2$ is the intercept difference at Education = 0 — a value that may not even exist in your data. Always use `marginaleffects` or `predictions()` to compute meaningful group comparisons at realistic covariate values.
+
+---
+
+## 3. Categorical × Categorical Interaction
+
+### 3.1 The Research Question
+
+**Does the combination of nativity (immigrant vs. U.S.-born) and health insurance coverage predict SRH beyond their individual effects?**
+
+Insurance coverage may matter differently for immigrants and U.S.-born adults. Uninsured U.S.-born adults face access barriers, but uninsured immigrants may face *compounded* disadvantages — language barriers, fear of immigration enforcement, and limited eligibility for public programs. This would produce a synergistic (or antagonistic) effect that neither variable captures alone.
+
+### 3.2 The Regression Model
+
+Let $\text{Immigrant}_i \in \{0, 1\}$ and $\text{Uninsured}_i \in \{0, 1\}$.
+
+**Without interaction:**
+
+$$\text{SRH}_i = \beta_0 + \beta_1 \text{Immigrant}_i + \beta_2 \text{Uninsured}_i + \epsilon_i$$
+
+**With interaction:**
+
+$$\text{SRH}_i = \beta_0 + \beta_1 \text{Immigrant}_i + \beta_2 \text{Uninsured}_i + \beta_3 (\text{Immigrant}_i \times \text{Uninsured}_i) + \epsilon_i$$
+
+### 3.3 Algebraic Interpretation
+
+With two binary variables, the model produces exactly four cell means — one for each combination of the two dummies. Substituting the four combinations:
+
+| Nativity | Insurance | Predicted SRH |
+|----------|-----------|----------------|
+| U.S.-born ($= 0$) | Insured ($= 0$) | $\beta_0$ |
+| U.S.-born ($= 0$) | Uninsured ($= 1$) | $\beta_0 + \beta_2$ |
+| Immigrant ($= 1$) | Insured ($= 0$) | $\beta_0 + \beta_1$ |
+| Immigrant ($= 1$) | Uninsured ($= 1$) | $\beta_0 + \beta_1 + \beta_2 + \beta_3$ |
+
+This gives a completely transparent mapping from coefficients to group means.
+
+**What each coefficient represents:**
+
+| Coefficient | Meaning |
+|-------------|---------|
+| $\beta_0$ | Mean SRH for U.S.-born, insured adults (the reference cell) |
+| $\beta_1$ | SRH gap: immigrant insured vs. U.S.-born insured |
+| $\beta_2$ | SRH gap: U.S.-born uninsured vs. U.S.-born insured |
+| $\beta_3$ | **Interaction**: the *extra* penalty (or benefit) for being *both* immigrant *and* uninsured, beyond the sum of $\beta_1$ and $\beta_2$ |
+
+**The additive counterfactual**:
+
+Without an interaction, we would predict the immigrant-uninsured mean as:
+
+$$\hat{\text{SRH}}_{\text{immigrant, uninsured}} = \beta_0 + \beta_1 + \beta_2$$
+
+The interaction term $\beta_3$ measures how much the observed mean *deviates* from this additive prediction. A negative $\beta_3$ means the two disadvantages compound each other — the health penalty for being uninsured is *worse* among immigrants than among U.S.-born adults.
+
+### 3.4 Step-by-Step Numeric Walkthrough
+
+Suppose the model yields:
+
+| Parameter | Estimate |
+|-----------|----------|
+| $\hat{\beta}_0$ | 3.800 |
+| $\hat{\beta}_1$ (Immigrant) | −0.150 |
+| $\hat{\beta}_2$ (Uninsured) | −0.300 |
+| $\hat{\beta}_3$ (Immigrant × Uninsured) | −0.350 |
+
+**Four predicted cell means:**
+
+*U.S.-born, Insured*:
+
+$$\hat{\text{SRH}} = 3.800 = \mathbf{3.800}$$
+
+*U.S.-born, Uninsured*:
+
+$$\hat{\text{SRH}} = 3.800 + (-0.300) = \mathbf{3.500}$$
+
+*Immigrant, Insured*:
+
+$$\hat{\text{SRH}} = 3.800 + (-0.150) = \mathbf{3.650}$$
+
+*Immigrant, Uninsured*:
+
+$$\hat{\text{SRH}} = 3.800 + (-0.150) + (-0.300) + (-0.350) = \mathbf{3.000}$$
+
+**Verifying the interaction:**
+
+The additive prediction for immigrant-uninsured (assuming no interaction) would be:
+
+$$3.800 + (-0.150) + (-0.300) = 3.350$$
+
+The observed (interaction-adjusted) prediction is 3.000. The interaction term $\hat{\beta}_3 = -0.350$ captures this shortfall: immigrant uninsured adults fare 0.350 SRH points *worse* than we would expect from adding the immigrant and uninsured penalties separately.
+
+**Computing contrasts manually:**
+
+| Comparison | Difference | Formula |
+|------------|------------|---------|
+| Insurance penalty, U.S.-born | $3.500 - 3.800 = -0.300$ | $\hat{\beta}_2$ |
+| Insurance penalty, Immigrant | $3.000 - 3.650 = -0.350 + (-0.300) = -0.650$ | $\hat{\beta}_2 + \hat{\beta}_3$ |
+| Immigrant gap, Insured | $3.650 - 3.800 = -0.150$ | $\hat{\beta}_1$ |
+| Immigrant gap, Uninsured | $3.000 - 3.500 = -0.500$ | $\hat{\beta}_1 + \hat{\beta}_3$ |
+
+The insurance penalty is more than twice as large for immigrants ($-0.650$) as for U.S.-born adults ($-0.300$). This is the negative interaction: being uninsured is far more consequential for health when you are also an immigrant.
+
+### 3.5 Simulating and Visualizing in R
+
+```{r cat-cat-sim, message=FALSE, warning=FALSE}
+n3 <- 800
+
+d3 <- data.frame(
+  immigrant = c(rep(0, 500), rep(1, 300)),
+  uninsured = rbinom(800, 1, prob = 0.30)
+) %>%
+  mutate(
+    # Uninsured rate is higher among immigrants
+    uninsured  = ifelse(immigrant == 1,
+                        rbinom(n(), 1, prob = 0.45),
+                        rbinom(n(), 1, prob = 0.18)),
+    srh = 3.800 +
+      -0.150 * immigrant +
+      -0.300 * uninsured +
+      -0.350 * immigrant * uninsured +   # compounding disadvantage
+      rnorm(n(), 0, 0.50),
+    nativity  = factor(immigrant,  labels = c("U.S.-born", "Immigrant")),
+    insurance = factor(uninsured,  labels = c("Insured", "Uninsured"))
+  )
+
+m3_no_int <- lm(srh ~ nativity + insurance,          data = d3)
+m3_int    <- lm(srh ~ nativity * insurance,          data = d3)
+```
+
+```{r cat-cat-table, message=FALSE, warning=FALSE, results='asis'}
+stargazer(
+  m3_no_int, m3_int,
+  type          = "html",
+  title         = "OLS Regression: Self-Rated Health ~ Nativity × Insurance",
+  column.labels = c("No Interaction", "With Interaction"),
+  covariate.labels = c("Immigrant", "Uninsured", "Immigrant × Uninsured"),
+  keep.stat     = c("n", "rsq"),
+  star.cutoffs  = c(0.05, 0.01, 0.001)
+)
+```
+
+```{r cat-cat-marginal, message=FALSE, warning=FALSE}
+# ── Cell Means and Contrasts ────────────────────────────────────────────────
+cell_means <- predictions(
+  m3_int,
+  newdata = datagrid(nativity  = c("U.S.-born", "Immigrant"),
+                     insurance = c("Insured",   "Uninsured"))
+)
+
+cell_means %>%
+  select(nativity, insurance, estimate, conf.low, conf.high) %>%
+  rename(Nativity  = nativity,
+         Insurance = insurance,
+         `Predicted SRH` = estimate,
+         `95% CI Low`    = conf.low,
+         `95% CI High`   = conf.high) %>%
+  arrange(Nativity, Insurance) %>%
+  kable(digits = 3,
+        caption = "Predicted SRH by Nativity and Insurance Status") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"))
+```
+
+```{r cat-cat-plots, message=FALSE, warning=FALSE}
+# ── Plot 1: Interaction Plot (classic 2x2 cell mean plot) ─────────────────
+pred3 <- predictions(
+  m3_int,
+  newdata = datagrid(
+    nativity  = c("U.S.-born", "Immigrant"),
+    insurance = c("Insured", "Uninsured")
+  )
+)
+
+p3a <- pred3 %>%
+  ggplot(aes(x = insurance, y = estimate,
+             color = nativity, group = nativity)) +
+  geom_point(size = 4) +
+  geom_line(size = 1.2) +
+  geom_errorbar(aes(ymin = conf.low, ymax = conf.high),
+                width = 0.08, size = 0.9) +
+  scale_color_manual(values = c("U.S.-born" = "steelblue", "Immigrant" = "tomato")) +
+  labs(title    = "Interaction Plot: SRH by Nativity × Insurance Status",
+       subtitle = "Non-parallel lines = interaction; immigrants suffer a larger uninsurance penalty",
+       x = "Insurance Status", y = "Predicted SRH", color = "Nativity") +
+  theme_minimal()
+
+# ── Plot 2: Grouped bar chart of four cell means ───────────────────────────
+p3b <- pred3 %>%
+  ggplot(aes(x = nativity, y = estimate, fill = insurance)) +
+  geom_col(position = "dodge", alpha = 0.85) +
+  geom_errorbar(aes(ymin = conf.low, ymax = conf.high),
+                position = position_dodge(0.9), width = 0.15) +
+  geom_text(aes(label = sprintf("%.2f", estimate)),
+            position = position_dodge(0.9), vjust = -0.6,
+            fontface = "bold", size = 3.8) +
+  scale_fill_manual(values = c("Insured" = "#4393c3", "Uninsured" = "#d6604d")) +
+  labs(title    = "Predicted SRH by Nativity and Insurance Status",
+       subtitle = "The uninsurance penalty is substantially larger for immigrants",
+       x = "Nativity", y = "Predicted SRH", fill = "Insurance") +
+  theme_minimal()
+
+# ── Plot 3: Marginal effects of insurance penalty by nativity ──────────────
+me3 <- slopes(
+  m3_int,
+  variables = "insurance",
+  newdata   = datagrid(nativity = c("U.S.-born", "Immigrant"))
+)
+
+p3c <- me3 %>%
+  mutate(nativity = as.character(nativity)) %>%
+  ggplot(aes(x = nativity, y = estimate, fill = nativity)) +
+  geom_col(alpha = 0.85, width = 0.4) +
+  geom_errorbar(aes(ymin = conf.low, ymax = conf.high), width = 0.12, size = 0.8) +
+  geom_text(aes(label = sprintf("%.3f", estimate)), vjust = 1.5,
+            fontface = "bold", color = "white", size = 4) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "grey50") +
+  scale_fill_manual(values = c("U.S.-born" = "steelblue", "Immigrant" = "tomato")) +
+  labs(title    = "Insurance Penalty (Insured → Uninsured) by Nativity",
+       subtitle = "Marginal effect of uninsurance on SRH; 95% CI shown",
+       x = NULL, y = "Change in Predicted SRH") +
+  theme_minimal() +
+  theme(legend.position = "none")
+
+grid.arrange(p3a, p3b, p3c, layout_matrix = rbind(c(1, 2), c(3, 3)))
+```
+
+### 3.6 Reading the Results
+
+- **Parallel lines** in the interaction plot would indicate *no* interaction: the uninsurance penalty is the same for both groups. **Non-parallel lines** mean the effect of insurance depends on nativity — and vice versa.
+- The interaction coefficient $\hat{\beta}_3$ captures the **excess penalty** (or benefit) for the doubly-disadvantaged cell, beyond what additive effects would predict.
+- The **marginal effects panel** (Plot 3) is often the most interpretable: it directly shows the insurance penalty separately for each nativity group, making the interaction visible as a difference in bar heights.
+
+---
+
+## 4. Centering and Scaling: A Practical Note
+
+For continuous × continuous and categorical × continuous interactions, the **main effect** coefficients ($\hat{\beta}_1$, $\hat{\beta}_2$) are conditional on the other variable equaling zero. If zero is not a meaningful value for your moderator — e.g., age = 0 — the main effects become uninterpretable.
+
+**The solution is mean-centering** the continuous variables before computing the product term:
+
+$$(\text{Income} - \bar{\text{Income}}) \times (\text{Age} - \bar{\text{Age}})$$
+
+After centering:
+
+- $\hat{\beta}_1$ = effect of income *at the mean age*
+- $\hat{\beta}_2$ = effect of age *at the mean income*
+- $\hat{\beta}_3$ = unchanged — the interaction coefficient is scale-invariant
+
+```{r centering, message=FALSE, warning=FALSE, results='asis'}
+d1_c <- d1 %>%
+  mutate(
+    income_c = income - mean(income),
+    age_c    = age    - mean(age)
+  )
+
+m1_centered <- lm(srh ~ income_c * age_c, data = d1_c)
+
+stargazer(
+  m1_int, m1_centered,
+  type          = "html",
+  title         = "Effect of Mean-Centering on Interaction Model Coefficients",
+  column.labels = c("Uncentered", "Mean-Centered"),
+  covariate.labels = c("Income ($10k)", "Age",
+                        "Income × Age",
+                        "Income (centered)", "Age (centered)",
+                        "Income × Age (centered)"),
+  keep.stat     = c("n", "rsq"),
+  star.cutoffs  = c(0.05, 0.01, 0.001)
+)
+```
+
+Note that $\hat{\beta}_3$ is identical across the two models. Only the intercept and main effects change — now they are interpretable as effects at the sample mean of the moderator.
+
+---
+
+## 5. Testing and Reporting Interactions
+
+### 5.1 Is the Interaction Statistically Significant?
+
+The standard approach is to compare the model fit with and without the interaction term using an F-test (for OLS) or a likelihood ratio test:
+
+```{r model-comparison, message=FALSE, warning=FALSE}
+# Continuous x continuous
+anova(m1_no_int, m1_int)
+
+# Categorical x continuous
+anova(m2_no_int, m2_int)
+
+# Categorical x categorical
+anova(m3_no_int, m3_int)
+```
+
+### 5.2 Reporting Best Practices
+
+1. **Always report the full interaction model**, not just the term that "tests" the interaction. Suppressing main effects in the presence of interaction terms is misleading.
+2. **Use marginal effects tables** (from `marginaleffects::slopes()`) to communicate the substantive size of the interaction at meaningful covariate values.
+3. **Visualize**: predicted value plots and marginal effects plots communicate interactions far more effectively than a single interaction coefficient.
+4. **For categorical × categorical**, always present the full **2 × 2 cell mean table** so readers can compute all pairwise contrasts.
+5. **Interpret the interaction, not just its significance**: a significant interaction coefficient of −0.002 may be statistically reliable but substantively trivial; a p = 0.06 interaction of −0.350 may matter a great deal.
+
+---
+
+## 6. Summary Comparison of Interaction Types
+
+| Feature | Continuous × Continuous | Categorical × Continuous | Categorical × Categorical |
+|---------|------------------------|--------------------------|--------------------------|
+| **Example** | Income × Age → SRH | Education × Nativity → SRH | Nativity × Insurance → SRH |
+| **What $\beta_3$ means** | Change in slope of $X_1$ per unit of $X_2$ | Difference in $X_1$ slope across groups | Extra cell mean deviation from additivity |
+| **Main effects interpretable?** | Only at $X_2 = 0$ (center first) | Only at $X_2 = 0$ reference level | Only for reference cells |
+| **Best visualization** | Predicted lines at representative values | Non-parallel regression lines by group | Classic 2×2 interaction plot |
+| **Centering needed?** | Yes (both variables) | For continuous variable | No (binary) |
+| **Marginal effect varies by** | All values of the moderator (continuous) | Group membership | Group membership |
+
+### The Unifying Logic
+
+All three interaction types share the same algebraic idea: the **slope of $X_1$ is itself a linear function of $X_2$**. The differences are cosmetic — whether $X_2$ takes on a continuous range, two discrete values, or two labeled categories determines *how* the slope variation is parameterized and visualized, not *what* it fundamentally means.
+
+$$\frac{\partial Y}{\partial X_1} = \beta_1 + \beta_3 X_2$$
+
+- **Continuous $X_2$**: the marginal effect of $X_1$ traces a line across all values of $X_2$
+- **Binary $X_2$**: the marginal effect of $X_1$ takes two values — one per group
+- The difference between those two values is always $\beta_3$
+
+---
+
+## Further Reading
+
+- Brambor, T., Clark, W. R., & Golder, M. (2006). Understanding interaction models: Improving empirical analyses. *Political Analysis*, 14(1), 63–82.
+- Jaccard, J., & Turrisi, R. (2003). *Interaction Effects in Multiple Regression* (2nd ed.). Sage.
+- Arel-Bundock, V. (2023). *marginaleffects: Predictions, comparisons, slopes, marginal means, and hypothesis tests for statistical models*. R package. https://marginaleffects.com
+- Link, B. G., & Phelan, J. (1995). Social conditions as fundamental causes of disease. *Journal of Health and Social Behavior*, 35(Extra Issue), 80–94.
+- Gelman, A., & Hill, J. (2007). *Data Analysis Using Regression and Multilevel/Hierarchical Models*. Cambridge University Press. (Chapter 4 on interactions)
