@@ -76,7 +76,7 @@ The key insight is to collect terms involving Income:
 
 $$\text{SRH}_i = \beta_0 + \beta_2 \text{Age}_i + \underbrace{(\beta_1 + \beta_3 \text{Age}_i)}_{\text{Marginal effect of Income}} \times \text{Income}_i + \epsilon_i$$
 
-The **marginal effect of Income** on SRH is no longer a constant $\beta_1$. It is now:
+The **marginal effect of Income** on SRH is no longer a constant $\beta_1$. The $\partial$ symbol means we are asking: *if Income increases by one unit while Age stays fixed, how much does SRH change?* The answer depends on which Age we fix it at:
 
 $$\frac{\partial \text{SRH}}{\partial \text{Income}} = \beta_1 + \beta_3 \times \text{Age}$$
 
@@ -96,7 +96,40 @@ Both variables are simultaneously "moderated" by each other — continuous × co
 
 > **Marginal effect**: The marginal effect of a variable $X$ is the estimated change in the outcome $Y$ associated with a one-unit increase in $X$, holding all other variables constant. In a simple linear regression without interactions, this is just the slope coefficient $\hat{\beta}$ — a single number that applies uniformly across all observations. In a model with an interaction term, however, the marginal effect of $X_1$ is no longer constant. It depends on the value of the interacting variable $X_2$.
 
-### 1.3.1 Reading the Direction: Four Sign Combinations of $\beta_1$ and $\beta_3$
+### 1.4 Step-by-Step Numeric Walkthrough
+
+Suppose a model yields the following estimates:
+
+| Parameter | Estimate |
+|-----------|----------|
+| $\hat{\beta}_0$ (Intercept) | 3.500 |
+| $\hat{\beta}_1$ (Income) | 0.080 |
+| $\hat{\beta}_2$ (Age) | −0.010 |
+| $\hat{\beta}_3$ (Income × Age) | 0.002 |
+
+**Predicted SRH for two individuals:**
+
+*Person A*: Income = \$30k ($= 3$ in \$10k units), Age = 30
+
+$$\hat{\text{SRH}}_A = 3.500 + 0.080(3) + (-0.010)(30) + 0.002(3 \times 30)$$
+$$= 3.500 + 0.240 - 0.300 + 0.180 = \mathbf{3.620}$$
+
+*Person B*: Income = \$30k, Age = 65
+
+$$\hat{\text{SRH}}_B = 3.500 + 0.080(3) + (-0.010)(65) + 0.002(3 \times 65)$$
+$$= 3.500 + 0.240 - 0.650 + 0.390 = \mathbf{3.480}$$
+
+**Marginal effect of a \$10k income increase:**
+
+At Age = 30: $\quad 0.080 + 0.002 \times 30 = 0.080 + 0.060 = \mathbf{0.140}$
+
+At Age = 65: $\quad 0.080 + 0.002 \times 65 = 0.080 + 0.130 = \mathbf{0.210}$
+
+The same \$10k income increase is associated with a 0.14-point SRH improvement at age 30, but a 0.21-point improvement at age 65 — 50% larger. This is the interaction at work: income matters more for health at older ages. This is Case 1 ($\beta_1 > 0$, $\beta_3 > 0$): an amplifying interaction consistent with cumulative advantage over the life course.
+
+**What $\beta_3 = 0.002$ means in plain language**: For each one-year increase in age, the income slope increases by 0.002 SRH points. Alternatively, for each \$10k increase in income, the age slope increases by 0.002 — the interpretation is symmetric.
+
+### 1.5 Reading the Direction: Four Sign Combinations of $\beta_1$ and $\beta_3$
 
 Because the marginal effect of Income equals $\beta_1 + \beta_3 \times \text{Age}$, the *combination* of signs on $\beta_1$ and $\beta_3$ — not either coefficient alone — determines the substantive story. There are four possible patterns.
 
@@ -149,40 +182,7 @@ Income has a negative effect that worsens as Age increases. Both main effect and
 
 3. **Report and visualize marginal effects across the moderator range.** A single interaction coefficient communicates the *rate of change* in the slope, but a marginal effects plot communicates whether that change is substantively large, whether a crossover occurs, and where the effect is statistically distinguishable from zero.
 
-### 1.4 Step-by-Step Numeric Walkthrough
-
-Suppose a model yields the following estimates:
-
-| Parameter | Estimate |
-|-----------|----------|
-| $\hat{\beta}_0$ (Intercept) | 3.500 |
-| $\hat{\beta}_1$ (Income) | 0.080 |
-| $\hat{\beta}_2$ (Age) | −0.010 |
-| $\hat{\beta}_3$ (Income × Age) | 0.002 |
-
-**Predicted SRH for two individuals:**
-
-*Person A*: Income = \$30k ($= 3$ in \$10k units), Age = 30
-
-$$\hat{\text{SRH}}_A = 3.500 + 0.080(3) + (-0.010)(30) + 0.002(3 \times 30)$$
-$$= 3.500 + 0.240 - 0.300 + 0.180 = \mathbf{3.620}$$
-
-*Person B*: Income = \$30k, Age = 65
-
-$$\hat{\text{SRH}}_B = 3.500 + 0.080(3) + (-0.010)(65) + 0.002(3 \times 65)$$
-$$= 3.500 + 0.240 - 0.650 + 0.390 = \mathbf{3.480}$$
-
-**Marginal effect of a \$10k income increase:**
-
-At Age = 30: $\quad 0.080 + 0.002 \times 30 = 0.080 + 0.060 = \mathbf{0.140}$
-
-At Age = 65: $\quad 0.080 + 0.002 \times 65 = 0.080 + 0.130 = \mathbf{0.210}$
-
-The same \$10k income increase is associated with a 0.14-point SRH improvement at age 30, but a 0.21-point improvement at age 65 — 50% larger. This is the interaction at work: income matters more for health at older ages. This is Case 1 ($\beta_1 > 0$, $\beta_3 > 0$): an amplifying interaction consistent with cumulative advantage over the life course.
-
-**What $\beta_3 = 0.002$ means in plain language**: For each one-year increase in age, the income slope increases by 0.002 SRH points. Alternatively, for each \$10k increase in income, the age slope increases by 0.002 — the interpretation is symmetric.
-
-### 1.5 Simulating and Visualizing in R
+### 1.6 Simulating and Visualizing in R
 
 ```{r cont-cont-sim, message=FALSE, warning=FALSE}
 n <- 800
@@ -284,7 +284,7 @@ p1b <- me1_full %>%
 grid.arrange(p1a, p1b, ncol = 1)
 ```
 
-### 1.6 Reading the Results
+### 1.7 Reading the Results
 
 - **$\hat{\beta}_1$ (Income)**: The effect of income on SRH *when age = 0* — not directly interpretable but needed for the formula.
 - **$\hat{\beta}_2$ (Age)**: The effect of age on SRH *when income = 0* — same caveat.
