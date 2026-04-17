@@ -1,7 +1,7 @@
 ---
 title: "Understanding Interaction Terms in Regression"
 author: "Heeyoung Lee"
-date: "March 2026"
+date: "April 16, 2026"
 format: 
   html:
     theme: cosmo
@@ -94,7 +94,60 @@ $$\frac{\partial \text{SRH}}{\partial \text{Age}} = \beta_2 + \beta_3 \times \te
 
 Both variables are simultaneously "moderated" by each other — continuous × continuous interactions are always symmetric in this sense.
 
-> **Marginal effect**: The marginal effect of a variable $X$ is the estimated change in the outcome $Y$ associated with a one-unit increase in $X$, holding all other variables constant. In a simple linear regression without interactions, this is just the slope coefficient $\hat{\beta}$ — a single number that applies uniformly across all observations. In a model with an interaction term, however, the marginal effect of $X_1$ is no longer constant. It depends on the value of the interacting variable $X_2$
+> **Marginal effect**: The marginal effect of a variable $X$ is the estimated change in the outcome $Y$ associated with a one-unit increase in $X$, holding all other variables constant. In a simple linear regression without interactions, this is just the slope coefficient $\hat{\beta}$ — a single number that applies uniformly across all observations. In a model with an interaction term, however, the marginal effect of $X_1$ is no longer constant. It depends on the value of the interacting variable $X_2$.
+
+### 1.3.1 Reading the Direction: Four Sign Combinations of $\beta_1$ and $\beta_3$
+
+Because the marginal effect of Income equals $\beta_1 + \beta_3 \times \text{Age}$, the *combination* of signs on $\beta_1$ and $\beta_3$ — not either coefficient alone — determines the substantive story. There are four possible patterns.
+
+**Case 1: $\beta_1 > 0$, $\beta_3 > 0$ — Amplification**
+
+Income has a positive effect on SRH, and that effect grows stronger at older ages. The income-health gradient steepens as the moderator increases. This pattern is consistent with cumulative advantage: those with higher incomes benefit progressively more over the life course.
+
+> *Example*: Education (+) on wages interacted with job experience (+). More experience amplifies the return to education.
+
+**Case 2: $\beta_1 > 0$, $\beta_3 < 0$ — Buffering / Diminishing Returns**
+
+Income has a positive baseline effect, but higher values of Age attenuate it. The association weakens as the moderator increases, and can reach zero or reverse beyond a crossover point. This is the most common pattern when a protective resource matters less in high-risk contexts, or when ceiling effects apply.
+
+> *Example*: Social support (+) on mental health interacted with chronic illness severity (−). Among the most severely ill, the benefit of social support is diminished.
+
+The crossover point — the value of Age at which the income effect equals zero — is:
+
+$$\text{Age}^* = -\frac{\beta_1}{\beta_3}$$
+
+If $\text{Age}^*$ falls within your observed data range, the direction of the income-health association actually reverses for part of your sample. This should be reported and interpreted substantively.
+
+**Case 3: $\beta_1 < 0$, $\beta_3 > 0$ — Mitigation**
+
+Income has a negative baseline effect (at Age = 0, a counterfactual), but higher Age weakens that harm. A positive $\beta_3$ moves the marginal effect toward zero and potentially into positive territory. This pattern is common when a moderating resource or condition offsets an otherwise harmful exposure.
+
+> *Example*: Poverty (−) on child health outcomes interacted with neighborhood resource availability (+). Strong neighborhood resources reduce the health penalty of poverty.
+
+The same crossover formula applies: $\text{Age}^* = -\beta_1 / \beta_3$.
+
+**Case 4: $\beta_1 < 0$, $\beta_3 < 0$ — Compounding / Cumulative Disadvantage**
+
+Income has a negative effect that worsens as Age increases. Both main effect and interaction pull in the same harmful direction. This is the "double jeopardy" scenario, consistent with fundamental cause and cumulative disadvantage theories in medical sociology.
+
+> *Example*: Unemployment (−) on mortality risk interacted with minority status (−). The mortality burden of unemployment is larger among racial minority groups.
+
+**Summary table:**
+
+| $\beta_1$ | $\beta_3$ | Substantive Pattern | Sociological Label |
+|:---------:|:---------:|---------------------|-------------------|
+| $+$ | $+$ | Effect grows with moderator | Amplification / Cumulative advantage |
+| $+$ | $-$ | Effect shrinks with moderator | Buffering / Diminishing returns |
+| $-$ | $+$ | Harm shrinks with moderator | Mitigation / Protective factor |
+| $-$ | $-$ | Harm grows with moderator | Compounding / Cumulative disadvantage |
+
+**Three critical reminders:**
+
+1. **$\beta_1$ is conditional, not unconditional.** It is the effect of Income only when Age = 0. If zero is not a meaningful or observed value of your moderator, $\beta_1$ alone is uninterpretable. Mean-centering Age makes $\beta_1$ the effect of Income at the sample mean age — far more useful.
+
+2. **The interaction is symmetric.** $\beta_3$ equally describes how the effect of Age varies across levels of Income. You can (and often should) interpret it in both directions depending on your theoretical question.
+
+3. **Report and visualize marginal effects across the moderator range.** A single interaction coefficient communicates the *rate of change* in the slope, but a marginal effects plot communicates whether that change is substantively large, whether a crossover occurs, and where the effect is statistically distinguishable from zero.
 
 ### 1.4 Step-by-Step Numeric Walkthrough
 
@@ -125,7 +178,7 @@ At Age = 30: $\quad 0.080 + 0.002 \times 30 = 0.080 + 0.060 = \mathbf{0.140}$
 
 At Age = 65: $\quad 0.080 + 0.002 \times 65 = 0.080 + 0.130 = \mathbf{0.210}$
 
-The same \$10k income increase is associated with a 0.14-point SRH improvement at age 30, but a 0.21-point improvement at age 65 — 50% larger. This is the interaction at work: income matters more for health at older ages.
+The same \$10k income increase is associated with a 0.14-point SRH improvement at age 30, but a 0.21-point improvement at age 65 — 50% larger. This is the interaction at work: income matters more for health at older ages. This is Case 1 ($\beta_1 > 0$, $\beta_3 > 0$): an amplifying interaction consistent with cumulative advantage over the life course.
 
 **What $\beta_3 = 0.002$ means in plain language**: For each one-year increase in age, the income slope increases by 0.002 SRH points. Alternatively, for each \$10k increase in income, the age slope increases by 0.002 — the interpretation is symmetric.
 
@@ -235,7 +288,7 @@ grid.arrange(p1a, p1b, ncol = 1)
 
 - **$\hat{\beta}_1$ (Income)**: The effect of income on SRH *when age = 0* — not directly interpretable but needed for the formula.
 - **$\hat{\beta}_2$ (Age)**: The effect of age on SRH *when income = 0* — same caveat.
-- **$\hat{\beta}_3$ (Income × Age)**: The change in the income slope for each one-year increase in age (and vice versa). A positive $\hat{\beta}_3$ means income is a stronger health predictor at older ages.
+- **$\hat{\beta}_3$ (Income × Age)**: The change in the income slope for each one-year increase in age (and vice versa). A positive $\hat{\beta}_3$ means income is a stronger health predictor at older ages. Consult the sign combination table in Section 1.3.1 to identify the substantive pattern.
 
 > **Tip**: For continuous × continuous interactions, the intercept and main effect coefficients are no longer interpretable on their own. Always evaluate them at substantively meaningful values of the moderating variable using marginal effects or predicted value plots.
 
@@ -291,7 +344,9 @@ This yields a clean interpretation for each coefficient:
 | $\beta_2$ | Intercept shift for immigrants vs. U.S.-born (at Education = 0) |
 | $\beta_3$ | **Difference in education slopes** between immigrants and U.S.-born |
 
-A negative $\beta_3$ means immigrants get a *smaller* health return per year of education relative to U.S.-born adults. This would be consistent with credential devaluation.
+Because $Z$ (Immigrant) is binary, the slope of Education takes exactly two values: $\beta_1$ for U.S.-born and $\beta_1 + \beta_3$ for immigrants. The same four directional patterns from Section 1.3.1 apply, but now the "moderator" only switches between two discrete states rather than varying continuously.
+
+A negative $\beta_3$ means immigrants get a *smaller* health return per year of education relative to U.S.-born adults — the education slope is dampened for the comparison group. This is Case 2 ($\beta_1 > 0$, $\beta_3 < 0$): a buffering interaction consistent with credential devaluation. There is no continuous crossover point here, but you can ask whether the immigrant education slope ($\beta_1 + \beta_3$) remains positive, equals zero, or reverses sign — each has a distinct substantive meaning.
 
 ### 2.4 Step-by-Step Numeric Walkthrough
 
@@ -492,7 +547,13 @@ Without an interaction, we would predict the immigrant-uninsured mean as:
 
 $$\hat{\text{SRH}}_{\text{immigrant, uninsured}} = \beta_0 + \beta_1 + \beta_2$$
 
-The interaction term $\beta_3$ measures how much the observed mean *deviates* from this additive prediction. A negative $\beta_3$ means the two disadvantages compound each other — the health penalty for being uninsured is *worse* among immigrants than among U.S.-born adults.
+The interaction term $\beta_3$ measures how much the observed mean *deviates* from this additive prediction. In the categorical × categorical case, the directional logic from Section 1.3.1 translates directly: the sign of $\beta_3$ tells you whether the doubly-classified cell is better or worse than additivity predicts, and the signs of $\beta_1$ and $\beta_2$ tell you whether each individual disadvantage is harmful or beneficial at baseline.
+
+- **$\beta_1 < 0$, $\beta_2 < 0$, $\beta_3 < 0$**: Both main effects are harmful, and they compound each other — classic double jeopardy or cumulative disadvantage.
+- **$\beta_1 < 0$, $\beta_2 < 0$, $\beta_3 > 0$**: Both main effects are harmful, but they are *less than additive* — one disadvantage partially buffers or offsets the other.
+- **$\beta_1 > 0$, $\beta_2 < 0$, $\beta_3 < 0$**: One group has a baseline advantage, but that advantage is erased or reversed when the second condition is present.
+
+A negative $\beta_3$ means the two disadvantages compound each other — the health penalty for being uninsured is *worse* among immigrants than among U.S.-born adults.
 
 ### 3.4 Step-by-Step Numeric Walkthrough
 
@@ -529,14 +590,14 @@ The additive prediction for immigrant-uninsured (assuming no interaction) would 
 
 $$3.800 + (-0.150) + (-0.300) = 3.350$$
 
-The observed (interaction-adjusted) prediction is 3.000. The interaction term $\hat{\beta}_3 = -0.350$ captures this shortfall: immigrant uninsured adults fare 0.350 SRH points *worse* than we would expect from adding the immigrant and uninsured penalties separately.
+The observed (interaction-adjusted) prediction is 3.000. The interaction term $\hat{\beta}_3 = -0.350$ captures this shortfall: immigrant uninsured adults fare 0.350 SRH points *worse* than we would expect from adding the immigrant and uninsured penalties separately. This is the $\beta_1 < 0$, $\beta_2 < 0$, $\beta_3 < 0$ pattern — a compounding, cumulative disadvantage scenario.
 
 **Computing contrasts manually:**
 
 | Comparison | Difference | Formula |
 |------------|------------|---------|
 | Insurance penalty, U.S.-born | $3.500 - 3.800 = -0.300$ | $\hat{\beta}_2$ |
-| Insurance penalty, Immigrant | $3.000 - 3.650 = -0.350 + (-0.300) = -0.650$ | $\hat{\beta}_2 + \hat{\beta}_3$ |
+| Insurance penalty, Immigrant | $3.000 - 3.650 = -0.650$ | $\hat{\beta}_2 + \hat{\beta}_3$ |
 | Immigrant gap, Insured | $3.650 - 3.800 = -0.150$ | $\hat{\beta}_1$ |
 | Immigrant gap, Uninsured | $3.000 - 3.500 = -0.500$ | $\hat{\beta}_1 + \hat{\beta}_3$ |
 
@@ -668,7 +729,7 @@ grid.arrange(p3a, p3b, p3c, layout_matrix = rbind(c(1, 2), c(3, 3)))
 ### 3.6 Reading the Results
 
 - **Parallel lines** in the interaction plot would indicate *no* interaction: the uninsurance penalty is the same for both groups. **Non-parallel lines** mean the effect of insurance depends on nativity — and vice versa.
-- The interaction coefficient $\hat{\beta}_3$ captures the **excess penalty** (or benefit) for the doubly-disadvantaged cell, beyond what additive effects would predict.
+- The interaction coefficient $\hat{\beta}_3$ captures the **excess penalty** (or benefit) for the doubly-classified cell, beyond what additive effects would predict.
 - The **marginal effects panel** (Plot 3) is often the most interpretable: it directly shows the insurance penalty separately for each nativity group, making the interaction visible as a difference in bar heights.
 
 ---
@@ -738,6 +799,7 @@ anova(m3_no_int, m3_int)
 3. **Visualize**: predicted value plots and marginal effects plots communicate interactions far more effectively than a single interaction coefficient.
 4. **For categorical × categorical**, always present the full **2 × 2 cell mean table** so readers can compute all pairwise contrasts.
 5. **Interpret the interaction, not just its significance**: a significant interaction coefficient of −0.002 may be statistically reliable but substantively trivial; a p = 0.06 interaction of −0.350 may matter a great deal.
+6. **Identify the directional pattern explicitly**: use the sign combination framework from Section 1.3.1 to label the substantive story (amplification, buffering, mitigation, or compounding) and connect it to your theoretical argument.
 
 ---
 
@@ -751,6 +813,19 @@ anova(m3_no_int, m3_int)
 | **Best visualization** | Predicted lines at representative values | Non-parallel regression lines by group | Classic 2×2 interaction plot |
 | **Centering needed?** | Yes (both variables) | For continuous variable | No (binary) |
 | **Marginal effect varies by** | All values of the moderator (continuous) | Group membership | Group membership |
+
+### Directional Interpretation: Quick Reference
+
+The sign combination of $\beta_1$ (main effect of $X_1$) and $\beta_3$ (interaction) determines the substantive pattern across all three interaction types. The table below provides a quick reference:
+
+| $\beta_1$ | $\beta_3$ | What happens to the effect of $X_1$ as $X_2$ increases | Sociological label |
+|:---------:|:---------:|--------------------------------------------------------|-------------------|
+| $+$ | $+$ | Positive effect grows stronger | Amplification / Cumulative advantage |
+| $+$ | $-$ | Positive effect weakens; may reverse at $X_2^* = -\beta_1/\beta_3$ | Buffering / Diminishing returns |
+| $-$ | $+$ | Negative effect weakens; may reverse at $X_2^* = -\beta_1/\beta_3$ | Mitigation / Protective factor |
+| $-$ | $-$ | Negative effect grows stronger | Compounding / Cumulative disadvantage |
+
+For **categorical × categorical** interactions, $\beta_3$ is the deviation of the doubly-classified cell from the additive prediction. The signs of all three coefficients ($\beta_1$, $\beta_2$, $\beta_3$) together determine whether the pattern represents compounding disadvantage, buffering, or advantage amplification.
 
 ### The Unifying Logic
 
