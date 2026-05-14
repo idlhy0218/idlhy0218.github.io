@@ -7,7 +7,6 @@
     <title>Heeyoung Lee - Sociology Researcher</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <script src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -33,12 +32,7 @@
             line-height: 1.6;
         }
 
-        h1,
-        h2,
-        h3,
-        h4,
-        h5,
-        h6 {
+        h1, h2, h3, h4, h5, h6 {
             font-family: 'Inter', sans-serif;
             font-weight: 600;
         }
@@ -72,11 +66,6 @@
             align-items: center;
             gap: 0.75rem;
             text-decoration: none;
-        }
-
-        .logo img {
-            height: 40px;
-            width: auto;
         }
 
         .nav-links {
@@ -376,14 +365,85 @@
             font-style: italic;
         }
 
-        /* Network Graph Container */
-        #network-container {
-            width: 100%;
-            height: 600px;
-            border: 1px solid var(--border);
-            border-radius: 8px;
+        /* Network Graph */
+        #net-wrap {
             background: #ffffff;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            overflow: hidden;
+            position: relative;
+            height: 560px;
+            user-select: none;
         }
+
+        #network-viz {
+            width: 100%;
+            height: 100%;
+            cursor: grab;
+        }
+
+        #network-viz.grabbing { cursor: grabbing; }
+
+        #net-legend {
+            position: absolute;
+            bottom: 14px;
+            left: 16px;
+            display: flex;
+            gap: 16px;
+            align-items: center;
+            font-size: 11px;
+            color: #9ca3af;
+            pointer-events: none;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .leg-item { display: flex; align-items: center; gap: 6px; }
+        .leg-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+
+        #zoom-controls {
+            position: absolute;
+            top: 14px;
+            right: 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .zoom-btn {
+            width: 28px;
+            height: 28px;
+            background: #fff;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 16px;
+            line-height: 1;
+            color: #374151;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .zoom-btn:hover { background: #f3f4f6; }
+
+        #net-tooltip {
+            position: absolute;
+            background: #1f2937;
+            border: 1px solid #374151;
+            border-radius: 6px;
+            padding: 7px 11px;
+            font-size: 11px;
+            color: #d1d5db;
+            pointer-events: none;
+            max-width: 210px;
+            line-height: 1.5;
+            display: none;
+            z-index: 10;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .tt-year { color: #6b7280; font-size: 10px; margin-top: 2px; }
 
         /* Responsive */
         @media (max-width: 968px) {
@@ -431,46 +491,20 @@
                 position: relative;
             }
 
-            #network-container {
+            #net-wrap {
                 height: 400px;
             }
         }
 
-        /* Mobile Typography & Spacing */
         @media (max-width: 768px) {
-            html {
-                font-size: 16px;
-            }
-
-            body {
-                font-size: 1.05rem;
-                line-height: 1.7;
-            }
-
-            p {
-                font-size: 1.05rem;
-                margin-bottom: 1.25rem;
-            }
-
-            .container {
-                padding: 2rem 1.25rem;
-            }
-
-            .card {
-                padding: 1.5rem;
-            }
-
-            h1 {
-                font-size: 2rem;
-            }
-
-            h2 {
-                font-size: 1.75rem;
-            }
-
-            h3 {
-                font-size: 1.5rem;
-            }
+            html { font-size: 16px; }
+            body { font-size: 1.05rem; line-height: 1.7; }
+            p { font-size: 1.05rem; margin-bottom: 1.25rem; }
+            .container { padding: 2rem 1.25rem; }
+            .card { padding: 1.5rem; }
+            h1 { font-size: 2rem; }
+            h2 { font-size: 1.75rem; }
+            h3 { font-size: 1.5rem; }
         }
     </style>
 </head>
@@ -486,8 +520,7 @@
             </button>
             <ul class="nav-links">
                 <li><a href="page building/about.html"><i class="bi bi-person-lines-fill"></i> About</a></li>
-                <li><a href="page building/publications.html"><i class="bi bi-file-earmark-text"></i> Publications</a>
-                </li>
+                <li><a href="page building/publications.html"><i class="bi bi-file-earmark-text"></i> Publications</a></li>
                 <li><a href="page building/teaching.html"><i class="bi bi-easel2"></i> Teaching</a></li>
                 <li><a href="page building/blog.html"><i class="bi bi-bar-chart-steps"></i> Blog</a></li>
                 <li><a href="page building/cv.html"><i class="bi bi-file-text"></i> CV</a></li>
@@ -526,8 +559,7 @@
                 </div>
 
                 <div class="social-links">
-                    <a href="https://scholar.google.com/citations?user=bh3YJZ0AAAAJ&hl=en&oi=sra" class="social-link"
-                        target="_blank">
+                    <a href="https://scholar.google.com/citations?user=bh3YJZ0AAAAJ&hl=en&oi=sra" class="social-link" target="_blank">
                         <i class="bi bi-google"></i> Scholar
                     </a>
                     <a href="https://www.linkedin.com/in/heeyoung-lee-086b2926a/" class="social-link" target="_blank">
@@ -570,9 +602,28 @@
                     <h2>My Research Network</h2>
                     <p style="color: var(--text-secondary); margin-bottom: 1.5rem;">
                         Interactive visualization of my research publications connected by shared keywords and themes.
-                        Zoom in and hover over nodes to see details.
+                        Scroll to zoom, drag to pan, and hover over nodes to see details.
                     </p>
-                    <div id="network-container"></div>
+
+                    <div id="net-wrap">
+                        <canvas id="network-viz"></canvas>
+                        <div id="net-legend">
+                            <div class="leg-item">
+                                <div class="leg-dot" style="background:#4e7ab5"></div>
+                                <span>Publication</span>
+                            </div>
+                            <div class="leg-item">
+                                <div class="leg-dot" style="background:#b8974a"></div>
+                                <span>Keyword</span>
+                            </div>
+                        </div>
+                        <div id="zoom-controls">
+                            <button class="zoom-btn" id="btn-zoom-in">+</button>
+                            <button class="zoom-btn" id="btn-zoom-out">−</button>
+                            <button class="zoom-btn" id="btn-zoom-reset" style="font-size:11px;">⊙</button>
+                        </div>
+                        <div id="net-tooltip"></div>
+                    </div>
                 </div>
 
                 <!-- Academic Growth -->
@@ -739,30 +790,26 @@
         </div>
     </div>
 
-    <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script>
+    <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- D3 for network graph -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
+
     <script>
-        // Scholar Metrics Data
+        /* ─── Scholar Metrics Chart ─── */
         const scholarData = {
-            summary: {
-                totalCitations: 41,
-                totalPublications: 16,
-                hIndex: 5,
-                i10Index: 1
-            },
+            summary: { totalCitations: 41, totalPublications: 16, hIndex: 5, i10Index: 1 },
             years: [2020, 2021, 2022, 2023, 2024, 2025, 2026],
             citations: [1, 1, 2, 4, 9, 29, 41],
             publications: [2, 3, 3, 4, 8, 14, 16]
         };
 
         document.addEventListener('DOMContentLoaded', function () {
-            // Update summary statistics
-            document.getElementById('totalCitations').textContent = scholarData.summary.totalCitations;
+            document.getElementById('totalCitations').textContent   = scholarData.summary.totalCitations;
             document.getElementById('totalPublications').textContent = scholarData.summary.totalPublications;
-            document.getElementById('hIndex').textContent = scholarData.summary.hIndex;
-            document.getElementById('i10Index').textContent = scholarData.summary.i10Index;
+            document.getElementById('hIndex').textContent           = scholarData.summary.hIndex;
+            document.getElementById('i10Index').textContent         = scholarData.summary.i10Index;
 
-            // Combined Chart
             const ctx = document.getElementById('scholarMetricsChart').getContext('2d');
             new Chart(ctx, {
                 type: 'line',
@@ -773,7 +820,7 @@
                             label: 'Citations',
                             data: scholarData.citations,
                             borderColor: '#15803d',
-                            backgroundColor: 'rgba(21, 128, 61, 0.1)',
+                            backgroundColor: 'rgba(21,128,61,0.1)',
                             borderWidth: 3,
                             fill: true,
                             tension: 0.4,
@@ -788,7 +835,7 @@
                             label: 'Publications',
                             data: scholarData.publications,
                             borderColor: '#c2410c',
-                            backgroundColor: 'rgba(194, 65, 12, 0.1)',
+                            backgroundColor: 'rgba(194,65,12,0.1)',
                             borderWidth: 3,
                             fill: true,
                             tension: 0.4,
@@ -804,19 +851,13 @@
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    interaction: {
-                        mode: 'index',
-                        intersect: false
-                    },
+                    interaction: { mode: 'index', intersect: false },
                     plugins: {
                         legend: {
                             display: true,
                             position: 'top',
                             labels: {
-                                font: {
-                                    family: "'Inter', sans-serif",
-                                    size: 13
-                                },
+                                font: { family: "'Inter', sans-serif", size: 13 },
                                 color: '#1e293b',
                                 padding: 15,
                                 usePointStyle: true,
@@ -824,354 +865,386 @@
                             }
                         },
                         tooltip: {
-                            backgroundColor: 'rgba(30, 41, 59, 0.95)',
-                            titleFont: {
-                                family: "'Inter', sans-serif",
-                                size: 13
-                            },
-                            bodyFont: {
-                                family: "'Inter', sans-serif",
-                                size: 12
-                            },
+                            backgroundColor: 'rgba(30,41,59,0.95)',
+                            titleFont: { family: "'Inter', sans-serif", size: 13 },
+                            bodyFont:  { family: "'Inter', sans-serif", size: 12 },
                             padding: 10,
                             cornerRadius: 4
                         }
                     },
                     scales: {
                         y: {
-                            type: 'linear',
-                            display: true,
-                            position: 'left',
-                            beginAtZero: true,
-                            title: {
-                                display: true,
-                                text: 'Citations',
-                                font: {
-                                    family: "'Inter', sans-serif",
-                                    size: 12,
-                                    weight: 'bold'
-                                },
-                                color: '#15803d'
-                            },
-                            ticks: {
-                                font: {
-                                    family: "'Inter', sans-serif",
-                                    size: 11
-                                },
-                                color: '#64748b'
-                            },
-                            grid: {
-                                color: 'rgba(226, 232, 240, 0.5)'
-                            }
+                            type: 'linear', display: true, position: 'left', beginAtZero: true,
+                            title: { display: true, text: 'Citations', font: { family: "'Inter', sans-serif", size: 12, weight: 'bold' }, color: '#15803d' },
+                            ticks: { font: { family: "'Inter', sans-serif", size: 11 }, color: '#64748b' },
+                            grid: { color: 'rgba(226,232,240,0.5)' }
                         },
                         y1: {
-                            type: 'linear',
-                            display: true,
-                            position: 'right',
-                            beginAtZero: true,
-                            title: {
-                                display: true,
-                                text: 'Publications',
-                                font: {
-                                    family: "'Inter', sans-serif",
-                                    size: 12,
-                                    weight: 'bold'
-                                },
-                                color: '#c2410c'
-                            },
-                            ticks: {
-                                font: {
-                                    family: "'Inter', sans-serif",
-                                    size: 11
-                                },
-                                color: '#64748b',
-                                stepSize: 2
-                            },
-                            grid: {
-                                drawOnChartArea: false
-                            }
+                            type: 'linear', display: true, position: 'right', beginAtZero: true,
+                            title: { display: true, text: 'Publications', font: { family: "'Inter', sans-serif", size: 12, weight: 'bold' }, color: '#c2410c' },
+                            ticks: { font: { family: "'Inter', sans-serif", size: 11 }, color: '#64748b', stepSize: 2 },
+                            grid: { drawOnChartArea: false }
                         },
                         x: {
-                            ticks: {
-                                font: {
-                                    family: "'Inter', sans-serif",
-                                    size: 11
-                                },
-                                color: '#64748b'
-                            },
-                            grid: {
-                                color: 'rgba(226, 232, 240, 0.5)'
-                            }
+                            ticks: { font: { family: "'Inter', sans-serif", size: 11 }, color: '#64748b' },
+                            grid: { color: 'rgba(226,232,240,0.5)' }
                         }
                     },
-                    animation: {
-                        duration: 1500,
-                        easing: 'easeInOutQuart'
-                    }
+                    animation: { duration: 1500, easing: 'easeInOutQuart' }
                 }
             });
 
-            // Research Network Graph
-            initializeNetworkGraph();
+            initNetworkGraph();
         });
 
-        // Research Network Graph
-        function initializeNetworkGraph() {
+        /* ─── Research Network Graph ─── */
+        function initNetworkGraph() {
             const publications = [
-                {
-                    id: 'pub1',
-                    title: 'County Educational Composition & Mortality',
-                    shortTitle: 'Education & Mortality',
-                    year: 2025,
-                    keywords: ['education', 'neighborhood', 'health-disparity']
-                },
-                {
-                    id: 'pub2',
-                    title: 'Unequal Spillover of Human Capital',
-                    shortTitle: 'Education Spillover',
-                    year: 2025,
-                    keywords: ['education', 'neighborhood', 'health-disparity']
-                },
-                {
-                    id: 'pub3',
-                    title: 'Police Killing & Adolescents Self-Concept',
-                    shortTitle: 'Police Violence & Youth',
-                    year: 2025,
-                    keywords: ['police-violence', 'adolescent', 'race', 'neighborhood']
-                },
-                {
-                    id: 'pub4',
-                    title: 'Coming Out & Depression in South Korea',
-                    shortTitle: 'Coming Out & Depression',
-                    year: 2025,
-                    keywords: ['LGBTQ', 'mental-health', 'coming-out', 'health-disparity']
-                },
-                {
-                    id: 'pub5',
-                    title: 'Opioid Use Disorder Among Older Adults',
-                    shortTitle: 'Opioid & Aging',
-                    year: 2025,
-                    keywords: ['opioid', 'aging', 'neighborhood', 'health-disparity']
-                },
-                {
-                    id: 'pub6',
-                    title: 'LGBTQ Movement Coalition Building',
-                    shortTitle: 'LGBTQ Movement',
-                    year: 2025,
-                    keywords: ['LGBTQ', 'social-movement', 'network-analysis']
-                },
-                {
-                    id: 'pub7',
-                    title: 'Black-White Mental Health Paradox',
-                    shortTitle: 'Mental Health Paradox',
-                    year: 2024,
-                    keywords: ['race', 'mental-health', 'neighborhood', 'health-disparity']
-                },
-                {
-                    id: 'pub8',
-                    title: 'Structural Sexism & Sexual Violence',
-                    shortTitle: 'Sexism & Violence',
-                    year: 2024,
-                    keywords: ['gender', 'sexual-violence', 'adolescent']
-                },
-                {
-                    id: 'pub9',
-                    title: 'Puberty & Delinquency',
-                    shortTitle: 'Puberty & Delinquency',
-                    year: 2024,
-                    keywords: ['delinquency', 'puberty', 'adolescent']
-                },
-                {
-                    id: 'pub10',
-                    title: 'Sexual Harassment in Film Industry',
-                    shortTitle: 'Film Industry Harassment',
-                    year: 2024,
-                    keywords: ['sexual-violence', 'workplace', 'film-industry']
-                },
-                {
-                    id: 'pub11',
-                    title: 'LGBTQ Youth Coming Out Patterns',
-                    shortTitle: 'Youth Coming Out',
-                    year: 2023,
-                    keywords: ['LGBTQ', 'LCA', 'coming-out']
-                },
-                {
-                    id: 'pub12',
-                    title: 'Democratic Response to COVID-19',
-                    shortTitle: 'COVID-19 & Democracy',
-                    year: 2021,
-                    keywords: ['COVID-19', 'medical-system', 'bio-politics']
-                },
-                {
-                    id: 'pub13',
-                    title: 'Premature Girls in 1960s-70s',
-                    shortTitle: 'Premature Girls',
-                    year: 2019,
-                    keywords: ['gender', 'historical-analysis', 'puberty']
-                },
-                {
-                    id: 'pub14',
-                    title: 'Child Development & Nation-State',
-                    shortTitle: 'Child Development',
-                    year: 2019,
-                    keywords: ['nationalism', 'historical-analysis', 'puberty']
-                }
+                { id:'pub1',  label:'Education & Mortality',     full:'County Educational Composition & Mortality',      year:2025, kws:['education','neighborhood','health-disparity'] },
+                { id:'pub2',  label:'Education Spillover',        full:'Unequal Spillover of Human Capital',              year:2025, kws:['education','neighborhood','health-disparity'] },
+                { id:'pub3',  label:'Police Violence & Youth',    full:'Police Killing & Adolescents Self-Concept',       year:2025, kws:['police-violence','adolescent','race','neighborhood','spatial-analysis'] },
+                { id:'pub4',  label:'Coming Out & Depression',    full:'Coming Out & Depression in South Korea',          year:2025, kws:['LGBTQ','mental-health','coming-out','health-disparity'] },
+                { id:'pub5',  label:'Opioid & Aging',             full:'Opioid Use Disorder Among Older Adults',          year:2025, kws:['opioid','aging','neighborhood','health-disparity'] },
+                { id:'pub6',  label:'LGBTQ Movement',             full:'LGBTQ Movement Coalition Building',               year:2025, kws:['LGBTQ','social-movement','network-analysis'] },
+                { id:'pub7',  label:'Mental Health Paradox',      full:'Black-White Mental Health Paradox',               year:2024, kws:['race','mental-health','neighborhood','health-disparity'] },
+                { id:'pub8',  label:'Sexism & Violence',          full:'Structural Sexism & Sexual Violence',             year:2024, kws:['gender','sexual-violence','adolescent','structural-sexism'] },
+                { id:'pub9',  label:'Puberty & Delinquency',      full:'Delinquency During Puberty',                      year:2024, kws:['delinquency','puberty','adolescent','gender'] },
+                { id:'pub10', label:'Film Industry Harassment',   full:'Sexual Harassment in Film Industry',              year:2024, kws:['sexual-violence','workplace','film-industry','gender'] },
+                { id:'pub11', label:'Youth Coming Out',           full:'LGBTQ Youth Coming Out Patterns',                 year:2023, kws:['LGBTQ','LCA','coming-out'] },
+                { id:'pub12', label:'COVID-19 & Democracy',       full:'Democratic Response to COVID-19',                 year:2021, kws:['COVID-19','medical-system','bio-politics'] },
+                { id:'pub13', label:'Premature Girls',            full:'Premature Girls in 1960s-70s',                    year:2019, kws:['gender','historical-analysis','puberty','medicalization'] },
+                { id:'pub14', label:'Child Development',          full:'Child Development & Nation-State',                year:2019, kws:['nationalism','historical-analysis','puberty','medicalization'] },
+                { id:'pub15', label:'Age Segregation & Despair',  full:'Age Segregation and Deaths of Despair',           year:2026, kws:['aging','neighborhood','health-disparity','segregation'] },
+                { id:'pub16', label:'Permeable Boundaries',       full:'Permeable Boundaries: State Policy & Mortality',  year:2026, kws:['policy','health-disparity','spatial-analysis'] },
             ];
 
-            const allKeywords = [...new Set(publications.flatMap(p => p.keywords))];
+            const kwSet = [...new Set(publications.flatMap(p => p.kws))];
+            const kwCount = {};
+            kwSet.forEach(k => { kwCount[k] = publications.filter(p => p.kws.includes(k)).length; });
 
-            const nodes = [];
-            const edges = [];
+            const nodes = [
+                ...publications.map(p => ({ id:p.id, label:p.label, full:p.full, year:p.year, type:'pub' })),
+                ...kwSet.map(k => ({ id:k, label:k, count:kwCount[k], type:'kw' }))
+            ];
+            const links = [];
+            publications.forEach(p => p.kws.forEach(k => links.push({ source:p.id, target:k })));
 
-            // Add publication nodes (primary blue circles)
-            publications.forEach(pub => {
-                nodes.push({
-                    id: pub.id,
-                    label: pub.shortTitle,
-                    title: `${pub.title} (${pub.year})`,
-                    group: 'publication',
-                    color: {
-                        background: '#2563eb',
-                        border: '#000000',
-                        highlight: {
-                            background: '#1e40af',
-                            border: '#000000'
-                        },
-                        hover: {
-                            background: '#1e40af',
-                            border: '#000000'
-                        }
-                    },
-                    size: 25,
-                    shape: 'dot',
-                    font: { size: 13, color: '#1e293b', face: 'Inter' }
+            const canvas  = document.getElementById('network-viz');
+            const wrap    = document.getElementById('net-wrap');
+            const tooltip = document.getElementById('net-tooltip');
+
+            let W = wrap.clientWidth;
+            let H = wrap.clientHeight;
+            const DPR = window.devicePixelRatio || 1;
+
+            function resizeCanvas() {
+                W = wrap.clientWidth;
+                H = wrap.clientHeight;
+                canvas.width  = W * DPR;
+                canvas.height = H * DPR;
+                canvas.style.width  = W + 'px';
+                canvas.style.height = H + 'px';
+            }
+            resizeCanvas();
+
+            const ctx = canvas.getContext('2d');
+            ctx.scale(DPR, DPR);
+
+            let tx = 0, ty = 0, scale = 1;
+            const SCALE_MIN = 0.25, SCALE_MAX = 4;
+
+            function nodeR(d) {
+                return d.type === 'kw' ? 7 + d.count * 3.2 : 7;
+            }
+
+            const sim = d3.forceSimulation(nodes)
+                .force('link', d3.forceLink(links).id(d => d.id).distance(95).strength(0.55))
+                .force('charge', d3.forceManyBody().strength(d => d.type === 'kw' ? -200 : -90))
+                .force('center', d3.forceCenter(W / 2, H / 2))
+                .force('collision', d3.forceCollide().radius(d => nodeR(d) + 9))
+                .alphaDecay(0.018);
+
+            function draw() {
+                ctx.save();
+                ctx.setTransform(1, 0, 0, 1, 0, 0);
+                ctx.clearRect(0, 0, W * DPR, H * DPR);
+                ctx.restore();
+
+                ctx.save();
+                ctx.translate(tx, ty);
+                ctx.scale(scale, scale);
+
+                /* edges */
+                links.forEach(l => {
+                    const s = l.source, t = l.target;
+                    const hot = hovered && (l.source === hovered || l.target === hovered);
+                    ctx.beginPath();
+                    ctx.moveTo(s.x, s.y);
+                    ctx.lineTo(t.x, t.y);
+                    ctx.strokeStyle = hot ? 'rgba(100,130,180,0.7)' : 'rgba(160,170,190,0.28)';
+                    ctx.lineWidth   = hot ? 1.2 : 0.8;
+                    ctx.stroke();
                 });
 
-                pub.keywords.forEach(keyword => {
-                    edges.push({
-                        from: pub.id,
-                        to: keyword,
-                        color: {
-                            color: '#a9a9a9',
-                            opacity: 0.7,
-                            highlight: '#000000',
-                            hover: '#a9a9a9'
-                        },
-                        width: 2,
-                        smooth: {
-                            smooth: false
-                        }
-                    });
-                });
-            });
+                /* nodes */
+                nodes.forEach(d => {
+                    const r     = nodeR(d);
+                    const isPub = d.type === 'pub';
+                    const isHov = d === hovered;
 
-            // Add keyword nodes (light gray circles) - size based on number of connections
-            allKeywords.forEach(keyword => {
-                // Count how many publications use this keyword
-                const connectionCount = publications.filter(p => p.keywords.includes(keyword)).length;
-                // Size scales with connections: base 10 + 3 per connection
-                const nodeSize = 10 + (connectionCount * 3);
-
-                nodes.push({
-                    id: keyword,
-                    label: `#${keyword}`,
-                    title: `${keyword} (${connectionCount} publications)`,
-                    group: 'keyword',
-                    color: {
-                        background: '#8b0000',
-                        border: '#000000',
-                        highlight: {
-                            background: '#8b0000',
-                            border: '#000000'
-                        },
-                        hover: {
-                            background: '#8b0000',
-                            border: '#000000'
-                        }
-                    },
-                    size: nodeSize,
-                    shape: 'dot',
-                    font: { size: 11, color: '#64748b', face: 'Inter' }
-                });
-            });
-
-            const container = document.getElementById('network-container');
-            const data = { nodes: nodes, edges: edges };
-            const options = {
-                physics: {
-                    enabled: true,
-                    barnesHut: {
-                        gravitationalConstant: -2000,
-                        centralGravity: 0.3,
-                        springLength: 120,
-                        springConstant: 0.04,
-                        damping: 0.09,
-                        avoidOverlap: 0.3
-                    },
-                    stabilization: {
-                        iterations: 150
+                    if (isHov) {
+                        ctx.beginPath();
+                        ctx.arc(d.x, d.y, r + 4, 0, Math.PI * 2);
+                        ctx.fillStyle = isPub ? 'rgba(78,122,181,0.18)' : 'rgba(184,151,74,0.2)';
+                        ctx.fill();
                     }
-                },
-                interaction: {
-                    hover: true,
-                    tooltipDelay: 100
-                },
-                nodes: {
-                    borderWidth: 2,
-                    borderWidthSelected: 3,
-                    shadow: {
-                        enabled: true,
-                        color: 'rgba(0,0,0,0.1)',
-                        size: 8,
-                        x: 0,
-                        y: 2
-                    },
-                    shapeProperties: {
-                        interpolation: true
-                    }
-                },
-                edges: {
-                    smooth: {
-                        smooth: false
-                    }
-                }
-            };
 
-            new vis.Network(container, data, options);
-        }
-    </script>
+                    ctx.beginPath();
+                    ctx.arc(d.x, d.y, r, 0, Math.PI * 2);
+                    ctx.fillStyle = isPub
+                        ? (isHov ? '#6a96d0' : '#4e7ab5')
+                        : (isHov ? '#d4aa5a' : '#b8974a');
+                    ctx.fill();
 
-    <script>
-        // Mobile menu toggle
-        document.addEventListener('DOMContentLoaded', function () {
-            const mobileMenuToggle = document.querySelector('.mobile-menu-toggle');
-            const navLinks = document.querySelector('.nav-links');
-
-            if (mobileMenuToggle) {
-                mobileMenuToggle.addEventListener('click', function () {
-                    navLinks.classList.toggle('active');
-                    const icon = this.querySelector('i');
-                    if (navLinks.classList.contains('active')) {
-                        icon.classList.remove('bi-list');
-                        icon.classList.add('bi-x');
-                    } else {
-                        icon.classList.remove('bi-x');
-                        icon.classList.add('bi-list');
+                    /* labels: keyword with count >= 2 always visible; pub on hover only */
+                    const showLabel = (d.type === 'kw' && d.count >= 2) || isHov;
+                    if (showLabel) {
+                        const fs = Math.max(8, 9.5 / scale);
+                        ctx.font         = `${d.type === 'kw' ? 500 : 400} ${fs}px 'Inter', sans-serif`;
+                        ctx.fillStyle    = d.type === 'kw' ? '#374151' : '#4b5563';
+                        ctx.textAlign    = 'center';
+                        ctx.textBaseline = 'top';
+                        ctx.fillText(d.label, d.x, d.y + r + 3);
                     }
                 });
 
-                const menuLinks = navLinks.querySelectorAll('a');
-                menuLinks.forEach(link => {
-                    link.addEventListener('click', function () {
-                        navLinks.classList.remove('active');
-                        const icon = mobileMenuToggle.querySelector('i');
-                        icon.classList.remove('bi-x');
-                        icon.classList.add('bi-list');
-                    });
+                ctx.restore();
+            }
+
+            sim.on('tick', draw);
+
+            /* ─── coordinate helpers ─── */
+            function canvasToWorld(cx, cy) {
+                return { x: (cx - tx) / scale, y: (cy - ty) / scale };
+            }
+
+            function getNode(cx, cy) {
+                const { x, y } = canvasToWorld(cx, cy);
+                return nodes.find(d => {
+                    const dx = d.x - x, dy = d.y - y;
+                    return Math.sqrt(dx * dx + dy * dy) <= nodeR(d) + 5;
                 });
             }
+
+            /* ─── state ─── */
+            let hovered  = null;
+            let dragNode = null;
+            let panning  = false;
+            let panStart = null;
+            let txStart, tyStart;
+
+            /* ─── mouse ─── */
+            canvas.addEventListener('mousemove', e => {
+                const rect = canvas.getBoundingClientRect();
+                const mx = e.clientX - rect.left;
+                const my = e.clientY - rect.top;
+
+                if (dragNode) {
+                    const w = canvasToWorld(mx, my);
+                    dragNode.fx = w.x;
+                    dragNode.fy = w.y;
+                    sim.alpha(0.08).restart();
+                    draw();
+                    return;
+                }
+                if (panning) {
+                    tx = txStart + (e.clientX - panStart.x);
+                    ty = tyStart + (e.clientY - panStart.y);
+                    draw();
+                    return;
+                }
+
+                const found = getNode(mx, my);
+                if (found !== hovered) {
+                    hovered = found;
+                    canvas.style.cursor = found ? 'pointer' : 'grab';
+                    draw();
+                }
+                if (found) {
+                    tooltip.style.display = 'block';
+                    tooltip.innerHTML = found.type === 'pub'
+                        ? `<div>${found.full}</div><div class="tt-year">${found.year}</div>`
+                        : `<div><strong>#${found.label}</strong></div><div class="tt-year">${found.count} publication${found.count > 1 ? 's' : ''}</div>`;
+                    let ttx = mx + 14, tty = my - 10;
+                    if (ttx + 220 > W) ttx = mx - 224;
+                    if (tty + 60  > H) tty = my - 64;
+                    tooltip.style.left = ttx + 'px';
+                    tooltip.style.top  = tty + 'px';
+                } else {
+                    tooltip.style.display = 'none';
+                }
+            });
+
+            canvas.addEventListener('mousedown', e => {
+                const rect  = canvas.getBoundingClientRect();
+                const mx    = e.clientX - rect.left;
+                const my    = e.clientY - rect.top;
+                const found = getNode(mx, my);
+
+                if (found) {
+                    dragNode = found;
+                    found.fx = found.x;
+                    found.fy = found.y;
+                    canvas.style.cursor = 'grabbing';
+                } else {
+                    panning  = true;
+                    panStart = { x: e.clientX, y: e.clientY };
+                    txStart  = tx;
+                    tyStart  = ty;
+                    canvas.classList.add('grabbing');
+                }
+                e.preventDefault();
+            });
+
+            window.addEventListener('mouseup', () => {
+                if (dragNode) {
+                    dragNode.fx = null;
+                    dragNode.fy = null;
+                    dragNode    = null;
+                    sim.alpha(0.25).restart();
+                    canvas.style.cursor = hovered ? 'pointer' : 'grab';
+                }
+                if (panning) {
+                    panning = false;
+                    canvas.classList.remove('grabbing');
+                    canvas.style.cursor = 'grab';
+                }
+            });
+
+            canvas.addEventListener('mouseleave', () => {
+                if (!dragNode && !panning) {
+                    hovered = null;
+                    tooltip.style.display = 'none';
+                    draw();
+                }
+            });
+
+            /* ─── scroll zoom ─── */
+            canvas.addEventListener('wheel', e => {
+                e.preventDefault();
+                const rect     = canvas.getBoundingClientRect();
+                const mx       = e.clientX - rect.left;
+                const my       = e.clientY - rect.top;
+                const delta    = e.deltaY < 0 ? 1.12 : 0.89;
+                const newScale = Math.min(SCALE_MAX, Math.max(SCALE_MIN, scale * delta));
+                tx    = mx - (mx - tx) * (newScale / scale);
+                ty    = my - (my - ty) * (newScale / scale);
+                scale = newScale;
+                draw();
+            }, { passive: false });
+
+            /* ─── touch ─── */
+            let lastTouchDist = null;
+
+            canvas.addEventListener('touchstart', e => {
+                if (e.touches.length === 1) {
+                    const t    = e.touches[0];
+                    const rect = canvas.getBoundingClientRect();
+                    const found = getNode(t.clientX - rect.left, t.clientY - rect.top);
+                    if (found) {
+                        dragNode = found;
+                        found.fx = found.x;
+                        found.fy = found.y;
+                    } else {
+                        panning  = true;
+                        panStart = { x: t.clientX, y: t.clientY };
+                        txStart  = tx; tyStart = ty;
+                    }
+                } else if (e.touches.length === 2) {
+                    const dx = e.touches[0].clientX - e.touches[1].clientX;
+                    const dy = e.touches[0].clientY - e.touches[1].clientY;
+                    lastTouchDist = Math.sqrt(dx * dx + dy * dy);
+                }
+                e.preventDefault();
+            }, { passive: false });
+
+            canvas.addEventListener('touchmove', e => {
+                if (e.touches.length === 1) {
+                    const t    = e.touches[0];
+                    const rect = canvas.getBoundingClientRect();
+                    const mx   = t.clientX - rect.left;
+                    const my   = t.clientY - rect.top;
+                    if (dragNode) {
+                        const w = canvasToWorld(mx, my);
+                        dragNode.fx = w.x; dragNode.fy = w.y;
+                        sim.alpha(0.08).restart();
+                    } else if (panning) {
+                        tx = txStart + (t.clientX - panStart.x);
+                        ty = tyStart + (t.clientY - panStart.y);
+                    }
+                    draw();
+                } else if (e.touches.length === 2 && lastTouchDist) {
+                    const dx   = e.touches[0].clientX - e.touches[1].clientX;
+                    const dy   = e.touches[0].clientY - e.touches[1].clientY;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+                    const cx   = (e.touches[0].clientX + e.touches[1].clientX) / 2;
+                    const cy   = (e.touches[0].clientY + e.touches[1].clientY) / 2;
+                    const rect = canvas.getBoundingClientRect();
+                    const mx   = cx - rect.left, my = cy - rect.top;
+                    const newScale = Math.min(SCALE_MAX, Math.max(SCALE_MIN, scale * (dist / lastTouchDist)));
+                    tx = mx - (mx - tx) * (newScale / scale);
+                    ty = my - (my - ty) * (newScale / scale);
+                    scale = newScale;
+                    lastTouchDist = dist;
+                    draw();
+                }
+                e.preventDefault();
+            }, { passive: false });
+
+            canvas.addEventListener('touchend', () => {
+                if (dragNode) { dragNode.fx = null; dragNode.fy = null; dragNode = null; sim.alpha(0.25).restart(); }
+                panning = false; lastTouchDist = null;
+            });
+
+            /* ─── zoom buttons ─── */
+            function zoomAt(delta) {
+                const cx = W / 2, cy = H / 2;
+                const newScale = Math.min(SCALE_MAX, Math.max(SCALE_MIN, scale * delta));
+                tx    = cx - (cx - tx) * (newScale / scale);
+                ty    = cy - (cy - ty) * (newScale / scale);
+                scale = newScale;
+                draw();
+            }
+
+            document.getElementById('btn-zoom-in').addEventListener('click',    () => zoomAt(1.25));
+            document.getElementById('btn-zoom-out').addEventListener('click',   () => zoomAt(0.8));
+            document.getElementById('btn-zoom-reset').addEventListener('click', () => {
+                tx = 0; ty = 0; scale = 1;
+                sim.force('center', d3.forceCenter(W / 2, H / 2));
+                sim.alpha(0.3).restart();
+            });
+        }
+
+        /* ─── Mobile menu ─── */
+        document.addEventListener('DOMContentLoaded', function () {
+            const toggle   = document.querySelector('.mobile-menu-toggle');
+            const navLinks = document.querySelector('.nav-links');
+            if (!toggle) return;
+            toggle.addEventListener('click', function () {
+                navLinks.classList.toggle('active');
+                const icon = this.querySelector('i');
+                icon.classList.toggle('bi-list', !navLinks.classList.contains('active'));
+                icon.classList.toggle('bi-x',    navLinks.classList.contains('active'));
+            });
+            navLinks.querySelectorAll('a').forEach(link => {
+                link.addEventListener('click', () => {
+                    navLinks.classList.remove('active');
+                    const icon = toggle.querySelector('i');
+                    icon.classList.add('bi-list');
+                    icon.classList.remove('bi-x');
+                });
+            });
         });
     </script>
 </body>
-
 </html>
