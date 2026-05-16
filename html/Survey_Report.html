@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Student First-Day Survey: AI Attitudes and Learning Preferences</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: Georgia, 'Times New Roman', serif;
+    background: #f4f3ef;
+    color: #1a1a1a;
+    padding: 40px 20px 60px;
+  }
+  .page {
+    max-width: 780px;
+    margin: 0 auto;
+    background: #fff;
+    border: 1px solid #bbb;
+    padding: 52px 56px;
+  }
+  .report-title {
+    font-size: 17px;
+    font-weight: 600;
+    color: #111;
+    margin-bottom: 5px;
+  }
+  .report-sub {
+    font-size: 12px;
+    color: #777;
+    font-style: italic;
+    padding-bottom: 16px;
+    border-bottom: 1.5px solid #111;
+    margin-bottom: 0;
+  }
+  .sec-head {
+    font-size: 10px;
+    letter-spacing: .13em;
+    text-transform: uppercase;
+    color: #666;
+    font-family: Arial, sans-serif;
+    margin: 32px 0 16px;
+    padding-bottom: 5px;
+    border-bottom: 1px solid #ccc;
+  }
+  .stat-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    border: 1px solid #ccc;
+    margin-bottom: 4px;
+  }
+  .stat {
+    background: #f8f7f4;
+    padding: 13px 15px;
+    border-right: 1px solid #ccc;
+  }
+  .stat:last-child { border-right: none; }
+  .stat-lbl { font-size: 10px; color: #999; font-family: Arial, sans-serif; margin-bottom: 4px; }
+  .stat-val { font-size: 20px; font-weight: 600; font-family: Arial, sans-serif; color: #111; }
+  .stat-sub { font-size: 10px; color: #aaa; font-family: Arial, sans-serif; font-style: italic; margin-top: 2px; }
+  .fig { margin-bottom: 22px; }
+  .fig-title { font-size: 12px; font-family: Arial, sans-serif; font-weight: 600; color: #222; margin-bottom: 2px; }
+  .fig-note { font-size: 10.5px; color: #999; font-style: italic; margin-bottom: 8px; }
+  .panel {
+    background: #f8f7f4;
+    border: 1px solid #d2d0cb;
+    padding: 14px 18px 14px 14px;
+  }
+  .cw { position: relative; width: 100%; }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <p class="report-title">Student First-Day Survey: AI Attitudes and Learning Preferences</p>
+  <p class="report-sub">Medical Sociology (ASOC 359) and Criminology (ASOC 203) &nbsp;&middot;&nbsp; Spring 2025 &nbsp;&middot;&nbsp; N = 292</p>
+
+  <p class="sec-head">1. Sample Overview</p>
+  <div class="stat-row">
+    <div class="stat"><p class="stat-lbl">Medical Sociology</p><p class="stat-val">150</p><p class="stat-sub">51.4% of total</p></div>
+    <div class="stat"><p class="stat-lbl">Criminology</p><p class="stat-val">142</p><p class="stat-sub">48.6% of total</p></div>
+    <div class="stat"><p class="stat-lbl">Paid AI subscription</p><p class="stat-val">~2%</p><p class="stat-sub">6 of 292 students</p></div>
+    <div class="stat"><p class="stat-lbl">Juniors + Seniors</p><p class="stat-val">60%</p><p class="stat-sub">Jr 33% &middot; Sr 28%</p></div>
+  </div>
+
+  <p class="sec-head">2. Student Background</p>
+
+  <div class="fig">
+    <p class="fig-title">Figure 1. Class year (%)</p>
+    <p class="fig-note">n = 292</p>
+    <div class="panel"><div class="cw" style="height:120px"><canvas id="c1"></canvas></div></div>
+  </div>
+
+  <div class="fig">
+    <p class="fig-title">Figure 2. How this class fits their plans (%)</p>
+    <p class="fig-note">n = 292</p>
+    <div class="panel"><div class="cw" style="height:148px"><canvas id="c2"></canvas></div></div>
+  </div>
+
+  <p class="sec-head">3. Learning Preferences</p>
+
+  <div class="fig">
+    <p class="fig-title">Figure 3. Classroom environment (%)</p>
+    <p class="fig-note">n = 292</p>
+    <div class="panel"><div class="cw" style="height:120px"><canvas id="c3"></canvas></div></div>
+  </div>
+
+  <div class="fig">
+    <p class="fig-title">Figure 4. How students learn best (%)</p>
+    <p class="fig-note">n = 292</p>
+    <div class="panel"><div class="cw" style="height:148px"><canvas id="c4"></canvas></div></div>
+  </div>
+
+  <div class="fig">
+    <p class="fig-title">Figure 5. Assignment preference (%)</p>
+    <p class="fig-note">n = 292</p>
+    <div class="panel"><div class="cw" style="height:120px"><canvas id="c5"></canvas></div></div>
+  </div>
+
+  <p class="sec-head">4. AI Attitude Scales (descriptive labels replace numeric 1&ndash;5 scores)</p>
+
+  <div class="fig">
+    <p class="fig-title">Figure 6. Familiarity with AI tools (%)</p>
+    <p class="fig-note">n = 292 &middot; Mean = 2.9 &middot; Median = 3</p>
+    <div class="panel"><div class="cw" style="height:148px"><canvas id="c6"></canvas></div></div>
+  </div>
+
+  <div class="fig">
+    <p class="fig-title">Figure 7. AI use frequency for schoolwork (%)</p>
+    <p class="fig-note">n = 291 &middot; Mean = 2.1 &middot; Median = 2</p>
+    <div class="panel"><div class="cw" style="height:148px"><canvas id="c7"></canvas></div></div>
+  </div>
+
+  <div class="fig">
+    <p class="fig-title">Figure 8. Perceived effect on work quality (%)</p>
+    <p class="fig-note">n = 291 &middot; Mean = 2.7 &middot; Median = 3</p>
+    <div class="panel"><div class="cw" style="height:148px"><canvas id="c8"></canvas></div></div>
+  </div>
+
+  <p class="sec-head">5. AI in the Classroom</p>
+
+  <div class="fig">
+    <p class="fig-title">Figure 9. Preferred instructor approach to AI (%)</p>
+    <p class="fig-note">n = 292 &middot; single choice</p>
+    <div class="panel"><div class="cw" style="height:148px"><canvas id="c9"></canvas></div></div>
+  </div>
+
+  <div class="fig">
+    <p class="fig-title">Figure 10. Negative impacts experienced from AI use (%)</p>
+    <p class="fig-note">n = 284 with valid response</p>
+    <div class="panel"><div class="cw" style="height:148px"><canvas id="c10"></canvas></div></div>
+  </div>
+
+  <div class="fig">
+    <p class="fig-title">Figure 11. Tasks AI should not handle (%)</p>
+    <p class="fig-note">n = 286 with valid response</p>
+    <div class="panel"><div class="cw" style="height:148px"><canvas id="c11"></canvas></div></div>
+  </div>
+
+  <p class="sec-head">6. Electronic Device Policy (Criminology sections only, n = 189)</p>
+
+  <div class="fig">
+    <p class="fig-title">Figure 12. Distracted by others&rsquo; device use (%)</p>
+    <p class="fig-note">n = 189 &middot; Mean = 1.9 &middot; Median = 2</p>
+    <div class="panel"><div class="cw" style="height:148px"><canvas id="c12"></canvas></div></div>
+  </div>
+
+  <div class="fig">
+    <p class="fig-title">Figure 13. Agreement with prohibiting devices in class (%)</p>
+    <p class="fig-note">n = 189 &middot; Mean = 2.3 &middot; Median = 2</p>
+    <div class="panel"><div class="cw" style="height:148px"><canvas id="c13"></canvas></div></div>
+  </div>
+
+</div>
+
+<script>
+const TC = '#666';
+const BLUE  = '#2a5f8f';
+const TEAL  = '#2e7d5e';
+const AMBER = '#7a4f1a';
+const GRAY  = '#555';
+
+function pct(v) { return v.toFixed(1) + '%'; }
+
+function hBar(id, labels, data, color) {
+  const axisMax = Math.min(100, Math.ceil(Math.max(...data) / 10 + 1) * 10);
+  new Chart(document.getElementById(id), {
+    type: 'bar',
+    data: {
+      labels: labels,
+      datasets: [{
+        data: data,
+        backgroundColor: color,
+        borderColor: 'transparent',
+        borderRadius: 2,
+        borderSkipped: false
+      }]
+    },
+    options: {
+      indexAxis: 'y',
+      responsive: true,
+      maintainAspectRatio: false,
+      layout: { padding: { right: 54, top: 2, bottom: 2, left: 2 } },
+      plugins: { legend: { display: false }, tooltip: { enabled: false } },
+      animation: {
+        onComplete: function() {
+          var chart = this;
+          var ctx = chart.ctx;
+          ctx.save();
+          ctx.font = '600 10.5px Arial, sans-serif';
+          ctx.fillStyle = '#333';
+          ctx.textAlign = 'left';
+          chart.data.datasets[0].data.forEach(function(val, i) {
+            var bar = chart.getDatasetMeta(0).data[i];
+            ctx.fillText(pct(val), bar.x + 6, bar.y + 4);
+          });
+          ctx.restore();
+        }
+      },
+      scales: {
+        x: { display: false, max: axisMax },
+        y: {
+          ticks: { color: TC, font: { size: 11, family: 'Arial, sans-serif' }, padding: 2 },
+          grid: { display: false },
+          border: { display: false }
+        }
+      }
+    }
+  });
+}
+
+function scaleHBar(id, labels, data, color) {
+  var maxV = Math.max(...data);
+  var bgColors = data.map(function(v) {
+    var alpha = (0.35 + 0.65 * (v / maxV));
+    var hex = Math.round(alpha * 255).toString(16).padStart(2, '0');
+    return color + hex;
+  });
+  new Chart(document.getElementById(id), {
+    type: 'bar',
+    data: {
+      labels: labels,
+      datasets: [{
+        data: data,
+        backgroundColor: bgColors,
+        borderColor: color,
+        borderWidth: 1,
+        borderRadius: 2,
+        borderSkipped: false
+      }]
+    },
+    options: {
+      indexAxis: 'y',
+      responsive: true,
+      maintainAspectRatio: false,
+      layout: { padding: { right: 54, top: 2, bottom: 2, left: 2 } },
+      plugins: { legend: { display: false }, tooltip: { enabled: false } },
+      animation: {
+        onComplete: function() {
+          var chart = this;
+          var ctx = chart.ctx;
+          ctx.save();
+          ctx.font = '600 10.5px Arial, sans-serif';
+          ctx.fillStyle = '#333';
+          ctx.textAlign = 'left';
+          chart.data.datasets[0].data.forEach(function(val, i) {
+            var bar = chart.getDatasetMeta(0).data[i];
+            ctx.fillText(pct(val), bar.x + 6, bar.y + 4);
+          });
+          ctx.restore();
+        }
+      },
+      scales: {
+        x: { display: false, max: 60 },
+        y: {
+          ticks: { color: TC, font: { size: 11, family: 'Arial, sans-serif' }, padding: 2 },
+          grid: { display: false },
+          border: { display: false }
+        }
+      }
+    }
+  });
+}
+
+hBar('c1',
+  ['Junior','Senior','Sophomore','Freshman'],
+  [32.6,27.5,23.7,16.2], BLUE);
+
+hBar('c2',
+  ['Essential for major/career','Helpful but not central','Personal interest only','Required course','For minor'],
+  [45.2,28.4,15.4,8.2,2.0], BLUE);
+
+hBar('c3',
+  ['Lecture-based','Interactive / discussion-based','Project-focused','Mixed'],
+  [56.8,37.3,3.4,2.4], TEAL);
+
+hBar('c4',
+  ['Seeing (videos, diagrams)','Hearing (lectures, discussions)','Doing (hands-on activities)','Multiple / mixed','Reading / writing'],
+  [33.6,26.4,26.4,7.9,5.8], TEAL);
+
+hBar('c5',
+  ['Short, frequent assignments','In-class activities','Longer individual projects','Longer group projects'],
+  [60.6,26.7,7.9,3.4], TEAL);
+
+scaleHBar('c6',
+  ['Not at all familiar (1)','Slightly familiar (2)','Moderately familiar (3)','Very familiar (4)','Expert (5)'],
+  [4.5,24.3,49.7,17.8,3.8], BLUE);
+
+scaleHBar('c7',
+  ['Never (1)','Rarely (2)','Sometimes (3)','Often (4)','Always (5)'],
+  [23.3,45.5,27.4,3.4,0.0], TEAL);
+
+scaleHBar('c8',
+  ['Much worse (1)','Somewhat worse (2)','No change (3)','Somewhat better (4)','Much better (5)'],
+  [16.4,17.8,45.2,16.8,3.4], AMBER);
+
+hBar('c9',
+  ['Provide specific guidelines','Teach effective prompting','Ignore AI / traditional methods','Design AI-resistant tasks','Let us use AI freely'],
+  [55.8,26.0,14.7,3.1,0.3], BLUE);
+
+hBar('c10',
+  ['Incorrect information','Reduced motivation to think deeply','Less satisfaction from completing work','Spending too much time','All of the above'],
+  [49.6,33.8,6.0,4.6,3.2], AMBER);
+
+hBar('c11',
+  ['Creative writing / personal reflections','Critical thinking and analysis','AI can assist all tasks','Research / information gathering','Math problem-solving'],
+  [57.1,16.6,16.6,4.5,3.1], BLUE);
+
+scaleHBar('c12',
+  ['Never (1)','Rarely (2)','Sometimes (3)','Often (4)','Always (5)'],
+  [37.6,39.7,16.9,3.7,2.1], GRAY);
+
+scaleHBar('c13',
+  ['Strongly disagree (1)','Disagree (2)','Neutral (3)','Agree (4)','Strongly agree (5)'],
+  [33.9,25.9,27.0,7.4,5.8], GRAY);
+</script>
+</body>
+</html>
