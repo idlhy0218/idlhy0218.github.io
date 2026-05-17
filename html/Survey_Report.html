@@ -8,63 +8,71 @@
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
-    font-family: Georgia, 'Times New Roman', serif;
-    background: #f4f3ef;
-    color: #1a1a1a;
+    font-family: 'Inter', Arial, sans-serif;
+    background: #f8fafc;
+    color: #1e293b;
     padding: 40px 20px 60px;
   }
   .page {
     max-width: 780px;
     margin: 0 auto;
-    background: #fff;
-    border: 1px solid #bbb;
-    padding: 52px 56px;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 48px 52px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
   }
   .report-title {
     font-size: 17px;
-    font-weight: 600;
-    color: #111;
+    font-weight: 700;
+    color: #1e293b;
     margin-bottom: 5px;
+    font-family: 'Inter', Arial, sans-serif;
   }
   .report-sub {
     font-size: 12px;
-    color: #777;
-    font-style: italic;
+    color: #64748b;
+    font-style: normal;
     padding-bottom: 16px;
-    border-bottom: 1.5px solid #111;
+    border-bottom: 1.5px solid #e2e8f0;
     margin-bottom: 0;
+    font-family: 'Inter', Arial, sans-serif;
   }
   .sec-head {
     font-size: 10px;
     letter-spacing: .13em;
     text-transform: uppercase;
-    color: #666;
-    font-family: Arial, sans-serif;
+    color: #94a3b8;
+    font-family: 'Inter', Arial, sans-serif;
+    font-weight: 600;
     margin: 32px 0 16px;
     padding-bottom: 5px;
-    border-bottom: 1px solid #ccc;
+    border-bottom: 1px solid #e2e8f0;
   }
   .stat-row {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    border: 1px solid #ccc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    overflow: hidden;
     margin-bottom: 4px;
   }
   .stat {
-    background: #f8f7f4;
+    background: #f8fafc;
     padding: 13px 15px;
-    border-right: 1px solid #ccc;
+    border-right: 1px solid #e2e8f0;
   }
   .stat:last-child { border-right: none; }
-  .stat-lbl { font-size: 10px; color: #999; font-family: Arial, sans-serif; margin-bottom: 4px; }
-  .stat-val { font-size: 20px; font-weight: 600; font-family: Arial, sans-serif; color: #111; }
-  .stat-sub { font-size: 10px; color: #aaa; font-family: Arial, sans-serif; font-style: italic; margin-top: 2px; }
+  .stat-lbl { font-size: 10px; color: #94a3b8; font-family: 'Inter', Arial, sans-serif; margin-bottom: 4px; }
+  .stat-val { font-size: 20px; font-weight: 700; font-family: 'Inter', Arial, sans-serif; color: #1e293b; }
+  .stat-sub { font-size: 10px; color: #94a3b8; font-family: 'Inter', Arial, sans-serif; margin-top: 2px; }
   .fig { margin-bottom: 22px; }
-  .fig-title { font-size: 12px; font-family: Arial, sans-serif; font-weight: 600; color: #222; margin-bottom: 2px; }
-  .fig-note { font-size: 10.5px; color: #999; font-style: italic; margin-bottom: 8px; }
+  .fig-title { font-size: 12px; font-family: 'Inter', Arial, sans-serif; font-weight: 600; color: #1e293b; margin-bottom: 2px; }
+  .fig-note { font-size: 10.5px; color: #94a3b8; margin-bottom: 8px; font-family: 'Inter', Arial, sans-serif; }
   .panel {
-    background: #f8f7f4;
-    border: 1px solid #d2d0cb;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
     padding: 14px 18px 14px 14px;
   }
   .cw { position: relative; width: 100%; }
