@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Student First-Day Survey: AI Attitudes and Learning Preferences</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
@@ -27,23 +28,19 @@
     font-weight: 700;
     color: #1e293b;
     margin-bottom: 5px;
-    font-family: 'Inter', Arial, sans-serif;
   }
   .report-sub {
     font-size: 12px;
     color: #64748b;
-    font-style: normal;
     padding-bottom: 16px;
     border-bottom: 1.5px solid #e2e8f0;
     margin-bottom: 0;
-    font-family: 'Inter', Arial, sans-serif;
   }
   .sec-head {
     font-size: 10px;
     letter-spacing: .13em;
     text-transform: uppercase;
     color: #94a3b8;
-    font-family: 'Inter', Arial, sans-serif;
     font-weight: 600;
     margin: 32px 0 16px;
     padding-bottom: 5px;
@@ -63,12 +60,12 @@
     border-right: 1px solid #e2e8f0;
   }
   .stat:last-child { border-right: none; }
-  .stat-lbl { font-size: 10px; color: #94a3b8; font-family: 'Inter', Arial, sans-serif; margin-bottom: 4px; }
-  .stat-val { font-size: 20px; font-weight: 700; font-family: 'Inter', Arial, sans-serif; color: #1e293b; }
-  .stat-sub { font-size: 10px; color: #94a3b8; font-family: 'Inter', Arial, sans-serif; margin-top: 2px; }
+  .stat-lbl { font-size: 10px; color: #94a3b8; margin-bottom: 4px; }
+  .stat-val { font-size: 20px; font-weight: 700; color: #1e293b; }
+  .stat-sub { font-size: 10px; color: #94a3b8; margin-top: 2px; }
   .fig { margin-bottom: 22px; }
-  .fig-title { font-size: 12px; font-family: 'Inter', Arial, sans-serif; font-weight: 600; color: #1e293b; margin-bottom: 2px; }
-  .fig-note { font-size: 10.5px; color: #94a3b8; margin-bottom: 8px; font-family: 'Inter', Arial, sans-serif; }
+  .fig-title { font-size: 12px; font-weight: 600; color: #1e293b; margin-bottom: 2px; }
+  .fig-note { font-size: 10.5px; color: #94a3b8; margin-bottom: 8px; }
   .panel {
     background: #f8fafc;
     border: 1px solid #e2e8f0;
@@ -93,13 +90,11 @@
   </div>
 
   <p class="sec-head">2. Student Background</p>
-
   <div class="fig">
     <p class="fig-title">Figure 1. Class year (%)</p>
     <p class="fig-note">n = 292</p>
     <div class="panel"><div class="cw" style="height:120px"><canvas id="c1"></canvas></div></div>
   </div>
-
   <div class="fig">
     <p class="fig-title">Figure 2. How this class fits their plans (%)</p>
     <p class="fig-note">n = 292</p>
@@ -107,19 +102,16 @@
   </div>
 
   <p class="sec-head">3. Learning Preferences</p>
-
   <div class="fig">
     <p class="fig-title">Figure 3. Classroom environment (%)</p>
     <p class="fig-note">n = 292</p>
     <div class="panel"><div class="cw" style="height:120px"><canvas id="c3"></canvas></div></div>
   </div>
-
   <div class="fig">
     <p class="fig-title">Figure 4. How students learn best (%)</p>
     <p class="fig-note">n = 292</p>
     <div class="panel"><div class="cw" style="height:148px"><canvas id="c4"></canvas></div></div>
   </div>
-
   <div class="fig">
     <p class="fig-title">Figure 5. Assignment preference (%)</p>
     <p class="fig-note">n = 292</p>
@@ -127,19 +119,16 @@
   </div>
 
   <p class="sec-head">4. AI Attitude Scales (descriptive labels replace numeric 1&ndash;5 scores)</p>
-
   <div class="fig">
     <p class="fig-title">Figure 6. Familiarity with AI tools (%)</p>
     <p class="fig-note">n = 292 &middot; Mean = 2.9 &middot; Median = 3</p>
     <div class="panel"><div class="cw" style="height:148px"><canvas id="c6"></canvas></div></div>
   </div>
-
   <div class="fig">
     <p class="fig-title">Figure 7. AI use frequency for schoolwork (%)</p>
     <p class="fig-note">n = 291 &middot; Mean = 2.1 &middot; Median = 2</p>
     <div class="panel"><div class="cw" style="height:148px"><canvas id="c7"></canvas></div></div>
   </div>
-
   <div class="fig">
     <p class="fig-title">Figure 8. Perceived effect on work quality (%)</p>
     <p class="fig-note">n = 291 &middot; Mean = 2.7 &middot; Median = 3</p>
@@ -147,19 +136,16 @@
   </div>
 
   <p class="sec-head">5. AI in the Classroom</p>
-
   <div class="fig">
     <p class="fig-title">Figure 9. Preferred instructor approach to AI (%)</p>
     <p class="fig-note">n = 292 &middot; single choice</p>
     <div class="panel"><div class="cw" style="height:148px"><canvas id="c9"></canvas></div></div>
   </div>
-
   <div class="fig">
     <p class="fig-title">Figure 10. Negative impacts experienced from AI use (%)</p>
     <p class="fig-note">n = 284 with valid response</p>
     <div class="panel"><div class="cw" style="height:148px"><canvas id="c10"></canvas></div></div>
   </div>
-
   <div class="fig">
     <p class="fig-title">Figure 11. Tasks AI should not handle (%)</p>
     <p class="fig-note">n = 286 with valid response</p>
@@ -167,13 +153,11 @@
   </div>
 
   <p class="sec-head">6. Electronic Device Policy (Criminology sections only, n = 189)</p>
-
   <div class="fig">
     <p class="fig-title">Figure 12. Distracted by others&rsquo; device use (%)</p>
     <p class="fig-note">n = 189 &middot; Mean = 1.9 &middot; Median = 2</p>
     <div class="panel"><div class="cw" style="height:148px"><canvas id="c12"></canvas></div></div>
   </div>
-
   <div class="fig">
     <p class="fig-title">Figure 13. Agreement with prohibiting devices in class (%)</p>
     <p class="fig-note">n = 189 &middot; Mean = 2.3 &middot; Median = 2</p>
@@ -183,25 +167,53 @@
 </div>
 
 <script>
-const TC = '#666';
-const BLUE  = '#2a5f8f';
-const TEAL  = '#2e7d5e';
-const AMBER = '#7a4f1a';
-const GRAY  = '#555';
+// Section palettes — calm, academic
+// Sec 2: Slate blue
+// Sec 3: Teal green
+// Sec 4: Muted indigo
+// Sec 5: Warm sienna
+// Sec 6: Steel blue-grey
+const COLORS = {
+  s2: '#3d5a80',
+  s3: '#2d6a4f',
+  s4: '#4a4580',
+  s5: '#7b4f2e',
+  s6: '#4a6274'
+};
+
+const TC = '#64748b';
 
 function pct(v) { return v.toFixed(1) + '%'; }
 
-function hBar(id, labels, data, color) {
-  const axisMax = Math.min(100, Math.ceil(Math.max(...data) / 10 + 1) * 10);
+// Build alpha-shaded colors: mode = full opacity, others scaled down
+// minAlpha: lightest bar; maxAlpha: darkest (mode) bar
+function modeColors(data, hexColor, minAlpha, maxAlpha) {
+  var maxV = Math.max(...data);
+  return data.map(function(v) {
+    var ratio = v / maxV; // 0..1, mode = 1
+    var alpha = minAlpha + (maxAlpha - minAlpha) * ratio;
+    var hexA = Math.round(alpha * 255).toString(16).padStart(2, '0');
+    return hexColor + hexA;
+  });
+}
+
+function drawChart(id, labels, data, color, minAlpha, maxAlpha) {
+  var bgColors = modeColors(data, color, minAlpha, maxAlpha);
+  var axisMax = Math.min(100, Math.ceil(Math.max(...data) / 10 + 1) * 10);
+
   new Chart(document.getElementById(id), {
     type: 'bar',
     data: {
       labels: labels,
       datasets: [{
         data: data,
-        backgroundColor: color,
-        borderColor: 'transparent',
-        borderRadius: 2,
+        backgroundColor: bgColors,
+        borderColor: bgColors.map(function(c, i) {
+          // mode bar gets solid border, others transparent
+          return data[i] === Math.max(...data) ? color : 'transparent';
+        }),
+        borderWidth: 1,
+        borderRadius: 3,
         borderSkipped: false
       }]
     },
@@ -216,11 +228,12 @@ function hBar(id, labels, data, color) {
           var chart = this;
           var ctx = chart.ctx;
           ctx.save();
-          ctx.font = '600 10.5px Arial, sans-serif';
-          ctx.fillStyle = '#333';
+          ctx.font = '600 10.5px Inter, Arial, sans-serif';
           ctx.textAlign = 'left';
           chart.data.datasets[0].data.forEach(function(val, i) {
             var bar = chart.getDatasetMeta(0).data[i];
+            var isMode = val === Math.max(...data);
+            ctx.fillStyle = isMode ? '#1e293b' : '#475569';
             ctx.fillText(pct(val), bar.x + 6, bar.y + 4);
           });
           ctx.restore();
@@ -229,7 +242,11 @@ function hBar(id, labels, data, color) {
       scales: {
         x: { display: false, max: axisMax },
         y: {
-          ticks: { color: TC, font: { size: 11, family: 'Arial, sans-serif' }, padding: 2 },
+          ticks: {
+            color: TC,
+            font: { size: 11, family: 'Inter, Arial, sans-serif' },
+            padding: 2
+          },
           grid: { display: false },
           border: { display: false }
         }
@@ -238,110 +255,62 @@ function hBar(id, labels, data, color) {
   });
 }
 
-function scaleHBar(id, labels, data, color) {
-  var maxV = Math.max(...data);
-  var bgColors = data.map(function(v) {
-    var alpha = (0.35 + 0.65 * (v / maxV));
-    var hex = Math.round(alpha * 255).toString(16).padStart(2, '0');
-    return color + hex;
-  });
-  new Chart(document.getElementById(id), {
-    type: 'bar',
-    data: {
-      labels: labels,
-      datasets: [{
-        data: data,
-        backgroundColor: bgColors,
-        borderColor: color,
-        borderWidth: 1,
-        borderRadius: 2,
-        borderSkipped: false
-      }]
-    },
-    options: {
-      indexAxis: 'y',
-      responsive: true,
-      maintainAspectRatio: false,
-      layout: { padding: { right: 54, top: 2, bottom: 2, left: 2 } },
-      plugins: { legend: { display: false }, tooltip: { enabled: false } },
-      animation: {
-        onComplete: function() {
-          var chart = this;
-          var ctx = chart.ctx;
-          ctx.save();
-          ctx.font = '600 10.5px Arial, sans-serif';
-          ctx.fillStyle = '#333';
-          ctx.textAlign = 'left';
-          chart.data.datasets[0].data.forEach(function(val, i) {
-            var bar = chart.getDatasetMeta(0).data[i];
-            ctx.fillText(pct(val), bar.x + 6, bar.y + 4);
-          });
-          ctx.restore();
-        }
-      },
-      scales: {
-        x: { display: false, max: 60 },
-        y: {
-          ticks: { color: TC, font: { size: 11, family: 'Arial, sans-serif' }, padding: 2 },
-          grid: { display: false },
-          border: { display: false }
-        }
-      }
-    }
-  });
-}
-
-hBar('c1',
+// Section 2 — Slate blue
+drawChart('c1',
   ['Junior','Senior','Sophomore','Freshman'],
-  [32.6,27.5,23.7,16.2], BLUE);
+  [32.6,27.5,23.7,16.2], COLORS.s2, 0.22, 0.90);
 
-hBar('c2',
+drawChart('c2',
   ['Essential for major/career','Helpful but not central','Personal interest only','Required course','For minor'],
-  [45.2,28.4,15.4,8.2,2.0], BLUE);
+  [45.2,28.4,15.4,8.2,2.0], COLORS.s2, 0.22, 0.90);
 
-hBar('c3',
+// Section 3 — Teal green
+drawChart('c3',
   ['Lecture-based','Interactive / discussion-based','Project-focused','Mixed'],
-  [56.8,37.3,3.4,2.4], TEAL);
+  [56.8,37.3,3.4,2.4], COLORS.s3, 0.22, 0.90);
 
-hBar('c4',
+drawChart('c4',
   ['Seeing (videos, diagrams)','Hearing (lectures, discussions)','Doing (hands-on activities)','Multiple / mixed','Reading / writing'],
-  [33.6,26.4,26.4,7.9,5.8], TEAL);
+  [33.6,26.4,26.4,7.9,5.8], COLORS.s3, 0.22, 0.90);
 
-hBar('c5',
+drawChart('c5',
   ['Short, frequent assignments','In-class activities','Longer individual projects','Longer group projects'],
-  [60.6,26.7,7.9,3.4], TEAL);
+  [60.6,26.7,7.9,3.4], COLORS.s3, 0.22, 0.90);
 
-scaleHBar('c6',
+// Section 4 — Muted indigo
+drawChart('c6',
   ['Not at all familiar (1)','Slightly familiar (2)','Moderately familiar (3)','Very familiar (4)','Expert (5)'],
-  [4.5,24.3,49.7,17.8,3.8], BLUE);
+  [4.5,24.3,49.7,17.8,3.8], COLORS.s4, 0.22, 0.90);
 
-scaleHBar('c7',
+drawChart('c7',
   ['Never (1)','Rarely (2)','Sometimes (3)','Often (4)','Always (5)'],
-  [23.3,45.5,27.4,3.4,0.0], TEAL);
+  [23.3,45.5,27.4,3.4,0.0], COLORS.s4, 0.22, 0.90);
 
-scaleHBar('c8',
+drawChart('c8',
   ['Much worse (1)','Somewhat worse (2)','No change (3)','Somewhat better (4)','Much better (5)'],
-  [16.4,17.8,45.2,16.8,3.4], AMBER);
+  [16.4,17.8,45.2,16.8,3.4], COLORS.s4, 0.22, 0.90);
 
-hBar('c9',
+// Section 5 — Warm sienna
+drawChart('c9',
   ['Provide specific guidelines','Teach effective prompting','Ignore AI / traditional methods','Design AI-resistant tasks','Let us use AI freely'],
-  [55.8,26.0,14.7,3.1,0.3], BLUE);
+  [55.8,26.0,14.7,3.1,0.3], COLORS.s5, 0.22, 0.90);
 
-hBar('c10',
+drawChart('c10',
   ['Incorrect information','Reduced motivation to think deeply','Less satisfaction from completing work','Spending too much time','All of the above'],
-  [49.6,33.8,6.0,4.6,3.2], AMBER);
+  [49.6,33.8,6.0,4.6,3.2], COLORS.s5, 0.22, 0.90);
 
-hBar('c11',
+drawChart('c11',
   ['Creative writing / personal reflections','Critical thinking and analysis','AI can assist all tasks','Research / information gathering','Math problem-solving'],
-  [57.1,16.6,16.6,4.5,3.1], BLUE);
+  [57.1,16.6,16.6,4.5,3.1], COLORS.s5, 0.22, 0.90);
 
-scaleHBar('c12',
+// Section 6 — Steel blue-grey
+drawChart('c12',
   ['Never (1)','Rarely (2)','Sometimes (3)','Often (4)','Always (5)'],
-  [37.6,39.7,16.9,3.7,2.1], GRAY);
+  [37.6,39.7,16.9,3.7,2.1], COLORS.s6, 0.22, 0.90);
 
-scaleHBar('c13',
+drawChart('c13',
   ['Strongly disagree (1)','Disagree (2)','Neutral (3)','Agree (4)','Strongly agree (5)'],
-  [33.9,25.9,27.0,7.4,5.8], GRAY);
+  [33.9,25.9,27.0,7.4,5.8], COLORS.s6, 0.22, 0.90);
 </script>
 </body>
 </html>
