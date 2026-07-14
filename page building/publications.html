@@ -20,14 +20,16 @@
         }
 
         :root {
-            --primary: #053499;
-            --primary-dark: #1e40af;
-            --text-primary: #1e293b;
-            --text-secondary: #64748b;
+            --primary: #1e3a8a;
+            --primary-dark: #0f172a;
+            --primary-light: #eff6ff;
+            --text-primary: #0f172a;
+            --text-secondary: #475569;
             --bg-primary: #ffffff;
             --bg-secondary: #f8fafc;
-            --border: #e2e8f050;
-            --accent: #1e40af;
+            --border: rgba(226, 232, 240, 0.8);
+            --accent: #1e3a8a;
+            --shadow-premium: 0 8px 30px rgba(15, 23, 42, 0.04);
         }
 
         body {
@@ -127,9 +129,10 @@
 
         .content-section {
             background: var(--bg-primary);
-            border-radius: 12px;
+            border-radius: 16px;
             padding: 3rem;
             border: 1px solid var(--border);
+            box-shadow: var(--shadow-premium);
         }
 
         .nav-tabs {
@@ -195,12 +198,13 @@
             margin-bottom: 1.5rem;
             background: var(--bg-secondary);
             border-radius: 8px;
-            transition: all 0.2s ease;
+            box-shadow: 0 2px 8px rgba(15, 23, 42, 0.02);
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .publication-card:hover {
             transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.1);
+            box-shadow: 0 10px 25px rgba(15, 23, 42, 0.05);
             border-left-color: var(--primary-dark);
         }
 
@@ -238,20 +242,26 @@
             margin-bottom: 0.5rem;
         }
 
-        .publication-doi {
+        .doi-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            padding: 0.2rem 0.6rem;
+            background: var(--primary-light);
             color: var(--primary);
-            font-size: 0.9em;
-            word-break: break-all;
-        }
-
-        .publication-doi a {
-            color: var(--primary);
+            border: 1px solid #bfdbfe;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            font-weight: 600;
             text-decoration: none;
+            margin-top: 0.35rem;
+            transition: all 0.2s ease;
         }
-
-        .publication-doi a:hover {
+        .doi-link:hover {
+            background: #dbeafe;
             color: var(--primary-dark);
-            text-decoration: underline;
+            border-color: #93c5fd;
+            text-decoration: none !important;
         }
 
         .award {
@@ -281,6 +291,12 @@
             background-color: #dbeafe;
             color: #1e40af;
             border-color: #3b82f6;
+        }
+
+        .status-forthcoming {
+            background-color: #f0fdf4;
+            color: #15803d;
+            border-color: #bbf7d0;
         }
 
         @media (max-width: 768px) {
@@ -414,7 +430,7 @@
                     <div class="publication-venue">
                         The Sociological Quarterly
                     </div>
-                    <span class="status-badge status-rnr" style="background-color:#dcfce7; color:#166534; border-color:#86efac;">Forthcoming</span>
+                    <span class="status-badge status-forthcoming">Forthcoming</span>
                 </div>
 
                 <div class="publication-card">
@@ -429,7 +445,7 @@
                         Journal of Health and Social Behavior
                     </div>
                     <div class="publication-doi">
-                        <a href="https://doi.org/10.1177/00221465261457832" target="_blank" rel="noopener">https://doi.org/10.1177/00221465261457832</a>
+                        <a href="https://doi.org/10.1177/00221465261457832" target="_blank" rel="noopener" class="doi-link"><i class="bi bi-link-45deg"></i> DOI</a>
                     </div>
                 </div>
 
@@ -445,7 +461,7 @@
                         Social Science &amp; Medicine
                     </div>
                     <div class="publication-doi">
-                        <a href="https://doi.org/10.1016/j.socscimed.2026.119407" target="_blank" rel="noopener">https://doi.org/10.1016/j.socscimed.2026.119407</a>
+                        <a href="https://doi.org/10.1016/j.socscimed.2026.119407" target="_blank" rel="noopener" class="doi-link"><i class="bi bi-link-45deg"></i> DOI</a>
                     </div>
                 </div>
 
@@ -463,7 +479,7 @@
                         Lerner Center Population Health Research Brief Series, Research Brief #139
                     </div>
                     <div class="publication-doi">
-                        <a href="https://doi.org/10.14305/rt.lerner.2025.22" target="_blank" rel="noopener">https://doi.org/10.14305/rt.lerner.2025.22</a>
+                        <a href="https://doi.org/10.14305/rt.lerner.2025.22" target="_blank" rel="noopener" class="doi-link"><i class="bi bi-link-45deg"></i> DOI</a>
                     </div>
                 </div>
 
@@ -479,7 +495,7 @@
                         American Journal of Preventive Medicine
                     </div>
                     <div class="publication-doi">
-                        <a href="https://doi.org/10.1016/j.amepre.2025.107646" target="_blank" rel="noopener">https://doi.org/10.1016/j.amepre.2025.107646</a>
+                        <a href="https://doi.org/10.1016/j.amepre.2025.107646" target="_blank" rel="noopener" class="doi-link"><i class="bi bi-link-45deg"></i> DOI</a>
                     </div>
                 </div>
 
@@ -495,7 +511,7 @@
                         Journal of Adolescence
                     </div>
                     <div class="publication-doi">
-                        <a href="https://doi.org/10.1002/jad.12490" target="_blank" rel="noopener">https://doi.org/10.1002/jad.12490</a>
+                        <a href="https://doi.org/10.1002/jad.12490" target="_blank" rel="noopener" class="doi-link"><i class="bi bi-link-45deg"></i> DOI</a>
                     </div>
                 </div>
 
@@ -511,7 +527,7 @@
                         Society and Mental Health
                     </div>
                     <div class="publication-doi">
-                        <a href="https://doi.org/10.1177/21568693241242400" target="_blank" rel="noopener">https://doi.org/10.1177/21568693241242400</a>
+                        <a href="https://doi.org/10.1177/21568693241242400" target="_blank" rel="noopener" class="doi-link"><i class="bi bi-link-45deg"></i> DOI</a>
                     </div>
                     <div class="award">
                         🏆 2024 Paul Meadows, Excellence in Research Award Winner, Sociology Department, University
@@ -533,7 +549,7 @@
                         The Journals of Gerontology, Series B: Psychological Sciences and Social Sciences
                     </div>
                     <div class="publication-doi">
-                        <a href="https://doi.org/10.1093/geronb/gbaf069" target="_blank" rel="noopener">https://doi.org/10.1093/geronb/gbaf069</a>
+                        <a href="https://doi.org/10.1093/geronb/gbaf069" target="_blank" rel="noopener" class="doi-link"><i class="bi bi-link-45deg"></i> DOI</a>
                     </div>
                 </div>
 
@@ -549,7 +565,7 @@
                         Journal of Homosexuality
                     </div>
                     <div class="publication-doi">
-                        <a href="https://doi.org/10.1080/00918369.2024.2378743" target="_blank" rel="noopener">https://doi.org/10.1080/00918369.2024.2378743</a>
+                        <a href="https://doi.org/10.1080/00918369.2024.2378743" target="_blank" rel="noopener" class="doi-link"><i class="bi bi-link-45deg"></i> DOI</a>
                     </div>
                 </div>
 
@@ -568,7 +584,7 @@
                         Population Research & Policy Review
                     </div>
                     <div class="publication-doi">
-                        <a href="https://doi.org/10.1007/s11113-024-09922-2" target="_blank" rel="noopener">https://doi.org/10.1007/s11113-024-09922-2</a>
+                        <a href="https://doi.org/10.1007/s11113-024-09922-2" target="_blank" rel="noopener" class="doi-link"><i class="bi bi-link-45deg"></i> DOI</a>
                     </div>
                 </div>
 
@@ -583,7 +599,7 @@
                         Child Abuse and Neglect
                     </div>
                     <div class="publication-doi">
-                        <a href="https://doi.org/10.1016/j.chiabu.2024.107096" target="_blank" rel="noopener">https://doi.org/10.1016/j.chiabu.2024.107096</a>
+                        <a href="https://doi.org/10.1016/j.chiabu.2024.107096" target="_blank" rel="noopener" class="doi-link"><i class="bi bi-link-45deg"></i> DOI</a>
                     </div>
                 </div>
 
@@ -599,7 +615,7 @@
                         Criminal Justice and Behaviors
                     </div>
                     <div class="publication-doi">
-                        <a href="https://doi.org/10.1177/00938548241276087" target="_blank" rel="noopener">https://doi.org/10.1177/00938548241276087</a>
+                        <a href="https://doi.org/10.1177/00938548241276087" target="_blank" rel="noopener" class="doi-link"><i class="bi bi-link-45deg"></i> DOI</a>
                     </div>
                     <div class="award">
                         🏆 2022 Paul Meadows, Excellence in Research Award Winner, Sociology Department, University
@@ -619,7 +635,7 @@
                         Violence Against Women
                     </div>
                     <div class="publication-doi">
-                        <a href="https://doi.org/10.1177/10778012231203001" target="_blank" rel="noopener">https://doi.org/10.1177/10778012231203001</a>
+                        <a href="https://doi.org/10.1177/10778012231203001" target="_blank" rel="noopener" class="doi-link"><i class="bi bi-link-45deg"></i> DOI</a>
                     </div>
                 </div>
 

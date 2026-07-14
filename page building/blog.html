@@ -19,20 +19,22 @@
         }
 
         :root {
-            --primary: #053499;
-            --primary-dark: #1e40af;
-            --text-primary: #1e293b;
-            --text-secondary: #64748b;
+            --primary: #1e3a8a;
+            --primary-dark: #0f172a;
+            --primary-light: #eff6ff;
+            --text-primary: #0f172a;
+            --text-secondary: #475569;
             --bg-primary: #ffffff;
             --bg-secondary: #f8fafc;
-            --border: #e2e8f050;
-            --accent: #1e40af;
+            --border: rgba(226, 232, 240, 0.8);
+            --accent: #1e3a8a;
             --ft-paper: #fff1e5;
             --ft-border: #e2e8f0;
             --ft-card: #ffffff;
             --ft-text-primary: #1e293b;
             --accent-claret: #990f3d;
             --accent-dark: #1e293b;
+            --shadow-premium: 0 8px 30px rgba(15, 23, 42, 0.04);
         }
 
         body {
@@ -136,9 +138,10 @@
         .tab-container {
             background: var(--bg-primary);
             border: 1px solid var(--border);
-            border-radius: 12px;
+            border-radius: 16px;
             padding: 2.5rem;
             margin-bottom: 2rem;
+            box-shadow: var(--shadow-premium);
         }
 
         .nav-tabs {
@@ -203,7 +206,8 @@
             border: 1px solid var(--border);
             border-radius: 8px;
             padding: 1.5rem;
-            transition: all 0.2s ease;
+            box-shadow: 0 2px 8px rgba(15, 23, 42, 0.02);
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
             cursor: pointer;
             position: relative;
             overflow: hidden;
@@ -211,7 +215,7 @@
 
         .blog-card:hover {
             transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.1);
+            box-shadow: 0 10px 25px rgba(15, 23, 42, 0.05);
             border-color: var(--primary);
         }
 

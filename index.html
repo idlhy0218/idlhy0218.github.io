@@ -16,14 +16,16 @@
         }
 
         :root {
-            --primary: #053499;
-            --primary-dark: #1e40af;
-            --text-primary: #1e293b;
-            --text-secondary: #64748b;
+            --primary: #1e3a8a;
+            --primary-dark: #0f172a;
+            --primary-light: #eff6ff;
+            --text-primary: #0f172a;
+            --text-secondary: #475569;
             --bg-primary: #ffffff;
             --bg-secondary: #f8fafc;
-            --border: #e2e8f050;
-            --accent: #1e40af;
+            --border: rgba(226, 232, 240, 0.8);
+            --accent: #1e3a8a;
+            --shadow-premium: 0 8px 30px rgba(15, 23, 42, 0.04);
         }
 
         body {
@@ -121,12 +123,18 @@
         /* Sidebar */
         .sidebar {
             background: var(--bg-primary);
-            border-radius: 12px;
+            border-radius: 16px;
             padding: 3rem 2.5rem;
             border: 1px solid var(--border);
+            box-shadow: var(--shadow-premium);
             height: fit-content;
             position: sticky;
             top: 100px;
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .sidebar:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 40px rgba(15, 23, 42, 0.06);
         }
 
         .sidebar h1 {
@@ -191,20 +199,21 @@
             align-items: center;
             gap: 0.5rem;
             padding: 0.5rem 1rem;
-            background: var(--bg-secondary);
+            background: transparent;
             border: 1px solid var(--border);
-            border-radius: 6px;
-            color: var(--text-primary);
+            border-radius: 8px;
+            color: var(--text-secondary);
             text-decoration: none;
             font-size: 0.9rem;
             font-weight: 500;
-            transition: all 0.2s;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .social-link:hover {
-            background: var(--primary);
-            color: white;
-            border-color: var(--primary);
+            background: var(--primary-light);
+            color: var(--primary);
+            border-color: #bfdbfe;
+            transform: translateY(-1px);
         }
 
         /* Main Content */
@@ -216,9 +225,50 @@
 
         .card {
             background: var(--bg-primary);
-            border-radius: 12px;
+            border-radius: 16px;
             padding: 2.5rem;
             border: 1px solid var(--border);
+            box-shadow: var(--shadow-premium);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 40px rgba(15, 23, 42, 0.06);
+        }
+
+        /* DOI link badge style */
+        .doi-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            padding: 0.2rem 0.6rem;
+            background: var(--primary-light);
+            color: var(--primary);
+            border: 1px solid #bfdbfe;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-decoration: none;
+            margin-top: 0.35rem;
+            transition: all 0.2s ease;
+        }
+        .doi-link:hover {
+            background: #dbeafe;
+            color: var(--primary-dark);
+            border-color: #93c5fd;
+        }
+
+        /* Status Badge for Forthcoming */
+        .status-badge.forthcoming {
+            display: inline-block;
+            margin-top: 0.35rem;
+            padding: 0.2rem 0.6rem;
+            background: #f0fdf4;
+            color: #15803d;
+            border: 1px solid #bbf7d0;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            font-weight: 600;
         }
 
         .card h2 {
@@ -680,21 +730,19 @@
                         <li>
                             <strong>Heeyoung Lee<sup>†</sup></strong>, Jungmin Shin<sup>†</sup>, and Jonathan Dirlam. 2026. "The Influence of Structural Sexism and the #MeToo Movement on Sexual Harassment Complaints in the United States."
                             <i>The Sociological Quarterly</i>.
-                            <span style="display:inline-block; margin-top:0.35rem; padding:0.2rem 0.6rem; background:#dcfce7; color:#166534; border:1px solid #86efac; border-radius:4px; font-size:0.85rem; font-weight:600;">Forthcoming</span>
+                            <span class="status-badge forthcoming">Forthcoming</span>
                         </li>
                         <li>
                             <strong>Heeyoung Lee*</strong>. 2026. "Permeable Boundaries: How Neighboring States'
                             Policy Environments Shape Local Mortality Rates in the United States."
                             <i>Journal of Health and Social Behavior</i>.
-                            <a href="https://doi.org/10.1177/00221465261457832" target="_blank" rel="noopener"
-                                style="color: var(--primary); font-size: 0.9em; display: block; word-break: break-all;">https://doi.org/10.1177/00221465261457832</a>
+                            <a href="https://doi.org/10.1177/00221465261457832" target="_blank" rel="noopener" class="doi-link"><i class="bi bi-link-45deg"></i> DOI</a>
                         </li>
                         <li>
                             Tse-Chuan Yang, <strong>Heeyoung Lee</strong>, and Golam Morshed Suhel. 2026. "Age
                             Segregation and Deaths of Despair among Older Adults, 2010-2022: Rural/Urban County
                             Comparisons." <i>Social Science &amp; Medicine</i>.
-                            <a href="https://doi.org/10.1016/j.socscimed.2026.119407" target="_blank" rel="noopener"
-                                style="color: var(--primary); font-size: 0.9em; display: block; word-break: break-all;">https://doi.org/10.1016/j.socscimed.2026.119407</a>
+                            <a href="https://doi.org/10.1016/j.socscimed.2026.119407" target="_blank" rel="noopener" class="doi-link"><i class="bi bi-link-45deg"></i> DOI</a>
                         </li>
 
                         <li class="year-header-item"><h4 class="year-header">2025</h4></li>
@@ -702,44 +750,38 @@
                             <strong>Heeyoung Lee*</strong>, and Tse-Chuan Yang. 2025. "How Does County Educational
                             Composition Affect Mortality." <i>Lerner Center Population Health Research Brief Series,
                                 Research Brief #139</i>.
-                            <a href="https://doi.org/10.14305/rt.lerner.2025.22" target="_blank" rel="noopener"
-                                style="color: var(--primary); font-size: 0.9em; display: block; word-break: break-all;">https://doi.org/10.14305/rt.lerner.2025.22</a>
+                            <a href="https://doi.org/10.14305/rt.lerner.2025.22" target="_blank" rel="noopener" class="doi-link"><i class="bi bi-link-45deg"></i> DOI</a>
                         </li>
                         <li>
                             <strong>Heeyoung Lee*</strong>, and Tse-Chuan Yang. 2025. "Unequal Spillover of Human
                             Capital: Longitudinal Analysis of Mortality Among Populations by College Degree in US
                             Counties, 2010-2022." <i>American Journal of Preventive Medicine</i>.
-                            <a href="https://doi.org/10.1016/j.amepre.2025.107646" target="_blank" rel="noopener"
-                                style="color: var(--primary); font-size: 0.9em; display: block; word-break: break-all;">https://doi.org/10.1016/j.amepre.2025.107646</a>
+                            <a href="https://doi.org/10.1016/j.amepre.2025.107646" target="_blank" rel="noopener" class="doi-link"><i class="bi bi-link-45deg"></i> DOI</a>
                         </li>
                         <li>
                             Tse-Chuan Yang, Carla Shoff, Kate Strully and <strong>Heeyoung Lee</strong>. 2025. "Features
                             of Residential Counties and Individual Health Conditions for Opioid Use Disorder Among Older
                             Medicare Beneficiaries." <i>The Journals of Gerontology, Series B: Psychological Sciences
                                 and Social Sciences</i>.
-                            <a href="https://doi.org/10.1093/geronb/gbaf069" target="_blank" rel="noopener"
-                                style="color: var(--primary); font-size: 0.9em; display: block; word-break: break-all;">https://doi.org/10.1093/geronb/gbaf069</a>
+                            <a href="https://doi.org/10.1093/geronb/gbaf069" target="_blank" rel="noopener" class="doi-link"><i class="bi bi-link-45deg"></i> DOI</a>
                         </li>
                         <li>
                             <strong>Heeyoung Lee*</strong>, and Matt Vogel. 2025. "Exposure to Police Killing and
                             Adolescents' Self-Concept: Diverging Effects for Black and White American Youths."
                             <i>Journal of Adolescence</i>.
-                            <a href="https://doi.org/10.1002/jad.12490" target="_blank" rel="noopener"
-                                style="color: var(--primary); font-size: 0.9em; display: block; word-break: break-all;">https://doi.org/10.1002/jad.12490</a>
+                            <a href="https://doi.org/10.1002/jad.12490" target="_blank" rel="noopener" class="doi-link"><i class="bi bi-link-45deg"></i> DOI</a>
                         </li>
                         <li>
                             Seong-Jo Jung, <strong>Heeyoung Lee</strong>, and Chan S. Suh. 2025. "Moving Apart and
                             Coming Together: The Dynamics of Coalition Building in the Case of South Korean LGBTQ
                             Movement." <i>Journal of Homosexuality</i>.
-                            <a href="https://doi.org/10.1080/00918369.2024.2378743" target="_blank" rel="noopener"
-                                style="color: var(--primary); font-size: 0.9em; display: block; word-break: break-all;">https://doi.org/10.1080/00918369.2024.2378743</a>
+                            <a href="https://doi.org/10.1080/00918369.2024.2378743" target="_blank" rel="noopener" class="doi-link"><i class="bi bi-link-45deg"></i> DOI</a>
                         </li>
                         <li>
                             <strong>Heeyoung Lee*</strong>, and Seong-Jo Jung. 2025. "Gender Differences in the
                             Relationship between Coming Out as LGB to Family and Depression in South Korea." <i>Society
                                 and Mental Health</i>.
-                            <a href="https://doi.org/10.1177/21568693241242400" target="_blank" rel="noopener"
-                                style="color: var(--primary); font-size: 0.9em; display: block; word-break: break-all;">https://doi.org/10.1177/21568693241242400</a>
+                            <a href="https://doi.org/10.1177/21568693241242400" target="_blank" rel="noopener" class="doi-link"><i class="bi bi-link-45deg"></i> DOI</a>
                             <span class="award-badge">2024 Paul Meadows, Excellence in Research Award Winner, Sociology
                                 Department, University at Albany, SUNY</span>
                         </li>
@@ -749,21 +791,18 @@
                             <strong>Heeyoung Lee*</strong>, and Tse-Chuan Yang. 2024. "Spatial and Temporal Dimension of
                             Black-White Mental Health Paradox in the US: Effect of Cumulative Neighborhood
                             Disadvantage." <i>Population Research &amp; Policy Review</i>.
-                            <a href="https://doi.org/10.1007/s11113-024-09922-2" target="_blank" rel="noopener"
-                                style="color: var(--primary); font-size: 0.9em; display: block; word-break: break-all;">https://doi.org/10.1007/s11113-024-09922-2</a>
+                            <a href="https://doi.org/10.1007/s11113-024-09922-2" target="_blank" rel="noopener" class="doi-link"><i class="bi bi-link-45deg"></i> DOI</a>
                         </li>
                         <li>
                             <strong>Heeyoung Lee*</strong>. 2024. "State-Level Structural Sexism and Adolescent Sexual
                             Violence Victimization in the US." <i>Child Abuse and Neglect</i>.
-                            <a href="https://doi.org/10.1016/j.chiabu.2024.107096" target="_blank" rel="noopener"
-                                style="color: var(--primary); font-size: 0.9em; display: block; word-break: break-all;">https://doi.org/10.1016/j.chiabu.2024.107096</a>
+                            <a href="https://doi.org/10.1016/j.chiabu.2024.107096" target="_blank" rel="noopener" class="doi-link"><i class="bi bi-link-45deg"></i> DOI</a>
                         </li>
                         <li>
                             <strong>Heeyoung Lee*</strong>. 2024. "Delinquency During Puberty as a Biosocial Behavior:
                             Time-Varying Effects of Social Contexts on Girl's Delinquency in South Korea." <i>Criminal
                                 Justice and Behaviors</i>.
-                            <a href="https://doi.org/10.1177/00938548241276087" target="_blank" rel="noopener"
-                                style="color: var(--primary); font-size: 0.9em; display: block; word-break: break-all;">https://doi.org/10.1177/00938548241276087</a>
+                            <a href="https://doi.org/10.1177/00938548241276087" target="_blank" rel="noopener" class="doi-link"><i class="bi bi-link-45deg"></i> DOI</a>
                             <span class="award-badge">2022 Paul Meadows, Excellence in Research Award Winner, Sociology
                                 Department, University at Albany, SUNY</span>
                         </li>
@@ -771,8 +810,7 @@
                             <strong>Heeyoung Lee*</strong>, Sooyeon Moon, and Na-Young Lee. 2024. "Industry Culture
                             Matters: Sexual Harassment in the South Korean Film Industry." <i>Violence Against
                                 Women</i>.
-                            <a href="https://doi.org/10.1177/10778012231203001" target="_blank" rel="noopener"
-                                style="color: var(--primary); font-size: 0.9em; display: block; word-break: break-all;">https://doi.org/10.1177/10778012231203001</a>
+                            <a href="https://doi.org/10.1177/10778012231203001" target="_blank" rel="noopener" class="doi-link"><i class="bi bi-link-45deg"></i> DOI</a>
                         </li>
                     </ul>
                     <a href="page building/publications.html" class="btn">View All Publications <i class="bi bi-arrow-right-short"></i></a>
@@ -898,14 +936,14 @@
                         {
                             label: 'Citations',
                             data: scholarData.citations,
-                            borderColor: '#15803d',
-                            backgroundColor: 'rgba(21,128,61,0.1)',
+                            borderColor: '#3b82f6',
+                            backgroundColor: 'rgba(59,130,246,0.1)',
                             borderWidth: 3,
                             fill: true,
                             tension: 0.4,
                             pointRadius: 5,
                             pointHoverRadius: 7,
-                            pointBackgroundColor: '#15803d',
+                            pointBackgroundColor: '#3b82f6',
                             pointBorderColor: '#fff',
                             pointBorderWidth: 2,
                             yAxisID: 'y'
@@ -913,14 +951,14 @@
                         {
                             label: 'Publications',
                             data: scholarData.publications,
-                            borderColor: '#c2410c',
-                            backgroundColor: 'rgba(194,65,12,0.1)',
+                            borderColor: '#8b5cf6',
+                            backgroundColor: 'rgba(139,92,246,0.1)',
                             borderWidth: 3,
                             fill: true,
                             tension: 0.4,
                             pointRadius: 5,
                             pointHoverRadius: 7,
-                            pointBackgroundColor: '#c2410c',
+                            pointBackgroundColor: '#8b5cf6',
                             pointBorderColor: '#fff',
                             pointBorderWidth: 2,
                             yAxisID: 'y1'
