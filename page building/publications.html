@@ -272,31 +272,52 @@
         }
 
         .status-badge {
-            display: inline-block;
-            padding: 0.25rem 0.75rem;
-            border-radius: 4px;
-            font-size: 0.85rem;
-            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            padding: 0.2rem 0.6rem;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
             margin-top: 0.5rem;
-            border: 1px solid;
+            border: 1px solid transparent;
         }
 
-        .status-rnr {
-            background-color: #fef3c7;
-            color: #92400e;
-            border-color: #fbbf24;
-        }
-
-        .status-review {
-            background-color: #dbeafe;
-            color: #1e40af;
-            border-color: #3b82f6;
+        .status-badge::before {
+            content: '';
+            display: inline-block;
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
         }
 
         .status-forthcoming {
             background-color: #f0fdf4;
-            color: #15803d;
-            border-color: #bbf7d0;
+            color: #166534;
+            border-color: #dcfce7;
+        }
+        .status-forthcoming::before {
+            background-color: #22c55e;
+        }
+
+        .status-rnr {
+            background-color: #fffbeb;
+            color: #92400e;
+            border-color: #fef3c7;
+        }
+        .status-rnr::before {
+            background-color: #f59e0b;
+        }
+
+        .status-review {
+            background-color: #f8fafc;
+            color: #475569;
+            border-color: #f1f5f9;
+        }
+        .status-review::before {
+            background-color: #94a3b8;
         }
 
         @media (max-width: 768px) {
@@ -422,7 +443,7 @@
 
                 <div class="publication-card">
                     <div class="publication-authors">
-                        <strong class="author-highlight">Heeyoung Lee</strong><sup>†</sup>, Jungmin Shin<sup>†</sup>, and Jonathan Dirlam
+                        <strong class="author-highlight">Heeyoung Lee</strong><sup>†</sup>, Jungmin Shin*<sup>†</sup>, and Jonathan Dirlam
                     </div>
                     <div class="publication-title">
                         "The Influence of Structural Sexism and the #MeToo Movement on Sexual Harassment Complaints in the United States"
