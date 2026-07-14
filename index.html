@@ -653,7 +653,7 @@
                             <div class="stat-label">Citations</div>
                         </div>
                         <div class="stat-card">
-                            <div class="stat-value" id="totalPublications">16</div>
+                            <div class="stat-value" id="totalPublications">17</div>
                             <div class="stat-label">Publications</div>
                         </div>
                         <div class="stat-card">
@@ -678,10 +678,16 @@
                     <ul class="content-list">
                         <li class="year-header-item"><h4 class="year-header">2026</h4></li>
                         <li>
+                            <strong>Heeyoung Lee<sup>†</sup></strong>, Jungmin Shin<sup>†</sup>, and Jonathan Dirlam. 2026. "Structural Sexism and Sexual Harassment."
+                            <i>The Sociological Quarterly</i>.
+                            <span style="display:inline-block; margin-top:0.35rem; padding:0.2rem 0.6rem; background:#dcfce7; color:#166534; border:1px solid #86efac; border-radius:4px; font-size:0.85rem; font-weight:600;">Forthcoming</span>
+                        </li>
+                        <li>
                             <strong>Heeyoung Lee*</strong>. 2026. "Permeable Boundaries: How Neighboring States'
                             Policy Environments Shape Local Mortality Rates in the United States."
                             <i>Journal of Health and Social Behavior</i>.
-                            <span style="display:inline-block; margin-top:0.35rem; padding:0.2rem 0.6rem; background:#dcfce7; color:#166534; border:1px solid #86efac; border-radius:4px; font-size:0.85rem; font-weight:600;">Forthcoming</span>
+                            <a href="https://doi.org/10.1177/00221465261457832" target="_blank" rel="noopener"
+                                style="color: var(--primary); font-size: 0.9em; display: block; word-break: break-all;">https://doi.org/10.1177/00221465261457832</a>
                         </li>
                         <li>
                             Tse-Chuan Yang, <strong>Heeyoung Lee</strong>, and Golam Morshed Suhel. 2026. "Age
@@ -859,7 +865,7 @@
         </div>
 
         <div class="footer">
-            Last updated: July 6, 2026
+            Last updated: July 14, 2026
         </div>
     </div>
 
@@ -871,10 +877,10 @@
     <script>
         /* ─── Scholar Metrics Chart ─── */
         const scholarData = {
-            summary: { totalCitations: 47, totalPublications: 16, hIndex: 5, i10Index: 1 },
+            summary: { totalCitations: 47, totalPublications: 17, hIndex: 5, i10Index: 1 },
             years: [2020, 2021, 2022, 2023, 2024, 2025, 2026],
             citations: [1, 1, 2, 4, 9, 29, 47],
-            publications: [2, 3, 3, 4, 8, 14, 16]
+            publications: [2, 3, 3, 4, 8, 14, 17]
         };
 
         document.addEventListener('DOMContentLoaded', function () {
@@ -989,6 +995,7 @@
                 { id:'pub14', label:'Child Development',          full:'Child Development & Nation-State',                year:2019, kws:['nationalism','historical-analysis','puberty','medicalization'] },
                 { id:'pub15', label:'Age Segregation & Despair',  full:'Age Segregation and Deaths of Despair',           year:2026, kws:['aging','neighborhood','health-disparity','segregation','spatial-analysis'] },
                 { id:'pub16', label:'Permeable Boundaries',       full:'Permeable Boundaries: State Policy & Mortality',  year:2026, kws:['policy','health-disparity','spatial-analysis'] },
+                { id:'pub17', label:'Sexism & Harassment',        full:'Structural Sexism and Sexual Harassment',         year:2026, kws:['gender','structural-sexism','sexual-violence'] },
             ];
 
             const kwSet = [...new Set(publications.flatMap(p => p.kws))];
