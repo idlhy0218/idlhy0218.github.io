@@ -1,0 +1,285 @@
+---
+title: "Understanding Meta-Analysis"
+author: "Heeyoung Lee"
+date: "July 14, 2026"
+format: 
+  html:
+    theme: cosmo
+    css: custom.css
+    page-layout: full
+    code-fold: true
+    code-tools: true
+    toc: true
+    toc-depth: 5
+    toc-location: left
+    self-contained: true
+    fig-width: 8
+    fig-height: 6
+    fig-dpi: 300
+    smooth-scroll: true
+    highlight-style: github
+---
+
+## Understanding Meta-Analysis
+
+In empirical research, no single study is definitive. Sample sizes are limited, contexts differ, and estimates bounce around due to sampling error. Meta-analysis addresses this by **systematically combining effect sizes across multiple studies** to arrive at a more precise, generalizable estimate.
+
+Meta-analysis is not just averaging numbers from different papers. It is a formal statistical framework that weights each study's contribution by its precision, models how much studies disagree with each other, and quantifies our uncertainty about the pooled result. This post walks through the logic of meta-analysis step by step, using a simulated example to make the mechanics concrete.
+
+### 1. What Is Meta-Analysis?
+
+#### The Core Idea
+
+Suppose ten different studies each estimate the effect of neighborhood disadvantage on adolescent depressive symptoms. Each study reports its own effect size and standard error. These estimates will vary for two reasons:
+
+1. **Sampling error**: Even if the true effect were identical across all populations, each study only samples a finite number of people, so estimates fluctuate around the truth.
+2. **True heterogeneity**: The true effect itself may genuinely differ across populations, time periods, or measurement approaches.
+
+Meta-analysis separates these two sources of variation and produces a single pooled estimate, along with a measure of how much studies genuinely disagree.
+
+#### Two Main Models
+
+**Fixed-effect model**: Assumes all studies share one true effect size. Differences between studies are attributed entirely to sampling error.
+
+**Random-effects model**: Assumes each study estimates its own true effect, drawn from a distribution of true effects. This is almost always the more realistic assumption in social science, where studies differ in populations, measures, and contexts.
+
+```{r library-imports, message=FALSE, warning=FALSE}
+# Load required packages
+library(metafor)
+library(dplyr)
+library(ggplot2)
+library(kableExtra)
+library(patchwork)
+```
+
+### 2. Simulating Data for Meta-Analysis
+
+Let's create a simple dataset of 12 hypothetical studies, each estimating the standardized effect of neighborhood disadvantage on depressive symptoms.
+
+**Effect size measure**: Standardized mean difference (similar to Cohen's *d*)
+
+**Between-study heterogeneity**: True effects vary modestly across studies, reflecting differences in samples and measurement
+
+**Study-level precision**: Larger studies produce smaller standard errors, so they will receive more weight in the pooled estimate
+
+The resulting table contains five columns:
+
+- **study_id**: A label identifying each study (Study 1 through Study 12)
+- **yi**: The observed effect size reported by each study, the true study-specific effect plus random sampling error, representing what a researcher would actually see in a published paper
+- **sei**: The standard error of each study's effect size, where smaller values indicate more precise estimates from studies with larger sample sizes
+- **vi**: The sampling variance of each study's effect size, calculated as the standard error squared, the quantity meta-analytic models use directly for weighting since precision weights are defined as the inverse of variance
+- **n**: The sample size of each study, randomly drawn between 60 and 400 participants, which drives differences in precision across studies, since larger samples produce smaller standard errors and therefore more weight in the pooled estimate
+
+```{r simulate-data}
+set.seed(123)
+n_studies <- 12
+
+# True effect size across the literature
+true_effect <- 0.35
+tau2_true <- 0.02  # true between-study variance (heterogeneity)
+
+# Simulate true study-specific effects (random-effects data-generating process)
+study_true_effects <- rnorm(n_studies, mean = true_effect, sd = sqrt(tau2_true))
+
+# Simulate sample sizes (vary study precision)
+sample_sizes <- round(runif(n_studies, min = 60, max = 400))
+
+# Standard errors scale inversely with sqrt(sample size)
+study_se <- 2 / sqrt(sample_sizes)
+
+# Observed effect sizes = true effect + sampling error
+observed_effect <- study_true_effects + rnorm(n_studies, mean = 0, sd = study_se)
+
+meta_data <- data.frame(
+  study_id = paste0("Study ", 1:n_studies),
+  yi = observed_effect,     # observed effect size
+  sei = study_se,           # standard error
+  vi = study_se^2,          # sampling variance
+  n = sample_sizes
+)
+
+meta_data %>%
+  mutate(across(c(yi, sei, vi), ~round(.x, 3))) %>%
+  kable(caption = "Simulated Study-Level Effect Sizes") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"))
+```
+
+### 3. Visualizing Why Weighting Matters
+
+The key insight in meta-analysis is that not all studies should count equally. A study with 400 participants tells us more about the true effect than a study with 60 participants.
+
+```{r}
+#| message: false
+#| warning: false
+ggplot(meta_data, aes(x = n, y = sei)) +
+  geom_point(size = 3, color = "steelblue") +
+  geom_smooth(method = "loess", se = FALSE, color = "darkred", linetype = "dashed") +
+  labs(title = "Study Precision Depends on Sample Size",
+       subtitle = "Larger studies have smaller standard errors, and will be weighted more heavily",
+       x = "Study Sample Size", y = "Standard Error of Effect Size") +
+  theme_minimal()
+```
+
+Studies toward the left have wide, uncertain estimates. Studies toward the right have narrow, precise estimates. A simple unweighted average would let a small, noisy study count just as much as a large, precise one, which is exactly what meta-analytic weighting is designed to avoid.
+
+### 4. The Weighting Logic: Step by Step
+
+#### Mathematical Model
+
+**Fixed-effect model**
+
+The fixed-effect model assumes every study is estimating the exact same true effect $\theta$. Any difference between studies is treated as pure sampling error:
+
+$$y_i = \theta + \epsilon_i, \quad \epsilon_i \sim N(0, v_i)$$
+
+- $y_i$ is the observed effect size reported by study $i$
+- $\theta$ is the single true effect shared by every study
+- $\epsilon_i$ is study $i$'s sampling error, centered on zero with variance $v_i$
+- $v_i$ is study $i$'s sampling variance, its squared standard error
+
+To combine studies into one pooled estimate, each study is weighted by how precise it is. This is a **precision-weighted average**:
+
+$$\hat{\theta}_{FE} = \frac{\sum_i w_i y_i}{\sum_i w_i}, \quad w_i = \frac{1}{v_i}$$
+
+Smaller sampling variance means a larger weight $w_i$, so more precise studies pull the pooled estimate closer to their own value. A study with a tiny standard error can end up dominating the result almost entirely.
+
+**Random-effects model**
+
+The random-effects model relaxes the core assumption above. Instead of one shared $\theta$, each study is allowed its own true effect $\theta_i$, and those study-specific true effects are themselves drawn from a distribution:
+
+$$y_i = \theta_i + \epsilon_i, \quad \theta_i \sim N(\theta, \tau^2), \quad \epsilon_i \sim N(0, v_i)$$
+
+- $\theta_i$ is study $i$'s own true effect, which no longer has to match any other study's
+- $\tau^2$ is the **between-study variance**, describing how much true effects vary from one study to the next
+- $\epsilon_i$ and $v_i$ mean the same thing as before, capturing sampling error within a study
+
+This model now has two separate sources of disagreement between $y_i$ and the overall $\theta$: real differences in the true effect ($\tau^2$) and ordinary sampling noise ($v_i$). The fixed-effect model only accounts for the second source, which is why it understates uncertainty whenever studies genuinely differ.
+
+The weights adjust accordingly:
+
+$$w_i^* = \frac{1}{v_i + \tau^2}$$
+
+Adding $\tau^2$ to the denominator shrinks the influence of sample size on the weights. As $\tau^2$ grows, weights across studies become more similar, since a large, precise study is only entitled to dominate if we believe all studies share one true effect. Once that assumption is dropped, precision alone is no longer enough to earn outsized influence.
+
+#### Intuitive Example
+
+Imagine two studies: Study A has 400 participants and a small standard error. Study B has only 60 participants and a large standard error.
+
+- **Under fixed effects**, Study A almost decides the pooled result by itself. The model assumes both studies are trying to estimate the exact same true number, so the more precise study is trusted more.
+- **Under random effects**, Study B still counts less than Study A, but the gap is smaller. This is because the model allows Study A and Study B to have different true effects, so being precise no longer means being right.
+
+```{r weight-comparison}
+weight_comparison <- data.frame(
+  model = rep(c("Fixed effects", "Random effects"), each = 2),
+  study = rep(c("Study A (n = 400)", "Study B (n = 60)"), times = 2),
+  weight = c(0.90, 0.10, 0.65, 0.35)
+)
+
+weight_comparison$model <- factor(weight_comparison$model,
+                                   levels = c("Fixed effects", "Random effects"))
+
+ggplot(weight_comparison, aes(x = model, y = weight, fill = study)) +
+  geom_col(position = "stack", width = 0.6) +
+  geom_text(aes(label = scales::percent(weight)),
+            position = position_stack(vjust = 0.5), color = "white", size = 4) +
+  scale_fill_manual(values = c("Study A (n = 400)" = "steelblue",
+                                "Study B (n = 60)" = "indianred")) +
+  labs(title = "Study Weight Under Fixed vs. Random Effects",
+       subtitle = "Random effects narrows the precision gap between studies",
+       x = NULL, y = "Share of pooled weight", fill = "Study") +
+  theme_minimal()
+```
+
+Under fixed effects, Study A takes up about 90% of the pooled weight, leaving Study B with almost none. Once between-study variance (τ²) enters the random-effects weighting formula, that gap narrows to roughly 65/35, since the model no longer assumes both studies are chasing the exact same true effect.
+
+### 5. Estimating the Models
+
+```{r model-estimation}
+# Fixed-effect model
+model_fe <- rma(yi, vi, data = meta_data, method = "FE")
+
+# Random-effects model (REML estimator for tau^2)
+model_re <- rma(yi, vi, data = meta_data, method = "REML")
+
+summary(model_fe)
+summary(model_re)
+```
+
+```{r model-comparison-table}
+comparison <- data.frame(
+  Model = c("Fixed-Effect", "Random-Effects"),
+  Estimate = c(coef(model_fe), coef(model_re)),
+  SE = c(model_fe$se, model_re$se),
+  CI_Lower = c(model_fe$ci.lb, model_re$ci.lb),
+  CI_Upper = c(model_fe$ci.ub, model_re$ci.ub),
+  Tau2 = c(0, model_re$tau2),
+  True_Effect = true_effect
+) %>%
+  mutate(across(where(is.numeric), ~round(.x, 3)))
+
+comparison %>%
+  kable(caption = "Pooled Effect Estimates: Fixed-Effect vs. Random-Effects") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"))
+```
+
+**Fixed-Effect Model**: Produces a narrower confidence interval because it assumes zero between-study variance. This understates our true uncertainty whenever studies genuinely differ.
+
+**Random-Effects Model**: Produces a wider, more honest confidence interval by incorporating $\tau^2$, the estimated between-study variance. This is the more defensible choice for most social science literatures, where study populations and designs are rarely identical.
+
+### 6. Visualizing the Pooled Estimate: The Forest Plot
+
+The forest plot is the standard way to display meta-analytic results, showing each study's estimate alongside the pooled summary.
+
+```{r forest-plot, fig.height=7}
+forest(model_re,
+       slab = meta_data$study_id,
+       xlab = "Standardized Effect Size",
+       main = "Forest Plot: Random-Effects Meta-Analysis",
+       col = "steelblue",
+       border = "steelblue")
+```
+
+Each horizontal line represents one study's confidence interval, with the box size proportional to that study's weight in the pooled estimate. The diamond at the bottom represents the pooled effect, where the diamond's width reflects the pooled confidence interval.
+
+### 7. Quantifying Heterogeneity
+
+The pooled estimate alone doesn't tell the whole story. A key follow-up question is: **how much do studies actually disagree with each other?** The $I^2$ statistic answers this by showing what percentage of the total variation across studies comes from real heterogeneity, rather than just sampling error.
+
+It's calculated as:
+
+$$I^2 = \frac{Q - df}{Q} \times 100\%$$
+
+Where:
+
+- $Q$ = a weighted sum of squared deviations of each study's estimate from the pooled estimate, capturing total observed variation
+- $df$ = the degrees of freedom, equal to the number of studies minus 1, representing the variation we'd expect from sampling error alone if all studies shared one true effect
+
+If $Q$ is close to $df$, observed differences between studies look like what pure chance would produce, so $I^2$ is near 0%. If $Q$ is much larger than $df$, studies disagree more than sampling error can explain, so $I^2$ rises toward 100%.
+
+Unlike $\tau^2$, which is measured in the same units as the effect size, $I^2$ is a percentage, which makes it easier to compare heterogeneity across meta-analyses that use different outcome measures.
+
+```{r heterogeneity}
+het_stats <- data.frame(
+  Statistic = c("Tau-squared (τ²)", "I-squared (I²)", "Q-statistic", "Q p-value"),
+  Value = c(round(model_re$tau2, 4),
+            paste0(round(model_re$I2, 1), "%"),
+            round(model_re$QE, 2),
+            round(model_re$QEp, 4))
+)
+
+het_stats %>%
+  kable(caption = "Heterogeneity Statistics") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"))
+```
+
+- **Low $I^2$ (near 0%)**: Studies mostly agree; observed differences are attributable to sampling error, and a fixed-effect model may be reasonable.
+- **Moderate to high $I^2$ (50% or above)**: Studies genuinely diverge in their true effects, and pooling them into a single number, even a random-effects one, may obscure important subgroup differences worth exploring through moderator analysis.
+
+### 8. Key Insights
+
+1. **Weighting is not optional**: Precision-weighted averaging, not a simple mean, is what makes meta-analysis a valid synthesis method rather than an informal literature summary.
+2. **Fixed-effect models understate uncertainty** whenever true heterogeneity exists, because they assume all studies share one identical true effect.
+3. **Random-effects models are usually more defensible** in the social sciences, since studies rarely share identical populations, measures, or designs.
+4. **Heterogeneity itself is informative**: A high $I^2$ is not a nuisance to explain away, but a signal that the effect may depend on moderating conditions worth investigating directly.
+
+The pooled random-effects estimate in this example, close to the true simulated effect of 0.35, illustrates how meta-analysis recovers a stable underlying signal from noisy, individually imprecise studies.
