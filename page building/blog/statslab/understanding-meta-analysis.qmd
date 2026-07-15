@@ -230,7 +230,18 @@ comparison %>%
 
 The forest plot is the standard way to display meta-analytic results, showing each study's estimate alongside the pooled summary.
 
-```{r forest-plot, fig.height=7}
+```{r forest-plot-fe, fig.height=7}
+forest(model_fe,
+       slab = meta_data$study_id,
+       xlab = "Standardized Effect Size",
+       main = "Forest Plot: Fixed-Effect Meta-Analysis",
+       col = "darkred",
+       border = "darkred")
+```
+
+Under the fixed-effect model, the diamond at the bottom is narrower, since the model assumes zero between-study variance and therefore overstates how confident we can be in the pooled result. Notice that the box sizes for each study still scale with precision, but here that precision is the only thing determining each study's influence, since there is no $\tau^2$ softening the weights.
+
+```{r forest-plot-re, fig.height=7}
 forest(model_re,
        slab = meta_data$study_id,
        xlab = "Standardized Effect Size",
@@ -239,7 +250,7 @@ forest(model_re,
        border = "steelblue")
 ```
 
-Each horizontal line represents one study's confidence interval, with the box size proportional to that study's weight in the pooled estimate. The diamond at the bottom represents the pooled effect, where the diamond's width reflects the pooled confidence interval.
+Each horizontal line represents one study's confidence interval, with the box size proportional to that study's weight in the pooled estimate. The diamond at the bottom represents the pooled effect, where the diamond's width reflects the pooled confidence interval. Compared to the fixed-effect forest plot above, the random-effects diamond is wider, a more honest reflection of the added uncertainty from $\tau^2$, and study box sizes are more even across studies since precision no longer entirely determines each study's weight.
 
 ### 7. Quantifying Heterogeneity
 
