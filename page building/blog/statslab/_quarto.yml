@@ -1,0 +1,14 @@
+project:
+  type: default
+
+format:
+  html:
+    css: custom.css
+    include-in-header:
+      text: |
+        <script>
+          if (window.self === window.top) {
+              const postId = window.location.pathname.split("/").pop().replace(".html", "");
+              window.location.replace("../../statslab.html#" + postId);
+          }
+        </script>
