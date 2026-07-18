@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gallery - Heeyoung Lee</title>
+    
+    <!-- Google Fonts & Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-base: #fbfbfa;          /* Elegant warm gallery off-white */
+            --border-slate: rgba(15, 23, 42, 0.08);
+            --text-primary: #111827;     /* Solid charcoal black */
+            --text-secondary: #575757;   /* Sophisticated dark slate gray */
+            --text-muted: #8a8a8a;       /* Light gray for labels */
+            --accent: #ea580c;           /* Terracotta Orange (from network) */
+            --primary: #2563eb;          /* Electric Blue (from network) */
+            --font-ui: 'Outfit', sans-serif;
+            --font-body: 'Inter', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-base);
+            font-family: var(--font-body);
+            color: var(--text-primary);
+            line-height: 1.7;
+            min-height: 100vh;
+            padding-bottom: 8rem;
+        }
+
+        /* Subtle vignette overlay */
+        .ambient-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            background: radial-gradient(circle at center, transparent 70%, rgba(15, 23, 42, 0.01) 100%);
+            z-index: 1;
+        }
+
+        /* Floating Minimalist Navbar */
+        nav {
+            position: fixed;
+            top: 1.5rem;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1000;
+            width: calc(100% - 3rem);
+            max-width: 900px;
+            background: rgba(251, 251, 250, 0.85);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--border-slate);
+            padding: 0.8rem 2.2rem;
+            border-radius: 50px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.01);
+        }
+
+        .logo {
+            font-family: var(--font-ui);
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            text-decoration: none;
+            letter-spacing: -0.01em;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        .nav-links a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-family: var(--font-ui);
+            font-weight: 500;
+            font-size: 0.95rem;
+            transition: color 0.2s ease;
+            position: relative;
+        }
+
+        .nav-links a:hover,
+        .nav-links a.active {
+            color: var(--text-primary);
+        }
+
+        .nav-links a::after {
+            content: '';
+            position: absolute;
+            bottom: -4px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: var(--text-primary);
+            transition: width 0.2s ease;
+        }
+
+        .nav-links a:hover::after,
+        .nav-links a.active::after {
+            width: 100%;
+        }
+
+        .mobile-menu-toggle {
+            display: none;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: var(--text-primary);
+            cursor: pointer;
+            padding: 0.25rem;
+        }
+
+        /* Container & Page Layout */
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 8rem 1.5rem 2rem;
+            position: relative;
+            z-index: 10;
+        }
+
+        /* Header Style */
+        header {
+            margin-bottom: 3.5rem;
+        }
+
+        h1 {
+            font-family: var(--font-ui);
+            font-size: 2.5rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            letter-spacing: -0.02em;
+            margin-bottom: 0.5rem;
+        }
+
+        .subtitle {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            letter-spacing: 0.02em;
+        }
+
+        /* Intro Description */
+        .intro-desc {
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+            margin-bottom: 2.5rem;
+            line-height: 1.7;
+        }
+
+        /* Gallery Visual Grid */
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .gallery-item {
+            position: relative;
+            background: #ffffff;
+            border: 1px solid var(--border-slate);
+            border-radius: 12px;
+            overflow: hidden;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.01);
+            transition: all 0.3s ease;
+        }
+
+        .gallery-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.04);
+            border-color: rgba(15, 23, 42, 0.15);
+        }
+
+        .gallery-image {
+            width: 100%;
+            height: 180px;
+            object-fit: cover;
+            display: block;
+        }
+
+        .gallery-info {
+            padding: 1rem;
+        }
+
+        .gallery-title {
+            font-family: var(--font-ui);
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 0.25rem;
+            line-height: 1.3;
+        }
+
+        .gallery-description {
+            font-size: 0.76rem;
+            color: var(--text-secondary);
+            line-height: 1.4;
+        }
+
+        /* Modal Lightbox */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 2000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(17, 24, 39, 0.95);
+            backdrop-filter: blur(8px);
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .modal.active {
+            display: flex;
+            opacity: 1;
+        }
+
+        .modal-content {
+            position: relative;
+            max-width: 85%;
+            max-height: 85%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .modal-image {
+            max-width: 100%;
+            max-height: 70vh;
+            object-fit: contain;
+            border-radius: 8px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+        }
+
+        .modal-info {
+            margin-top: 1.5rem;
+            text-align: center;
+            color: #ffffff;
+            max-width: 600px;
+        }
+
+        .modal-title {
+            font-family: var(--font-ui);
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .modal-description {
+            font-size: 0.9rem;
+            opacity: 0.8;
+            line-height: 1.5;
+        }
+
+        .modal-close {
+            position: absolute;
+            top: -3.5rem;
+            right: 0;
+            background: none;
+            border: none;
+            color: #ffffff;
+            font-size: 2rem;
+            cursor: pointer;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            transition: all 0.2s;
+        }
+
+        .modal-close:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        /* Responsive Breakpoints */
+        @media (max-width: 768px) {
+            nav {
+                border-radius: 20px;
+                padding: 0.8rem 1.5rem;
+            }
+
+            .nav-links {
+                display: none;
+                flex-direction: column;
+                position: absolute;
+                top: 105%;
+                left: 0;
+                right: 0;
+                background: rgba(251, 251, 250, 0.98);
+                backdrop-filter: blur(20px);
+                border: 1px solid var(--border-slate);
+                border-radius: 16px;
+                padding: 1.5rem;
+                gap: 1.2rem;
+                box-shadow: 0 10px 30px rgba(15, 23, 42, 0.05);
+            }
+
+            .nav-links.active {
+                display: flex;
+            }
+
+            .nav-links a::after {
+                display: none;
+            }
+
+            .mobile-menu-toggle {
+                display: block;
+            }
+
+            .container {
+                padding-top: 7rem;
+            }
+
+            .gallery-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Vignette backdrop -->
+    <div class="ambient-overlay"></div>
+
+    <!-- Glassmorphic Navbar -->
+    <nav>
+        <a href="../index.html" class="logo">Heeyoung Lee</a>
+        <button class="mobile-menu-toggle" aria-label="Toggle menu">
+            <i class="bi bi-list"></i>
+        </button>
+        <ul class="nav-links">
+            <li><a href="publications.html">Publications</a></li>
+            <li><a href="teaching.html">Teaching</a></li>
+            <li><a href="statslab.html">Stats Lab</a></li>
+            <li><a href="gallery.html" class="active">Gallery</a></li>
+            <li><a href="cv.html">CV</a></li>
+            <li><a href="contact.html">Contact</a></li>
+        </ul>
+    </nav>
+
+    <!-- Main Content Container -->
+    <div class="container">
+        <header>
+            <h1>Gallery</h1>
+            <div class="subtitle">Geographic maps, data visualizations, and spatial storytelling charts</div>
+        </header>
+
+        <p class="intro-desc">
+            A showcase of GIS mapping, spatial analytics, and creative data visualizations created for research publications and demographic projects.
+        </p>
+
+        <div class="gallery-grid" id="galleryGrid"></div>
+    </div>
+
+    <!-- Lightbox Modal -->
+    <div class="modal" id="galleryModal">
+        <div class="modal-content">
+            <button class="modal-close" id="galleryModalClose" aria-label="Close lightbox"><i class="bi bi-x"></i></button>
+            <img class="modal-image" id="galleryModalImage" src="" alt="">
+            <div class="modal-info">
+                <h3 class="modal-title" id="galleryModalTitle"></h3>
+                <p class="modal-description" id="galleryModalDescription"></p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const galleryImages = [
+            {
+                title: 'Albany Metro Area',
+                description: 'Spatial layout map of Albany urban infrastructure.',
+                file: 'blog/gallery/albany_metro_white.png'
+            },
+            {
+                title: 'NYS Water Map',
+                description: 'A detailed visualization of the river networks and waterways of New York State.',
+                file: 'blog/gallery/nys_water.png'
+            },
+            {
+                title: 'Albany MAUP Panels',
+                description: 'A visualization of the Modifiable Areal Unit Problem (MAUP) illustrating how aggregation scales change census spatial statistics.',
+                file: 'blog/gallery/albany_maup_panels.png'
+            },
+            {
+                title: 'BA Percent Change by Urban-Rural Status',
+                description: 'Comparison of change in bachelor\'s degree attainment rates (2000 vs 2023) across rural and urban counties.',
+                file: 'blog/gallery/ba percent change (2000 vs 2023) by urban-rural status.png'
+            },
+            {
+                title: 'US Incarceration Rate',
+                description: 'Spatial distribution of local and state incarceration rates across the United States.',
+                file: 'blog/gallery/US incarceration rate.png'
+            },
+            {
+                title: 'Seoul Life Expectancy and Aesthetic Clinics',
+                description: 'A geographical mapping highlighting the strong spatial correlation between district life expectancy and the density of dermatology/plastic surgery clinics in Seoul, South Korea.',
+                file: 'blog/gallery/seoul_life_exp_skin_doctors.png'
+            }
+        ];
+
+        function generateGallery() {
+            const gridElement = document.getElementById('galleryGrid');
+            gridElement.innerHTML = '';
+
+            galleryImages.forEach(image => {
+                const itemElement = document.createElement('div');
+                itemElement.className = 'gallery-item';
+                itemElement.innerHTML = `
+                    <img src="${image.file}" alt="${image.title}" class="gallery-image" loading="lazy">
+                    <div class="gallery-info">
+                        <h4 class="gallery-title">${image.title}</h4>
+                        <p class="gallery-description">${image.description}</p>
+                    </div>
+                `;
+                itemElement.addEventListener('click', () => openGalleryModal(image));
+                gridElement.appendChild(itemElement);
+            });
+        }
+
+        function openGalleryModal(image) {
+            const modal = document.getElementById('galleryModal');
+            document.getElementById('galleryModalImage').src = image.file;
+            document.getElementById('galleryModalTitle').textContent = image.title;
+            document.getElementById('galleryModalDescription').textContent = image.description;
+            modal.classList.add('active');
+        }
+
+        function closeGalleryModal() {
+            document.getElementById('galleryModal').classList.remove('active');
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            generateGallery();
+
+            // Modal Close handlers
+            document.getElementById('galleryModalClose').addEventListener('click', closeGalleryModal);
+            document.getElementById('galleryModal').addEventListener('click', function (e) {
+                if (e.target === this) closeGalleryModal();
+            });
+
+            // Mobile Menu Toggle
+            const toggle = document.querySelector('.mobile-menu-toggle');
+            const navLinks = document.querySelector('.nav-links');
+            if (toggle) {
+                toggle.addEventListener('click', function () {
+                    navLinks.classList.toggle('active');
+                    const icon = this.querySelector('i');
+                    icon.classList.toggle('bi-list', !navLinks.classList.contains('active'));
+                    icon.classList.toggle('bi-x', navLinks.classList.contains('active'));
+                });
+            }
+        });
+    </script>
+</body>
+
+</html>

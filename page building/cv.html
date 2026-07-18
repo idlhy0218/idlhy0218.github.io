@@ -4,13 +4,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Heeyoung Lee - Curriculum Vitae">
     <title>CV - Heeyoung Lee</title>
-
+    
+    <!-- Google Fonts & Bootstrap Icons -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
-    <link
-        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
-        rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
     <style>
         * {
             margin: 0;
@@ -19,69 +20,65 @@
         }
 
         :root {
-            --primary: #1e3a8a;
-            --primary-dark: #0f172a;
-            --primary-light: #eff6ff;
-            --text-primary: #0f172a;
-            --text-secondary: #475569;
-            --bg-primary: #ffffff;
-            --bg-secondary: #f8fafc;
-            --border: rgba(226, 232, 240, 0.8);
-            --accent: #1e3a8a;
-            --shadow-premium: 0 8px 30px rgba(15, 23, 42, 0.04);
+            --bg-base: #fbfbfa;          /* Elegant warm gallery off-white */
+            --border-slate: rgba(15, 23, 42, 0.08);
+            --text-primary: #111827;     /* Solid charcoal black */
+            --text-secondary: #575757;   /* Sophisticated dark slate gray */
+            --accent: #ea580c;           /* Terracotta Orange (from network) */
+            --primary: #2563eb;          /* Electric Blue (from network) */
+            --font-ui: 'Outfit', sans-serif;
+            --font-body: 'Inter', sans-serif;
         }
 
         body {
-            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-base);
+            font-family: var(--font-body);
             color: var(--text-primary);
-            background: var(--bg-secondary);
-            line-height: 1.6;
+            line-height: 1.7;
+            min-height: 100vh;
+            padding-bottom: 8rem;
         }
 
-        h1,
-        h2,
-        h3,
-        h4,
-        h5,
-        h6 {
-            font-family: 'Inter', sans-serif;
-            font-weight: 600;
-        }
-
-        /* Navigation */
-        nav {
-            background: var(--bg-primary);
-            border-bottom: 1px solid var(--border);
-            padding: 1rem 0;
-            position: sticky;
+        /* Vignette backdrop */
+        .ambient-overlay {
+            position: fixed;
             top: 0;
-            z-index: 1000;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            background: radial-gradient(circle at center, transparent 70%, rgba(15, 23, 42, 0.01) 100%);
+            z-index: 1;
         }
 
-        .nav-container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 2rem;
+        /* Floating Navbar */
+        nav {
+            position: fixed;
+            top: 1.5rem;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1000;
+            width: calc(100% - 3rem);
+            max-width: 900px;
+            background: rgba(251, 251, 250, 0.85);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--border-slate);
+            padding: 0.8rem 2.2rem;
+            border-radius: 50px;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.01);
         }
 
         .logo {
-            font-family: 'Inter', sans-serif;
-            font-size: 1.35rem;
+            font-family: var(--font-ui);
+            font-size: 1.2rem;
             font-weight: 700;
             color: var(--text-primary);
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
             text-decoration: none;
-        }
-
-        .logo img {
-            height: 40px;
-            width: auto;
+            letter-spacing: -0.01em;
         }
 
         .nav-links {
@@ -95,20 +92,34 @@
         .nav-links a {
             color: var(--text-secondary);
             text-decoration: none;
+            font-family: var(--font-ui);
             font-weight: 500;
-            font-size: 1.05rem;
-            transition: color 0.2s;
-            display: flex;
-            align-items: center;
-            gap: 0.4rem;
+            font-size: 0.95rem;
+            transition: color 0.2s ease;
+            position: relative;
         }
 
         .nav-links a:hover,
         .nav-links a.active {
-            color: var(--primary);
+            color: var(--text-primary);
         }
 
-        /* Mobile Menu Toggle */
+        .nav-links a::after {
+            content: '';
+            position: absolute;
+            bottom: -4px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: var(--text-primary);
+            transition: width 0.2s ease;
+        }
+
+        .nav-links a:hover::after,
+        .nav-links a.active::after {
+            width: 100%;
+        }
+
         .mobile-menu-toggle {
             display: none;
             background: none;
@@ -116,179 +127,187 @@
             font-size: 1.5rem;
             color: var(--text-primary);
             cursor: pointer;
-            padding: 0.5rem;
-            z-index: 1001;
+            padding: 0.25rem;
         }
 
-        /* Container */
+        /* Container & Page Layout */
         .container {
-            max-width: 1200px;
+            max-width: 800px;
             margin: 0 auto;
-            padding: 3rem 2rem;
+            padding: 8rem 1.5rem 2rem;
+            position: relative;
+            z-index: 10;
         }
 
-        .content-section {
-            background: var(--bg-primary);
-            border-radius: 16px;
-            padding: 3rem;
-            border: 1px solid var(--border);
-            box-shadow: var(--shadow-premium);
+        header {
+            margin-bottom: 3rem;
         }
 
-        .download-button {
-            background: var(--primary);
-            color: white;
-            padding: 0.75rem 1.5rem;
-            border-radius: 6px;
-            text-decoration: none;
+        h1 {
+            font-family: var(--font-ui);
+            font-size: 2.5rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            letter-spacing: -0.02em;
+            margin-bottom: 0.5rem;
+        }
+
+        .subtitle {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            letter-spacing: 0.02em;
+        }
+
+        /* Premium Pill Link for Download */
+        .download-btn {
             display: inline-flex;
             align-items: center;
-            gap: 0.5rem;
-            transition: all 0.2s;
-            margin-bottom: 1.5rem;
-            font-weight: 600;
+            gap: 0.6rem;
+            background-color: var(--text-primary);
+            color: var(--bg-base);
+            text-decoration: none;
+            padding: 0.65rem 1.4rem;
+            border-radius: 40px;
+            font-family: var(--font-ui);
+            font-weight: 500;
+            font-size: 0.88rem;
+            transition: opacity 0.2s ease;
+            margin-bottom: 2.5rem;
             border: none;
+            cursor: pointer;
         }
 
-        .download-button:hover {
-            background: var(--primary-dark);
-            color: white;
+        .download-btn:hover {
+            opacity: 0.9;
         }
 
-        .pdf-container {
+        /* Clean Embedded PDF View */
+        .pdf-viewer {
             width: 100%;
-            height: 800px;
-            border: 1px solid var(--border);
-            border-radius: 8px;
+            height: 850px;
+            border: 1px solid var(--border-slate);
+            border-radius: 12px;
+            background-color: #ffffff;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.01);
         }
 
-        @media (max-width: 768px) {
-            .pdf-container {
-                height: 500px;
-            }
+        .pdf-fallback {
+            padding: 2rem;
+            text-align: center;
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+            border: 1px dashed var(--border-slate);
+            border-radius: 12px;
+        }
 
-            .mobile-menu-toggle {
-                display: block;
+        .pdf-fallback a {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .pdf-fallback a:hover {
+            text-decoration: underline;
+        }
+
+        /* Responsive Breakpoints */
+        @media (max-width: 768px) {
+            nav {
+                border-radius: 20px;
+                padding: 0.8rem 1.5rem;
             }
 
             .nav-links {
                 display: none;
+                flex-direction: column;
                 position: absolute;
-                top: 100%;
+                top: 105%;
                 left: 0;
                 right: 0;
-                background: var(--bg-primary);
-                flex-direction: column;
-                padding: 1rem 2rem;
-                border-top: 1px solid var(--border);
-                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-                gap: 0;
-                z-index: 999;
+                background: rgba(251, 251, 250, 0.98);
+                backdrop-filter: blur(20px);
+                border: 1px solid var(--border-slate);
+                border-radius: 16px;
+                padding: 1.5rem;
+                gap: 1.2rem;
+                box-shadow: 0 10px 30px rgba(15, 23, 42, 0.05);
             }
 
             .nav-links.active {
                 display: flex;
             }
 
-            .nav-links li {
-                padding: 0.75rem 0;
-                border-bottom: 1px solid var(--border);
+            .nav-links a::after {
+                display: none;
             }
 
-            .nav-links li:last-child {
-                border-bottom: none;
-            }
-
-            nav {
-                position: relative;
-            }
-        }
-
-        /* Mobile Typography & Spacing */
-        @media (max-width: 768px) {
-            html {
-                font-size: 16px;
-            }
-
-            body {
-                font-size: 1.05rem;
-                line-height: 1.7;
+            .mobile-menu-toggle {
+                display: block;
             }
 
             .container {
-                padding: 2rem 1.25rem;
+                padding-top: 7rem;
             }
 
-            .content-section {
-                padding: 1.5rem;
+            .pdf-viewer {
+                height: 550px;
             }
         }
     </style>
 </head>
 
 <body>
+    <!-- Vignette backdrop -->
+    <div class="ambient-overlay"></div>
+
+    <!-- Glassmorphic Navbar -->
     <nav>
-        <div class="nav-container">
-            <a href="../index.html" class="logo">
-                <span>Heeyoung Lee</span>
-            </a>
-            <button class="mobile-menu-toggle" aria-label="Toggle menu">
-                <i class="bi bi-list"></i>
-            </button>
-            <ul class="nav-links">
-                <li><a href="about.html"><i class="bi bi-person-lines-fill"></i> About</a></li>
-                <li><a href="publications.html"><i class="bi bi-file-earmark-text"></i> Publications</a></li>
-                <li><a href="teaching.html"><i class="bi bi-easel2"></i> Teaching</a></li>
-                <li><a href="blog.html"><i class="bi bi-bar-chart-steps"></i> Blog</a></li>
-                <li><a href="cv.html" class="active"><i class="bi bi-file-text"></i> CV</a></li>
-                <li><a href="contact.html"><i class="bi bi-envelope"></i> Contact</a></li>
-            </ul>
-        </div>
+        <a href="../index.html" class="logo">Heeyoung Lee</a>
+        <button class="mobile-menu-toggle" aria-label="Toggle menu">
+            <i class="bi bi-list"></i>
+        </button>
+        <ul class="nav-links">
+            <li><a href="publications.html">Publications</a></li>
+            <li><a href="teaching.html">Teaching</a></li>
+            <li><a href="statslab.html">Stats Lab</a></li>
+            <li><a href="gallery.html">Gallery</a></li>
+            <li><a href="cv.html" class="active">CV</a></li>
+            <li><a href="contact.html">Contact</a></li>
+        </ul>
     </nav>
 
+    <!-- Main Container -->
     <div class="container">
-        <div class="content-section">
-            <a href="../pdf/Heeyoung_Lee_CV.pdf" download class="download-button">
-                <i class="bi bi-download"></i> Download CV
-            </a>
+        <header>
+            <h1>Curriculum Vitae</h1>
+            <div class="subtitle">Academic record, publications, and professional qualifications</div>
+        </header>
 
-            <iframe src="https://idlhy0218.github.io/pdf/Heeyoung_Lee_CV.pdf" class="pdf-container"
-                title="Heeyoung Lee's CV">
-                <p>It appears you don't have a PDF plugin for this browser.
-                    You can <a href="https://idlhy0218.github.io/pdf/Heeyoung_Lee_CV.pdf">click here to download the PDF
-                        file.</a></p>
-            </iframe>
-        </div>
+        <!-- Download Button -->
+        <a href="../pdf/Heeyoung_Lee_CV.pdf" download class="download-btn">
+            <i class="bi bi-download"></i> Download CV PDF
+        </a>
+
+        <!-- PDF Embed frame -->
+        <iframe src="https://idlhy0218.github.io/pdf/Heeyoung_Lee_CV.pdf" class="pdf-viewer" title="Curriculum Vitae of Heeyoung Lee">
+            <div class="pdf-fallback">
+                <p>It appears your browser does not support viewing embedded PDF documents.</p>
+                <p>You can <a href="../pdf/Heeyoung_Lee_CV.pdf" download>click here to download the CV file directly.</a></p>
+            </div>
+        </iframe>
     </div>
 
+    <!-- Script logic for mobile nav menu -->
     <script>
-        // Mobile menu toggle
         document.addEventListener('DOMContentLoaded', function () {
-            const mobileMenuToggle = document.querySelector('.mobile-menu-toggle');
+            const toggle = document.querySelector('.mobile-menu-toggle');
             const navLinks = document.querySelector('.nav-links');
-
-            if (mobileMenuToggle) {
-                mobileMenuToggle.addEventListener('click', function () {
+            if (toggle) {
+                toggle.addEventListener('click', function () {
                     navLinks.classList.toggle('active');
                     const icon = this.querySelector('i');
-                    if (navLinks.classList.contains('active')) {
-                        icon.classList.remove('bi-list');
-                        icon.classList.add('bi-x');
-                    } else {
-                        icon.classList.remove('bi-x');
-                        icon.classList.add('bi-list');
-                    }
-                });
-
-                // Close menu when clicking on a link
-                const menuLinks = navLinks.querySelectorAll('a');
-                menuLinks.forEach(link => {
-                    link.addEventListener('click', function () {
-                        navLinks.classList.remove('active');
-                        const icon = mobileMenuToggle.querySelector('i');
-                        icon.classList.remove('bi-x');
-                        icon.classList.add('bi-list');
-                    });
+                    icon.classList.toggle('bi-list', !navLinks.classList.contains('active'));
+                    icon.classList.toggle('bi-x', navLinks.classList.contains('active'));
                 });
             }
         });

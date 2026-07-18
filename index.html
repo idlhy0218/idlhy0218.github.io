@@ -4,10 +4,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Heeyoung Lee - Sociology Researcher</title>
-    <meta name="description" content="Heeyoung Lee is a Ph.D. Candidate in Sociology at the University at Albany, SUNY. Research focuses on population health, criminology, and life-course analysis using spatial and longitudinal methods.">
+    <title>Heeyoung Lee - Research Network</title>
+    <meta name="description" content="An interactive gallery-style visualization of Heeyoung Lee's research network.">
+    
+    <!-- Google Fonts & Bootstrap Icons -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
     <style>
         * {
             margin: 0;
@@ -16,60 +21,72 @@
         }
 
         :root {
-            --primary: #1e3a8a;
-            --primary-dark: #0f172a;
-            --primary-light: #eff6ff;
-            --text-primary: #0f172a;
-            --text-secondary: #475569;
-            --bg-primary: #ffffff;
-            --bg-secondary: #f8fafc;
-            --border: rgba(226, 232, 240, 0.8);
-            --accent: #1e3a8a;
-            --shadow-premium: 0 8px 30px rgba(15, 23, 42, 0.04);
+            --bg-base: #fbfbfa;          /* Elegant warm gallery off-white */
+            --bg-surface: rgba(255, 255, 255, 0.75);
+            --border-slate: rgba(15, 23, 42, 0.06);
+            --text-primary: #0f172a;     /* Deep Slate / Black */
+            --text-secondary: #64748b;   /* Muted Slate Gray */
+            --primary: #2563eb;          /* Electric Blue (Publications) */
+            --accent: #ea580c;           /* Terracotta Orange (Keywords) */
+            --font-ui: 'Outfit', sans-serif;
+            --font-body: 'Inter', sans-serif;
         }
 
-        body {
-            font-family: 'Inter', sans-serif;
+        body, html {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: var(--bg-base);
             color: var(--text-primary);
-            background: var(--bg-secondary);
-            line-height: 1.6;
+            font-family: var(--font-body);
         }
 
-        h1, h2, h3, h4, h5, h6 {
-            font-family: 'Inter', sans-serif;
-            font-weight: 600;
-        }
-
-        /* Navigation */
-        nav {
-            background: var(--bg-primary);
-            border-bottom: 1px solid var(--border);
-            padding: 1rem 0;
-            position: sticky;
+        /* Subtle ambient vignette */
+        .ambient-overlay {
+            position: absolute;
             top: 0;
-            z-index: 1000;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            background: radial-gradient(circle at center, transparent 60%, rgba(15, 23, 42, 0.015) 100%);
+            z-index: 1;
         }
 
-        .nav-container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 2rem;
+        /* Minimal Floating Navigation */
+        nav {
+            position: absolute;
+            top: 1.5rem;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 100;
+            width: calc(100% - 3rem);
+            max-width: 900px;
+            background: var(--bg-surface);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--border-slate);
+            padding: 0.8rem 2.2rem;
+            border-radius: 50px;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            box-shadow: 0 10px 30px rgba(15, 23, 42, 0.04);
+            transition: all 0.3s ease;
         }
 
         .logo {
-            font-family: 'Inter', sans-serif;
-            font-size: 1.35rem;
+            font-family: var(--font-ui);
+            font-size: 1.2rem;
             font-weight: 700;
             color: var(--text-primary);
+            text-decoration: none;
             display: flex;
             align-items: center;
-            gap: 0.75rem;
-            text-decoration: none;
+            gap: 0.5rem;
+            letter-spacing: -0.01em;
         }
+
 
         .nav-links {
             display: flex;
@@ -82,17 +99,30 @@
         .nav-links a {
             color: var(--text-secondary);
             text-decoration: none;
+            font-family: var(--font-ui);
             font-weight: 500;
-            font-size: 1.05rem;
-            transition: color 0.2s;
-            display: flex;
-            align-items: center;
-            gap: 0.4rem;
+            font-size: 0.95rem;
+            transition: all 0.2s ease;
+            position: relative;
         }
 
-        .nav-links a:hover,
-        .nav-links a.active {
-            color: var(--primary);
+        .nav-links a:hover {
+            color: var(--text-primary);
+        }
+
+        .nav-links a::after {
+            content: '';
+            position: absolute;
+            bottom: -4px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: var(--text-primary);
+            transition: width 0.2s ease;
+        }
+
+        .nav-links a:hover::after {
+            width: 100%;
         }
 
         /* Mobile Menu Toggle */
@@ -103,931 +133,395 @@
             font-size: 1.5rem;
             color: var(--text-primary);
             cursor: pointer;
-            padding: 0.5rem;
-            z-index: 1001;
+            padding: 0.25rem;
         }
 
-        /* Container */
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 3rem 2rem;
-        }
-
-        .row {
-            display: grid;
-            grid-template-columns: 350px 1fr;
-            gap: 2rem;
-        }
-
-        /* Sidebar */
-        .sidebar {
-            background: var(--bg-primary);
-            border-radius: 16px;
-            padding: 3rem 2.5rem;
-            border: 1px solid var(--border);
-            box-shadow: var(--shadow-premium);
-            height: fit-content;
-            position: sticky;
-            top: 100px;
-            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        .sidebar:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 12px 40px rgba(15, 23, 42, 0.06);
-        }
-
-        .sidebar h1 {
-            font-size: 2rem;
-            margin-bottom: 0.5rem;
-            color: var(--text-primary);
-        }
-
-        .sidebar .korean-name {
-            font-size: 1.1rem;
-            color: var(--text-secondary);
-            margin-bottom: 1.5rem;
-            font-weight: 400;
-        }
-
-        .sidebar .subtitle {
-            font-size: 1rem;
-            color: var(--text-secondary);
-            line-height: 1.6;
-            margin-bottom: 2rem;
-            font-weight: 400;
-        }
-
-        .sidebar .subtitle strong {
-            color: var(--primary);
-            font-weight: 600;
-        }
-
-        .contact-info {
-            border-top: 1px solid var(--border);
-            padding-top: 1.5rem;
-            margin-top: 1.5rem;
-        }
-
-        .contact-info p {
-            display: flex;
-            align-items: flex-start;
-            gap: 0.75rem;
-            margin-bottom: 1rem;
-            font-size: 0.95rem;
-            color: var(--text-secondary);
-        }
-
-        .contact-info i {
-            color: var(--primary);
-            margin-top: 2px;
-        }
-
-        .research-areas {
-            line-height: 1.8;
-        }
-
-        .social-links {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 0.6rem;
-            margin-top: 1.5rem;
-        }
-
-        .social-link {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            padding: 0.5rem 1rem;
-            background: transparent;
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            color: var(--text-secondary);
-            text-decoration: none;
-            font-size: 0.9rem;
-            font-weight: 500;
-            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .social-link:hover {
-            background: var(--primary-light);
-            color: var(--primary);
-            border-color: #bfdbfe;
-            transform: translateY(-1px);
-        }
-
-        /* Main Content */
-        .main-content {
-            display: flex;
-            flex-direction: column;
-            gap: 2rem;
-        }
-
-        .card {
-            background: var(--bg-primary);
-            border-radius: 16px;
-            padding: 2.5rem;
-            border: 1px solid var(--border);
-            box-shadow: var(--shadow-premium);
-            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        .card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 12px 40px rgba(15, 23, 42, 0.06);
-        }
-
-        /* DOI link badge style */
-        .doi-link {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.25rem;
-            padding: 0.2rem 0.6rem;
-            background: var(--primary-light);
-            color: var(--primary);
-            border: 1px solid #bfdbfe;
-            border-radius: 6px;
-            font-size: 0.8rem;
-            font-weight: 600;
-            text-decoration: none;
-            margin-top: 0.35rem;
-            transition: all 0.2s ease;
-        }
-        .doi-link:hover {
-            background: #dbeafe;
-            color: var(--primary-dark);
-            border-color: #93c5fd;
-        }
-
-        /* Status Badge for Forthcoming */
-        .status-badge.forthcoming {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.35rem;
-            margin-top: 0.35rem;
-            padding: 0.2rem 0.6rem;
-            background: #f0fdf4;
-            color: #166534;
-            border: 1px solid #dcfce7;
-            border-radius: 6px;
-            font-size: 0.75rem;
-            font-weight: 500;
-            text-transform: uppercase;
-            letter-spacing: 0.04em;
-        }
-        .status-badge.forthcoming::before {
-            content: '';
-            display: inline-block;
-            width: 6px;
-            height: 6px;
-            border-radius: 50%;
-            background-color: #22c55e;
-        }
-
-        .card h2 {
-            font-size: 1.75rem;
-            margin-bottom: 1.5rem;
-            color: var(--text-primary);
-        }
-
-        .card h3 {
-            font-size: 1.5rem;
-            margin-bottom: 1.25rem;
-            color: var(--text-primary);
-        }
-
-        .card p {
-            color: var(--text-secondary);
-            line-height: 1.8;
-            margin-bottom: 1rem;
-        }
-
-        /* Stats Grid */
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 0.75rem;
-            margin-top: 1rem;
-        }
-
-        .stat-card {
-            text-align: center;
-            padding: 0.75rem 0.5rem;
-            background: var(--bg-secondary);
-            border-radius: 8px;
-            border: 1px solid var(--border);
-            transition: all 0.2s;
-        }
-
-        .stat-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.1);
-        }
-
-        .stat-value {
-            font-family: 'Inter', sans-serif;
-            font-size: 1.4rem;
-            font-weight: 700;
-            color: var(--primary);
-            margin-bottom: 0.25rem;
-        }
-
-        .stat-label {
-            color: var(--text-secondary);
-            font-size: 0.75rem;
-            font-weight: 500;
-        }
-
-        /* Chart */
-        .chart-container {
-            height: 220px;
-            margin-top: 1rem;
-        }
-
-        /* Publications List */
-        .year-header {
-            font-size: 1.1rem;
-            font-weight: 600;
-            color: var(--primary);
-            margin-top: 2rem;
-            margin-bottom: 1rem;
-            padding-bottom: 0.5rem;
-            border-bottom: 2px solid var(--border);
-        }
-
-        .year-header:first-of-type {
-            margin-top: 0;
-        }
-
-        .content-list {
-            list-style: none;
-            padding: 0;
-        }
-
-        .content-list li {
-            margin-bottom: 1.5rem;
-            padding-left: 1.5rem;
+        /* Full Screen Network Visualization */
+        #network-container {
+            width: 100vw;
+            height: 100vh;
             position: relative;
-            line-height: 1.8;
-            color: var(--text-primary);
-        }
-
-        .content-list li::before {
-            content: "•";
-            position: absolute;
-            left: 0;
-            color: var(--primary);
-            font-size: 1.5rem;
-            line-height: 1.2;
-        }
-
-        .content-list .year-header-item {
-            padding-left: 0;
-            margin-top: 2rem;
-            margin-bottom: 0;
-            list-style: none;
-        }
-
-        .content-list .year-header-item:first-child {
-            margin-top: 0;
-        }
-
-        .content-list .year-header-item::before {
-            content: none;
-        }
-
-        .content-list .year-header-item .year-header {
-            margin-top: 0;
-            margin-bottom: 0;
-        }
-
-        .award-badge {
-            display: block;
-            margin-top: 0.5rem;
-            color: var(--primary);
-            font-style: italic;
-            font-size: 0.9rem;
-        }
-
-        /* Button */
-        .btn {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            padding: 0.75rem 1.5rem;
-            background: var(--bg-secondary);
-            border: 1px solid var(--border);
-            border-radius: 6px;
-            color: var(--text-primary);
-            text-decoration: none;
-            font-weight: 500;
-            font-size: 0.95rem;
-            transition: all 0.2s;
-            margin-top: 1rem;
-        }
-
-        .btn:hover {
-            background: var(--primary);
-            color: white;
-            border-color: var(--primary);
-        }
-
-        /* Teaching Scores */
-        .teaching-score {
-            color: var(--primary);
-            font-size: 0.9rem;
-            font-weight: 600;
-            margin-top: 0.25rem;
-        }
-
-        /* Footer */
-        .footer {
-            text-align: center;
-            color: var(--text-secondary);
-            font-size: 0.9rem;
-            margin: 3rem 0 2rem;
-            font-style: italic;
-        }
-
-        /* Network Graph */
-        #net-wrap {
-            background: #ffffff;
-            border-radius: 8px;
-            border: 1px solid var(--border);
-            overflow: hidden;
-            position: relative;
-            height: 560px;
-            user-select: none;
+            z-index: 10;
         }
 
         #network-viz {
             width: 100%;
             height: 100%;
+            display: block;
             cursor: grab;
         }
 
-        #network-viz.grabbing { cursor: grabbing; }
-
-        #net-legend {
-            position: absolute;
-            bottom: 14px;
-            left: 16px;
-            display: flex;
-            gap: 16px;
-            align-items: center;
-            font-size: 11px;
-            color: #9ca3af;
-            pointer-events: none;
-            font-family: 'Inter', sans-serif;
+        #network-viz.grabbing {
+            cursor: grabbing;
         }
 
-        .leg-item { display: flex; align-items: center; gap: 6px; }
-        .leg-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
-
-        #zoom-controls {
+        /* HUD Widgets */
+        .hud-overlay {
             position: absolute;
-            top: 14px;
-            right: 14px;
+            z-index: 50;
+            pointer-events: none;
+        }
+
+        .hud-overlay button, .hud-overlay a {
+            pointer-events: auto;
+        }
+
+        /* Bottom-Left Minimal Legend */
+        .legend-widget {
+            pointer-events: auto;
+            bottom: 2rem;
+            left: 2rem;
+            background: var(--bg-surface);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--border-slate);
+            padding: 0.6rem 1.2rem;
+            border-radius: 30px;
+            display: flex;
+            gap: 1.5rem;
+            font-family: var(--font-ui);
+            font-size: 0.8rem;
+            font-weight: 500;
+            box-shadow: 0 4px 20px rgba(15, 23, 42, 0.02);
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .legend-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+
+        /* Bottom-Right Zoom Controls */
+        .controls-widget {
+            pointer-events: auto;
+            bottom: 2rem;
+            right: 2rem;
             display: flex;
             flex-direction: column;
-            gap: 4px;
+            gap: 0.4rem;
         }
 
-        .zoom-btn {
-            width: 28px;
-            height: 28px;
-            background: #fff;
-            border: 1px solid #d1d5db;
-            border-radius: 6px;
-            font-size: 16px;
-            line-height: 1;
-            color: #374151;
+        .control-btn {
+            width: 38px;
+            height: 38px;
+            background: var(--bg-surface);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--border-slate);
+            color: var(--text-primary);
+            font-size: 1.1rem;
+            border-radius: 50%;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-family: 'Inter', sans-serif;
+            box-shadow: 0 6px 18px rgba(15, 23, 42, 0.03);
+            transition: all 0.2s ease;
         }
 
-        .zoom-btn:hover { background: #f3f4f6; }
+        .control-btn:hover {
+            background: rgba(255, 255, 255, 0.95);
+            border-color: var(--text-primary);
+            transform: translateY(-1px);
+        }
 
+        /* Native HUD Tooltip */
         #net-tooltip {
             position: absolute;
-            background: #1f2937;
-            border: 1px solid #374151;
-            border-radius: 6px;
-            padding: 7px 11px;
-            font-size: 11px;
-            color: #d1d5db;
+            background: rgba(255, 255, 255, 0.96);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--border-slate);
+            border-radius: 12px;
+            padding: 0.9rem 1.1rem;
+            font-size: 0.82rem;
+            color: var(--text-primary);
             pointer-events: none;
-            max-width: 210px;
+            max-width: 280px;
             line-height: 1.5;
             display: none;
-            z-index: 10;
-            font-family: 'Inter', sans-serif;
+            z-index: 1000;
+            box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
+            transition: opacity 0.15s ease;
+            font-family: var(--font-body);
         }
 
-        .tt-year { color: #6b7280; font-size: 10px; margin-top: 2px; }
+        .tt-header {
+            font-family: var(--font-ui);
+            font-weight: 600;
+            font-size: 0.88rem;
+            margin-bottom: 0.2rem;
+            color: var(--text-primary);
+        }
 
-        /* Responsive */
-        @media (max-width: 968px) {
-            .row {
-                grid-template-columns: 1fr;
-            }
+        .tt-year {
+            color: var(--text-secondary);
+            font-size: 0.72rem;
+            margin-top: 0.2rem;
+            display: flex;
+            align-items: center;
+            gap: 0.2rem;
+        }
 
-            .sidebar {
-                position: static;
-            }
-
-            .mobile-menu-toggle {
-                display: block;
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            nav {
+                border-radius: 20px;
+                padding: 0.8rem 1.5rem;
             }
 
             .nav-links {
                 display: none;
+                flex-direction: column;
                 position: absolute;
-                top: 100%;
+                top: 105%;
                 left: 0;
                 right: 0;
-                background: var(--bg-primary);
-                flex-direction: column;
-                padding: 1rem 2rem;
-                border-top: 1px solid var(--border);
-                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-                gap: 0;
-                z-index: 999;
+                background: rgba(255, 255, 255, 0.98);
+                backdrop-filter: blur(20px);
+                border: 1px solid var(--border-slate);
+                border-radius: 16px;
+                padding: 1.5rem;
+                gap: 1.2rem;
+                box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
             }
 
             .nav-links.active {
                 display: flex;
             }
 
-            .nav-links li {
-                padding: 0.75rem 0;
-                border-bottom: 1px solid var(--border);
+            .nav-links a::after {
+                display: none;
             }
 
-            .nav-links li:last-child {
-                border-bottom: none;
+            .mobile-menu-toggle {
+                display: block;
             }
 
-            nav {
-                position: relative;
+            .legend-widget {
+                left: 1rem;
+                bottom: 2rem;
+                padding: 0.5rem 0.8rem;
+                gap: 0.8rem;
             }
 
-            #net-wrap {
-                height: 400px;
+            .controls-widget {
+                right: 1rem;
+                bottom: 2rem;
             }
         }
 
+        .intro-card {
+            pointer-events: auto;
+            position: absolute;
+            top: 7rem;
+            left: 2rem;
+            z-index: 80;
+            max-width: 420px;
+            background: var(--bg-surface);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--border-slate);
+            padding: 2.2rem;
+            border-radius: 24px;
+            box-shadow: 0 15px 40px rgba(15, 23, 42, 0.05);
+            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeInUp 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) 0.2s forwards;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .intro-lead {
+            font-family: var(--font-ui);
+            font-size: 1.05rem;
+            font-weight: 600;
+            line-height: 1.6;
+            color: var(--text-primary);
+            margin-bottom: 1rem;
+        }
+
+        .intro-body {
+            font-size: 0.86rem;
+            color: var(--text-secondary);
+            line-height: 1.7;
+            margin-bottom: 1.2rem;
+        }
+
+        .intro-close-btn {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            font-size: 1.25rem;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+        }
+
+        .intro-close-btn:hover {
+            color: var(--text-primary);
+            background: rgba(15, 23, 42, 0.04);
+        }
+
+        .intro-toggle-btn {
+            position: absolute;
+            top: 7rem;
+            left: 2rem;
+            z-index: 90;
+            background: var(--bg-surface);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--border-slate);
+            color: var(--text-primary);
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 6px 20px rgba(15, 23, 42, 0.03);
+            font-size: 1.25rem;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            opacity: 0;
+            transform: scale(0.8);
+        }
+
+        .intro-toggle-btn:hover {
+            background: rgba(255, 255, 255, 0.95);
+            border-color: var(--text-primary);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+        }
+
         @media (max-width: 768px) {
-            html { font-size: 16px; }
-            body { font-size: 1.05rem; line-height: 1.7; }
-            p { font-size: 1.05rem; margin-bottom: 1.25rem; }
-            .container { padding: 2rem 1.25rem; }
-            .card { padding: 1.5rem; }
-            h1 { font-size: 2rem; }
-            h2 { font-size: 1.75rem; }
-            h3 { font-size: 1.5rem; }
+            .intro-card {
+                left: 1rem;
+                right: 1rem;
+                top: auto;
+                bottom: 7.5rem;
+                max-width: none;
+                padding: 1.5rem;
+                max-height: 40vh;
+                overflow-y: auto;
+            }
+            .intro-toggle-btn {
+                top: auto;
+                bottom: 2rem;
+                left: 1rem;
+            }
+        }
+
+        /* Short-height screen responsiveness (e.g. landscape mobile) */
+        @media (max-height: 550px) and (max-width: 968px) {
+            .intro-card {
+                top: 5rem;
+                bottom: auto;
+                max-height: 65vh;
+                max-width: 380px;
+                left: 1rem;
+            }
+            .intro-toggle-btn {
+                top: 5rem;
+                bottom: auto;
+                left: 1rem;
+            }
+            nav {
+                top: 0.75rem;
+                padding: 0.5rem 1.5rem;
+            }
         }
     </style>
 </head>
 
 <body>
+    <!-- Vignette / lighting backdrop -->
+    <div class="ambient-overlay"></div>
+
+    <!-- Glassmorphic Navbar -->
     <nav>
-        <div class="nav-container">
-            <a href="index.html" class="logo">
-                <span>Heeyoung Lee</span>
-            </a>
-            <button class="mobile-menu-toggle" aria-label="Toggle menu">
-                <i class="bi bi-list"></i>
-            </button>
-            <ul class="nav-links">
-                <li><a href="page building/about.html"><i class="bi bi-person-lines-fill"></i> About</a></li>
-                <li><a href="page building/publications.html"><i class="bi bi-file-earmark-text"></i> Publications</a></li>
-                <li><a href="page building/teaching.html"><i class="bi bi-easel2"></i> Teaching</a></li>
-                <li><a href="page building/blog.html"><i class="bi bi-bar-chart-steps"></i> Blog</a></li>
-                <li><a href="page building/cv.html"><i class="bi bi-file-text"></i> CV</a></li>
-                <li><a href="page building/contact.html"><i class="bi bi-envelope"></i> Contact</a></li>
-            </ul>
-        </div>
+        <a href="index(3).html" class="logo">Heeyoung Lee</a>
+        <button class="mobile-menu-toggle" aria-label="Toggle menu">
+            <i class="bi bi-list"></i>
+        </button>
+        <ul class="nav-links">
+            <li><a href="page building/publications.html">Publications</a></li>
+            <li><a href="page building/teaching.html">Teaching</a></li>
+            <li><a href="page building/statslab.html">Stats Lab</a></li>
+            <li><a href="page building/gallery.html">Gallery</a></li>
+            <li><a href="page building/cv.html">CV</a></li>
+            <li><a href="page building/contact.html">Contact</a></li>
+        </ul>
     </nav>
 
-    <div class="container">
-        <div class="row">
-            <!-- Sidebar -->
-            <aside class="sidebar">
-                <h1>Heeyoung Lee</h1>
-                <div class="korean-name">이희영</div>
-                <p class="subtitle">
-                    Ph.D. Candidate in <strong>Sociology</strong><br>
-                    University at Albany, SUNY
-                </p>
+    <!-- Full Screen Canvas Network Visualization -->
+    <div id="network-container">
+        <canvas id="network-viz"></canvas>
 
-                <div class="contact-info">
-                    <p>
-                        <i class="bi bi-envelope-fill"></i>
-                        <span>hlee25@albany.edu</span>
-                    </p>
-                    <p>
-                        <i class="bi bi-mortarboard-fill"></i>
-                        <span class="research-areas">
-                            Population Health<br>
-                            Criminology<br>
-                            Socio-ecological Context<br>
-                            Life-course<br>
-                            Longitudinal Analysis<br>
-                            Spatial Analysis
-                        </span>
-                    </p>
-                </div>
-
-                <div class="social-links">
-                    <a href="https://scholar.google.com/citations?user=bh3YJZ0AAAAJ&hl=en&oi=sra" class="social-link" target="_blank">
-                        <i class="bi bi-google"></i> Scholar
-                    </a>
-                    <a href="https://www.linkedin.com/in/heeyoung-lee-086b2926a/" class="social-link" target="_blank">
-                        <i class="bi bi-linkedin"></i> LinkedIn
-                    </a>
-                    <a href="https://x.com/idlhy0218" class="social-link" target="_blank">
-                        <i class="bi bi-twitter-x"></i> Twitter
-                    </a>
-                    <a href="https://www.researchgate.net/profile/Heeyoung-Lee-11" class="social-link" target="_blank">
-                        <i class="bi bi-journal-text"></i> ResearchGate
-                    </a>
-                </div>
-            </aside>
-
-            <!-- Main Content -->
-            <main class="main-content">
-                <!-- About -->
-                <div class="card">
-                    <h2>About Me</h2>
-                    <p>I am a Ph.D. Candidate in Sociology at the University at Albany, SUNY.</p>
-                    <p>My work investigates the <span style="color: darkred;">unequal distribution of health and
-                       crime</span> across temporal and spatial dimensions, specifically examining how
-                       socio-ecological factors shape these outcomes. I employ advanced quantitative methods, including
-                       multilevel modeling, spatial analysis, and longitudinal techniques, to understand these complex
-                       social processes.</p>
-
-                    <p>I have published in leading journals including the <i>Journal of Health and Social Behavior</i>,
-                        <i>Social Science &amp; Medicine</i>, <i>Society and Mental Health</i>,
-                        <i>Population Research &amp; Policy Review</i>, <i>American Journal of Preventive Medicine</i>,
-                        <i>The Journals of Gerontology</i>, <i>Journal of Adolescence</i>, <i>Child Abuse and
-                            Neglect</i>, and <i>Criminal Justice and Behavior</i>.
-                    </p>
-                </div>
-
-                <!-- Research Network -->
-                <div class="card">
-                    <h2>My Research Network</h2>
-                    <p style="color: var(--text-secondary); margin-bottom: 1.5rem;">
-                        Interactive visualization of my research publications connected by shared keywords and themes.
-                        Scroll to zoom, drag to pan, and hover over nodes to see details.
-                    </p>
-
-                    <div id="net-wrap">
-                        <canvas id="network-viz"></canvas>
-                        <div id="net-legend">
-                            <div class="leg-item">
-                                <div class="leg-dot" style="background:#4e7ab5"></div>
-                                <span>Publication</span>
-                            </div>
-                            <div class="leg-item">
-                                <div class="leg-dot" style="background:#b8974a"></div>
-                                <span>Keyword</span>
-                            </div>
-                        </div>
-                        <div id="zoom-controls">
-                            <button class="zoom-btn" id="btn-zoom-in">+</button>
-                            <button class="zoom-btn" id="btn-zoom-out">−</button>
-                            <button class="zoom-btn" id="btn-zoom-reset" style="font-size:11px;">⊙</button>
-                        </div>
-                        <div id="net-tooltip"></div>
-                    </div>
-                </div>
-
-                <!-- Academic Growth -->
-                <div class="card">
-                    <h2>My Academic Growth</h2>
-                    <div class="stats-grid">
-                        <div class="stat-card">
-                            <div class="stat-value" id="totalCitations">47</div>
-                            <div class="stat-label">Citations</div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-value" id="totalPublications">17</div>
-                            <div class="stat-label">Publications</div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-value" id="hIndex">5</div>
-                            <div class="stat-label">h-index</div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-value" id="i10Index">2</div>
-                            <div class="stat-label">i10-index</div>
-                        </div>
-                    </div>
-
-                    <div class="chart-container">
-                        <canvas id="scholarMetricsChart"></canvas>
-                    </div>
-                </div>
-
-                <!-- Recent Publications -->
-                <div class="card">
-                    <h2>Recent Publications</h2>
-                    <p style="font-size:0.85rem; color:var(--text-secondary); margin-bottom:1rem;">* Corresponding author; <sup>†</sup> Equal contribution (co-first author)</p>
-                    <ul class="content-list">
-                        <li class="year-header-item"><h4 class="year-header">2026</h4></li>
-                        <li>
-                            <strong>Heeyoung Lee<sup>†</sup></strong>, Jungmin Shin*<sup>†</sup>, and Jonathan Dirlam. 2026. "The Influence of Structural Sexism and the #MeToo Movement on Sexual Harassment Complaints in the United States."
-                            <i>The Sociological Quarterly</i>.
-                            <span class="status-badge forthcoming">Forthcoming</span>
-                        </li>
-                        <li>
-                            <strong>Heeyoung Lee*</strong>. 2026. "Permeable Boundaries: How Neighboring States'
-                            Policy Environments Shape Local Mortality Rates in the United States."
-                            <i>Journal of Health and Social Behavior</i>.
-                            <a href="https://doi.org/10.1177/00221465261457832" target="_blank" rel="noopener" class="doi-link"><i class="bi bi-link-45deg"></i> DOI</a>
-                        </li>
-                        <li>
-                            Tse-Chuan Yang, <strong>Heeyoung Lee</strong>, and Golam Morshed Suhel. 2026. "Age
-                            Segregation and Deaths of Despair among Older Adults, 2010-2022: Rural/Urban County
-                            Comparisons." <i>Social Science &amp; Medicine</i>.
-                            <a href="https://doi.org/10.1016/j.socscimed.2026.119407" target="_blank" rel="noopener" class="doi-link"><i class="bi bi-link-45deg"></i> DOI</a>
-                        </li>
-
-                        <li class="year-header-item"><h4 class="year-header">2025</h4></li>
-                        <li>
-                            <strong>Heeyoung Lee*</strong>, and Tse-Chuan Yang. 2025. "How Does County Educational
-                            Composition Affect Mortality." <i>Lerner Center Population Health Research Brief Series,
-                                Research Brief #139</i>.
-                            <a href="https://doi.org/10.14305/rt.lerner.2025.22" target="_blank" rel="noopener" class="doi-link"><i class="bi bi-link-45deg"></i> DOI</a>
-                        </li>
-                        <li>
-                            <strong>Heeyoung Lee*</strong>, and Tse-Chuan Yang. 2025. "Unequal Spillover of Human
-                            Capital: Longitudinal Analysis of Mortality Among Populations by College Degree in US
-                            Counties, 2010-2022." <i>American Journal of Preventive Medicine</i>.
-                            <a href="https://doi.org/10.1016/j.amepre.2025.107646" target="_blank" rel="noopener" class="doi-link"><i class="bi bi-link-45deg"></i> DOI</a>
-                        </li>
-                        <li>
-                            Tse-Chuan Yang, Carla Shoff, Kate Strully and <strong>Heeyoung Lee</strong>. 2025. "Features
-                            of Residential Counties and Individual Health Conditions for Opioid Use Disorder Among Older
-                            Medicare Beneficiaries." <i>The Journals of Gerontology, Series B: Psychological Sciences
-                                and Social Sciences</i>.
-                            <a href="https://doi.org/10.1093/geronb/gbaf069" target="_blank" rel="noopener" class="doi-link"><i class="bi bi-link-45deg"></i> DOI</a>
-                        </li>
-                        <li>
-                            <strong>Heeyoung Lee*</strong>, and Matt Vogel. 2025. "Exposure to Police Killing and
-                            Adolescents' Self-Concept: Diverging Effects for Black and White American Youths."
-                            <i>Journal of Adolescence</i>.
-                            <a href="https://doi.org/10.1002/jad.12490" target="_blank" rel="noopener" class="doi-link"><i class="bi bi-link-45deg"></i> DOI</a>
-                        </li>
-                        <li>
-                            Seong-Jo Jung, <strong>Heeyoung Lee</strong>, and Chan S. Suh. 2025. "Moving Apart and
-                            Coming Together: The Dynamics of Coalition Building in the Case of South Korean LGBTQ
-                            Movement." <i>Journal of Homosexuality</i>.
-                            <a href="https://doi.org/10.1080/00918369.2024.2378743" target="_blank" rel="noopener" class="doi-link"><i class="bi bi-link-45deg"></i> DOI</a>
-                        </li>
-                        <li>
-                            <strong>Heeyoung Lee*</strong>, and Seong-Jo Jung. 2025. "Gender Differences in the
-                            Relationship between Coming Out as LGB to Family and Depression in South Korea." <i>Society
-                                and Mental Health</i>.
-                            <a href="https://doi.org/10.1177/21568693241242400" target="_blank" rel="noopener" class="doi-link"><i class="bi bi-link-45deg"></i> DOI</a>
-                            <span class="award-badge">2024 Paul Meadows, Excellence in Research Award Winner, Sociology
-                                Department, University at Albany, SUNY</span>
-                        </li>
-
-                        <li class="year-header-item"><h4 class="year-header">2024</h4></li>
-                        <li>
-                            <strong>Heeyoung Lee*</strong>, and Tse-Chuan Yang. 2024. "Spatial and Temporal Dimension of
-                            Black-White Mental Health Paradox in the US: Effect of Cumulative Neighborhood
-                            Disadvantage." <i>Population Research &amp; Policy Review</i>.
-                            <a href="https://doi.org/10.1007/s11113-024-09922-2" target="_blank" rel="noopener" class="doi-link"><i class="bi bi-link-45deg"></i> DOI</a>
-                        </li>
-                        <li>
-                            <strong>Heeyoung Lee*</strong>. 2024. "State-Level Structural Sexism and Adolescent Sexual
-                            Violence Victimization in the US." <i>Child Abuse and Neglect</i>.
-                            <a href="https://doi.org/10.1016/j.chiabu.2024.107096" target="_blank" rel="noopener" class="doi-link"><i class="bi bi-link-45deg"></i> DOI</a>
-                        </li>
-                        <li>
-                            <strong>Heeyoung Lee*</strong>. 2024. "Delinquency During Puberty as a Biosocial Behavior:
-                            Time-Varying Effects of Social Contexts on Girl's Delinquency in South Korea." <i>Criminal
-                                Justice and Behaviors</i>.
-                            <a href="https://doi.org/10.1177/00938548241276087" target="_blank" rel="noopener" class="doi-link"><i class="bi bi-link-45deg"></i> DOI</a>
-                            <span class="award-badge">2022 Paul Meadows, Excellence in Research Award Winner, Sociology
-                                Department, University at Albany, SUNY</span>
-                        </li>
-                        <li>
-                            <strong>Heeyoung Lee*</strong>, Sooyeon Moon, and Na-Young Lee. 2024. "Industry Culture
-                            Matters: Sexual Harassment in the South Korean Film Industry." <i>Violence Against
-                                Women</i>.
-                            <a href="https://doi.org/10.1177/10778012231203001" target="_blank" rel="noopener" class="doi-link"><i class="bi bi-link-45deg"></i> DOI</a>
-                        </li>
-                    </ul>
-                    <a href="page building/publications.html" class="btn">View All Publications <i class="bi bi-arrow-right-short"></i></a>
-                </div>
-
-                <!-- Teaching -->
-                <div class="card">
-                    <h2>Teaching Experience</h2>
-                    <ul class="content-list">
-                        <li class="year-header-item"><h4 class="year-header">2026</h4></li>
-                        <li>
-                            <strong>Adjunct Instructor:</strong> Criminology (Spring)
-                            <div class="teaching-score">Overall Score: 4.68/5.00 (Spring)</div>
-                        </li>
-                        <li>
-                            <strong>Adjunct Instructor:</strong> Medical Sociology (Spring)
-                            <div class="teaching-score">Overall Score: 4.77/5.00 (Spring)</div>
-                        </li>
-
-                        <li class="year-header-item"><h4 class="year-header">2025</h4></li>
-                        <li>
-                            <strong>Adjunct Instructor:</strong> Criminology (Fall, Summer)
-                            <div class="teaching-score">Overall Score: 4.73/5.00 (Fall) | 4.75/5.00 (Summer)</div>
-                        </li>
-                        <li>
-                            <strong>Adjunct Instructor:</strong> Medical Sociology (Fall, Spring)
-                            <div class="teaching-score">Overall Score: 4.81/5.00 (Fall) | 4.76/5.00 (Spring)</div>
-                        </li>
-                        <li>
-                            <strong>Teaching Assistant:</strong> The 12th KOSTAT-UNFPA Summer Seminar on Population
-                        </li>
-
-                        <li class="year-header-item"><h4 class="year-header">2024</h4></li>
-                        <li>
-                            <strong>Adjunct Instructor:</strong> Medical Sociology (Fall, Summer)
-                            <div class="teaching-score">Overall Score: 4.78/5.00 (Fall) | 4.80/5.00 (Summer)</div>
-                        </li>
-
-                        <li class="year-header-item"><h4 class="year-header">2023</h4></li>
-                        <li>
-                            <strong>Co-Instructor:</strong> Statistics for Sociologists (Spring)
-                        </li>
-                    </ul>
-                    <a href="page building/teaching.html" class="btn">More About Teaching <i class="bi bi-arrow-right-short"></i></a>
-                </div>
-
-                <!-- Awards -->
-                <div class="card">
-                    <h2>Selected Awards &amp; Grants</h2>
-                    <ul class="content-list">
-                        <li class="year-header-item"><h4 class="year-header">2026</h4></li>
-                        <li>
-                            <strong>Howard B. Kaplan Memorial Award</strong>, ASA Section on Medical Sociology
-                        </li>
-                        <li>
-                            <strong>UAlbany Graduate Student Association Professional Development Grant</strong>
-                        </li>
-
-                        <li class="year-header-item"><h4 class="year-header">2025</h4></li>
-                        <li>
-                            <strong>Hak-Bong Research Grant</strong>, School of Law, Seoul National University
-                        </li>
-                        <li>
-                            <strong>UAlbany Graduate Student Association Professional Development Grant</strong>
-                        </li>
-
-                        <li class="year-header-item"><h4 class="year-header">2024</h4></li>
-                        <li>
-                            <strong>BIPOC Junior Scholar Travel Grant</strong>, ASA Section on Aging and the Life Course
-                        </li>
-                        <li>
-                            <strong>Paul Meadows Excellence in Research Award</strong>, Sociology Department, University at Albany, SUNY
-                        </li>
-
-                        <li class="year-header-item"><h4 class="year-header">2022</h4></li>
-                        <li>
-                            <strong>Paul Meadows Excellence in Research Award</strong>, Sociology Department, University at Albany, SUNY
-                        </li>
-                        <li>
-                            <strong>Academic Paper Award</strong>, People's Solidarity for Participatory Democracy
-                        </li>
-
-                        <li class="year-header-item"><h4 class="year-header">2021</h4></li>
-                        <li>
-                            <strong>Democracy Academic Paper Contest Winner</strong>, Korean Democracy Foundation
-                        </li>
-                    </ul>
-                </div>
-            </main>
+        <!-- Intro Card Widget -->
+        <div class="hud-overlay intro-card" id="introCard">
+            <button class="intro-close-btn" id="btn-intro-close" aria-label="Close intro"><i class="bi bi-x"></i></button>
+            <p class="intro-lead">I am a Ph.D. Candidate in Sociology at the University at Albany, SUNY.</p>
+            <p class="intro-body">My work investigates the unequal distribution of health and crime across temporal and spatial dimensions, specifically examining how socio-ecological factors shape these outcomes. I employ advanced quantitative methods, including multilevel modeling, spatial analysis, and longitudinal techniques, to understand these complex social processes.</p>
+            <p class="intro-body" style="margin-bottom: 0;">I have published in leading journals including the <i>Journal of Health and Social Behavior</i>, <i>Social Science &amp; Medicine</i>, <i>Society and Mental Health</i>, <i>Population Research &amp; Policy Review</i>, <i>American Journal of Preventive Medicine</i>, <i>The Journals of Gerontology</i>, <i>Journal of Adolescence</i>, <i>Child Abuse and Neglect</i>, and <i>Criminal Justice and Behavior</i>.</p>
         </div>
 
-        <div class="footer">
-            Last updated: July 14, 2026
+        <!-- Restore Intro Toggle Button -->
+        <button class="hud-overlay intro-toggle-btn" id="btn-intro-toggle" aria-label="Open intro" style="display: none;"><i class="bi bi-person-circle"></i></button>
+
+        <!-- Legend Widget -->
+        <div class="hud-overlay legend-widget">
+            <div class="legend-item">
+                <div class="legend-dot" style="background: var(--primary); box-shadow: 0 0 5px rgba(37,99,235,0.2);"></div>
+                <span>Publication</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-dot" style="background: var(--accent); box-shadow: 0 0 5px rgba(234,88,12,0.2);"></div>
+                <span>Keyword Theme</span>
+            </div>
         </div>
+
+        <!-- Zoom / Pan Controls -->
+        <div class="hud-overlay controls-widget">
+            <button class="control-btn" id="btn-zoom-in" title="Zoom In"><i class="bi bi-plus-lg"></i></button>
+            <button class="control-btn" id="btn-zoom-out" title="Zoom Out"><i class="bi bi-dash-lg"></i></button>
+            <button class="control-btn" id="btn-zoom-reset" title="Recenter View"><i class="bi bi-fullscreen"></i></button>
+        </div>
+
+        <!-- Tooltip -->
+        <div id="net-tooltip"></div>
     </div>
 
-    <!-- Chart.js -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- D3 for network graph -->
+    <!-- D3.js -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
 
     <script>
-        /* ─── Scholar Metrics Chart ─── */
-        const scholarData = {
-            summary: { totalCitations: 47, totalPublications: 17, hIndex: 5, i10Index: 2 },
-            years: [2020, 2021, 2022, 2023, 2024, 2025, 2026],
-            citations: [1, 1, 2, 4, 9, 29, 47],
-            publications: [2, 3, 3, 4, 8, 14, 17]
-        };
-
         document.addEventListener('DOMContentLoaded', function () {
-            document.getElementById('totalCitations').textContent   = scholarData.summary.totalCitations;
-            document.getElementById('totalPublications').textContent = scholarData.summary.totalPublications;
-            document.getElementById('hIndex').textContent           = scholarData.summary.hIndex;
-            document.getElementById('i10Index').textContent         = scholarData.summary.i10Index;
-
-            const ctx = document.getElementById('scholarMetricsChart').getContext('2d');
-            new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: scholarData.years,
-                    datasets: [
-                        {
-                            label: 'Citations',
-                            data: scholarData.citations,
-                            borderColor: '#15803d',
-                            backgroundColor: 'rgba(21,128,61,0.1)',
-                            borderWidth: 3,
-                            fill: true,
-                            tension: 0.4,
-                            pointRadius: 5,
-                            pointHoverRadius: 7,
-                            pointBackgroundColor: '#15803d',
-                            pointBorderColor: '#fff',
-                            pointBorderWidth: 2,
-                            yAxisID: 'y'
-                        },
-                        {
-                            label: 'Publications',
-                            data: scholarData.publications,
-                            borderColor: '#c2410c',
-                            backgroundColor: 'rgba(194,65,12,0.1)',
-                            borderWidth: 3,
-                            fill: true,
-                            tension: 0.4,
-                            pointRadius: 5,
-                            pointHoverRadius: 7,
-                            pointBackgroundColor: '#c2410c',
-                            pointBorderColor: '#fff',
-                            pointBorderWidth: 2,
-                            yAxisID: 'y1'
-                        }
-                    ]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    interaction: { mode: 'index', intersect: false },
-                    plugins: {
-                        legend: {
-                            display: true,
-                            position: 'top',
-                            labels: {
-                                font: { family: "'Inter', sans-serif", size: 13 },
-                                color: '#1e293b',
-                                padding: 15,
-                                usePointStyle: true,
-                                pointStyle: 'circle'
-                            }
-                        },
-                        tooltip: {
-                            backgroundColor: 'rgba(30,41,59,0.95)',
-                            titleFont: { family: "'Inter', sans-serif", size: 13 },
-                            bodyFont:  { family: "'Inter', sans-serif", size: 12 },
-                            padding: 10,
-                            cornerRadius: 4
-                        }
-                    },
-                    scales: {
-                        y: {
-                            type: 'linear', display: true, position: 'left', beginAtZero: true,
-                            title: { display: true, text: 'Citations', font: { family: "'Inter', sans-serif", size: 12, weight: 'bold' }, color: '#15803d' },
-                            ticks: { font: { family: "'Inter', sans-serif", size: 11 }, color: '#64748b' },
-                            grid: { color: 'rgba(226,232,240,0.5)' }
-                        },
-                        y1: {
-                            type: 'linear', display: true, position: 'right', beginAtZero: true,
-                            title: { display: true, text: 'Publications', font: { family: "'Inter', sans-serif", size: 12, weight: 'bold' }, color: '#c2410c' },
-                            ticks: { font: { family: "'Inter', sans-serif", size: 11 }, color: '#64748b', stepSize: 2 },
-                            grid: { drawOnChartArea: false }
-                        },
-                        x: {
-                            ticks: { font: { family: "'Inter', sans-serif", size: 11 }, color: '#64748b' },
-                            grid: { color: 'rgba(226,232,240,0.5)' }
-                        }
-                    },
-                    animation: { duration: 1500, easing: 'easeInOutQuart' }
-                }
-            });
-
-            initNetworkGraph();
-        });
-
-        /* ─── Research Network Graph ─── */
-        function initNetworkGraph() {
+            // Publications Data List
             const publications = [
                 { id:'pub1',  label:'Education & Mortality',     full:'County Educational Composition & Mortality',      year:2025, kws:['education','neighborhood','health-disparity'] },
                 { id:'pub2',  label:'Education Spillover',        full:'Unequal Spillover of Human Capital',              year:2025, kws:['education','neighborhood','health-disparity'] },
@@ -1046,8 +540,10 @@
                 { id:'pub15', label:'Age Segregation & Despair',  full:'Age Segregation and Deaths of Despair',           year:2026, kws:['aging','neighborhood','health-disparity','segregation','spatial-analysis'] },
                 { id:'pub16', label:'Permeable Boundaries',       full:'Permeable Boundaries: State Policy & Mortality',  year:2026, kws:['policy','health-disparity','spatial-analysis'] },
                 { id:'pub17', label:'Sexism & Harassment',        full:'The Influence of Structural Sexism and the #MeToo Movement on Sexual Harassment Complaints in the United States',         year:2026, kws:['gender','structural-sexism','sexual-violence'] },
+                { id:'pub18', label:'Substance Use & Mental Health', full:'Substance Use and Mental Health Outcomes among Gay and Bisexual Men in South Korea', year:2026, kws:['LGBTQ','mental-health','substance-use'] },
             ];
 
+            // Build Nodes and Links
             const kwSet = [...new Set(publications.flatMap(p => p.kws))];
             const kwCount = {};
             kwSet.forEach(k => { kwCount[k] = publications.filter(p => p.kws.includes(k)).length; });
@@ -1059,17 +555,17 @@
             const links = [];
             publications.forEach(p => p.kws.forEach(k => links.push({ source:p.id, target:k })));
 
+            // Setup Canvas elements
             const canvas  = document.getElementById('network-viz');
-            const wrap    = document.getElementById('net-wrap');
             const tooltip = document.getElementById('net-tooltip');
-
-            let W = wrap.clientWidth;
-            let H = wrap.clientHeight;
+            
+            let W = window.innerWidth;
+            let H = window.innerHeight;
             const DPR = window.devicePixelRatio || 1;
 
             function resizeCanvas() {
-                W = wrap.clientWidth;
-                H = wrap.clientHeight;
+                W = window.innerWidth;
+                H = window.innerHeight;
                 canvas.width  = W * DPR;
                 canvas.height = H * DPR;
                 canvas.style.width  = W + 'px';
@@ -1080,20 +576,24 @@
             const ctx = canvas.getContext('2d');
             ctx.scale(DPR, DPR);
 
-            let tx = 0, ty = 0, scale = 1;
+            let scale = 0.8;
+            let tx = (W / 2) * (1 - scale);
+            let ty = (H / 2) * (1 - scale);
             const SCALE_MIN = 0.25, SCALE_MAX = 4;
 
             function nodeR(d) {
-                return d.type === 'kw' ? 7 + d.count * 3.2 : 7;
+                return d.type === 'kw' ? 8 + d.count * 3.5 : 8;
             }
 
+            // Force Simulation
             const sim = d3.forceSimulation(nodes)
-                .force('link', d3.forceLink(links).id(d => d.id).distance(95).strength(0.55))
-                .force('charge', d3.forceManyBody().strength(d => d.type === 'kw' ? -200 : -90))
+                .force('link', d3.forceLink(links).id(d => d.id).distance(85).strength(0.65))
+                .force('charge', d3.forceManyBody().strength(d => d.type === 'kw' ? -420 : -180))
                 .force('center', d3.forceCenter(W / 2, H / 2))
-                .force('collision', d3.forceCollide().radius(d => nodeR(d) + 9))
-                .alphaDecay(0.018);
+                .force('collision', d3.forceCollide().radius(d => nodeR(d) + 12))
+                .alphaDecay(0.015);
 
+            // Draw Canvas Frame
             function draw() {
                 ctx.save();
                 ctx.setTransform(1, 0, 0, 1, 0, 0);
@@ -1104,47 +604,69 @@
                 ctx.translate(tx, ty);
                 ctx.scale(scale, scale);
 
-                /* edges */
+                /* Draw Edges (Links) */
                 links.forEach(l => {
                     const s = l.source, t = l.target;
                     const hot = hovered && (l.source === hovered || l.target === hovered);
+                    
                     ctx.beginPath();
                     ctx.moveTo(s.x, s.y);
                     ctx.lineTo(t.x, t.y);
-                    ctx.strokeStyle = hot ? 'rgba(70,90,115,0.85)' : 'rgba(100,110,125,0.55)';
-                    ctx.lineWidth   = hot ? 1.2 : 0.8;
+                    
+                    const kwNode = t.type === 'kw' ? t : s;
+                    const count = kwNode.count || 1;
+                    
+                    if (hot) {
+                        ctx.strokeStyle = hovered.type === 'pub' ? 'rgba(37, 99, 235, 0.75)' : 'rgba(234, 88, 12, 0.75)';
+                        ctx.lineWidth = 2.0;
+                    } else {
+                        const opacity = 0.35 + Math.min(0.35, (count - 1) * 0.08);
+                        const width = 0.9 + Math.min(0.9, (count - 1) * 0.2);
+                        ctx.strokeStyle = `rgba(71, 85, 105, ${opacity})`;
+                        ctx.lineWidth = width;
+                    }
                     ctx.stroke();
                 });
 
-                /* nodes */
+                /* Draw Nodes */
                 nodes.forEach(d => {
-                    const r     = nodeR(d);
+                    const r = nodeR(d);
                     const isPub = d.type === 'pub';
                     const isHov = d === hovered;
 
+                    // Hover background glow ring
                     if (isHov) {
                         ctx.beginPath();
-                        ctx.arc(d.x, d.y, r + 4, 0, Math.PI * 2);
-                        ctx.fillStyle = isPub ? 'rgba(78,122,181,0.18)' : 'rgba(184,151,74,0.2)';
+                        ctx.arc(d.x, d.y, r + 6, 0, Math.PI * 2);
+                        ctx.fillStyle = isPub ? 'rgba(37, 99, 235, 0.12)' : 'rgba(234, 88, 12, 0.1)';
                         ctx.fill();
                     }
 
+                    // Node center circle
                     ctx.beginPath();
                     ctx.arc(d.x, d.y, r, 0, Math.PI * 2);
                     ctx.fillStyle = isPub
-                        ? (isHov ? '#6a96d0' : '#4e7ab5')
-                        : (isHov ? '#d4aa5a' : '#b8974a');
+                        ? (isHov ? '#1e40af' : '#2563eb')
+                        : (isHov ? '#c2410c' : '#ea580c');
+                    
+                    ctx.shadowBlur = isHov ? 10 : 2;
+                    ctx.shadowColor = isPub ? 'rgba(37, 99, 235, 0.4)' : 'rgba(234, 88, 12, 0.4)';
                     ctx.fill();
+                    ctx.shadowBlur = 0; // Reset shadow
 
-                    /* labels: keyword with count >= 2 always visible; pub on hover only */
-                    const showLabel = (d.type === 'kw' && d.count >= 2) || isHov;
-                    if (showLabel) {
-                        const fs = Math.max(8, 9.5 / scale);
-                        ctx.font         = `${d.type === 'kw' ? 500 : 400} ${fs}px 'Inter', sans-serif`;
-                        ctx.fillStyle    = d.type === 'kw' ? '#374151' : '#4b5563';
+                    // Label: Hide by default, show ONLY on hover
+                    if (isHov) {
+                        const fs = Math.max(10, 13 / scale);
+                        ctx.font         = `600 ${fs}px 'Outfit', sans-serif`;
+                        ctx.fillStyle    = '#0f172a';
                         ctx.textAlign    = 'center';
                         ctx.textBaseline = 'top';
-                        ctx.fillText(d.label, d.x, d.y + r + 3);
+                        
+                        // Add shadow to text to make it extremely readable
+                        ctx.shadowColor = '#ffffff';
+                        ctx.shadowBlur = 6;
+                        ctx.fillText(d.label, d.x, d.y + r + 8);
+                        ctx.shadowBlur = 0; // Reset shadow
                     }
                 });
 
@@ -1153,7 +675,7 @@
 
             sim.on('tick', draw);
 
-            /* ─── coordinate helpers ─── */
+            // Coordinate Helpers
             function canvasToWorld(cx, cy) {
                 return { x: (cx - tx) / scale, y: (cy - ty) / scale };
             }
@@ -1162,18 +684,17 @@
                 const { x, y } = canvasToWorld(cx, cy);
                 return nodes.find(d => {
                     const dx = d.x - x, dy = d.y - y;
-                    return Math.sqrt(dx * dx + dy * dy) <= nodeR(d) + 5;
+                    return Math.sqrt(dx * dx + dy * dy) <= nodeR(d) + 6;
                 });
             }
 
-            /* ─── state ─── */
+            // Interactions & Event Listeners
             let hovered  = null;
             let dragNode = null;
             let panning  = false;
             let panStart = null;
             let txStart, tyStart;
 
-            /* ─── mouse ─── */
             canvas.addEventListener('mousemove', e => {
                 const rect = canvas.getBoundingClientRect();
                 const mx = e.clientX - rect.left;
@@ -1200,14 +721,17 @@
                     canvas.style.cursor = found ? 'pointer' : 'grab';
                     draw();
                 }
+
                 if (found) {
                     tooltip.style.display = 'block';
                     tooltip.innerHTML = found.type === 'pub'
-                        ? `<div>${found.full}</div><div class="tt-year">${found.year}</div>`
-                        : `<div><strong>#${found.label}</strong></div><div class="tt-year">${found.count} publication${found.count > 1 ? 's' : ''}</div>`;
-                    let ttx = mx + 14, tty = my - 10;
-                    if (ttx + 220 > W) ttx = mx - 224;
-                    if (tty + 60  > H) tty = my - 64;
+                        ? `<div class="tt-header">${found.full}</div><div class="tt-year"><i class="bi bi-calendar-event"></i> ${found.year} &bull; Click to open</div>`
+                        : `<div class="tt-header"># ${found.label}</div><div class="tt-year"><i class="bi bi-journal-text"></i> ${found.count} paper${found.count > 1 ? 's' : ''} connected</div>`;
+                    
+                    let ttx = mx + 16, tty = my - 12;
+                    const ttRect = tooltip.getBoundingClientRect();
+                    if (ttx + ttRect.width > W) ttx = mx - ttRect.width - 16;
+                    if (tty + ttRect.height > H) tty = my - ttRect.height - 12;
                     tooltip.style.left = ttx + 'px';
                     tooltip.style.top  = tty + 'px';
                 } else {
@@ -1236,6 +760,18 @@
                 e.preventDefault();
             });
 
+            // Node Click Event
+            canvas.addEventListener('click', e => {
+                // Ignore if it was dragging/panning
+                if (panning || dragNode) return;
+                const rect  = canvas.getBoundingClientRect();
+                const found = getNode(e.clientX - rect.left, e.clientY - rect.top);
+                if (found && found.type === 'pub') {
+                    // Navigate to publications tab
+                    window.location.href = 'page building/publications.html';
+                }
+            });
+
             window.addEventListener('mouseup', () => {
                 if (dragNode) {
                     dragNode.fx = null;
@@ -1259,7 +795,7 @@
                 }
             });
 
-            /* ─── scroll zoom ─── */
+            // Scroll Zoom
             canvas.addEventListener('wheel', e => {
                 e.preventDefault();
                 const rect     = canvas.getBoundingClientRect();
@@ -1273,7 +809,7 @@
                 draw();
             }, { passive: false });
 
-            /* ─── touch ─── */
+            // Touch support for Mobile
             let lastTouchDist = null;
 
             canvas.addEventListener('touchstart', e => {
@@ -1336,7 +872,7 @@
                 panning = false; lastTouchDist = null;
             });
 
-            /* ─── zoom buttons ─── */
+            // Zoom helper
             function zoomAt(delta) {
                 const cx = W / 2, cy = H / 2;
                 const newScale = Math.min(SCALE_MAX, Math.max(SCALE_MIN, scale * delta));
@@ -1349,32 +885,75 @@
             document.getElementById('btn-zoom-in').addEventListener('click',    () => zoomAt(1.25));
             document.getElementById('btn-zoom-out').addEventListener('click',   () => zoomAt(0.8));
             document.getElementById('btn-zoom-reset').addEventListener('click', () => {
-                tx = 0; ty = 0; scale = 1;
+                scale = 0.8;
+                tx = (W / 2) * (1 - scale);
+                ty = (H / 2) * (1 - scale);
                 sim.force('center', d3.forceCenter(W / 2, H / 2));
                 sim.alpha(0.3).restart();
             });
-        }
 
-        /* ─── Mobile menu ─── */
-        document.addEventListener('DOMContentLoaded', function () {
+            // Handle Resize
+            window.addEventListener('resize', () => {
+                const oldW = W, oldH = H;
+                resizeCanvas();
+                tx = tx + (W - oldW) / 2;
+                ty = ty + (H - oldH) / 2;
+                sim.force('center', d3.forceCenter(W / 2, H / 2));
+                sim.alpha(0.2).restart();
+                draw();
+            });
+
+            // Mobile Menu Toggle
             const toggle   = document.querySelector('.mobile-menu-toggle');
             const navLinks = document.querySelector('.nav-links');
-            if (!toggle) return;
-            toggle.addEventListener('click', function () {
-                navLinks.classList.toggle('active');
-                const icon = this.querySelector('i');
-                icon.classList.toggle('bi-list', !navLinks.classList.contains('active'));
-                icon.classList.toggle('bi-x',    navLinks.classList.contains('active'));
-            });
-            navLinks.querySelectorAll('a').forEach(link => {
-                link.addEventListener('click', () => {
-                    navLinks.classList.remove('active');
-                    const icon = toggle.querySelector('i');
-                    icon.classList.add('bi-list');
-                    icon.classList.remove('bi-x');
+            if (toggle) {
+                toggle.addEventListener('click', function () {
+                    navLinks.classList.toggle('active');
+                    const icon = this.querySelector('i');
+                    icon.classList.toggle('bi-list', !navLinks.classList.contains('active'));
+                    icon.classList.toggle('bi-x',    navLinks.classList.contains('active'));
                 });
-            });
+            }
+
+            // Intro Card Toggle Logic
+            const introCard = document.getElementById('introCard');
+            const introToggle = document.getElementById('btn-intro-toggle');
+            const introClose = document.getElementById('btn-intro-close');
+
+            if (introClose && introToggle && introCard) {
+                // Prevent mouse wheel events inside the card from zooming the canvas
+                introCard.addEventListener('wheel', e => {
+                    e.stopPropagation();
+                }, { passive: true });
+
+                introClose.addEventListener('click', () => {
+                    introCard.style.opacity = '0';
+                    introCard.style.transform = 'translateY(15px)';
+                    setTimeout(() => {
+                        introCard.style.display = 'none';
+                        introToggle.style.display = 'flex';
+                        setTimeout(() => {
+                            introToggle.style.opacity = '1';
+                            introToggle.style.transform = 'scale(1)';
+                        }, 50);
+                    }, 400);
+                });
+
+                introToggle.addEventListener('click', () => {
+                    introToggle.style.opacity = '0';
+                    introToggle.style.transform = 'scale(0.8)';
+                    setTimeout(() => {
+                        introToggle.style.display = 'none';
+                        introCard.style.display = 'block';
+                        setTimeout(() => {
+                            introCard.style.opacity = '1';
+                            introCard.style.transform = 'translateY(0)';
+                        }, 50);
+                    }, 300);
+                });
+            }
         });
     </script>
 </body>
+
 </html>

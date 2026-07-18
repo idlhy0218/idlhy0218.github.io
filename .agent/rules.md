@@ -6,116 +6,61 @@
 
 **This is the most important rule. When editing ANY HTML file in this project:**
 
-- **DO NOT** modify any file paths that reference GitHub repository structure
-- **DO NOT** change relative paths like `../page building/`, `./blog/`, `../images/`, etc.
+- **DO NOT** modify any file paths that reference GitHub repository structure unless performing an explicit file rename operation requested by the user.
+- **DO NOT** change relative paths like `../page building/`, `../images/`, etc.
 - **DO NOT** "fix" or "optimize" paths that look redundant (e.g., `../page building/blog/` is intentional)
 - **DO NOT** convert relative paths to absolute paths or vice versa
 - **DO NOT** reorganize folder structure without explicit user permission
-
-**Examples of paths you must NEVER change:**
-```html
-<!-- NEVER change these -->
-<link href="../page building/styles.css" rel="stylesheet">
-<img src="../images/logo.png">
-<a href="./blog/statslab/post.html">
-<script src="../page building/blog/gallery/script.js"></script>
-```
 
 **Why this matters:** GitHub Pages has a specific deployment structure. Changing paths will break the live website even if it works locally.
 
 ---
 
-## General Development Rules
+## 🎨 Design System: Light Gallery Theme
 
-### Code Modification Guidelines
+All new and modified pages in this project must follow the **Light Gallery** aesthetic:
 
-1. **Ask Before Major Changes**
-   - Always ask before refactoring large sections of code
-   - Confirm before deleting files or moving them
-   - Get approval before changing project structure
+### 1. Color Palette
+- **Canvas/Background**: `#fbfbfa` (Elegant warm gallery off-white)
+- **Vignette Background**: Fixed `.ambient-overlay` (radial gradient transitioning to soft dark slate)
+- **Primary Text**: `#111827` (Solid charcoal black)
+- **Secondary Text**: `#575757` (Sophisticated dark slate gray)
+- **Accent Color**: Terracotta Orange `#ea580c` (derived from network nodes, used for years, headers, and section accents)
+- **Link Highlight**: Electric Blue `#2563eb` (used for inline hyperlinks, DOI tags, and interactive hover states)
 
-2. **Preserve Existing Patterns**
-   - Follow the existing code style in the file you're editing
-   - Don't introduce new frameworks or libraries without permission
-   - Keep the same naming conventions used in the project
+### 2. Typography
+- **UI & Headers**: `'Outfit', sans-serif` (used for page titles, course headers, publication years, dates, and buttons)
+- **Paragraph Body & Quotes**: `'Inter', sans-serif` (used for descriptions, student comments, and bibliography listings)
 
-3. **Test Before Committing**
-   - Verify changes don't break existing functionality
-   - Check that all links still work
-   - Ensure responsive design isn't broken
-
-### File Editing Best Practices
-
-1. **Keep Backups**
-   - Don't delete old code immediately
-   - Comment out instead of deleting when unsure
-   - Keep version history in mind
-
-2. **Document Changes**
-   - Add comments explaining non-obvious changes
-   - Update README if you change project structure
-   - Note breaking changes clearly
-
-### Common Mistakes to Avoid
-
-❌ **DON'T:**
-- Change file paths in HTML/CSS/JS files
-- Edit generated files instead of source files
-- Delete files without checking references
-- Introduce breaking changes without warning
-- Mix tabs and spaces inconsistently
-- Commit commented-out code to production
-- Use hardcoded values instead of variables
-- Ignore existing code patterns
-
-✅ **DO:**
-- Preserve all existing file paths
-- Follow the project's existing code style
-- Ask before making structural changes
-- Test changes thoroughly
-- Use meaningful variable names
-- Keep code DRY (Don't Repeat Yourself)
-- Write clear commit messages
-- Check for console errors
+### 3. Layout Philosophy
+- **Whitespace & Breathing Room**: Prioritize generous margin padding over dense grid lines.
+- **No Card Boxes**: Avoid enclosing text in cards, boxes, backgrounds, borders, or dropshadows. Let the typography sit naturally on the warm-white canvas.
+- **Thin Separators**: Use thin slate borders or dashed lines (`rgba(15, 23, 42, 0.08)`) to structure sections.
 
 ---
 
-## Project-Specific Rules
+## General Development Rules
 
-### Blog Management
+### Navigation Structure
+- The site navigation consists of 6 primary items:
+  1. **Publications** (`publications.html`)
+  2. **Teaching** (`teaching.html`)
+  3. **Stats Lab** (`statslab.html`)
+  4. **Gallery** (`gallery.html`)
+  5. **CV** (`cv.html`)
+  6. **Contact** (`contact.html`)
+- **About** and **Blog** pages/tabs are completely deleted.
+- Navbars should remain floating glass containers (`backdrop-filter: blur(20px)`) centered at the top.
 
-1. **Date Consistency**
-   - Dates in `.qmd` files must match dates in `blog.html`
-   - Use format: `"Month DD, YYYY"` (e.g., "Nov 30, 2025")
-   - Update both locations when changing dates
+### Stats Lab Management
+- All tutorials are listed dynamically inside `page building/statslab.html` in the `statsLabPosts` array.
+- Stats Lab items do **NOT** show a "Read Article" text link at the bottom.
+- Instead, the tutorial title itself must be wrapped in an anchor tag pointing directly to the `.html` post file.
+- The title link must change from charcoal black to electric blue with an underline on hover.
 
-2. **Blog Configuration**
-   - All posts must be registered in `blog.html` blogConfig
-   - Maintain alphabetical or chronological order
-   - Include all required fields: id, title, date, description, file
-
-3. **File Organization**
-   - Stats Lab posts: `page building/blog/statslab/`
-   - Study Notes: `page building/blog/studynotes/`
-   - Gallery images: `page building/blog/gallery/`
-
-### Design Consistency
-
-1. **Navigation**
-   - Keep nav items: About, Publications, Teaching, Blog, CV, Contact
-   - Maintain mobile menu toggle functionality
-   - Preserve logo and site title
-
-2. **Styling**
-   - Use existing CSS variables (`:root` definitions)
-   - Maintain Financial Times-inspired theme
-   - Keep Inter font family
-   - Preserve responsive breakpoints
-
-3. **JavaScript**
-   - Use ES6+ syntax consistently
-   - Maintain event-driven architecture
-   - Keep tab-based interface structure
+### Gallery Management
+- Gallery visual charts and maps are managed in `page building/gallery.html` in the `galleryImages` array.
+- Images render in a responsive grid and open in a responsive modal lightbox when clicked.
 
 ---
 
@@ -123,35 +68,12 @@
 
 Before finalizing any changes:
 
-- [ ] All file paths remain unchanged
-- [ ] No broken links or 404 errors
-- [ ] Dates are consistent across files
-- [ ] Code follows existing style
-- [ ] Responsive design works on mobile
-- [ ] No console errors in browser
-- [ ] Changes are tested locally
-- [ ] Documentation is updated if needed
+- [ ] All file paths remain correct and unchanged
+- [ ] No broken links or 404 errors when clicking navbar items
+- [ ] Responsive design works properly on mobile viewports
+- [ ] Title links in Stats Lab are clickable and hover states function correctly
+- [ ] Embedded PDF viewer on CV page is responsive and fully loaded
 
----
-
-## When in Doubt
-
-**If you're unsure whether to make a change:**
-1. **ASK THE USER FIRST**
-2. Show them what you plan to change
-3. Explain why you think it needs changing
-4. Wait for confirmation
-
-**Especially ask before:**
-- Changing any file paths
-- Deleting any files
-- Restructuring folders
-- Modifying core functionality
-- Introducing new dependencies
-- Making breaking changes
-
----
-
-**Last Updated:** 2026-02-16  
+**Last Updated:** 2026-07-18  
 **Project Owner:** Heeyoung Lee  
 **Repository:** idlhy0218.github.io

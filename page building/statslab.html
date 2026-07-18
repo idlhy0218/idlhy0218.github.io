@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Contact - Heeyoung Lee</title>
+    <title>Stats Lab - Heeyoung Lee</title>
     
     <!-- Google Fonts & Bootstrap Icons -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
@@ -24,7 +24,7 @@
             --border-slate: rgba(15, 23, 42, 0.08);
             --text-primary: #111827;     /* Solid charcoal black */
             --text-secondary: #575757;   /* Sophisticated dark slate gray */
-            --text-muted: #8a8a8a;       /* Light gray for labels */
+            --text-muted: #8a8a8a;       /* Light gray for metadata label */
             --accent: #ea580c;           /* Terracotta Orange (from network) */
             --primary: #2563eb;          /* Electric Blue (from network) */
             --font-ui: 'Outfit', sans-serif;
@@ -40,7 +40,7 @@
             padding-bottom: 8rem;
         }
 
-        /* Vignette backdrop */
+        /* Subtle vignette overlay */
         .ambient-overlay {
             position: fixed;
             top: 0;
@@ -52,7 +52,7 @@
             z-index: 1;
         }
 
-        /* Floating Navbar */
+        /* Floating Minimalist Navbar */
         nav {
             position: fixed;
             top: 1.5rem;
@@ -160,99 +160,52 @@
             letter-spacing: 0.02em;
         }
 
-        /* Profile details top row */
-        .profile-row {
-            display: flex;
-            align-items: center;
-            gap: 2rem;
-            margin-bottom: 4rem;
-        }
-
-        .profile-img {
-            width: 130px;
-            height: 130px;
-            border-radius: 50%;
-            object-fit: cover;
-            border: 1px solid var(--border-slate);
-        }
-
-        .profile-info h2 {
-            font-family: var(--font-ui);
-            font-size: 1.8rem;
-            font-weight: 600;
-            color: var(--text-primary);
-            letter-spacing: -0.015em;
-            margin-bottom: 0.25rem;
-        }
-
-        .profile-info p {
+        /* Intro Description */
+        .intro-desc {
             font-size: 0.95rem;
             color: var(--text-secondary);
-        }
-
-        /* Contact Details Grid */
-        .contact-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 3rem;
-            margin-bottom: 4rem;
-        }
-
-        .contact-block-title {
-            font-family: var(--font-ui);
-            font-size: 0.9rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.08em;
-            color: var(--text-muted);
-            margin-bottom: 1rem;
-            border-bottom: 1px dashed var(--border-slate);
-            padding-bottom: 0.4rem;
-        }
-
-        .contact-content {
-            font-size: 0.95rem;
-            color: var(--text-secondary);
+            margin-bottom: 3rem;
             line-height: 1.7;
         }
 
-        .contact-content a {
-            color: var(--primary);
+        /* Minimal Blog/Stats Article Item */
+        .blog-item {
+            padding-bottom: 2rem;
+            margin-bottom: 2rem;
+            border-bottom: 1px dashed rgba(15, 23, 42, 0.06);
+        }
+
+        .blog-item:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+
+        .blog-date {
+            font-family: var(--font-ui);
+            font-size: 0.82rem;
+            color: var(--accent); /* Terracotta */
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .blog-title {
+            font-family: var(--font-ui);
+            font-size: 1.15rem;
+            font-weight: 600;
+            line-height: 1.4;
+            margin-bottom: 0.4rem;
+        }
+
+        .blog-title a {
+            color: var(--text-primary);
             text-decoration: none;
-            font-weight: 500;
-        }
-
-        .contact-content a:hover {
-            text-decoration: underline;
-        }
-
-        /* Social Link Lists */
-        .social-list {
-            display: flex;
-            flex-direction: column;
-            gap: 0.8rem;
-            margin-top: 0.5rem;
-        }
-
-        .social-item {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.6rem;
-            color: var(--text-secondary);
-            text-decoration: none;
-            font-size: 0.95rem;
             transition: color 0.2s ease;
         }
 
-        .social-item:hover {
-            color: var(--accent); /* Terracotta */
-        }
-
-        .social-item i {
-            font-size: 1.1rem;
-            width: 20px;
-            text-align: center;
-            color: var(--text-primary);
+        .blog-title a:hover {
+            color: var(--primary);
+            text-decoration: underline;
         }
 
         /* Responsive Breakpoints */
@@ -293,17 +246,6 @@
             .container {
                 padding-top: 7rem;
             }
-
-            .profile-row {
-                flex-direction: column;
-                text-align: center;
-                gap: 1.2rem;
-            }
-
-            .contact-grid {
-                grid-template-columns: 1fr;
-                gap: 2.5rem;
-            }
         }
     </style>
 </head>
@@ -321,79 +263,107 @@
         <ul class="nav-links">
             <li><a href="publications.html">Publications</a></li>
             <li><a href="teaching.html">Teaching</a></li>
-            <li><a href="statslab.html">Stats Lab</a></li>
+            <li><a href="statslab.html" class="active">Stats Lab</a></li>
             <li><a href="gallery.html">Gallery</a></li>
             <li><a href="cv.html">CV</a></li>
-            <li><a href="contact.html" class="active">Contact</a></li>
+            <li><a href="contact.html">Contact</a></li>
         </ul>
     </nav>
 
-    <!-- Main Container -->
+    <!-- Main Content Container -->
     <div class="container">
         <header>
-            <h1>Contact</h1>
-            <div class="subtitle">Get in touch and connect with my professional networks</div>
+            <h1>Stats Lab</h1>
+            <div class="subtitle">R statistical tutorials and causal inference analysis guides</div>
         </header>
 
-        <!-- Profile row introduction -->
-        <div class="profile-row">
-            <img src="../images/profile%20picture.png" alt="Heeyoung Lee" class="profile-img">
-            <div class="profile-info">
-                <h2>Heeyoung Lee</h2>
-                <p>Ph.D. Candidate in Sociology | University at Albany, SUNY</p>
-            </div>
-        </div>
+        <p class="intro-desc">
+            My R statistical lab. These guides clarify the underlying mathematical and logic concepts behind frequently used statistical methods in quantitative sociology, demographic analysis, and causal inference.
+        </p>
 
-        <!-- Contact Grid of details -->
-        <div class="contact-grid">
-            <!-- Left col: Address, Email, Office hours -->
-            <div class="contact-left">
-                <div class="contact-block-title">Email</div>
-                <div class="contact-content" style="margin-bottom: 2.5rem;">
-                    <a href="mailto:hlee25@albany.edu">hlee25@albany.edu</a>
-                </div>
-
-                <div class="contact-block-title">Office</div>
-                <div class="contact-content" style="margin-bottom: 2.5rem;">
-                    Department of Sociology<br>
-                    University at Albany, SUNY<br>
-                    United States
-                </div>
-
-                <div class="contact-block-title">Office Hours</div>
-                <div class="contact-content">
-                    Available by appointment.<br>
-                    Please email to schedule a meeting.
-                </div>
-            </div>
-
-            <!-- Right col: Academic Links -->
-            <div class="contact-right">
-                <div class="contact-block-title">Professional Profiles</div>
-                <div class="social-list">
-                    <a href="https://scholar.google.com/citations?user=bh3YJZ0AAAAJ&hl=en&oi=sra" class="social-item" target="_blank" rel="noopener">
-                        <i class="bi bi-google"></i> Google Scholar ↗
-                    </a>
-                    <a href="https://www.linkedin.com/in/heeyoung-lee-086b2926a/" class="social-item" target="_blank" rel="noopener">
-                        <i class="bi bi-linkedin"></i> LinkedIn ↗
-                    </a>
-                    <a href="https://x.com/idlhy0218" class="social-item" target="_blank" rel="noopener">
-                        <i class="bi bi-twitter-x"></i> Twitter (X) ↗
-                    </a>
-                    <a href="https://www.researchgate.net/profile/Heeyoung-Lee-11" class="social-item" target="_blank" rel="noopener">
-                        <i class="bi bi-journal-text"></i> ResearchGate ↗
-                    </a>
-                    <a href="https://github.com/idlhy0218/" class="social-item" target="_blank" rel="noopener">
-                        <i class="bi bi-github"></i> GitHub ↗
-                    </a>
-                </div>
-            </div>
-        </div>
+        <div class="blog-list" id="statsLabGrid"></div>
     </div>
 
-    <!-- Script logic for mobile nav menu -->
     <script>
+        const statsLabPosts = [
+            {
+                title: 'Understanding Meta-Analysis',
+                date: 'July 14, 2026',
+                description: 'Walk through the statistical framework of meta-analysis, showing how effect sizes are combined across multiple studies, how precision weights are calculated, and how to model between-study variation.',
+                file: 'blog/statslab/understanding-meta-analysis.html'
+            },
+            {
+                title: 'Hands-on Practice for Staggered Diff-in-Diff in R',
+                date: 'Nov 12, 2025',
+                description: 'Compares modern difference-in-differences (DiD) estimators designed to handle staggered treatment adoption.',
+                file: 'blog/statslab/staggered_did.html'
+            },
+            {
+                title: 'Understanding Basic Difference-in-Differences',
+                date: 'Nov 30, 2025',
+                description: 'Understanding the basic concepts of Difference-in-Differences with an example using John Snow cholera data.',
+                file: 'blog/statslab/did_tutorial.html'
+            },
+            {
+                title: 'What is The Logic Behind a Two-Way Fixed Effects Analysis?',
+                date: 'May 28, 2025',
+                description: 'Demystify the two-way fixed effects approach and understand the underlying statistical logic for causal inference.',
+                file: 'blog/statslab/twfe.html'
+            },
+            {
+                title: 'Fixed vs Between vs Random Effect',
+                date: 'May 15, 2025',
+                description: 'Clear up the confusion between different types of effects in panel data analysis with practical examples.',
+                file: 'blog/statslab/fe_be_re.html'
+            },
+            {
+                title: 'Understanding Multilevel Analysis',
+                date: 'Sep 1, 2025',
+                description: 'Explore the fundamentals of multilevel modeling and when to use hierarchical data structures in statistical analysis.',
+                file: 'blog/statslab/multilevel.html'
+            },
+            {
+                title: 'Understanding Decomposition Methods: Kitagawa and Oaxaca-Blinder',
+                date: 'Mar 17, 2026',
+                description: 'Explore decomposition techniques for understanding group differences, comparing the Kitagawa and Oaxaca-Blinder methods with practical examples in R.',
+                file: 'blog/statslab/kitagawa_decomposition.html'
+            },
+            {
+                title: 'Understanding Event History Analysis',
+                date: 'Nov 24, 2025',
+                description: 'Understanding basic concept of Event History Analysis (also known as Survival Analysis).',
+                file: 'blog/statslab/event_history.html'
+            },
+            {
+                title: 'Understanding Interaction Terms in Regression',
+                date: 'Apr 16, 2026',
+                description: 'Explore what interaction terms mean in regression models and how to interpret them correctly with practical examples in R.',
+                file: 'blog/statslab/interaction.html'
+            },
+            {
+                title: 'Understanding "Control" in Statistical Analysis',
+                date: 'May 18, 2025',
+                description: 'Learn what it really means to "control for" variables and how it affects your statistical interpretations.',
+                file: 'blog/statslab/what_is_control.html'
+            }
+        ];
+
         document.addEventListener('DOMContentLoaded', function () {
+            const gridElement = document.getElementById('statsLabGrid');
+            gridElement.innerHTML = '';
+
+            statsLabPosts.forEach(post => {
+                const itemElement = document.createElement('div');
+                itemElement.className = 'blog-item';
+                itemElement.innerHTML = `
+                    <div class="blog-date">${post.date}</div>
+                    <h3 class="blog-title"><a href="${post.file}">${post.title}</a></h3>
+                    <p class="blog-description" style="color: var(--text-secondary); font-size: 0.9rem; line-height: 1.6;">${post.description}</p>
+                `;
+                gridElement.appendChild(itemElement);
+            });
+
+            // Mobile Menu Toggle
             const toggle = document.querySelector('.mobile-menu-toggle');
             const navLinks = document.querySelector('.nav-links');
             if (toggle) {

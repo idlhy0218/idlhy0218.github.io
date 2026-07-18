@@ -1,0 +1,849 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teaching - Heeyoung Lee</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #1e3a8a;
+            --primary-dark: #0f172a;
+            --primary-light: #eff6ff;
+            --text-primary: #0f172a;
+            --text-secondary: #475569;
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8fafc;
+            --border: rgba(226, 232, 240, 0.8);
+            --accent: #1e3a8a;
+            --shadow-premium: 0 8px 30px rgba(15, 23, 42, 0.04);
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            color: var(--text-primary);
+            background: var(--bg-secondary);
+            line-height: 1.6;
+        }
+
+        h1, h2, h3, h4, h5, h6 {
+            font-family: 'Inter', sans-serif;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        nav {
+            background: var(--bg-primary);
+            border-bottom: 1px solid var(--border);
+            padding: 1rem 0;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-family: 'Inter', sans-serif;
+            font-size: 1.35rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            text-decoration: none;
+        }
+
+        .logo img { height: 40px; width: auto; }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        .nav-links a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 1.05rem;
+            transition: color 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .nav-links a:hover, .nav-links a.active { color: var(--primary); }
+
+        .mobile-menu-toggle {
+            display: none;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: var(--text-primary);
+            cursor: pointer;
+            padding: 0.5rem;
+            z-index: 1001;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 3rem 2rem;
+        }
+
+        .section-container {
+            background: var(--bg-primary);
+            border-radius: 16px;
+            padding: 3rem;
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow-premium);
+        }
+
+        .nav-tabs-level1 {
+            border-bottom: 2px solid var(--border);
+            gap: 0;
+            margin-bottom: 2rem;
+            display: flex;
+            list-style: none;
+            padding: 0;
+        }
+
+        .nav-tabs-level1 button {
+            font-family: 'Inter', sans-serif;
+            border: none;
+            border-bottom: 2px solid transparent;
+            background: transparent;
+            color: var(--text-secondary);
+            font-weight: 600;
+            padding: 0.75rem 1.5rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 1.05rem;
+        }
+
+        .nav-tabs-level1 button:hover { color: var(--primary); border-bottom-color: var(--primary); }
+        .nav-tabs-level1 button.active { color: var(--primary); border-bottom-color: var(--primary); }
+
+        .nav-tabs-level2 {
+            border-bottom: 1px solid var(--border);
+            gap: 0;
+            margin-bottom: 1rem;
+            display: flex;
+            list-style: none;
+            padding: 0;
+        }
+
+        .nav-tabs-level2 button {
+            font-family: 'Inter', sans-serif;
+            border: none;
+            border-bottom: 2px solid transparent;
+            background: transparent;
+            color: var(--text-secondary);
+            font-weight: 600;
+            padding: 0.75rem 1.5rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 1.05rem;
+            flex: 1;
+            text-align: center;
+        }
+
+        .nav-tabs-level2 button:hover { color: var(--primary); border-bottom-color: var(--primary); }
+        .nav-tabs-level2 button.active { color: var(--primary); border-bottom-color: var(--primary); }
+
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        .course-card {
+            border-left: 3px solid var(--primary);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            background: var(--bg-secondary);
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(15, 23, 42, 0.02);
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .course-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(15, 23, 42, 0.05);
+            border-left-color: var(--primary-dark);
+        }
+
+        .course-title {
+            font-family: 'Inter', sans-serif;
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .chart-container { height: 300px; }
+
+        .survey-iframe {
+            width: 100%;
+            height: 950px;
+            border: none;
+            display: block;
+            border-radius: 8px;
+        }
+
+        .survey-meta {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-left: 3px solid var(--primary);
+            border-radius: 8px;
+            padding: 1rem 1.25rem;
+            margin-bottom: 1.25rem;
+            font-size: 0.92rem;
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+
+        .survey-meta strong { color: var(--text-primary); }
+
+        .comment-item {
+            padding: 0.75rem;
+            margin-bottom: 0.5rem;
+            background-color: rgba(255, 255, 255, 0.8);
+            border-radius: 6px;
+            border-left: 2px solid var(--primary);
+        }
+
+        @media (max-width: 768px) {
+            .mobile-menu-toggle { display: block; }
+
+            .nav-links {
+                display: none;
+                position: absolute;
+                top: 100%;
+                left: 0;
+                right: 0;
+                background: var(--bg-primary);
+                flex-direction: column;
+                padding: 1rem 2rem;
+                border-top: 1px solid var(--border);
+                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+                gap: 0;
+                z-index: 999;
+            }
+
+            .nav-links.active { display: flex; }
+            .nav-links li { padding: 0.75rem 0; border-bottom: 1px solid var(--border); }
+            .nav-links li:last-child { border-bottom: none; }
+            nav { position: relative; }
+            .nav-tabs-level1 { flex-wrap: wrap; }
+            .nav-tabs-level1 button { font-size: 1.05rem; padding: 0.75rem 1.5rem; }
+            .nav-tabs-level2 button { font-size: 1.05rem; padding: 0.75rem 1.5rem; }
+        }
+
+        @media (max-width: 768px) {
+            html { font-size: 16px; }
+            body { font-size: 1.05rem; line-height: 1.7; }
+            p, li { font-size: 1.05rem; }
+            .container { padding: 2rem 1.25rem; }
+            .section-container { padding: 1.5rem; }
+        }
+    </style>
+</head>
+
+<body>
+    <nav>
+        <div class="nav-container">
+            <a href="../index.html" class="logo">
+                <span>Heeyoung Lee</span>
+            </a>
+            <button class="mobile-menu-toggle" aria-label="Toggle menu">
+                <i class="bi bi-list"></i>
+            </button>
+            <ul class="nav-links">
+                <li><a href="about.html"><i class="bi bi-person-lines-fill"></i> About</a></li>
+                <li><a href="publications.html"><i class="bi bi-file-earmark-text"></i> Publications</a></li>
+                <li><a href="teaching.html" class="active"><i class="bi bi-easel2"></i> Teaching</a></li>
+                <li><a href="blog.html"><i class="bi bi-bar-chart-steps"></i> Blog</a></li>
+                <li><a href="cv.html"><i class="bi bi-file-text"></i> CV</a></li>
+                <li><a href="contact.html"><i class="bi bi-envelope"></i> Contact</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="section-container">
+            <ul class="nav-tabs-level1" role="tablist">
+                <li role="presentation">
+                    <button class="active" data-tab="medical-sociology">Medical Sociology</button>
+                </li>
+                <li role="presentation">
+                    <button data-tab="criminology">Criminology</button>
+                </li>
+                <li role="presentation">
+                    <button data-tab="student-survey">Student First-Day Survey</button>
+                </li>
+            </ul>
+
+            <!-- ===== MEDICAL SOCIOLOGY TAB ===== -->
+            <div class="tab-content active" id="medical-sociology">
+
+                <!-- Spring 2026 - NEW -->
+                <div class="course-card">
+                    <div class="course-title">Medical Sociology - Spring 2026</div>
+                    <div class="mb-2"><small>University at Albany, SUNY | Instructor | Response Rate: 56.44%</small></div>
+                    <p>This course introduces students to sociological perspectives on health, illness, and healthcare systems. We examine how social factors influence health outcomes and healthcare access.</p>
+                    <div class="mt-3 mb-3">
+                        <h6>Course Evaluation</h6>
+                        <ul class="nav-tabs-level2" role="tablist">
+                            <li role="presentation">
+                                <button class="active" data-eval-tab="medsoc-spring26-chart">Evaluation Scores</button>
+                            </li>
+                            <li role="presentation">
+                                <button data-eval-tab="medsoc-spring26-comments">Student Comments</button>
+                            </li>
+                        </ul>
+                        <div class="tab-content active" id="medsoc-spring26-chart">
+                            <div class="chart-container">
+                                <canvas id="medSocSpring2026Chart"></canvas>
+                            </div>
+                            <div class="text-center mt-2 small">
+                                <div class="d-inline-block me-3">
+                                    <span style="background: rgba(255, 99, 132, 0.7); width: 12px; height: 12px; display: inline-block;"></span>
+                                    My Score
+                                </div>
+                                <div class="d-inline-block">
+                                    <span style="background: rgba(153, 102, 255, 0.5); width: 12px; height: 12px; display: inline-block;"></span>
+                                    Department Average
+                                </div>
+                            </div>
+                        </div>
+                        <div class="tab-content" id="medsoc-spring26-comments">
+                            <div style="max-height: 300px; overflow-y: auto;">
+                                <div class="comment-item">
+                                    <p class="mb-0">"I genuinely enjoyed this class with this professor. I kind of wish it were a smaller class or in a smaller classroom so more discussions could happen, but other than that, it was great."</p>
+                                </div>
+                                <div class="comment-item">
+                                    <p class="mb-0">"Professor was awesome. Made class fun. Offered extra credit opportunities. Stimulated my interest in the material."</p>
+                                </div>
+                                <div class="comment-item">
+                                    <p class="mb-0">"Very kind and helpful professor. Highly recommend to take this course!"</p>
+                                </div>
+                                <div class="comment-item">
+                                    <p class="mb-0">"Dr. Heeyoung Lee is very nice and passionate about medical sociology and has made class very enjoyable and interesting, especially being able to participate and discuss class topics with classmates along with listening and respecting everyone's opinions."</p>
+                                </div>
+                                <div class="comment-item">
+                                    <p class="mb-0">"Excellent instructor with a good, often dry, sense of humor, passionate in what he teaches with interesting lectures that prepare you for not only medical sociology but the principles of social sciences in general. Taking this course made me further interested in the field of medical sociology, which I wasn't as knowledgeable about before taking this course."</p>
+                                </div>
+                                <div class="comment-item">
+                                    <p class="mb-0">"Very kind and compassionate. Engages well with the class. Strong communication skills. He puts a lot of effort into the presentations. I like the exam reviews he does. They're really helpful. He's a really good professor and it is obvious that he cares about the content he teaches and his students' success."</p>
+                                </div>
+                                <div class="comment-item">
+                                    <p class="mb-0">"Great professor. Grades quickly, extremely receptive to criticism and ideas, very knowledgeable and well informed. Assignments are not too lengthy but a bit tedious. Would definitely recommend this course!"</p>
+                                </div>
+                                <div class="comment-item">
+                                    <p class="mb-0">"Heeyoung Lee is a great professor!!"</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Fall 2025 -->
+                <div class="course-card">
+                    <div class="course-title">Medical Sociology - Fall 2025</div>
+                    <div class="mb-2"><small>University at Albany, SUNY | Instructor | Response Rate: 56.76%</small></div>
+                    <p>This course introduces students to sociological perspectives on health, illness, and healthcare systems. We examine how social factors influence health outcomes and healthcare access.</p>
+                    <div class="mt-3 mb-3">
+                        <h6>Course Evaluation</h6>
+                        <ul class="nav-tabs-level2" role="tablist">
+                            <li role="presentation">
+                                <button class="active" data-eval-tab="fall25-chart">Evaluation Scores</button>
+                            </li>
+                            <li role="presentation">
+                                <button data-eval-tab="fall25-comments">Student Comments</button>
+                            </li>
+                        </ul>
+                        <div class="tab-content active" id="fall25-chart">
+                            <div class="chart-container">
+                                <canvas id="fall2025EvaluationChart"></canvas>
+                            </div>
+                            <div class="text-center mt-2 small">
+                                <div class="d-inline-block me-3">
+                                    <span style="background: rgba(255, 99, 132, 0.7); width: 12px; height: 12px; display: inline-block;"></span>
+                                    My Score
+                                </div>
+                                <div class="d-inline-block">
+                                    <span style="background: rgba(153, 102, 255, 0.5); width: 12px; height: 12px; display: inline-block;"></span>
+                                    Department Average
+                                </div>
+                            </div>
+                        </div>
+                        <div class="tab-content" id="fall25-comments">
+                            <div style="max-height: 300px; overflow-y: auto;">
+                                <div class="comment-item"><p class="mb-0">"Wonderful professor and hands down my favorite class. Material was stimulating and Prof. Lee was exceptional!"</p></div>
+                                <div class="comment-item"><p class="mb-0">"Heeyoung Lee is an amazing professor. He genuinely cares for his students and has their best interests. I always look forward to his lectures because the content is often super interesting and he makes it interactive for students. But not in a dreadful way, in a fun, motivating way that makes you want to participate. He takes his students' feedback very seriously and I honestly couldn't have asked for a better professor for this course!"</p></div>
+                                <div class="comment-item"><p class="mb-0">"Very fun, engaging, interesting class. I preferred the class discussions compared to group ones, as it seemed like more students were comfortable adding their opinions and thoughts when it was a free-for-all"</p></div>
+                                <div class="comment-item"><p class="mb-0">"He is an extremely kind and considerate professor that makes lecture enjoyable to attend. I have signed up for another course taught by him because I like his way of conducting class."</p></div>
+                                <div class="comment-item"><p class="mb-0">"Thank you for a great semester!"</p></div>
+                                <div class="comment-item"><p class="mb-0">"I enjoyed the class"</p></div>
+                                <div class="comment-item"><p class="mb-0">"Great professor and class!"</p></div>
+                                <div class="comment-item"><p class="mb-0">"I loved this professor. He was very personable, friendly, and easy to communicate with. He always made sure that students' voices were heard and had a chance to share opinions and thoughts in class. I would easily take 1000 more courses with him."</p></div>
+                                <div class="comment-item"><p class="mb-0">"I enjoyed this class very much!"</p></div>
+                                <div class="comment-item"><p class="mb-0">"Great Professor!! His lectures are easy to understand and his exams reflect material that we learned in class. I also like how he interacts with his students and ask them how they are doing or just general conversation."</p></div>
+                                <div class="comment-item"><p class="mb-0">"It was a wonderful class to be apart of and hope be in many other classes taught by this professor"</p></div>
+                                <div class="comment-item"><p class="mb-0">"Heeyoung Lee is a great professor! This semester I had a lot of grad student professors and professor Lee was definetly my favorite out of all of them. He runs class is a really laid back way while still teaching all of the content really well. He's just a cool guy overall and I really appreciate that he gives us writing assignments that are challenging."</p></div>
+                                <div class="comment-item"><p class="mb-0">"Great Class"</p></div>
+                                <div class="comment-item"><p class="mb-0">"Graded attendance that is only taken once a week feels like a cruel trick, especially when I miss one day of class for the week but show up to the other, because I will be getting no credit for being there at least one time. Heeyoung Lee is a fantastic instructor, he takes great care to read the mood of the room and the students to tell if the day ought wrap up earlier or if we are all focused. His slides are pretty wordy but that's okay, because he doesn't speak straight off the slides but instead synthesizes the information to be communicated verbally. I would recommend him as a sociology instructor and will look to take a class with him again in the future."</p></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Spring 2025 -->
+                <div class="course-card">
+                    <div class="course-title">Medical Sociology - Spring 2025</div>
+                    <div class="mb-2"><small>University at Albany, SUNY | Instructor | Response Rate: 66.36%</small></div>
+                    <p>This course introduces students to sociological perspectives on health, illness, and healthcare systems. We examine how social factors influence health outcomes and healthcare access.</p>
+                    <div class="mt-3 mb-3">
+                        <h6>Course Evaluation</h6>
+                        <ul class="nav-tabs-level2" role="tablist">
+                            <li role="presentation">
+                                <button class="active" data-eval-tab="spring25-chart">Evaluation Scores</button>
+                            </li>
+                            <li role="presentation">
+                                <button data-eval-tab="spring25-comments">Student Comments</button>
+                            </li>
+                        </ul>
+                        <div class="tab-content active" id="spring25-chart">
+                            <div class="chart-container">
+                                <canvas id="spring2025EvaluationChart"></canvas>
+                            </div>
+                            <div class="text-center mt-2 small">
+                                <div class="d-inline-block me-3">
+                                    <span style="background: rgba(255, 99, 132, 0.7); width: 12px; height: 12px; display: inline-block;"></span>
+                                    My Score
+                                </div>
+                                <div class="d-inline-block">
+                                    <span style="background: rgba(153, 102, 255, 0.5); width: 12px; height: 12px; display: inline-block;"></span>
+                                    Department Average
+                                </div>
+                            </div>
+                        </div>
+                        <div class="tab-content" id="spring25-comments">
+                            <div style="max-height: 300px; overflow-y: auto;">
+                                <div class="comment-item"><p class="mb-0">"Very good teacher. Loved that he was interactive with students and would ask questions and change the course off feedback he received"</p></div>
+                                <div class="comment-item"><p class="mb-0">"My absolute favorite professor by far, he cares so much about his students and makes sure that everything is explained. always makes sure that everyone is comfortable, beyond understanding."</p></div>
+                                <div class="comment-item"><p class="mb-0">"He is amazing! He communicates his expectations very clearly, makes the content easy to understand but still challenges us to think, prepares us well for exams, has a good class format! I love his class and would easily take another class with this professor."</p></div>
+                                <div class="comment-item"><p class="mb-0">"Amazing class. The professor genuinely is so kind and understanding. The course was taught very well and I understood everything. I thought this class was going to be boring but the professor made it interesting with his personality. Everything was explained well and he made me excited to come to class and learn! If I could I'd take another class with this professor!!"</p></div>
+                                <div class="comment-item"><p class="mb-0">"This course was not necessarily a topic I am extremely interested in, but the professor made me want to show up to class every day. He was engaging and interesting. He presented the material in a way that made it fun to learn. His lectures showed his passion for the topic and made me want to know."</p></div>
+                                <div class="comment-item"><p class="mb-0">"Expectations were always clear, updates at the start of classes were great, and the material was interesting with conversations of our class size. This was a good classroom setup for this class for me personally."</p></div>
+                                <div class="comment-item"><p class="mb-0">"Professor was open to feedback throughout the course and applied feedback when it was given, he upheld a positive environment and made it easy to learn."</p></div>
+                                <div class="comment-item"><p class="mb-0">"I really enjoyed this class and didn't find it too challenging for being a 300-level course. I think your teaching style is easy to follow, and I appreciate the cheat sheets for exams as it takes off a lot of pressure."</p></div>
+                                <div class="comment-item"><p class="mb-0">"This course helped deepen my perspective on medical injustices in our society and brought forth new complex ideas about sociology that I want to help further research. The professor taught this course with such a calm demeanor, truly taking time to engage."</p></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Fall 2024 -->
+                <div class="course-card">
+                    <div class="course-title">Medical Sociology - Fall 2024</div>
+                    <div class="mb-2"><small>University at Albany, SUNY | Instructor | Response Rate: 56.16%</small></div>
+                    <p>This course examines the social contexts of health, illness, and healthcare. Students explore how social factors influence the distribution of illness and healthcare systems.</p>
+                    <div class="mt-3 mb-3">
+                        <h6>Course Evaluation</h6>
+                        <ul class="nav-tabs-level2" role="tablist">
+                            <li role="presentation">
+                                <button class="active" data-eval-tab="fall24-chart">Evaluation Scores</button>
+                            </li>
+                            <li role="presentation">
+                                <button data-eval-tab="fall24-comments">Student Comments</button>
+                            </li>
+                        </ul>
+                        <div class="tab-content active" id="fall24-chart">
+                            <div class="chart-container">
+                                <canvas id="evaluationChart"></canvas>
+                            </div>
+                            <div class="text-center mt-2 small">
+                                <div class="d-inline-block me-3">
+                                    <span style="background: rgba(255, 99, 132, 0.7); width: 12px; height: 12px; display: inline-block;"></span>
+                                    My Score
+                                </div>
+                                <div class="d-inline-block">
+                                    <span style="background: rgba(153, 102, 255, 0.5); width: 12px; height: 12px; display: inline-block;"></span>
+                                    Department Average
+                                </div>
+                            </div>
+                        </div>
+                        <div class="tab-content" id="fall24-comments">
+                            <div style="max-height: 300px; overflow-y: auto;">
+                                <div class="comment-item"><p class="mb-0">"Professor Lee was so caring for every student in his class, always came to class ready to teach, and you can tell he was excited to teach. He truly cares about sociology and educating the next generation. Great guy and very understanding during his lectures."</p></div>
+                                <div class="comment-item"><p class="mb-0">"Amazing, understanding, challenging but doable, and overall a great class"</p></div>
+                                <div class="comment-item"><p class="mb-0">"I found the professor to be excellent. He was very understanding of his students and open to the different perspectives shared by my peers. He consistently helped us succeed in the course and sought our feedback on how he could improve his teaching."</p></div>
+                                <div class="comment-item"><p class="mb-0">"He is a great professor and very receptive to students ideas. I love how much he opens discussion. He is also the first professor who has explained how to read a graph to me and has backed up what he is saying with statistics for almost all the course content."</p></div>
+                                <div class="comment-item"><p class="mb-0">"Professor Lee is very nice and always available to help his students. He is also a great Professor who loves the material he teaches and is very helpful when you don't understand the concepts."</p></div>
+                                <div class="comment-item"><p class="mb-0">"I had a great time in your class, and it furthered my interest in sociology!!"</p></div>
+                                <div class="comment-item"><p class="mb-0">"Professor Lee was a great professor and made the lectures very fun and interactive to the point that difficult topics were understood well"</p></div>
+                                <div class="comment-item"><p class="mb-0">"Always helpful and happy to provide you with the tools for success"</p></div>
+                                <div class="comment-item"><p class="mb-0">"Worked with class to help improve grades. Cheat sheet not only helped me during exam but it was a helpful study guide. Good communication in email responses."</p></div>
+                                <div class="comment-item"><p class="mb-0">"Great good class topics included racial point of views which is much appreciated"</p></div>
+                                <div class="comment-item"><p class="mb-0">"Thank you so much, he is a amazing professor and I love his class!"</p></div>
+                                <div class="comment-item"><p class="mb-0">"Overall the class and the instructor were what I expected them to be. I found that Lee was very open to the suggestions of his students which I found to be very refreshing."</p></div>
+                                <div class="comment-item"><p class="mb-0">"Great professor, he was very interested in the topic and that reflected in his work ethic and the way he engaged with all of us in the classroom."</p></div>
+                                <div class="comment-item"><p class="mb-0">"Thank you for an interesting and great class this semester!"</p></div>
+                                <div class="comment-item"><p class="mb-0">"Great professor, made content understable. very clear and fair with grading and expectations."</p></div>
+                                <div class="comment-item"><p class="mb-0">"Great Job teaching, thank you!"</p></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Summer 2024 -->
+                <div class="course-card">
+                    <div class="course-title">Medical Sociology - Summer 2024</div>
+                    <div class="mb-2"><small>University at Albany, SUNY | Instructor | Response Rate: 19.23%</small></div>
+                    <p>This intensive summer online course provides students with a comprehensive introduction to medical sociology with focused exploration of how social factors influence health outcomes.</p>
+                    <div class="mt-3 mb-3">
+                        <h6>Course Evaluation</h6>
+                        <ul class="nav-tabs-level2" role="tablist">
+                            <li role="presentation">
+                                <button class="active" data-eval-tab="summer24-chart">Evaluation Scores</button>
+                            </li>
+                            <li role="presentation">
+                                <button data-eval-tab="summer24-comments">Student Comments</button>
+                            </li>
+                        </ul>
+                        <div class="tab-content active" id="summer24-chart">
+                            <div class="chart-container">
+                                <canvas id="summerEvaluationChart"></canvas>
+                            </div>
+                            <div class="text-center mt-2 small">
+                                <div class="d-inline-block me-3">
+                                    <span style="background: rgba(255, 99, 132, 0.7); width: 12px; height: 12px; display: inline-block;"></span>
+                                    My Score
+                                </div>
+                                <div class="d-inline-block">
+                                    <span style="background: rgba(153, 102, 255, 0.5); width: 12px; height: 12px; display: inline-block;"></span>
+                                    Department Average
+                                </div>
+                            </div>
+                        </div>
+                        <div class="tab-content" id="summer24-comments">
+                            <div style="max-height: 300px; overflow-y: auto;">
+                                <div class="comment-item"><p class="mb-0">"I liked that video lectures and slideshows were provided"</p></div>
+                                <div class="comment-item"><p class="mb-0">"The lecture memos were the most useful part of the course for me, as they required me to actively engage with the video lectures by taking notes and summarizing the main points rather than just passively consuming the information, which greatly improved my understanding and retention of the material."</p></div>
+                                <div class="comment-item"><p class="mb-0">"I am glad i took this course. I learned more than expected and Professor Lee was helpful."</p></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div><!-- end medical-sociology tab -->
+
+            <!-- ===== CRIMINOLOGY TAB ===== -->
+            <div class="tab-content" id="criminology">
+
+                <!-- Spring 2026 - NEW -->
+                <div class="course-card">
+                    <div class="course-title">Criminology - Spring 2026</div>
+                    <div class="mb-2"><small>University at Albany, SUNY | Instructor | Response Rate: 58.88%</small></div>
+                    <p>This course provides a sociological perspective on crime and criminal justice. Students explore theories explaining criminal behavior, examine patterns of crime, and analyze the criminal justice system's response to crime. The course emphasizes the social contexts of crime and the ways in which structural factors influence criminal behavior and criminal justice outcomes.</p>
+                    <div class="mt-3 mb-3">
+                        <h6>Course Evaluation</h6>
+                        <ul class="nav-tabs-level2" role="tablist">
+                            <li role="presentation">
+                                <button class="active" data-eval-tab="crim-spring26-chart">Evaluation Scores</button>
+                            </li>
+                            <li role="presentation">
+                                <button data-eval-tab="crim-spring26-comments">Student Comments</button>
+                            </li>
+                        </ul>
+                        <div class="tab-content active" id="crim-spring26-chart">
+                            <div class="chart-container">
+                                <canvas id="crimSpring2026Chart"></canvas>
+                            </div>
+                            <div class="text-center mt-2 small">
+                                <div class="d-inline-block me-3">
+                                    <span style="background: rgba(255, 99, 132, 0.7); width: 12px; height: 12px; display: inline-block;"></span>
+                                    My Score
+                                </div>
+                                <div class="d-inline-block">
+                                    <span style="background: rgba(153, 102, 255, 0.5); width: 12px; height: 12px; display: inline-block;"></span>
+                                    Department Average
+                                </div>
+                            </div>
+                        </div>
+                        <div class="tab-content" id="crim-spring26-comments">
+                            <div style="max-height: 300px; overflow-y: auto;">
+                                <div class="comment-item">
+                                    <p class="mb-0">"A phenomenal teacher. I'll 100% take his class again. The course easy, you just really have to do your work. The class is dead, no energy whatsoever but the instructor makes sure we are OK mentally, always makes us take at least a two minute break during the lesson. If you're really interested in law this class will be perfect. And any ideas you have he will listen to them."</p>
+                                </div>
+                                <div class="comment-item">
+                                    <p class="mb-0">"Professor Lee is an excellent professor; he gives clear and concise information, which you can understand very easily. Gives out amazing review slides and information, probably one of the best professors who gives out reviews. I find it very generous that he gives out open extra credit opportunities. The tests are easy to understand and can challenge you, as expected out of a test, but if you study, you will get an A. Also, for the test, he lets you have a cheat sheet that is TWO SIDED, wow, very generous, he actually wants you to succeed in his class."</p>
+                                </div>
+                                <div class="comment-item">
+                                    <p class="mb-0">"He's a wonderful professor, I will miss having him."</p>
+                                </div>
+                                <div class="comment-item">
+                                    <p class="mb-0">"The class was great overall. I learned so much and he was very caring about our opinions and needs and did his best to meet us where we were at. He accommodated what we needed and always tried to help in as many ways he could. The assignments and test amount was perfect and I have no complaints. I would take this class again."</p>
+                                </div>
+                                <div class="comment-item">
+                                    <p class="mb-0">"Great teacher. He cares about the students and is always looking for ways he can improve. He can clearly get a point across with many different examples and is clearly passionate about what he talks about. I would highly recommend professor Lee to anyone."</p>
+                                </div>
+                                <div class="comment-item">
+                                    <p class="mb-0">"Heeyoung Lee is a stellar professor and I wish there were more courses I could take from him. He truly cares about his students, always asking for feedback and how he can support us. Everything is straightforward and organized in this class and he does a great job of explaining directions and expectations."</p>
+                                </div>
+                                <div class="comment-item">
+                                    <p class="mb-0">"A very understanding professor, wants his students to pass, very engaging lessons and everything is in the syllabus so everything is straight forward. Very kind but also sticks to his rules and morals."</p>
+                                </div>
+                                <div class="comment-item">
+                                    <p class="mb-0">"This course was very engaging and Professor Lee allowed us to have many discussions and hear other students perspectives and opinions."</p>
+                                </div>
+                                <div class="comment-item">
+                                    <p class="mb-0">"He is a very good professor and it is clear that he knows what he is talking about. He is extremely receptive to students' ideas and he highly encourages that we share our ideas/perspectives even if it contradicts his. He has made our classroom environment feel very safe and welcoming. I hope to take a course with him again."</p>
+                                </div>
+                                <div class="comment-item">
+                                    <p class="mb-0">"Heeyoung is an amazing professor! He doesn't let the intimidating size of a lecture hall stop him from engaging with his students, even going so far as to walk through the rows if it meant being able to hear what a student had to say. He cares about his student's success and doesn't intend to be an obstacle in anyone's academics."</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Fall 2025 -->
+                <div class="course-card">
+                    <div class="course-title">Criminology - Fall 2025</div>
+                    <div class="mb-2"><small>University at Albany, SUNY | Instructor | Response Rate: 62.50%</small></div>
+                    <p>This course provides a sociological perspective on crime and criminal justice. Students explore theories explaining criminal behavior, examine patterns of crime, and analyze the criminal justice system's response to crime. The course emphasizes the social contexts of crime and the ways in which structural factors influence criminal behavior and criminal justice outcomes.</p>
+                    <div class="mt-3 mb-3">
+                        <h6>Course Evaluation</h6>
+                        <ul class="nav-tabs-level2" role="tablist">
+                            <li role="presentation">
+                                <button class="active" data-eval-tab="crimfall25-chart">Evaluation Scores</button>
+                            </li>
+                            <li role="presentation">
+                                <button data-eval-tab="crimfall25-comments">Student Comments</button>
+                            </li>
+                        </ul>
+                        <div class="tab-content active" id="crimfall25-chart">
+                            <div class="chart-container">
+                                <canvas id="crimFall2025EvaluationChart"></canvas>
+                            </div>
+                            <div class="text-center mt-2 small">
+                                <div class="d-inline-block me-3">
+                                    <span style="background: rgba(255, 99, 132, 0.7); width: 12px; height: 12px; display: inline-block;"></span>
+                                    My Score
+                                </div>
+                                <div class="d-inline-block">
+                                    <span style="background: rgba(153, 102, 255, 0.5); width: 12px; height: 12px; display: inline-block;"></span>
+                                    Department Average
+                                </div>
+                            </div>
+                        </div>
+                        <div class="tab-content" id="crimfall25-comments">
+                            <div style="max-height: 300px; overflow-y: auto;">
+                                <div class="comment-item"><p class="mb-0">"Incredibly kind and understanding professor. Very interesting material and kept students engaged with lectures and videos. Very clear guidelines for assignments and test. Thank you for a great semester!"</p></div>
+                                <div class="comment-item"><p class="mb-0">"Heeyoung Lee was a fantastic teacher that really prioritized our education. He puts in effort to show certain statistics about our test grades giving us insight on how to improve. I would 100% take a different course with the same teacher knowing he puts in as much effort as he does."</p></div>
+                                <div class="comment-item"><p class="mb-0">"Hes mad funny"</p></div>
+                                <div class="comment-item"><p class="mb-0">"He's an excellent professor! and takes in our feedback and criticism very well."</p></div>
+                                <div class="comment-item"><p class="mb-0">"I might be in the minority here, but simply in response to what others in the class have been saying about readings and the final project, I didn't find the readings to be too overbearing or the project to be too much. Overall, even though this class was an elective for me, you did a good job making it enjoyable and engaging which I appreciate."</p></div>
+                                <div class="comment-item"><p class="mb-0">"great teacher overall, thank you:)"</p></div>
+                                <div class="comment-item"><p class="mb-0">"I enjoyed Heeyoung Lee's class because his appreciation on the subject and its contents flowed into the material and coursework, making it easier to understand. Overall great professor, and had a fun way of relaying lectures to students."</p></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Summer 2025 -->
+                <div class="course-card">
+                    <div class="course-title">Criminology - Summer 2025</div>
+                    <div class="mb-2"><small>University at Albany, SUNY | Instructor | Response Rate: 14.81%</small></div>
+                    <p>This course provides a sociological perspective on crime and criminal justice. Students will explore theories explaining criminal behavior, examine patterns of crime, and analyze the criminal justice system's response to crime. The course emphasizes the social contexts of crime and the ways in which structural factors influence criminal behavior and criminal justice outcomes.</p>
+                    <p>Topics covered include classical and contemporary criminological theories, social correlates of crime, crime trends and patterns, policing, courts, corrections, and criminal justice policy. Special attention will be given to how factors such as race, class, and gender shape experiences with crime and the criminal justice system.</p>
+                    <div class="mt-3 mb-3">
+                        <h6>Course Evaluation</h6>
+                        <ul class="nav-tabs-level2" role="tablist">
+                            <li role="presentation">
+                                <button class="active" data-eval-tab="crimsummer25-chart">Evaluation Scores</button>
+                            </li>
+                        </ul>
+                        <div class="tab-content active" id="crimsummer25-chart">
+                            <div class="chart-container">
+                                <canvas id="criminologyEvaluationChart"></canvas>
+                            </div>
+                            <div class="text-center mt-2 small">
+                                <div class="d-inline-block me-3">
+                                    <span style="background: rgba(255, 99, 132, 0.7); width: 12px; height: 12px; display: inline-block;"></span>
+                                    My Score
+                                </div>
+                                <div class="d-inline-block">
+                                    <span style="background: rgba(153, 102, 255, 0.5); width: 12px; height: 12px; display: inline-block;"></span>
+                                    Department Average
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div><!-- end criminology tab -->
+
+            <!-- ===== STUDENT SURVEY TAB ===== -->
+            <div class="tab-content" id="student-survey">
+                <div class="survey-meta">
+                    <strong>About this survey:</strong> At the start of Fall 2025 and Spring 2026, students completed an anonymous first-day survey. The report below summarizes their learning preferences, AI familiarity and usage patterns, attitudes toward AI in the classroom, and responses to an electronic device policy question.
+                </div>
+                <iframe
+                    class="survey-iframe"
+                    src="../html/Survey_Report.html"
+                    title="Student First-Day Survey: AI Attitudes and Learning Preferences"
+                    loading="lazy"
+                ></iframe>
+            </div>
+
+        </div><!-- end section-container -->
+    </div><!-- end container -->
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+
+            // Level 1 tabs
+            document.querySelectorAll('.nav-tabs-level1 button').forEach(button => {
+                button.addEventListener('click', () => {
+                    document.querySelectorAll('.nav-tabs-level1 button').forEach(btn => btn.classList.remove('active'));
+                    document.querySelectorAll('.section-container > .tab-content').forEach(c => c.classList.remove('active'));
+                    button.classList.add('active');
+                    document.getElementById(button.getAttribute('data-tab')).classList.add('active');
+                });
+            });
+
+            // Level 2 tabs
+            document.querySelectorAll('.nav-tabs-level2 button').forEach(button => {
+                button.addEventListener('click', () => {
+                    const card = button.closest('.course-card');
+                    card.querySelectorAll('.nav-tabs-level2 button').forEach(btn => btn.classList.remove('active'));
+                    card.querySelectorAll('.nav-tabs-level2 ~ .tab-content').forEach(c => c.classList.remove('active'));
+                    button.classList.add('active');
+                    card.querySelector('#' + button.getAttribute('data-eval-tab')).classList.add('active');
+                });
+            });
+
+            const LABELS = ['Preparation', 'Communication', 'Interest', 'Challenge', 'Receptiveness', 'Availability', 'Standards', 'Overall'];
+            const ONLINE_LABELS = ['Organization', 'Communication', 'Assignments', 'Learning', 'In-Person Collaboration', 'Responsiveness', 'Rigor', 'Overall'];
+            const CRIM_ONLINE_LABELS = ['Organization', 'Communication', 'Interest', 'Learning', 'Collaboration', 'Responsiveness', 'Rigor', 'Overall'];
+
+            function makeChart(id, labels, myData, deptData, myColor, yMin) {
+                const ctx = document.getElementById(id).getContext('2d');
+                new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: labels,
+                        datasets: [
+                            { label: 'My Score', data: myData, backgroundColor: myColor },
+                            { label: 'Department Average', data: deptData, backgroundColor: 'rgba(153, 102, 255, 0.5)' }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: { y: { min: yMin, max: 5.0 } },
+                        plugins: { legend: { display: false } }
+                    }
+                });
+            }
+
+            // Medical Sociology - Spring 2026
+            makeChart('medSocSpring2026Chart', LABELS,
+                [4.88, 4.65, 4.53, 4.46, 4.81, 4.63, 4.74, 4.77],
+                [4.78, 4.51, 4.28, 4.31, 4.74, 4.64, 4.63, 4.49],
+                'rgba(255, 99, 132, 0.7)', 3.5);
+
+            // Medical Sociology - Fall 2025
+            makeChart('fall2025EvaluationChart', LABELS,
+                [5.00, 4.81, 4.62, 4.59, 4.93, 4.71, 4.75, 4.81],
+                [4.69, 4.15, 3.91, 4.16, 4.60, 4.54, 4.49, 4.14],
+                'rgba(255, 99, 132, 0.7)', 3.5);
+
+            // Medical Sociology - Spring 2025
+            makeChart('spring2025EvaluationChart', LABELS,
+                [4.90, 4.67, 4.51, 4.40, 4.93, 4.79, 4.51, 4.76],
+                [4.89, 4.64, 4.42, 4.43, 4.76, 4.68, 4.53, 4.62],
+                'rgba(255, 99, 132, 0.7)', 3.5);
+
+            // Medical Sociology - Fall 2024
+            makeChart('evaluationChart', LABELS,
+                [4.93, 4.68, 4.34, 4.35, 4.88, 4.82, 4.63, 4.78],
+                [4.71, 4.30, 4.09, 4.29, 4.52, 4.52, 4.53, 4.10],
+                'rgba(255, 99, 132, 0.7)', 3.5);
+
+            // Medical Sociology - Summer 2024
+            makeChart('summerEvaluationChart', ONLINE_LABELS,
+                [4.80, 4.80, 4.80, 4.80, 4.00, 4.75, 4.80, 4.80],
+                [4.47, 4.66, 4.39, 4.39, 4.32, 4.72, 4.33, 4.44],
+                'rgba(255, 99, 132, 0.7)', 3.5);
+
+            // Criminology - Spring 2026
+            makeChart('crimSpring2026Chart', LABELS,
+                [4.84, 4.66, 4.52, 4.43, 4.79, 4.65, 4.56, 4.68],
+                [4.69, 4.47, 4.13, 4.15, 4.55, 4.45, 4.41, 4.29],
+                'rgba(255, 99, 132, 0.7)', 3.5);
+
+            // Criminology - Fall 2025
+            makeChart('crimFall2025EvaluationChart', LABELS,
+                [4.87, 4.47, 4.40, 4.34, 4.72, 4.62, 4.57, 4.73],
+                [4.70, 4.47, 4.04, 3.99, 4.58, 4.45, 4.29, 4.23],
+                'rgba(255, 99, 132, 0.7)', 3.5);
+
+            // Criminology - Summer 2025
+            makeChart('criminologyEvaluationChart', CRIM_ONLINE_LABELS,
+                [5.00, 5.00, 4.75, 5.00, 3.00, 5.00, 4.25, 4.75],
+                [4.74, 4.76, 4.33, 4.55, 3.59, 4.66, 4.33, 4.60],
+                'rgba(255, 99, 132, 0.7)', 2.5);
+        });
+    </script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const toggle = document.querySelector('.mobile-menu-toggle');
+            const navLinks = document.querySelector('.nav-links');
+            if (toggle) {
+                toggle.addEventListener('click', function () {
+                    navLinks.classList.toggle('active');
+                    const icon = this.querySelector('i');
+                    icon.classList.toggle('bi-list');
+                    icon.classList.toggle('bi-x');
+                });
+                navLinks.querySelectorAll('a').forEach(link => {
+                    link.addEventListener('click', function () {
+                        navLinks.classList.remove('active');
+                        const icon = toggle.querySelector('i');
+                        icon.classList.remove('bi-x');
+                        icon.classList.add('bi-list');
+                    });
+                });
+            }
+        });
+    </script>
+</body>
+</html>
