@@ -54,7 +54,7 @@ a:hover {
 #TOC,
 nav#TOC {
   font-size: 0.82rem;
-  background: var(--surface);
+  background: #ffffff;
   border: 1px solid var(--border);
   border-radius: var(--radius);
   padding: 1rem 0.9rem;

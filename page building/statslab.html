@@ -498,10 +498,15 @@
                             text-decoration: none !important;
                             font-size: 0.85rem !important;
                             font-weight: 500 !important;
-                            transition: color 0.15s ease !important;
+                            display: block !important;
+                            padding: 0.2rem 0.45rem !important;
+                            border-radius: 4px !important;
+                            transition: background 0.12s ease, color 0.12s ease !important;
                         }
-                        #TOC a:hover {
+                        #TOC a:hover, #TOC a.active {
                             color: #ea580c !important;
+                            background-color: #f1ede6 !important;
+                            text-decoration: none !important;
                         }
 
                         #quarto-document-content, main {
