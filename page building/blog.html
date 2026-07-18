@@ -46,23 +46,31 @@
     <script>
         (function() {
             // Get URL Hash (e.g. #fe_be_re)
-            const hash = window.location.hash.replace('#', '');
+            let hash = window.location.hash.replace('#', '');
             
-            // Map legacy hash IDs to their absolute HTTPS post URLs
+            // Map legacy underscores/differences if needed
+            if (hash === 'understanding_meta_analysis') {
+                hash = 'understanding-meta-analysis';
+            }
+            if (hash === 'control') {
+                hash = 'control'; // mapping to control
+            }
+            
+            // Map legacy hash IDs to their new absolute HTTPS Stats Lab URLs with hash routing
             const redirects = {
-                'understanding_meta_analysis': 'https://idlhy0218.github.io/page%20building/blog/statslab/understanding-meta-analysis.html',
-                'staggered_did': 'https://idlhy0218.github.io/page%20building/blog/statslab/staggered_did.html',
-                'did_tutorial': 'https://idlhy0218.github.io/page%20building/blog/statslab/did_tutorial.html',
-                'twfe': 'https://idlhy0218.github.io/page%20building/blog/statslab/twfe.html',
-                'fe_be_re': 'https://idlhy0218.github.io/page%20building/blog/statslab/fe_be_re.html',
-                'multilevel': 'https://idlhy0218.github.io/page%20building/blog/statslab/multilevel.html',
-                'kitagawa_decomposition': 'https://idlhy0218.github.io/page%20building/blog/statslab/kitagawa_decomposition.html',
-                'event_history': 'https://idlhy0218.github.io/page%20building/blog/statslab/event_history.html',
-                'interaction': 'https://idlhy0218.github.io/page%20building/blog/statslab/interaction.html',
-                'control': 'https://idlhy0218.github.io/page%20building/blog/statslab/what_is_control.html',
+                'understanding-meta-analysis': 'https://idlhy0218.github.io/page%20building/statslab.html#understanding-meta-analysis',
+                'staggered_did': 'https://idlhy0218.github.io/page%20building/statslab.html#staggered_did',
+                'did_tutorial': 'https://idlhy0218.github.io/page%20building/statslab.html#did_tutorial',
+                'twfe': 'https://idlhy0218.github.io/page%20building/statslab.html#twfe',
+                'fe_be_re': 'https://idlhy0218.github.io/page%20building/statslab.html#fe_be_re',
+                'multilevel': 'https://idlhy0218.github.io/page%20building/statslab.html#multilevel',
+                'kitagawa_decomposition': 'https://idlhy0218.github.io/page%20building/statslab.html#kitagawa_decomposition',
+                'event_history': 'https://idlhy0218.github.io/page%20building/statslab.html#event_history',
+                'interaction': 'https://idlhy0218.github.io/page%20building/statslab.html#interaction',
+                'control': 'https://idlhy0218.github.io/page%20building/statslab.html#control',
                 'opportunity_insights': 'https://idlhy0218.github.io/page%20building/blog/studynotes/opportunity_insights.html',
                 
-                // Map legacy gallery hashes to the new Gallery tab absolute URL
+                // Map legacy gallery hashes to the new Gallery tab
                 'map_art_1': 'https://idlhy0218.github.io/page%20building/gallery.html',
                 'map_art_2': 'https://idlhy0218.github.io/page%20building/gallery.html',
                 'map_art_3': 'https://idlhy0218.github.io/page%20building/gallery.html',
@@ -92,18 +100,21 @@
     <script>
         // Update fallback link href dynamically
         (function() {
-            const hash = window.location.hash.replace('#', '');
+            let hash = window.location.hash.replace('#', '');
+            if (hash === 'understanding_meta_analysis') {
+                hash = 'understanding-meta-analysis';
+            }
             const redirects = {
-                'understanding_meta_analysis': 'https://idlhy0218.github.io/page%20building/blog/statslab/understanding-meta-analysis.html',
-                'staggered_did': 'https://idlhy0218.github.io/page%20building/blog/statslab/staggered_did.html',
-                'did_tutorial': 'https://idlhy0218.github.io/page%20building/blog/statslab/did_tutorial.html',
-                'twfe': 'https://idlhy0218.github.io/page%20building/blog/statslab/twfe.html',
-                'fe_be_re': 'https://idlhy0218.github.io/page%20building/blog/statslab/fe_be_re.html',
-                'multilevel': 'https://idlhy0218.github.io/page%20building/blog/statslab/multilevel.html',
-                'kitagawa_decomposition': 'https://idlhy0218.github.io/page%20building/blog/statslab/kitagawa_decomposition.html',
-                'event_history': 'https://idlhy0218.github.io/page%20building/blog/statslab/event_history.html',
-                'interaction': 'https://idlhy0218.github.io/page%20building/blog/statslab/interaction.html',
-                'control': 'https://idlhy0218.github.io/page%20building/blog/statslab/what_is_control.html',
+                'understanding-meta-analysis': 'https://idlhy0218.github.io/page%20building/statslab.html#understanding-meta-analysis',
+                'staggered_did': 'https://idlhy0218.github.io/page%20building/statslab.html#staggered_did',
+                'did_tutorial': 'https://idlhy0218.github.io/page%20building/statslab.html#did_tutorial',
+                'twfe': 'https://idlhy0218.github.io/page%20building/statslab.html#twfe',
+                'fe_be_re': 'https://idlhy0218.github.io/page%20building/statslab.html#fe_be_re',
+                'multilevel': 'https://idlhy0218.github.io/page%20building/statslab.html#multilevel',
+                'kitagawa_decomposition': 'https://idlhy0218.github.io/page%20building/statslab.html#kitagawa_decomposition',
+                'event_history': 'https://idlhy0218.github.io/page%20building/statslab.html#event_history',
+                'interaction': 'https://idlhy0218.github.io/page%20building/statslab.html#interaction',
+                'control': 'https://idlhy0218.github.io/page%20building/statslab.html#control',
                 'opportunity_insights': 'https://idlhy0218.github.io/page%20building/blog/studynotes/opportunity_insights.html',
                 'map_art_1': 'https://idlhy0218.github.io/page%20building/gallery.html',
                 'map_art_2': 'https://idlhy0218.github.io/page%20building/gallery.html',

@@ -133,7 +133,7 @@
 
         /* Container & Page Layout */
         .container {
-            max-width: 800px;
+            max-width: 850px;
             margin: 0 auto;
             padding: 8rem 1.5rem 2rem;
             position: relative;
@@ -158,14 +158,6 @@
             font-size: 0.85rem;
             color: var(--text-secondary);
             letter-spacing: 0.02em;
-        }
-
-        /* Intro Description */
-        .intro-desc {
-            font-size: 0.95rem;
-            color: var(--text-secondary);
-            margin-bottom: 3rem;
-            line-height: 1.7;
         }
 
         /* Minimal Blog/Stats Article Item */
@@ -208,6 +200,43 @@
             text-decoration: underline;
         }
 
+        /* Detail Reader Elements */
+        .viewer-container {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+        }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--primary);
+            text-decoration: none;
+            font-family: var(--font-ui);
+            font-weight: 600;
+            font-size: 0.9rem;
+            margin-bottom: 2rem;
+            transition: transform 0.2s ease;
+            cursor: pointer;
+            width: fit-content;
+        }
+
+        .back-link:hover {
+            transform: translateX(-4px);
+            text-decoration: underline;
+        }
+
+        .post-iframe {
+            width: 100%;
+            height: calc(100vh - 15rem);
+            border: none;
+            border-radius: 12px;
+            background: #ffffff;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.01);
+            border: 1px solid var(--border-slate);
+        }
+
         /* Responsive Breakpoints */
         @media (max-width: 768px) {
             nav {
@@ -246,6 +275,10 @@
             .container {
                 padding-top: 7rem;
             }
+
+            .post-iframe {
+                height: calc(100vh - 13rem);
+            }
         }
     </style>
 </head>
@@ -272,71 +305,92 @@
 
     <!-- Main Content Container -->
     <div class="container">
-        <header>
-            <h1>Stats Lab</h1>
-            <div class="subtitle">My R statistical lab. These guides clarify the underlying mathematical and logic concepts behind frequently used statistical methods in quantitative sociology, demographic analysis, and causal inference.</div>
-        </header>
+        <!-- Overview List -->
+        <div id="statsLabOverview">
+            <header>
+                <h1>Stats Lab</h1>
+                <div class="subtitle">My R statistical lab. These guides clarify the underlying mathematical and logic concepts behind frequently used statistical methods in quantitative sociology, demographic analysis, and causal inference.</div>
+            </header>
 
-        <div class="blog-list" id="statsLabGrid"></div>
+            <div class="blog-list" id="statsLabGrid"></div>
+        </div>
+
+        <!-- Detail Reader View -->
+        <div id="statsLabDetail" class="viewer-container" style="display: none;">
+            <a href="#" id="btnBackToList" class="back-link">
+                <i class="bi bi-arrow-left"></i> Back to Tutorials
+            </a>
+            <iframe id="postViewer" class="post-iframe" src="" scrolling="auto"></iframe>
+        </div>
     </div>
 
     <script>
         const statsLabPosts = [
             {
+                id: 'understanding-meta-analysis',
                 title: 'Understanding Meta-Analysis',
                 date: 'July 14, 2026',
                 description: 'Walk through the statistical framework of meta-analysis, showing how effect sizes are combined across multiple studies, how precision weights are calculated, and how to model between-study variation.',
                 file: 'blog/statslab/understanding-meta-analysis.html'
             },
             {
+                id: 'staggered_did',
                 title: 'Hands-on Practice for Staggered Diff-in-Diff in R',
                 date: 'Nov 12, 2025',
                 description: 'Compares modern difference-in-differences (DiD) estimators designed to handle staggered treatment adoption.',
                 file: 'blog/statslab/staggered_did.html'
             },
             {
+                id: 'did_tutorial',
                 title: 'Understanding Basic Difference-in-Differences',
                 date: 'Nov 30, 2025',
                 description: 'Understanding the basic concepts of Difference-in-Differences with an example using John Snow cholera data.',
                 file: 'blog/statslab/did_tutorial.html'
             },
             {
+                id: 'twfe',
                 title: 'What is The Logic Behind a Two-Way Fixed Effects Analysis?',
                 date: 'May 28, 2025',
                 description: 'Demystify the two-way fixed effects approach and understand the underlying statistical logic for causal inference.',
                 file: 'blog/statslab/twfe.html'
             },
             {
+                id: 'fe_be_re',
                 title: 'Fixed vs Between vs Random Effect',
                 date: 'May 15, 2025',
                 description: 'Clear up the confusion between different types of effects in panel data analysis with practical examples.',
                 file: 'blog/statslab/fe_be_re.html'
             },
             {
+                id: 'multilevel',
                 title: 'Understanding Multilevel Analysis',
                 date: 'Sep 1, 2025',
                 description: 'Explore the fundamentals of multilevel modeling and when to use hierarchical data structures in statistical analysis.',
                 file: 'blog/statslab/multilevel.html'
             },
             {
+                id: 'kitagawa_decomposition',
                 title: 'Understanding Decomposition Methods: Kitagawa and Oaxaca-Blinder',
                 date: 'Mar 17, 2026',
                 description: 'Explore decomposition techniques for understanding group differences, comparing the Kitagawa and Oaxaca-Blinder methods with practical examples in R.',
                 file: 'blog/statslab/kitagawa_decomposition.html'
             },
             {
+                id: 'event_history',
                 title: 'Understanding Event History Analysis',
                 date: 'Nov 24, 2025',
                 description: 'Understanding basic concept of Event History Analysis (also known as Survival Analysis).',
                 file: 'blog/statslab/event_history.html'
             },
             {
+                id: 'interaction',
                 title: 'Understanding Interaction Terms in Regression',
                 date: 'Apr 16, 2026',
                 description: 'Explore what interaction terms mean in regression models and how to interpret them correctly with practical examples in R.',
                 file: 'blog/statslab/interaction.html'
             },
             {
+                id: 'control',
                 title: 'Understanding "Control" in Statistical Analysis',
                 date: 'May 18, 2025',
                 description: 'Learn what it really means to "control for" variables and how it affects your statistical interpretations.',
@@ -346,18 +400,82 @@
 
         document.addEventListener('DOMContentLoaded', function () {
             const gridElement = document.getElementById('statsLabGrid');
-            gridElement.innerHTML = '';
+            const overviewEl = document.getElementById('statsLabOverview');
+            const detailEl = document.getElementById('statsLabDetail');
+            const iframe = document.getElementById('postViewer');
+            const backBtn = document.getElementById('btnBackToList');
 
+            // Render Overview Grid
+            gridElement.innerHTML = '';
             statsLabPosts.forEach(post => {
                 const itemElement = document.createElement('div');
                 itemElement.className = 'blog-item';
                 itemElement.innerHTML = `
                     <div class="blog-date">${post.date}</div>
-                    <h3 class="blog-title"><a href="${post.file}">${post.title}</a></h3>
+                    <h3 class="blog-title"><a href="#${post.id}">${post.title}</a></h3>
                     <p class="blog-description" style="color: var(--text-secondary); font-size: 0.9rem; line-height: 1.6;">${post.description}</p>
                 `;
                 gridElement.appendChild(itemElement);
             });
+
+            // Clean Quarto duplicate layout styling inside iframe
+            iframe.addEventListener('load', () => {
+                try {
+                    const doc = iframe.contentDocument || iframe.contentWindow.document;
+                    const style = doc.createElement('style');
+                    style.innerHTML = `
+                        #quarto-header, .quarto-navigation, footer, #quarto-margin-sidebar, .navbar, .quarto-title-block {
+                            display: none !important;
+                        }
+                        body {
+                            background-color: #ffffff !important;
+                            padding-top: 1rem !important;
+                        }
+                        #quarto-content {
+                            padding-top: 1rem !important;
+                            margin-top: 0 !important;
+                            max-width: 100% !important;
+                        }
+                        .page-columns {
+                            display: block !important;
+                        }
+                    `;
+                    doc.head.appendChild(style);
+                } catch (e) {
+                    console.warn("Cross-origin or frame block: could not inject custom iframe CSS", e);
+                }
+            });
+
+            // Router based on hash
+            function router() {
+                const hash = window.location.hash.replace('#', '');
+                const matchedPost = statsLabPosts.find(p => p.id === hash);
+
+                if (matchedPost) {
+                    // Show reader view
+                    iframe.src = matchedPost.file;
+                    overviewEl.style.display = 'none';
+                    detailEl.style.display = 'flex';
+                    document.body.style.overflow = 'hidden'; // block outer scroll
+                    window.scrollTo(0, 0);
+                } else {
+                    // Show list overview
+                    iframe.src = 'about:blank';
+                    detailEl.style.display = 'none';
+                    overviewEl.style.display = 'block';
+                    document.body.style.overflow = ''; // restore outer scroll
+                }
+            }
+
+            // Bind Event Listeners
+            window.addEventListener('hashchange', router);
+            backBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                window.location.hash = '';
+            });
+
+            // Run router on load
+            router();
 
             // Mobile Menu Toggle
             const toggle = document.querySelector('.mobile-menu-toggle');
