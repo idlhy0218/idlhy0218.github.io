@@ -744,8 +744,8 @@
                 const rect  = canvas.getBoundingClientRect();
                 const found = getNode(e.clientX - rect.left, e.clientY - rect.top);
                 if (found && found.type === 'pub') {
-                    // Navigate to publications tab
-                    window.location.href = 'page building/publications.html';
+                    // Navigate to publications tab with hash
+                    window.location.href = `page building/publications.html#${found.id}`;
                 }
             });
 
@@ -874,7 +874,7 @@
                     if (found) {
                         if (hovered === found) {
                             if (found.type === 'pub') {
-                                window.location.href = 'page building/publications.html';
+                                window.location.href = `page building/publications.html#${found.id}`;
                             }
                         } else {
                             hovered = found;

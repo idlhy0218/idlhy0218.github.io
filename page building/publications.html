@@ -31,6 +31,10 @@
             --font-body: 'Inter', sans-serif;
         }
 
+        html {
+            scroll-behavior: smooth;
+        }
+
         body {
             background-color: var(--bg-base);
             font-family: var(--font-body);
@@ -180,7 +184,26 @@
             padding-bottom: 1rem;
             margin-bottom: 1rem;
             border-bottom: 1px dashed rgba(15, 23, 42, 0.06);
-            transition: opacity 0.2s;
+            transition: all 0.3s ease;
+            scroll-margin-top: 7rem;
+            border-radius: 8px;
+        }
+
+        .publication-item:target {
+            animation: highlight-pulse 2s ease-out;
+        }
+
+        @keyframes highlight-pulse {
+            0% {
+                background-color: rgba(37, 99, 235, 0.12); /* Soft electric blue tint */
+                border-left: 4px solid var(--primary);
+                padding: 1rem;
+            }
+            100% {
+                background-color: transparent;
+                border-left: 0px solid var(--primary);
+                padding: 0 0 1rem 0;
+            }
         }
 
         .publication-item:last-child {
@@ -327,7 +350,7 @@
             <!-- 2026 -->
             <div class="year-header">2026</div>
 
-            <div class="publication-item">
+            <div class="publication-item" id="pub17">
                 <div class="publication-authors">
                     <strong class="author-highlight">Heeyoung Lee</strong><sup>†</sup>, Jungmin Shin†</sup>, and Jonathan Dirlam
                 </div>
@@ -342,7 +365,7 @@
                 </div>
             </div>
 
-            <div class="publication-item">
+            <div class="publication-item" id="pub18">
                 <div class="publication-authors">
                     Seong-Jo Jeong, Bomi Kim, <strong class="author-highlight">Heeyoung Lee</strong>, and Hyemin Lee
                 </div>
@@ -357,7 +380,7 @@
                 </div>
             </div>
 
-            <div class="publication-item">
+            <div class="publication-item" id="pub16">
                 <div class="publication-authors">
                     <strong class="author-highlight">Heeyoung Lee*</strong>
                 </div>
@@ -372,7 +395,7 @@
                 </div>
             </div>
 
-            <div class="publication-item">
+            <div class="publication-item" id="pub15">
                 <div class="publication-authors">
                     Tse-Chuan Yang, <strong class="author-highlight">Heeyoung Lee</strong>, and Golam Morshed Suhel
                 </div>
@@ -390,7 +413,7 @@
             <!-- 2025 -->
             <div class="year-header">2025</div>
 
-            <div class="publication-item">
+            <div class="publication-item" id="pub1">
                 <div class="publication-authors">
                     <strong class="author-highlight">Heeyoung Lee*</strong> and Tse-Chuan Yang
                 </div>
@@ -405,7 +428,7 @@
                 </div>
             </div>
 
-            <div class="publication-item">
+            <div class="publication-item" id="pub2">
                 <div class="publication-authors">
                     <strong class="author-highlight">Heeyoung Lee*</strong> and Tse-Chuan Yang
                 </div>
@@ -420,7 +443,7 @@
                 </div>
             </div>
 
-            <div class="publication-item">
+            <div class="publication-item" id="pub3">
                 <div class="publication-authors">
                     <strong class="author-highlight">Heeyoung Lee*</strong> and Matt Vogel
                 </div>
@@ -435,7 +458,7 @@
                 </div>
             </div>
 
-            <div class="publication-item">
+            <div class="publication-item" id="pub4">
                 <div class="publication-authors">
                     <strong class="author-highlight">Heeyoung Lee*</strong> and Seong-Jo Jung
                 </div>
@@ -453,7 +476,7 @@
                 </div>
             </div>
 
-            <div class="publication-item">
+            <div class="publication-item" id="pub5">
                 <div class="publication-authors">
                     Tse-Chuan Yang, Carla Shoff, Kate Strully, and <strong class="author-highlight">Heeyoung Lee</strong>
                 </div>
@@ -468,7 +491,7 @@
                 </div>
             </div>
 
-            <div class="publication-item">
+            <div class="publication-item" id="pub6">
                 <div class="publication-authors">
                     Seong-Jo Jung, <strong class="author-highlight">Heeyoung Lee</strong>, and Chan S. Suh
                 </div>
@@ -486,7 +509,7 @@
             <!-- 2024 -->
             <div class="year-header">2024</div>
 
-            <div class="publication-item">
+            <div class="publication-item" id="pub7">
                 <div class="publication-authors">
                     <strong class="author-highlight">Heeyoung Lee*</strong> and Tse-Chuan Yang
                 </div>
@@ -501,7 +524,7 @@
                 </div>
             </div>
 
-            <div class="publication-item">
+            <div class="publication-item" id="pub8">
                 <div class="publication-authors">
                     <strong class="author-highlight">Heeyoung Lee*</strong>
                 </div>
@@ -516,7 +539,7 @@
                 </div>
             </div>
 
-            <div class="publication-item">
+            <div class="publication-item" id="pub9">
                 <div class="publication-authors">
                     <strong class="author-highlight">Heeyoung Lee*</strong>
                 </div>
@@ -534,7 +557,7 @@
                 </div>
             </div>
 
-            <div class="publication-item">
+            <div class="publication-item" id="pub10">
                 <div class="publication-authors">
                     <strong class="author-highlight">Heeyoung Lee*</strong>, Sooyeon Moon, and Na-Young Lee
                 </div>
@@ -552,7 +575,7 @@
             <!-- 2023 -->
             <div class="year-header">2023</div>
 
-            <div class="publication-item">
+            <div class="publication-item" id="pub11">
                 <div class="publication-authors">
                     Seong-Jo Jung and <strong class="author-highlight">Heeyoung Lee</strong>
                 </div>
@@ -570,7 +593,7 @@
             <!-- 2021 -->
             <div class="year-header">2021</div>
 
-            <div class="publication-item">
+            <div class="publication-item" id="pub12">
                 <div class="publication-authors">
                     <strong class="author-highlight">Heeyoung Lee*</strong>, Dawool Cheong, and Seong-Jo Jung
                 </div>
@@ -588,7 +611,7 @@
             <!-- 2019 -->
             <div class="year-header">2019</div>
 
-            <div class="publication-item">
+            <div class="publication-item" id="pub13">
                 <div class="publication-authors">
                     <strong class="author-highlight">Heeyoung Lee*</strong> and Na-Young Lee
                 </div>
@@ -600,7 +623,7 @@
                 </div>
             </div>
 
-            <div class="publication-item">
+            <div class="publication-item" id="pub14">
                 <div class="publication-authors">
                     <strong class="author-highlight">Heeyoung Lee*</strong> and Na-Young Lee
                 </div>
