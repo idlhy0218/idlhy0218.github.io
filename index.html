@@ -788,12 +788,20 @@
 
             // Touch support for Mobile
             let lastTouchDist = null;
+            let touchStartPos = null;
+            let touchStartTime = null;
 
             canvas.addEventListener('touchstart', e => {
                 if (e.touches.length === 1) {
                     const t    = e.touches[0];
                     const rect = canvas.getBoundingClientRect();
-                    const found = getNode(t.clientX - rect.left, t.clientY - rect.top);
+                    const mx   = t.clientX - rect.left;
+                    const my   = t.clientY - rect.top;
+                    
+                    touchStartPos = { x: t.clientX, y: t.clientY, mx: mx, my: my };
+                    touchStartTime = Date.now();
+                    
+                    const found = getNode(mx, my);
                     if (found) {
                         dragNode = found;
                         found.fx = found.x;
@@ -844,10 +852,65 @@
                 e.preventDefault();
             }, { passive: false });
 
-            canvas.addEventListener('touchend', () => {
-                if (dragNode) { dragNode.fx = null; dragNode.fy = null; dragNode = null; sim.alpha(0.25).restart(); }
-                panning = false; lastTouchDist = null;
-            });
+            canvas.addEventListener('touchend', e => {
+                let isTap = false;
+                if (touchStartPos && touchStartTime && e.changedTouches.length === 1) {
+                    const t = e.changedTouches[0];
+                    const dx = t.clientX - touchStartPos.x;
+                    const dy = t.clientY - touchStartPos.y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+                    const duration = Date.now() - touchStartTime;
+                    
+                    if (dist < 8 && duration < 300) {
+                        isTap = true;
+                    }
+                }
+
+                if (isTap && touchStartPos) {
+                    const mx = touchStartPos.mx;
+                    const my = touchStartPos.my;
+                    const found = getNode(mx, my);
+                    
+                    if (found) {
+                        if (hovered === found) {
+                            if (found.type === 'pub') {
+                                window.location.href = 'page building/publications.html';
+                            }
+                        } else {
+                            hovered = found;
+                            tooltip.style.display = 'block';
+                            tooltip.innerHTML = found.type === 'pub'
+                                ? `<div class="tt-header">${found.full}</div><div class="tt-year"><i class="bi bi-calendar-event"></i> ${found.year} &bull; Tap again to open</div>`
+                                : `<div class="tt-header"># ${found.label}</div><div class="tt-year"><i class="bi bi-journal-text"></i> ${found.count} paper${found.count > 1 ? 's' : ''} connected</div>`;
+                            
+                            let ttx = mx + 16, tty = my - 12;
+                            const ttRect = tooltip.getBoundingClientRect();
+                            if (ttx + ttRect.width > W) ttx = mx - ttRect.width - 16;
+                            if (tty + ttRect.height > H) tty = my - ttRect.height - 12;
+                            tooltip.style.left = ttx + 'px';
+                            tooltip.style.top  = tty + 'px';
+                            draw();
+                        }
+                    } else {
+                        hovered = null;
+                        tooltip.style.display = 'none';
+                        draw();
+                    }
+                }
+
+                touchStartPos = null;
+                touchStartTime = null;
+
+                if (dragNode) {
+                    dragNode.fx = null;
+                    dragNode.fy = null;
+                    dragNode = null;
+                    sim.alpha(0.25).restart();
+                }
+                panning = false;
+                lastTouchDist = null;
+                e.preventDefault();
+            }, { passive: false });
 
             // Zoom helper
             function zoomAt(delta) {
