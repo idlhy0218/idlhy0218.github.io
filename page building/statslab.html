@@ -390,7 +390,7 @@
                 file: 'blog/statslab/interaction.html'
             },
             {
-                id: 'control',
+                id: 'what_is_control',
                 title: 'Understanding "Control" in Statistical Analysis',
                 date: 'May 18, 2025',
                 description: 'Learn what it really means to "control for" variables and how it affects your statistical interpretations.',
@@ -424,7 +424,7 @@
                     const doc = iframe.contentDocument || iframe.contentWindow.document;
                     const style = doc.createElement('style');
                     style.innerHTML = `
-                        #quarto-header, .quarto-navigation, footer, #quarto-margin-sidebar, .navbar, .quarto-title-block {
+                        #quarto-header, .quarto-navigation, footer, #quarto-margin-sidebar, .navbar, .quarto-title-block, #TOC, .table-of-contents, .toc-title, .toc-actions, #toc-title, #quarto-toc-sidebar {
                             display: none !important;
                         }
                         body {
@@ -435,6 +435,11 @@
                             padding-top: 1rem !important;
                             margin-top: 0 !important;
                             max-width: 100% !important;
+                        }
+                        #quarto-document-content, main {
+                            max-width: 100% !important;
+                            margin: 0 !important;
+                            padding: 0 !important;
                         }
                         .page-columns {
                             display: block !important;
