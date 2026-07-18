@@ -404,37 +404,6 @@
             background: rgba(15, 23, 42, 0.04);
         }
 
-        .intro-toggle-btn {
-            position: absolute;
-            top: 7rem;
-            left: 2rem;
-            z-index: 90;
-            background: var(--bg-surface);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border: 1px solid var(--border-slate);
-            color: var(--text-primary);
-            width: 44px;
-            height: 44px;
-            border-radius: 50%;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 6px 20px rgba(15, 23, 42, 0.03);
-            font-size: 1.25rem;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            opacity: 0;
-            transform: scale(0.8);
-        }
-
-        .intro-toggle-btn:hover {
-            background: rgba(255, 255, 255, 0.95);
-            border-color: var(--text-primary);
-            transform: translateY(-2px);
-            box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
-        }
-
         @media (max-width: 768px) {
             .intro-card {
                 left: 1rem;
@@ -446,11 +415,6 @@
                 max-height: 40vh;
                 overflow-y: auto;
             }
-            .intro-toggle-btn {
-                top: auto;
-                bottom: 2rem;
-                left: 1rem;
-            }
         }
 
         /* Short-height screen responsiveness (e.g. landscape mobile) */
@@ -460,11 +424,6 @@
                 bottom: auto;
                 max-height: 65vh;
                 max-width: 380px;
-                left: 1rem;
-            }
-            .intro-toggle-btn {
-                top: 5rem;
-                bottom: auto;
                 left: 1rem;
             }
             nav {
@@ -507,8 +466,7 @@
             <p class="intro-body" style="margin-bottom: 0;">I have published in leading journals including the <i>Journal of Health and Social Behavior</i>, <i>Social Science &amp; Medicine</i>, <i>Society and Mental Health</i>, <i>Population Research &amp; Policy Review</i>, <i>American Journal of Preventive Medicine</i>, <i>The Journals of Gerontology</i>, <i>Journal of Adolescence</i>, <i>Child Abuse and Neglect</i>, and <i>Criminal Justice and Behavior</i>.</p>
         </div>
 
-        <!-- Restore Intro Toggle Button -->
-        <button class="hud-overlay intro-toggle-btn" id="btn-intro-toggle" aria-label="Open intro" style="display: none;"><i class="bi bi-person-circle"></i></button>
+
 
         <!-- Legend Widget -->
         <div class="hud-overlay legend-widget">
@@ -940,10 +898,9 @@
 
             // Intro Card Toggle Logic
             const introCard = document.getElementById('introCard');
-            const introToggle = document.getElementById('btn-intro-toggle');
             const introClose = document.getElementById('btn-intro-close');
 
-            if (introClose && introToggle && introCard) {
+            if (introClose && introCard) {
                 // Prevent mouse wheel events inside the card from zooming the canvas
                 introCard.addEventListener('wheel', e => {
                     e.stopPropagation();
@@ -954,25 +911,7 @@
                     introCard.style.transform = 'translateY(15px)';
                     setTimeout(() => {
                         introCard.style.display = 'none';
-                        introToggle.style.display = 'flex';
-                        setTimeout(() => {
-                            introToggle.style.opacity = '1';
-                            introToggle.style.transform = 'scale(1)';
-                        }, 50);
                     }, 400);
-                });
-
-                introToggle.addEventListener('click', () => {
-                    introToggle.style.opacity = '0';
-                    introToggle.style.transform = 'scale(0.8)';
-                    setTimeout(() => {
-                        introToggle.style.display = 'none';
-                        introCard.style.display = 'block';
-                        setTimeout(() => {
-                            introCard.style.opacity = '1';
-                            introCard.style.transform = 'translateY(0)';
-                        }, 50);
-                    }, 300);
                 });
             }
         });
