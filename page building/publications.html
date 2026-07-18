@@ -190,20 +190,8 @@
         }
 
         .publication-item:target {
-            animation: highlight-pulse 2s ease-out;
-        }
-
-        @keyframes highlight-pulse {
-            0% {
-                background-color: rgba(37, 99, 235, 0.12); /* Soft electric blue tint */
-                border-left: 4px solid var(--primary);
-                padding: 1rem;
-            }
-            100% {
-                background-color: transparent;
-                border-left: 0px solid var(--primary);
-                padding: 0 0 1rem 0;
-            }
+            border-left: 4px solid var(--accent);
+            padding-left: 1rem;
         }
 
         .publication-item:last-child {
