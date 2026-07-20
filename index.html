@@ -306,14 +306,21 @@
 
             .legend-widget {
                 left: 1rem;
-                bottom: 2rem;
+                bottom: 1.5rem;
                 padding: 0.5rem 0.8rem;
                 gap: 0.8rem;
+                font-size: 0.75rem;
             }
 
             .controls-widget {
                 right: 1rem;
-                bottom: 2rem;
+                bottom: 1.5rem;
+            }
+
+            .control-btn {
+                width: 42px;
+                height: 42px;
+                font-size: 1.2rem;
             }
         }
 
@@ -440,7 +447,7 @@
 
     <!-- Glassmorphic Navbar -->
     <nav>
-        <a href="index(3).html" class="logo">Heeyoung Lee</a>
+        <a href="index.html" class="logo">Heeyoung Lee</a>
         <button class="mobile-menu-toggle" aria-label="Toggle menu">
             <i class="bi bi-list"></i>
         </button>
@@ -538,6 +545,38 @@
             let H = window.innerHeight;
             const DPR = window.devicePixelRatio || 1;
 
+            const isMobile = () => window.innerWidth <= 768;
+
+            function getInitialScale() {
+                const w = window.innerWidth;
+                if (w <= 480) return 0.9;
+                if (w <= 768) return 0.85;
+                return 0.8;
+            }
+
+            function getCenterY() {
+                const w = window.innerWidth;
+                const h = window.innerHeight;
+                const introCard = document.getElementById('introCard');
+                const isIntroVisible = introCard && introCard.style.display !== 'none' && getComputedStyle(introCard).opacity !== '0';
+                if (w <= 768 && isIntroVisible) {
+                    return h * 0.36; // Shift center up so network is centered in visible area above intro card
+                } else if (w <= 768) {
+                    return h * 0.45;
+                }
+                return h / 2;
+            }
+
+            function getForceParams() {
+                const mobile = isMobile();
+                return {
+                    linkDistance: mobile ? 48 : 85,
+                    chargeKw: mobile ? -180 : -420,
+                    chargePub: mobile ? -75 : -180,
+                    collideOffset: mobile ? 8 : 12
+                };
+            }
+
             function resizeCanvas() {
                 W = window.innerWidth;
                 H = window.innerHeight;
@@ -551,24 +590,41 @@
             const ctx = canvas.getContext('2d');
             ctx.scale(DPR, DPR);
 
-            let scale = 0.8;
+            let scale = getInitialScale();
+            let cy = getCenterY();
             let tx = (W / 2) * (1 - scale);
-            let ty = (H / 2) * (1 - scale);
+            let ty = cy * (1 - scale);
             const SCALE_MIN = 0.25, SCALE_MAX = 4;
 
             function nodeR(d) {
-                return d.type === 'kw' ? 8 + d.count * 3.5 : 8;
+                const mobile = isMobile();
+                if (d.type === 'kw') {
+                    return (mobile ? 10 : 8) + d.count * 3.5;
+                }
+                return mobile ? 11 : 8;
             }
 
             // Force Simulation
+            const fp = getForceParams();
             const sim = d3.forceSimulation(nodes)
-                .force('link', d3.forceLink(links).id(d => d.id).distance(85).strength(0.65))
-                .force('charge', d3.forceManyBody().strength(d => d.type === 'kw' ? -420 : -180))
-                .force('center', d3.forceCenter(W / 2, H / 2))
+                .force('link', d3.forceLink(links).id(d => d.id).distance(fp.linkDistance).strength(0.65))
+                .force('charge', d3.forceManyBody().strength(d => d.type === 'kw' ? fp.chargeKw : fp.chargePub))
+                .force('center', d3.forceCenter(W / 2, cy))
                 .force('x', d3.forceX(W / 2).strength(0.06))
-                .force('y', d3.forceY(H / 2).strength(0.06))
-                .force('collision', d3.forceCollide().radius(d => nodeR(d) + 12))
+                .force('y', d3.forceY(cy).strength(0.06))
+                .force('collision', d3.forceCollide().radius(d => nodeR(d) + fp.collideOffset))
                 .alphaDecay(0.015);
+
+            function updateForces() {
+                const currentFp = getForceParams();
+                cy = getCenterY();
+                sim.force('center', d3.forceCenter(W / 2, cy));
+                sim.force('x', d3.forceX(W / 2).strength(0.06));
+                sim.force('y', d3.forceY(cy).strength(0.06));
+                sim.force('link', d3.forceLink(links).id(d => d.id).distance(currentFp.linkDistance).strength(0.65));
+                sim.force('charge', d3.forceManyBody().strength(d => d.type === 'kw' ? currentFp.chargeKw : currentFp.chargePub));
+                sim.force('collision', d3.forceCollide().radius(d => nodeR(d) + currentFp.collideOffset));
+            }
 
             // Draw Canvas Frame
             function draw() {
@@ -595,7 +651,7 @@
                     
                     if (hot) {
                         ctx.strokeStyle = hovered.type === 'pub' ? 'rgba(37, 99, 235, 0.75)' : 'rgba(234, 88, 12, 0.75)';
-                        ctx.lineWidth = 2.0;
+                        ctx.lineWidth = isMobile() ? 2.5 : 2.0;
                     } else {
                         const opacity = 0.35 + Math.min(0.35, (count - 1) * 0.08);
                         const width = 0.9 + Math.min(0.9, (count - 1) * 0.2);
@@ -610,12 +666,13 @@
                     const r = nodeR(d);
                     const isPub = d.type === 'pub';
                     const isHov = d === hovered;
+                    const mobile = isMobile();
 
                     // Hover background glow ring
                     if (isHov) {
                         ctx.beginPath();
-                        ctx.arc(d.x, d.y, r + 6, 0, Math.PI * 2);
-                        ctx.fillStyle = isPub ? 'rgba(37, 99, 235, 0.12)' : 'rgba(234, 88, 12, 0.1)';
+                        ctx.arc(d.x, d.y, r + (mobile ? 8 : 6), 0, Math.PI * 2);
+                        ctx.fillStyle = isPub ? 'rgba(37, 99, 235, 0.18)' : 'rgba(234, 88, 12, 0.15)';
                         ctx.fill();
                     }
 
@@ -626,23 +683,25 @@
                         ? (isHov ? '#1e40af' : '#2563eb')
                         : (isHov ? '#c2410c' : '#ea580c');
                     
-                    ctx.shadowBlur = isHov ? 10 : 2;
+                    ctx.shadowBlur = isHov ? 12 : (mobile ? 4 : 2);
                     ctx.shadowColor = isPub ? 'rgba(37, 99, 235, 0.4)' : 'rgba(234, 88, 12, 0.4)';
                     ctx.fill();
                     ctx.shadowBlur = 0; // Reset shadow
 
-                    // Label: Hide by default, show ONLY on hover
+                    // Label: Hide by default, show ONLY on hover / tap
                     if (isHov) {
-                        const fs = Math.max(10, 13 / scale);
+                        const fs = Math.max(12, 14 / scale);
                         ctx.font         = `600 ${fs}px 'Outfit', sans-serif`;
-                        ctx.fillStyle    = '#0f172a';
+                        ctx.fillStyle    = isHov ? '#0f172a' : (isPub ? '#1e293b' : '#c2410c');
                         ctx.textAlign    = 'center';
                         ctx.textBaseline = 'top';
                         
                         // Add shadow to text to make it extremely readable
-                        ctx.shadowColor = '#ffffff';
+                        ctx.shadowColor = 'rgba(255, 255, 255, 0.95)';
                         ctx.shadowBlur = 6;
-                        ctx.fillText(d.label, d.x, d.y + r + 8);
+
+                        const text = isPub ? d.label : `# ${d.label}`;
+                        ctx.fillText(text, d.x, d.y + r + (mobile ? 6 : 5));
                         ctx.shadowBlur = 0; // Reset shadow
                     }
                 });
@@ -659,9 +718,10 @@
 
             function getNode(cx, cy) {
                 const { x, y } = canvasToWorld(cx, cy);
+                const mobile = isMobile();
                 return nodes.find(d => {
                     const dx = d.x - x, dy = d.y - y;
-                    return Math.sqrt(dx * dx + dy * dy) <= nodeR(d) + 6;
+                    return Math.sqrt(dx * dx + dy * dy) <= nodeR(d) + (mobile ? 12 : 6);
                 });
             }
 
@@ -702,13 +762,15 @@
                 if (found) {
                     tooltip.style.display = 'block';
                     tooltip.innerHTML = found.type === 'pub'
-                        ? `<div class="tt-header">${found.full}</div><div class="tt-year"><i class="bi bi-calendar-event"></i> ${found.year} &bull; Click to open</div>`
+                        ? `<div class="tt-header">${found.full}</div><div class="tt-year"><i class="bi bi-calendar-event"></i> ${found.year} &bull; ${isMobile() ? 'Tap again to open' : 'Click to open'}</div>`
                         : `<div class="tt-header"># ${found.label}</div><div class="tt-year"><i class="bi bi-journal-text"></i> ${found.count} paper${found.count > 1 ? 's' : ''} connected</div>`;
                     
                     let ttx = mx + 16, tty = my - 12;
                     const ttRect = tooltip.getBoundingClientRect();
-                    if (ttx + ttRect.width > W) ttx = mx - ttRect.width - 16;
-                    if (tty + ttRect.height > H) tty = my - ttRect.height - 12;
+                    if (ttx + ttRect.width > W - 12) ttx = Math.max(12, W - ttRect.width - 12);
+                    if (tty + ttRect.height > H - 12) tty = Math.max(12, my - ttRect.height - 16);
+                    if (ttx < 12) ttx = 12;
+                    if (tty < 12) tty = 12;
                     tooltip.style.left = ttx + 'px';
                     tooltip.style.top  = tty + 'px';
                 } else {
@@ -885,8 +947,10 @@
                             
                             let ttx = mx + 16, tty = my - 12;
                             const ttRect = tooltip.getBoundingClientRect();
-                            if (ttx + ttRect.width > W) ttx = mx - ttRect.width - 16;
-                            if (tty + ttRect.height > H) tty = my - ttRect.height - 12;
+                            if (ttx + ttRect.width > W - 12) ttx = Math.max(12, W - ttRect.width - 12);
+                            if (tty + ttRect.height > H - 12) tty = Math.max(12, my - ttRect.height - 16);
+                            if (ttx < 12) ttx = 12;
+                            if (tty < 12) tty = 12;
                             tooltip.style.left = ttx + 'px';
                             tooltip.style.top  = tty + 'px';
                             draw();
@@ -925,25 +989,25 @@
             document.getElementById('btn-zoom-in').addEventListener('click',    () => zoomAt(1.25));
             document.getElementById('btn-zoom-out').addEventListener('click',   () => zoomAt(0.8));
             document.getElementById('btn-zoom-reset').addEventListener('click', () => {
-                scale = 0.8;
+                scale = getInitialScale();
+                const newCy = getCenterY();
                 tx = (W / 2) * (1 - scale);
-                ty = (H / 2) * (1 - scale);
-                sim.force('center', d3.forceCenter(W / 2, H / 2));
-                sim.force('x', d3.forceX(W / 2).strength(0.06));
-                sim.force('y', d3.forceY(H / 2).strength(0.06));
+                ty = newCy * (1 - scale);
+                cy = newCy;
+                updateForces();
                 sim.alpha(0.3).restart();
             });
 
             // Handle Resize
             window.addEventListener('resize', () => {
-                const oldW = W, oldH = H;
+                const oldW = W;
                 resizeCanvas();
+                const newCy = getCenterY();
                 tx = tx + (W - oldW) / 2;
-                ty = ty + (H - oldH) / 2;
-                sim.force('center', d3.forceCenter(W / 2, H / 2));
-                sim.force('x', d3.forceX(W / 2).strength(0.06));
-                sim.force('y', d3.forceY(H / 2).strength(0.06));
-                sim.alpha(0.2).restart();
+                ty = ty + (newCy - cy);
+                cy = newCy;
+                updateForces();
+                sim.alpha(0.25).restart();
                 draw();
             });
 
@@ -974,6 +1038,9 @@
                     introCard.style.transform = 'translateY(15px)';
                     setTimeout(() => {
                         introCard.style.display = 'none';
+                        // Re-center network nicely when intro card is closed
+                        updateForces();
+                        sim.alpha(0.25).restart();
                     }, 400);
                 });
             }
