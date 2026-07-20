@@ -1,0 +1,27 @@
+# R / Quarto temporary & history files
+.Rhistory
+.RData
+.RDataTmp
+.Ruserdata
+*.Rproj.user/
+.quarto/
+*_cache/
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# IDE, Editor & Agent internal files
+.vscode/
+.idea/
+.agent/
+*.swp
+*~
+*.tmp
+*.bak
