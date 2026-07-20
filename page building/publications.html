@@ -181,8 +181,9 @@
 
         /* Minimal Item Layout */
         .publication-item {
-            padding-bottom: 1rem;
+            padding: 1rem;
             margin-bottom: 1rem;
+            border: 1px solid transparent;
             border-bottom: 1px dashed rgba(15, 23, 42, 0.06);
             transition: all 0.3s ease;
             scroll-margin-top: 7rem;
@@ -190,8 +191,8 @@
         }
 
         .publication-item:target {
-            border-left: 4px solid var(--accent);
-            padding-left: 1rem;
+            background-color: rgba(234, 88, 12, 0.08);
+            border: 1px solid rgba(234, 88, 12, 0.25);
         }
 
         .publication-item:last-child {
