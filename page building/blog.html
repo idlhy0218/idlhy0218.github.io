@@ -44,6 +44,7 @@
         }
     </style>
     <script>
+        let targetUrl = 'https://idlhy0218.github.io/page%20building/statslab.html';
         (function() {
             // Get URL Hash (e.g. #fe_be_re)
             let hash = window.location.hash.replace('#', '');
@@ -79,8 +80,6 @@
                 'seoul_life_exp_skin': 'https://idlhy0218.github.io/page%20building/gallery.html'
             };
 
-            let targetUrl = 'https://idlhy0218.github.io/page%20building/statslab.html'; // Default fallback
-
             if (hash && redirects[hash]) {
                 targetUrl = redirects[hash];
             }
@@ -98,38 +97,9 @@
         <p>You are being redirected automatically. If you are not redirected, <a href="https://idlhy0218.github.io/page%20building/statslab.html" id="fallback-link">click here to proceed</a>.</p>
     </div>
     <script>
-        // Update fallback link href dynamically
-        (function() {
-            let hash = window.location.hash.replace('#', '');
-            if (hash === 'understanding_meta_analysis') {
-                hash = 'understanding-meta-analysis';
-            }
-            if (hash === 'control') {
-                hash = 'what_is_control';
-            }
-            const redirects = {
-                'understanding-meta-analysis': 'https://idlhy0218.github.io/page%20building/statslab.html#understanding-meta-analysis',
-                'staggered_did': 'https://idlhy0218.github.io/page%20building/statslab.html#staggered_did',
-                'did_tutorial': 'https://idlhy0218.github.io/page%20building/statslab.html#did_tutorial',
-                'twfe': 'https://idlhy0218.github.io/page%20building/statslab.html#twfe',
-                'fe_be_re': 'https://idlhy0218.github.io/page%20building/statslab.html#fe_be_re',
-                'multilevel': 'https://idlhy0218.github.io/page%20building/statslab.html#multilevel',
-                'kitagawa_decomposition': 'https://idlhy0218.github.io/page%20building/statslab.html#kitagawa_decomposition',
-                'event_history': 'https://idlhy0218.github.io/page%20building/statslab.html#event_history',
-                'interaction': 'https://idlhy0218.github.io/page%20building/statslab.html#interaction',
-                'what_is_control': 'https://idlhy0218.github.io/page%20building/statslab.html#what_is_control',
-                'opportunity_insights': 'https://idlhy0218.github.io/page%20building/blog/studynotes/chetty.html',
-                'map_art_1': 'https://idlhy0218.github.io/page%20building/gallery.html',
-                'map_art_2': 'https://idlhy0218.github.io/page%20building/gallery.html',
-                'map_art_3': 'https://idlhy0218.github.io/page%20building/gallery.html',
-                'map_art_4': 'https://idlhy0218.github.io/page%20building/gallery.html',
-                'map_art_5': 'https://idlhy0218.github.io/page%20building/gallery.html',
-                'seoul_life_exp_skin': 'https://idlhy0218.github.io/page%20building/gallery.html'
-            };
-            if (hash && redirects[hash]) {
-                document.getElementById('fallback-link').href = redirects[hash];
-            }
-        })();
+        if (targetUrl) {
+            document.getElementById('fallback-link').href = targetUrl;
+        }
     </script>
 </body>
 

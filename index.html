@@ -558,7 +558,7 @@
                 const w = window.innerWidth;
                 const h = window.innerHeight;
                 const introCard = document.getElementById('introCard');
-                const isIntroVisible = introCard && introCard.style.display !== 'none' && getComputedStyle(introCard).opacity !== '0';
+                const isIntroVisible = introCard && introCard.style.display !== 'none' && introCard.style.opacity !== '0';
                 if (w <= 768 && isIntroVisible) {
                     return h * 0.36; // Shift center up so network is centered in visible area above intro card
                 } else if (w <= 768) {
