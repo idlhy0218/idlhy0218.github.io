@@ -26,12 +26,12 @@ body {
 }
 
 /* --- Headings --- */
-h1 { font-size: 1.85rem; font-weight: 700; color: #DA7756; border-bottom: none; margin-top: 0; }
-h2 { font-size: 1.35rem; font-weight: 600; color: #C96442; border-bottom: 1.5px solid var(--border); padding-bottom: 0.35rem; }
-h3 { font-size: 1.1rem;  font-weight: 600; color: #C96442; }
-h4 { font-size: 0.95rem; font-weight: 600; color: #8B6E52; }
-h5 { font-size: 0.875rem; font-weight: 500; color: var(--text-muted); }
-h6 { font-size: 0.8rem;  font-weight: 500; color: var(--text-light); }
+h1 { font-size: 2.13rem; font-weight: 700; color: #7A1A1A; border-bottom: none; margin-top: 0; }
+h2 { font-size: 1.55rem; font-weight: 600; color: #912222; border-bottom: 1.5px solid var(--border); padding-bottom: 0.35rem; }
+h3 { font-size: 1.265rem; font-weight: 600; color: #A82E2E; }
+h4 { font-size: 1.09rem; font-weight: 600; color: #BF3D3D; }
+h5 { font-size: 1.01rem; font-weight: 500; color: #D25252; }
+h6 { font-size: 0.92rem; font-weight: 500; color: #E26F6F; }
 
 h1, h2, h3, h4, h5, h6 {
   line-height: 1.3;
@@ -217,8 +217,8 @@ hr { border: none; border-top: 1px solid var(--border); margin: 2.2rem 0; }
 
 /* --- Title block --- */
 .quarto-title h1.title {
-  color: #B05535;
-  font-size: 1.9rem;
+  color: #7A1A1A;
+  font-size: 2.185rem;
   font-weight: 700;
   letter-spacing: -0.015em;
   border-bottom: none;
@@ -235,14 +235,14 @@ hr { border: none; border-top: 1px solid var(--border); margin: 2.2rem 0; }
 @media print {
   * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
   body { background: var(--bg) !important; color: var(--text) !important; font-size: 11pt !important; }
-  h1 { color: #DA7756 !important; }
-  h2 { color: #C96442 !important; }
-  h3 { color: #C96442 !important; }
+  h1 { color: #7A1A1A !important; }
+  h2 { color: #912222 !important; }
+  h3 { color: #A82E2E !important; }
 }
 
 /* --- Responsive --- */
 @media (max-width: 768px) {
   body { font-size: 15px; }
-  h1 { font-size: 1.5rem; }
-  h2 { font-size: 1.2rem; }
+  h1 { font-size: 1.725rem; }
+  h2 { font-size: 1.38rem; }
 }

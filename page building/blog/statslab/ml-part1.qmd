@@ -10,7 +10,7 @@ format:
     code-fold: true
     code-tools: true
     toc: true
-    toc-depth: 5
+    toc-depth: 6
     toc-location: left
     self-contained: true
     fig-width: 9
@@ -44,7 +44,7 @@ Before we get into cultures and penalties, it helps to sort machine learning met
 - **Supervised learning** — you have a known outcome you're trying to predict. Every county in your data has both the predictors *and* the actual mortality rate attached to it. The algorithm learns by comparing its guesses to the real answer, the way a student learns from a teacher who grades their homework.
 - **Unsupervised learning** — there is no known outcome. You just have a pile of county characteristics, and you're asking the algorithm to find structure or patterns in it on its own — no teacher, no answer key, no grading.
 
-#### A Health Example of Each
+#### 1-1. A Health Example of Each
 
 Let's stick with our running county mortality example and see how the same dataset supports both kinds of tasks.
 
@@ -94,7 +94,7 @@ Look at the two panels above. They show the *exact same* 80 counties, plotted on
 - **Left (supervised)**: each county is colored by its actual mortality rate (gold = low, red = high). The algorithm's job is to learn the relationship between the x/y position and that color, so it can predict the color (mortality rate) for a brand-new county.
 - **Right (unsupervised)**: the color is hidden — we've stripped away the outcome entirely. All the algorithm can do is notice that the points seem to fall into two loose clusters based on their position alone. It has no way of knowing whether those clusters mean anything about mortality; it's just describing structure in the predictors themselves.
 
-#### Why This Distinction Matters Before You Choose a Method
+#### 1-2. Why This Distinction Matters Before You Choose a Method
 
 Every method we'll walk through in the rest of this post — and the next one — sits cleanly in one of these two buckets:
 
@@ -109,7 +109,7 @@ The rest of this post — two cultures, bias-variance, and regularization — al
 
 ### 2. Two Cultures of Statistical Analysis
 
-#### The Core Distinction
+#### 2-1. The Core Distinction
 
 In 2001, the statistician Leo Breiman wrote a famous paper describing two very different ways that researchers approach data. He called them the "two cultures," and the distinction still organizes how we think about classical statistics versus machine learning today.
 
@@ -127,7 +127,7 @@ This is not just a philosophical distinction — it changes what a "good model" 
 | **Model complexity** | Kept small and interpretable | Can be very large and complex |
 | **Risk if misused** | Missing real complexity in the world | Producing a black box that predicts well but explains nothing |
 
-#### A Concrete Example
+#### 2-2. A Concrete Example
 
 Suppose we're back in our county mortality dataset. If we're doing **inference**, our question is: "Holding other things constant, does a $1,000 increase in county median income reduce mortality, and by how much?" We want a trustworthy $\hat{\beta}$.
 
@@ -170,7 +170,7 @@ Both lines are "correct" in their own way. The straight line gives us one clean 
 
 ### 3. The Bias-Variance Tradeoff and Generalization Error
 
-#### Why a Model That Fits Well Can Still Predict Badly
+#### 3-1. Why a Model That Fits Well Can Still Predict Badly
 
 Here's a puzzle that trips up a lot of researchers the first time they see it: a model can fit your existing data almost perfectly and still make *terrible* predictions on new data. Understanding why requires breaking prediction error into two separate pieces: **bias** and **variance**.
 
@@ -182,12 +182,12 @@ $$\text{Generalization Error} = \text{Bias}^2 + \text{Variance} + \text{Irreduci
 
 The irreducible error is just noise in the world that no model can ever remove — measurement error, unpredictable individual circumstances, and so on.
 
-#### Underfitting and Overfitting
+#### 3-2. Underfitting and Overfitting
 
 - **Underfitting** happens when the model is too simple: it misses real signal in the data. High bias, low variance.
 - **Overfitting** happens when the model is too complex: it captures not just the signal, but also the random noise specific to *this* sample. Low bias, high variance.
 
-#### The Dartboard Picture (the Classic Way to See Bias vs. Variance)
+#### 3-3. The Dartboard Picture (the Classic Way to See Bias vs. Variance)
 
 Before we bring back the county data, here's a picture that makes bias and variance click for a lot of people. Imagine four different dart players, each throwing 20 darts at the same target. The bullseye represents the *true* mortality rate we're trying to hit; each dart is one prediction from repeating the same model on slightly different samples of counties.
 
@@ -302,7 +302,7 @@ The dashed black line is the *true* relationship (which we'd never actually know
 - **Good fit (middle)**: the green curve tracks the true pattern closely without overreacting to any single point.
 - **Overfitting (bottom)**: the red line wiggles wildly to pass as close as possible to every single training point — including the random noise. This model would look completely different if we resampled 40 new counties.
 
-#### Seeing It Numerically: In-Sample vs. Out-of-Sample Error
+#### 3-4. Seeing It Numerically: In-Sample vs. Out-of-Sample Error
 
 The real danger of overfitting is invisible if you only look at how well a model fits the data it was trained on. You have to test it on *new* data to see the problem.
 
@@ -376,7 +376,7 @@ We then make the model more and more complex — degree 1, degree 2, degree 3, a
 
 ### 4. The Principle of Regularization
 
-#### The Core Idea
+#### 4-1. The Core Idea
 
 Now we get to the tool that machine learning uses to avoid landing on the wrong side of that curve: **regularization**. The idea is simple to state: instead of only minimizing error on the training data, add a penalty for model complexity.
 
@@ -388,14 +388,14 @@ $$\underbrace{\sum_{i=1}^{n}[y_i - f(x_i)]^2}_{\text{fit to training data}} \;+\
 
 Choosing $\lambda$ is itself data-driven — it's typically selected via cross-validation, so the model doesn't just optimize the penalty by guesswork.
 
-#### Lasso, Ridge, and Elastic Net: Three Flavors of Penalty
+#### 4-2. Lasso, Ridge, and Elastic Net: Three Flavors of Penalty
 
 The three primary regularized regression methods differ in how they define the penalty term $R(f)$: All three of these methods start from the exact same idea — penalize big coefficients — but they punish "bigness" in different ways, and that difference changes what the model does in practice.
 
 Think of it like packing a suitcase with a strict weight limit. You have 30 items (our county-level predictors: poverty rate, opioid prescribing rate, racial composition, physician density, and so on) and a budget for how much "weight" your model's coefficients are allowed to carry in total.
 
 
-#### 1. Lasso ($L_1$ Penalty)
+##### 4-2-1. Lasso ($L_1$ Penalty)
 
 "Some items just don't make the cut — leave them home entirely." Lasso can shrink some coefficients all the way to *exactly* zero, which means those variables are dropped from the model completely. This gives you automatic variable selection: lasso tells you which handful of predictors actually matter.
 
@@ -404,7 +404,7 @@ $$\min_{\beta} \sum_{i=1}^{n} [y_i - f(x_i)]^2 \;+\; \lambda \sum_{j=1}^{p} \lve
 - **Mechanism**: Punishes the sum of *absolute* values of coefficients.
 - **Behavior**: The $L_1$ penalty retains a constant derivative down to zero, driving coefficients of non-essential variables to **exactly zero**. Performs automatic feature selection.
 
-#### 2. Ridge Regression ($L_2$ Penalty)
+##### 4-2-2. Ridge Regression ($L_2$ Penalty)
 
 "Every item can come, but the heavier ones get squeezed down more." Ridge shrinks *every* coefficient toward zero, proportionally more for large ones, but essentially never sets a coefficient to exactly zero. Every variable stays in the model, just with a smaller voice.
 
@@ -413,7 +413,7 @@ $$\min_{\beta} \sum_{i=1}^{n} [y_i - f(x_i)]^2 \;+\; \lambda \sum_{j=1}^{p} \bet
 - **Mechanism**: Punishes the sum of *squared* coefficients.
 - **Behavior**: Shrinks all coefficients continuously toward zero, but **never sets any coefficient to exactly zero**. Every variable remains in the model.
 
-#### 3. Elastic Net (Blended Penalty)
+##### 4-2-3. Elastic Net (Blended Penalty)
 
 Compromise between the Lasso and Ridge: "Squeeze everything down, *and* leave some things home." It combines both penalties, weighted by a parameter $\alpha$ between 0 and 1: $\alpha = 1$ is pure lasso, $\alpha = 0$ is pure ridge, and anything in between is elastic net.
 
@@ -429,11 +429,11 @@ $$\min_{\beta} \sum_{i=1}^{n} [y_i - f(x_i)]^2 \;+\; \lambda \left[ \alpha \sum_
 
 **Elastic net** is often the practical default when you have many correlated county-level variables and also want some of them to drop out: it handles correlated groups better than lasso alone, while still allowing some coefficients to hit exactly zero.
 
-#### A Worked Example: Predicting County Mortality
+#### 4-3. A Worked Example: Predicting County Mortality
 
 To compare these methods empirically, we simulate a county health dataset with $n = 100$ counties and $p = 30$ candidate predictors. In the true underlying data-generating process, only the first 4 variables drive mortality ($\beta_1=8, \beta_2=-6, \beta_3=5, \beta_4=-4$), while the remaining 26 variables are pure noise ($\beta_{5\dots30} = 0$).
 
-**1. Lasso in Action ($L_1$ Penalty)**
+##### 4-3-1. Lasso in Action ($L_1$ Penalty)
 
 We first fit Lasso ($\alpha = 1$) across a continuum of penalty values ($\lambda$):
 
@@ -480,7 +480,7 @@ ggplot(coef_df, aes(x = log(lambda), y = coefficient, group = variable, color = 
 - As $\lambda$ increases, the 26 noise variables (gray lines) drop to zero one by one.
 - The 4 true signals (red lines) resist shrinkage longer, demonstrating how Lasso isolates true drivers through **sparse variable selection**.
 
-**2. Ridge in Action ($L_2$ Penalty)**
+##### 4-3-2. Ridge in Action ($L_2$ Penalty)
 
 Next, we fit Ridge Regression ($\alpha = 0$) on the exact same dataset:
 
@@ -514,7 +514,7 @@ ggplot(ridge_coef_df, aes(x = log(lambda), y = coefficient, group = variable, co
 - As $\lambda$ increases, all 30 coefficients shrink smoothly toward zero.
 - Crucially, **none of the 26 noise variables hit zero exactly**. Every single variable remains in the model, regardless of how large $\lambda$ becomes.
 
-#### Lasso vs. Ridge, Side by Side
+##### 4-3-3. Lasso vs. Ridge, Side by Side
 
 Placing Lasso ($\alpha = 1$) and Ridge ($\alpha = 0$) side by side on the exact same dataset highlights their fundamental structural difference:
 
@@ -548,7 +548,7 @@ ggplot(combined_df, aes(x = log(lambda), y = coefficient, group = variable, colo
 - **Lasso (Left)**: Noise lines collapse directly onto the zero axis, performing **hard variable elimination** (setting 26 noise variables to exactly 0).
 - **Ridge (Right)**: All 26 gray noise lines shrink continuously toward zero, but **none reach zero**. All 30 variables remain in the model.
 
-#### Choosing the Right Amount of Penalty: Cross-Validation
+##### 4-3-4. Choosing the Right Amount of Penalty: Cross-Validation
 
 How do we choose $\lambda$? We don't guess — we use $k$-fold cross-validation (`cv.glmnet()`) to find the penalty that minimizes out-of-sample prediction error. The data is split into $k$ folds; the model trains on $k-1$ folds and tests on the remaining fold, repeating until every fold serves as the test set once.
 
@@ -624,7 +624,7 @@ kable(head(ridge_selected_df, 30), digits = 3,
 
 Ridge correctly ranks the 4 true predictors at the top, but shrinks all 30 coefficients continuously rather than performing variable selection.
 
-#### Elastic Net on the Same Data: Combining Ridge and Lasso
+##### 4-3-5. Elastic Net on the Same Data: Combining Ridge and Lasso
 
 How does **Elastic Net** ($\alpha = 0.5$) differ from Lasso ($\alpha = 1$) and Ridge ($\alpha = 0$)? 
 
@@ -685,18 +685,17 @@ cat("  Elastic Net:", sum(coef(cv_enet, s = "lambda.min")[-1] != 0))
 - **Lasso (12/30 non-zero)**: Aggressive selection; zeroes out 18 noise variables.
 - **Elastic Net (17/30 non-zero)**: Balanced selection; zeroes out 13 noise variables while offering smoother shrinkage for surviving predictors.
 
-#### Handling Correlated Predictors: A Direct Comparison
+##### 4-3-6. Handling Correlated Predictors: A Direct Comparison
 
 The key advantage of Elastic Net over Lasso becomes obvious when predictors are collinear (e.g., Poverty Rate and Uninsured Rate moving together across counties).
 
 To evaluate performance under high collinearity, I simulate two strongly correlated predictors ($r \approx 0.8$), both with an equal true effect size ($\beta = 3.0$), alongside 8 noise variables.
 
-**Why we need more than one dataset here**: everywhere else in this post, we've fit each method on a single simulated dataset — exactly what you'd do in real research, since you only ever get one. But the specific thing we want to show in this section is a claim about **variance**, and variance is, by definition, a measure of how much an estimate would swing across different samples. A single dataset simply cannot show you that; it can only show you one outcome. So for this section only, I do something you would never do with real data: I regenerate the entire dataset from scratch 100 times, refit all four methods on each one, and look at how much each method's coefficients move around across those 100 versions. This is what statisticians call a **Monte Carlo simulation**, and it's a tool for demonstrating a method's general behavior in advance — not a step in an actual data-analysis workflow.
+**Two ways to check "variance" here**: what we want to show is how much each method's coefficients would swing across different samples. The correct way to check that is a **Monte Carlo simulation** — regenerate the dataset from scratch many times and see how much each method's answer changes. But every other example in this post uses just one dataset, which is what you'd actually have in real research. So I'll do both: first, a $k$-fold version that stays consistent with "one dataset only," then the full Monte Carlo version, so we can see how much they agree.
 
-To measure how each estimator behaves, I combine two complementary evaluation tools:
+###### 4-3-6-1. Version 1: k-Fold Cross-Validation on One Dataset
 
-- **Cross-Validation (`cv.glmnet()`)**: Used *within each sample* to select the optimal tuning parameter $\lambda$ (`lambda.min`) for Ridge, Lasso, and Elastic Net — this part matches what you'd actually do with a single real dataset.
-- **Monte Carlo Simulation ($B = 100$)**: Repeats the entire process above — generate data, then cross-validate — across 100 independent, freshly simulated datasets. Only by comparing results *across* these 100 repetitions can I compute an empirical **Bias**, **Variance**, and **MSE** for each method. In real research, with only one dataset in hand, you would never see these numbers directly — but knowing them in advance is exactly what should inform which method you reach for.
+This uses only the single dataset below, split into 10 folds. Each fold trains on a different 90% of the counties, and comparing coefficients across folds gives a rough sense of how stable each method is — without ever generating new data.
 
 ```{r elastic-net-sim, message=FALSE, warning=FALSE}
 set.seed(55)
@@ -713,7 +712,7 @@ X_corr <- cbind(poverty_rate, uninsured_rate_corr,
                  matrix(rnorm(n_counties_sim * 8), nrow = n_counties_sim))
 colnames(X_corr) <- c("poverty_rate", "uninsured_rate", paste0("noise", 1:8))
 
-# Single-sample estimates for OLS, Ridge, Lasso, and Elastic Net
+# Single-sample estimates for OLS, Ridge, Lasso, and Elastic Net (full dataset)
 df_corr <- as.data.frame(X_corr)
 df_corr$mortality <- mortality_corr
 ols_fit <- lm(mortality ~ ., data = df_corr)
@@ -727,9 +726,67 @@ ridge_result <- coef(cv_ridge_corr, s = "lambda.min")[c("poverty_rate", "uninsur
 lasso_result <- coef(cv_lasso_corr, s = "lambda.min")[c("poverty_rate", "uninsured_rate"), ]
 enet_result <- coef(cv_enet_corr, s = "lambda.min")[c("poverty_rate", "uninsured_rate"), ]
 
-# Monte Carlo simulation (B = 100) for empirical Bias, Variance, and MSE
-B <- 100
+# k-fold check: refit each method on each of k folds of THIS SAME dataset
+k <- 10
+set.seed(2024)
+fold_id <- sample(rep(1:k, length.out = n_counties_sim))
+
+res_ols_fold   <- matrix(0, k, 2)
+res_ridge_fold <- matrix(0, k, 2)
+res_lasso_fold <- matrix(0, k, 2)
+res_enet_fold  <- matrix(0, k, 2)
+
+for (i in 1:k) {
+  train_idx <- which(fold_id != i)
+  X_train <- X_corr[train_idx, ]
+  y_train <- mortality_corr[train_idx]
+  df_train <- as.data.frame(X_train)
+  df_train$mortality <- y_train
+  
+  res_ols_fold[i, ] <- coef(lm(mortality ~ ., data = df_train))[c("poverty_rate", "uninsured_rate")]
+  
+  cv_r <- cv.glmnet(X_train, y_train, alpha = 0)
+  cv_l <- cv.glmnet(X_train, y_train, alpha = 1)
+  cv_e <- cv.glmnet(X_train, y_train, alpha = 0.5)
+  
+  res_ridge_fold[i, ] <- coef(cv_r, s = "lambda.min")[c("poverty_rate", "uninsured_rate"), ]
+  res_lasso_fold[i, ] <- coef(cv_l, s = "lambda.min")[c("poverty_rate", "uninsured_rate"), ]
+  res_enet_fold[i, ]  <- coef(cv_e, s = "lambda.min")[c("poverty_rate", "uninsured_rate"), ]
+}
+
 true_b <- c(3, 3)
+b_ols_k   <- mean(abs(colMeans(res_ols_fold) - true_b))
+v_ols_k   <- mean(apply(res_ols_fold, 2, var))
+b_ridge_k <- mean(abs(colMeans(res_ridge_fold) - true_b))
+v_ridge_k <- mean(apply(res_ridge_fold, 2, var))
+b_lasso_k <- mean(abs(colMeans(res_lasso_fold) - true_b))
+v_lasso_k <- mean(apply(res_lasso_fold, 2, var))
+b_enet_k  <- mean(abs(colMeans(res_enet_fold) - true_b))
+v_enet_k  <- mean(apply(res_enet_fold, 2, var))
+```
+
+```{r elastic-net-table-kfold}
+kfold_summary_df <- data.frame(
+  Method = c("OLS", "Ridge", "Lasso", "Elastic Net"),
+  `Abs Bias` = round(c(b_ols_k, b_ridge_k, b_lasso_k, b_enet_k), 3),
+  `Variance` = round(c(v_ols_k, v_ridge_k, v_lasso_k, v_enet_k), 3),
+  `MSE` = round(c(b_ols_k^2 + v_ols_k, b_ridge_k^2 + v_ridge_k, 
+                   b_lasso_k^2 + v_lasso_k, b_enet_k^2 + v_enet_k), 3),
+  check.names = FALSE
+)
+
+kable(kfold_summary_df, caption = "Bias, Variance, and MSE from 10-Fold Cross-Validation (One Dataset)") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"))
+```
+
+Ridge has the lowest variance here, as expected. But its bias is large enough that its MSE ends up close to — or even slightly worse than — OLS's. Lasso looks like the worst option on every measure. This is a useful first read, but with only 10 folds that overlap heavily with each other, it's a fairly noisy estimate. Let's check it against the "real" answer.
+
+###### 4-3-6-2. Version 2: Monte Carlo Simulation (100 Fresh Datasets)
+
+This time, instead of splitting one dataset into folds, I generate 100 completely new datasets from scratch and refit every method on each one. This is the textbook-correct way to measure variance — just not something you could ever do with real data, since real data only comes once.
+
+```{r elastic-net-montecarlo, message=FALSE, warning=FALSE}
+B <- 100
 res_ols <- matrix(0, B, 2)
 res_ridge <- matrix(0, B, 2)
 res_lasso <- matrix(0, B, 2)
@@ -765,108 +822,65 @@ b_enet  <- mean(abs(colMeans(res_enet) - true_b))
 v_enet  <- mean(apply(res_enet, 2, var))
 ```
 
-```{r elastic-net-table}
-corr_summary_df <- data.frame(
-  Method = c("True Effect", "OLS (Unpenalized)", "Ridge (L2)", "Lasso (L1)", "Elastic Net (L1+L2)"),
-  `Poverty Rate` = c(3.00, round(ols_result[1], 2), round(ridge_result[1], 2), round(lasso_result[1], 2), round(enet_result[1], 2)),
-  `Uninsured Rate` = c(3.00, round(ols_result[2], 2), round(ridge_result[2], 2), round(lasso_result[2], 2), round(enet_result[2], 2)),
-  `Abs Bias` = c(0.000, round(b_ols, 3), round(b_ridge, 3), round(b_lasso, 3), round(b_enet, 3)),
-  `Variance` = c(0.000, round(v_ols, 3), round(v_ridge, 3), round(v_lasso, 3), round(v_enet, 3)),
-  `MSE (Bias² + Var)` = c(0.000, round(b_ols^2 + v_ols, 3), round(b_ridge^2 + v_ridge, 3), round(b_lasso^2 + v_lasso, 3), round(b_enet^2 + v_enet, 3)),
-  `Behavior with Collinear Predictors` = c(
-    "Ground Truth",
-    "Unbiased, but high variance under collinearity",
-    "Lowest variance (Grouping effect)",
-    "High variance due to lopsided selection",
-    "Balanced variance reduction + Selection"
-  ),
+```{r elastic-net-table-mc}
+mc_summary_df <- data.frame(
+  Method = c("OLS", "Ridge", "Lasso", "Elastic Net"),
+  `Abs Bias` = round(c(b_ols, b_ridge, b_lasso, b_enet), 3),
+  `Variance` = round(c(v_ols, v_ridge, v_lasso, v_enet), 3),
+  `MSE` = round(c(b_ols^2 + v_ols, b_ridge^2 + v_ridge, 
+                   b_lasso^2 + v_lasso, b_enet^2 + v_enet), 3),
   check.names = FALSE
 )
 
-kable(corr_summary_df, caption = "Empirical Comparison of Coefficients, Bias, Variance, and MSE Under High Multicollinearity (r ≈ 0.8)") %>%
+kable(mc_summary_df, caption = "Bias, Variance, and MSE from 100 Independently Simulated Datasets") %>%
   kable_styling(bootstrap_options = c("striped", "hover", "condensed"))
 ```
 
 ```{r elastic-net-pointcharts, fig.width=11, fig.height=5}
-# Left panel: coefficient estimates across methods, as points
-coef_point_df <- data.frame(
-  Method = rep(c("True Effect", "OLS", "Ridge", "Lasso", "Elastic Net"), times = 2),
-  Variable = rep(c("Poverty Rate", "Uninsured Rate"), each = 5),
-  Coefficient = c(3.0, unname(ols_result[1]), unname(ridge_result[1]), 
-                  unname(lasso_result[1]), unname(enet_result[1]),
-                  3.0, unname(ols_result[2]), unname(ridge_result[2]), 
-                  unname(lasso_result[2]), unname(enet_result[2]))
+compare_df <- data.frame(
+  Method = rep(c("OLS", "Ridge", "Lasso", "Elastic Net"), times = 4),
+  Metric = rep(c("Bias", "Variance"), each = 4, times = 2),
+  Value = c(b_ols_k, b_ridge_k, b_lasso_k, b_enet_k,
+            v_ols_k, v_ridge_k, v_lasso_k, v_enet_k,
+            b_ols, b_ridge, b_lasso, b_enet,
+            v_ols, v_ridge, v_lasso, v_enet),
+  Approach = rep(c("k-Fold (1 dataset)", "Monte Carlo (100 datasets)"), each = 8)
 )
-coef_point_df$Method <- factor(coef_point_df$Method, 
-                                 levels = c("True Effect", "OLS", "Ridge", "Lasso", "Elastic Net"))
+compare_df$Method <- factor(compare_df$Method, levels = c("OLS", "Ridge", "Lasso", "Elastic Net"))
 
-p_coef_point <- ggplot(coef_point_df, aes(x = Method, y = Coefficient, color = Variable)) +
-  geom_hline(yintercept = 3, linetype = "dashed", color = "gray50") +
-  geom_point(size = 5, alpha = 0.85, position = position_dodge(width = 0.4)) +
-  scale_color_manual(values = c("Poverty Rate" = "#c62828", "Uninsured Rate" = "#1565c0")) +
-  labs(title = "Coefficient Estimates Across Methods",
-       subtitle = "Dashed line = true effect (3.0 for both)",
-       x = "", y = "Coefficient Value", color = "") +
-  theme_minimal(base_size = 12) +
-  theme(legend.position = "bottom",
-        plot.title = element_text(face = "bold", size = 13),
-        axis.text.x = element_text(angle = 20, hjust = 1),
-        plot.margin = ggplot2::margin(10, 10, 10, 10))
-
-# Right panel: bias and variance across methods, as points
-bias_var_point_df <- data.frame(
-  Method = rep(c("OLS", "Ridge", "Lasso", "Elastic Net"), times = 2),
-  Metric = rep(c("Bias", "Variance"), each = 4),
-  Value = c(b_ols, b_ridge, b_lasso, b_enet,
-            v_ols, v_ridge, v_lasso, v_enet)
-)
-bias_var_point_df$Method <- factor(bias_var_point_df$Method, 
-                                     levels = c("OLS", "Ridge", "Lasso", "Elastic Net"))
-
-p_metrics_point <- ggplot(bias_var_point_df, aes(x = Method, y = Value, color = Metric)) +
+ggplot(compare_df, aes(x = Method, y = Value, color = Metric)) +
   geom_point(size = 5, alpha = 0.85, position = position_dodge(width = 0.4)) +
   scale_color_manual(values = c("Bias" = "#f9a825", "Variance" = "#6a1b9a")) +
-  labs(title = "Bias and Variance Across Methods",
-       subtitle = "Monte Carlo (B = 100) across samples",
+  facet_wrap(~Approach) +
+  labs(title = "k-Fold vs. Monte Carlo: Do They Agree?",
        x = "", y = "Value", color = "") +
   theme_minimal(base_size = 12) +
   theme(legend.position = "bottom",
         plot.title = element_text(face = "bold", size = 13),
+        strip.text = element_text(face = "bold", size = 11),
         axis.text.x = element_text(angle = 20, hjust = 1),
         plot.margin = ggplot2::margin(10, 10, 10, 10))
-
-p_coef_point + p_metrics_point
 ```
 
-**Reading the left panel**: each dot is one method's estimated coefficient for one variable — red dots for poverty rate, blue for uninsured rate. The dashed line marks the truth (3.0 for both). Look at how far apart the red and blue dot are at each method: a bigger vertical gap between the two dots means that method split credit less evenly between the two correlated predictors. OLS and ridge keep their two dots close together; lasso's dots are the farthest apart.
+###### 4-3-6-3. Comparing the Two Versions
 
-**Reading the right panel**: each dot is one number — orange for bias, purple for variance — plotted separately for each method. Bias creeps up for every regularized method compared to OLS, which is expected: that's the deliberate cost of shrinkage. What matters is the purple (variance) dots: ridge's purple dot drops the most dramatically, lasso's barely moves down from OLS's, and elastic net's lands in between.
+Look at ridge's purple (variance) dot in both panels: low in the k-fold version, and just as low — or lower — in the Monte Carlo version. That part agrees. But the overall ranking shifts once we use the full 100-dataset version: with more independent samples, ridge's advantage becomes cleaner, and lasso's problems become clearer too.
 
-**Key empirical findings (bias-variance tradeoff in action)**:
+**The takeaway**: $k$-fold cross-validation on one dataset gets the broad shape of the story right — ridge is the most stable, lasso is the least — but it's a noisier, lower-resolution picture. It shares 80% of its data across every "different" fold, so it can't fully separate a method's true stability from one unlucky split of the data. Monte Carlo is the more trustworthy answer, but it needs 100 datasets you'll never actually have. In practice, this means: trust the general pattern from a $k$-fold check on your own data, but don't take its exact numbers too literally — the deeper truth about a method's stability is something you learn once, in advance, from exercises like this one, not something you re-derive from scratch every time you fit a model to a single real dataset.
 
-- **OLS**: Barely any bias (0.085), but the highest variance (0.331) — with poverty rate and uninsured rate this correlated, OLS's estimates bounce around a lot from sample to sample, even though they're right on average.
+#### 4-4. Why This Matters for Applied Research
 
-- **Ridge**: Trades a bit more bias (0.131) for a huge drop in variance (0.055, an 83% cut from OLS) — the best deal of the three. Its two coefficient dots in the left panel are also the closest together, meaning it splits credit between poverty and uninsured rate most evenly.
+When working with high-dimensional observational data (e.g., county health indicators), which method to reach for depends on what your predictors look like:
 
-- **Lasso**: Variance stays just as high as OLS (0.357) — under this much collinearity, lasso doesn't actually help. It tends to lean hard on one variable and shrug off the other, which is why its two dots in the left panel are the farthest apart: poverty rate gets a boost above 3.0, uninsured rate gets pulled down.
-
-- **Elastic Net**: A genuine middle ground — variance drops to 0.160 (about half of OLS/lasso), and its two dots sit closer together than lasso's, though not quite as close as ridge's.
-
-**The takeaway**: shrinking coefficients always adds a little bias — that's expected, not a flaw. The real question is how much stability you get back for that cost. Here, ridge gets the best deal, lasso gets almost nothing, and elastic net lands in between — which is exactly why elastic net beats lasso alone when your predictors are this correlated.
-
-#### Why This Matters for Applied Research
-
-When working with high-dimensional observational data (e.g., county health indicators), choose your regularization strategy based on your data structure:
-
-| Situation | Reach for | Key Property |
+| Situation | Reach for | Why |
 |---|---|---|
-| Many independent predictors; expect strong sparsity | **Lasso** | Aggressive variable selection |
-| High multicollinearity; want to retain all controls | **Ridge** | Stable $L_2$ shrinkage across all features |
-| Many correlated predictors; want sparse yet stable selection | **Elastic Net** | Grouping effect + variable selection |
+| Many independent predictors; expect only a few really matter | **Lasso** | Cleanly drops the irrelevant ones |
+| Predictors are highly correlated; want to keep every variable | **Ridge** | Splits credit evenly, never drops anyone |
+| Many correlated predictors; still want some to drop out | **Elastic Net** | A middle path between the two |
 
-> **Important Caution**: Regularized coefficients are intentionally biased ($\hat{\beta}_{\text{reg}} \to 0$) to reduce variance. They excel at prediction and feature selection, but should **not** be interpreted directly as unbiased causal effect sizes. For causal inference, use Lasso or Elastic Net to select control variables, then estimate an unpenalized model (e.g., Fixed Effects).
+**One important caution**: every regularized coefficient here is intentionally shrunk toward zero — that's the whole point, and it's what buys the drop in variance. But it also means these coefficients aren't unbiased estimates of a "true" causal effect anymore. They're excellent for prediction and for narrowing down a long list of candidate variables. If your actual goal is a trustworthy causal estimate — a number you'd report as "the effect of X" — the better workflow is to use lasso or elastic net just to *select* which control variables belong in the model, then re-estimate that shorter list with a standard, unpenalized method (like the fixed and random effects models covered in an earlier post in this series).
 
-### Conclusion
+### 5. Conclusion
 
 Supervised regularization links four core concepts into a cohesive workflow:
 
