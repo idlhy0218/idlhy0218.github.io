@@ -1,0 +1,386 @@
+---
+title: "Machine Learning for Social Scientists, Part 3: The Transition to Classification"
+author: "Heeyoung Lee"
+date: "August 13, 2026"
+format: 
+  html:
+    theme: cosmo
+    css: custom.css
+    page-layout: full
+    code-fold: true
+    code-tools: true
+    toc: true
+    toc-depth: 5
+    toc-location: left
+    self-contained: true
+    fig-width: 9
+    fig-height: 6
+    fig-dpi: 300
+    smooth-scroll: true
+    highlight-style: github
+---
+
+## Machine Learning for Social Scientists, Part 3
+
+[Part 1](#ml-part1) and [Part 2](#ml-part2) both predicted a **continuous** outcome — county mortality rate, a number that can be 750 or 812.3 or anywhere in between. But a huge share of real social science and public health questions aren't about predicting a number at all. They're about predicting a **category**: Will this county be classified as high-risk or not? Will this patient be readmitted or not? Did this county adopt a policy or not? This post covers the shift from **regression** (predicting a number) to **classification** (predicting a category), starting with the natural first step — logistic regression — then a completely different philosophy — k-nearest neighbors — and finally the new toolkit you need to evaluate a classifier, since "how far off was my prediction?" no longer makes sense once your outcome is a category.
+
+Let's load what we'll need:
+
+```{r library-imports, message=FALSE, warning=FALSE}
+library(dplyr)
+library(ggplot2)
+library(kableExtra)
+library(patchwork)
+library(class)      # For k-NN
+library(pROC)        # For ROC curves
+library(caret)        # For confusion matrix utilities
+```
+
+### 1. From a Number to a Category
+
+#### Why We Need New Tools
+
+Everything in Part 1 and Part 2 was built around one central idea: minimize how far our prediction is from the true number. That idea simply doesn't apply anymore once the outcome is a category. "How far" is a county that's actually low-risk from a prediction of "high-risk"? There's no meaningful distance to measure — it's either right or wrong.
+
+Let's turn our familiar county mortality data into a classification problem. Instead of predicting the exact mortality rate, suppose a state health department wants to flag counties as **high-risk** (top 30% of mortality rates) so they can prioritize them for mobile health clinics.
+
+```{r simulate-classification-data}
+set.seed(123)
+n_counties <- 400
+
+poverty_rate <- runif(n_counties, 5, 35)
+uninsured_rate <- runif(n_counties, 3, 25)
+physician_density <- runif(n_counties, 50, 400)
+obesity_rate <- runif(n_counties, 18, 42)
+
+mortality_rate <- 500 + 6 * poverty_rate + 4 * uninsured_rate - 
+  0.3 * physician_density + 3 * obesity_rate + rnorm(n_counties, 0, 25)
+
+# Turn the continuous outcome into a binary label
+risk_cutoff <- quantile(mortality_rate, 0.70)
+high_risk <- factor(ifelse(mortality_rate > risk_cutoff, "High Risk", "Not High Risk"),
+                     levels = c("Not High Risk", "High Risk"))
+
+county_df <- data.frame(poverty_rate, uninsured_rate, physician_density, obesity_rate, 
+                         mortality_rate, high_risk)
+
+head(county_df, 6) %>%
+  kable(digits = 1) %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"))
+```
+
+```{r visualize-binary-outcome, fig.height=5}
+ggplot(county_df, aes(x = poverty_rate, y = mortality_rate, color = high_risk)) +
+  geom_point(size = 2.5, alpha = 0.7) +
+  geom_hline(yintercept = risk_cutoff, linetype = "dashed", color = "gray40") +
+  scale_color_manual(values = c("Not High Risk" = "steelblue", "High Risk" = "firebrick")) +
+  labs(title = "Turning a Number Into a Category",
+       subtitle = "Counties above the dashed line get relabeled as 'High Risk'",
+       x = "Poverty Rate (%)", y = "Mortality Rate", color = "") +
+  theme_minimal(base_size = 12) +
+  theme(legend.position = "right",
+        plot.title = element_text(face = "bold", size = 13),
+        plot.margin = ggplot2::margin(10, 15, 10, 10))
+```
+
+We've thrown away some information on purpose (exactly how high mortality is) to answer a simpler, more actionable question (is this county in the group that needs attention or not). This tradeoff — precision of measurement for simplicity of decision — is extremely common in applied policy work, and it's why classification deserves its own set of tools.
+
+### 2. Logistic Regression: The Natural Starting Point
+
+#### Why Not Just Use OLS on a 0/1 Outcome?
+
+The most tempting first move is to just code "High Risk" as 1 and "Not High Risk" as 0, and run an ordinary regression. The problem: OLS has no idea it's supposed to produce something that behaves like a probability. It will happily predict values like 1.3 or −0.2, which make no sense as a chance of being high-risk.
+
+**Logistic regression** fixes this with one clever adjustment: instead of predicting the outcome directly, it predicts the *log-odds* of the outcome, and then squeezes that through a function (the logistic function, or "sigmoid") that always outputs a number between 0 and 1.
+
+$$P(\text{High Risk}) = \frac{1}{1 + e^{-(\beta_0 + \beta_1 X_1 + \beta_2 X_2 + \dots)}}$$
+
+```{r sigmoid-illustration, fig.height=5}
+logit_x <- seq(-6, 6, length.out = 200)
+sigmoid_df <- data.frame(x = logit_x, prob = 1 / (1 + exp(-logit_x)))
+
+ggplot(sigmoid_df, aes(x = x, y = prob)) +
+  geom_line(color = "darkgreen", linewidth = 1.3) +
+  geom_hline(yintercept = c(0, 1), linetype = "dotted", color = "gray50") +
+  geom_hline(yintercept = 0.5, linetype = "dashed", color = "gray40") +
+  labs(title = "The Sigmoid Function: Squeezing Any Number Into a Probability",
+       subtitle = "No matter how extreme the input, the output always stays between 0 and 1",
+       x = "Log-Odds (raw model output)", y = "Predicted Probability") +
+  theme_minimal(base_size = 12) +
+  theme(plot.title = element_text(face = "bold", size = 13),
+        plot.margin = ggplot2::margin(10, 15, 10, 10))
+```
+
+No matter how extreme the combination of predictors, the S-shaped curve guarantees the output stays between 0 and 1 — it just gets closer and closer to the boundary without ever crossing it. This is the whole trick behind logistic regression: keep the familiar linear combination of predictors ($\beta_0 + \beta_1 X_1 + \dots$) from OLS, but pass it through this squeezing function before calling it a prediction.
+
+#### Fitting the Model
+
+```{r fit-logistic}
+logit_model <- glm(high_risk ~ poverty_rate + uninsured_rate + physician_density + obesity_rate,
+                    data = county_df, family = "binomial")
+
+summary(logit_model)
+```
+
+**Reading the coefficients**: unlike OLS, these coefficients are on the log-odds scale, which isn't very intuitive by itself. In practice, researchers usually exponentiate them to get **odds ratios**:
+
+```{r odds-ratios}
+odds_ratios <- exp(coef(logit_model))
+data.frame(Variable = names(odds_ratios), `Odds Ratio` = round(odds_ratios, 3)) %>%
+  kable(caption = "Odds Ratios: How Much Does Each Predictor Multiply the Odds of Being High-Risk?") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"))
+```
+
+An odds ratio above 1 means the predictor *increases* the odds of being high-risk; below 1 means it *decreases* the odds. For example, an odds ratio of 1.15 for poverty rate means each one-point increase in poverty rate multiplies the odds of being high-risk by 1.15 — a 15% increase in the odds, holding the other variables constant.
+
+#### Visualizing the Decision Boundary
+
+```{r decision-boundary-logit, fig.height=5.5}
+grid_df <- expand.grid(
+  poverty_rate = seq(5, 35, length.out = 100),
+  uninsured_rate = median(county_df$uninsured_rate),
+  physician_density = median(county_df$physician_density),
+  obesity_rate = median(county_df$obesity_rate)
+)
+grid_df$predicted_prob <- predict(logit_model, newdata = grid_df, type = "response")
+
+ggplot() +
+  geom_line(data = grid_df, aes(x = poverty_rate, y = predicted_prob), 
+            color = "darkgreen", linewidth = 1.3) +
+  geom_point(data = county_df, 
+             aes(x = poverty_rate, y = as.numeric(high_risk) - 1, color = high_risk), 
+             alpha = 0.5, size = 2) +
+  geom_hline(yintercept = 0.5, linetype = "dashed", color = "gray40") +
+  scale_color_manual(values = c("Not High Risk" = "steelblue", "High Risk" = "firebrick")) +
+  labs(title = "Logistic Regression's S-Curve, Fit to Real County Data",
+       subtitle = "Holding other predictors at their median values",
+       x = "Poverty Rate (%)", y = "Predicted Probability of High Risk", color = "") +
+  theme_minimal(base_size = 12) +
+  theme(legend.position = "right",
+        plot.title = element_text(face = "bold", size = 13),
+        plot.margin = ggplot2::margin(10, 15, 10, 10))
+```
+
+The dots at the top and bottom are the actual counties (1 = High Risk, 0 = Not High Risk). The green S-curve is the model's estimated probability as poverty rate rises, holding the other predictors at typical values. Wherever that curve crosses the dashed 50% line is the **decision boundary** — the point where the model tips from predicting "not high risk" to "high risk."
+
+**One connection back to Part 1**: logistic regression has its own regularized versions too. Just like `lm()` has a lasso/ridge cousin in `glmnet`, `glm()` does as well — `glmnet` handles both continuous and binary outcomes, so everything we learned about penalizing coefficients to prevent overfitting carries over directly to classification.
+
+### 3. k-Nearest Neighbors: A Completely Different Philosophy
+
+#### No Equation at All
+
+Logistic regression, like every method in Part 1, still fits an equation with coefficients. **k-nearest neighbors (k-NN)** throws that idea away entirely. It has no coefficients, no training phase, and no formula. Its entire logic is: *"To classify a new county, find the k counties in the data that look most similar to it, and go with whatever the majority of them are."*
+
+Think about how a colleague unfamiliar with statistics might informally guess whether a new county is high-risk: "Well, it has a poverty rate of 24% and an uninsured rate of 15% — that's pretty similar to five other counties I know, and four of those five turned out to be high-risk, so I'd guess this one is too." That's k-NN, in plain language.
+
+```{r knn-intuition, fig.height=5.5}
+set.seed(50)
+new_county <- data.frame(poverty_rate = 24, uninsured_rate = 15)
+
+county_df$distance <- sqrt((county_df$poverty_rate - new_county$poverty_rate)^2 + 
+                            (county_df$uninsured_rate - new_county$uninsured_rate)^2)
+nearest_5 <- county_df %>% arrange(distance) %>% head(5)
+
+ggplot(county_df, aes(x = poverty_rate, y = uninsured_rate, color = high_risk)) +
+  geom_point(alpha = 0.35, size = 2) +
+  geom_point(data = nearest_5, aes(x = poverty_rate, y = uninsured_rate, color = high_risk), 
+             size = 4, shape = 21, stroke = 1.3, fill = NA, color = "black") +
+  geom_point(data = new_county, aes(x = poverty_rate, y = uninsured_rate), 
+             color = "black", size = 5, shape = 17, inherit.aes = FALSE) +
+  scale_color_manual(values = c("Not High Risk" = "steelblue", "High Risk" = "firebrick")) +
+  labs(title = "k-NN in Action: Find the 5 Closest Counties, Take a Vote",
+       subtitle = "Black triangle = new county; black-ringed dots = its 5 nearest neighbors",
+       x = "Poverty Rate (%)", y = "Uninsured Rate (%)", color = "") +
+  theme_minimal(base_size = 12) +
+  theme(legend.position = "right",
+        plot.title = element_text(face = "bold", size = 13),
+        plot.margin = ggplot2::margin(10, 15, 10, 10))
+```
+
+```{r knn-vote-table}
+vote_table <- table(nearest_5$high_risk)
+kable(as.data.frame(vote_table), col.names = c("Label", "Votes among 5 nearest neighbors")) %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"))
+```
+
+The black triangle is our new, unclassified county. We circled its five nearest neighbors (by straight-line distance on these two predictors) and simply counted how many of them are red versus blue. Whichever color wins the vote becomes our prediction for the new county. There's no fitting process, no coefficients to estimate — the "model" *is* the dataset itself, plus a rule for measuring distance and counting votes.
+
+#### The One Tuning Parameter: How Many Neighbors?
+
+k-NN has exactly one knob to turn: $k$, the number of neighbors to consult. This plays the exact same regularization role we've now seen three times — $\lambda$ in Part 1, tree depth in Part 2, and now $k$ here.
+
+```{r knn-k-comparison, fig.height=8}
+set.seed(321)
+knn_train_x <- scale(county_df[, c("poverty_rate", "uninsured_rate")])
+knn_train_y <- county_df$high_risk
+
+grid_knn <- expand.grid(
+  poverty_rate = seq(5, 35, length.out = 80),
+  uninsured_rate = seq(3, 25, length.out = 80)
+)
+grid_knn_scaled <- scale(grid_knn, 
+                          center = attr(knn_train_x, "scaled:center"), 
+                          scale = attr(knn_train_x, "scaled:scale"))
+
+fit_and_plot_knn <- function(k_val, title_text) {
+  pred <- knn(train = knn_train_x, test = grid_knn_scaled, cl = knn_train_y, k = k_val)
+  grid_knn$pred <- pred
+  
+  ggplot() +
+    geom_tile(data = grid_knn, aes(x = poverty_rate, y = uninsured_rate, fill = pred), alpha = 0.35) +
+    geom_point(data = county_df, aes(x = poverty_rate, y = uninsured_rate, color = high_risk), size = 1.8) +
+    scale_fill_manual(values = c("Not High Risk" = "steelblue", "High Risk" = "firebrick"), guide = "none") +
+    scale_color_manual(values = c("Not High Risk" = "steelblue", "High Risk" = "firebrick")) +
+    labs(title = title_text, x = "Poverty Rate (%)", y = "Uninsured Rate (%)", color = "") +
+    theme_minimal(base_size = 12) +
+    theme(legend.position = "none",
+          plot.title = element_text(face = "bold", size = 12),
+          plot.margin = ggplot2::margin(6, 10, 6, 6))
+}
+
+p_k1 <- fit_and_plot_knn(1, "k = 1: Jagged, Overfit Boundary")
+p_k15 <- fit_and_plot_knn(15, "k = 15: Reasonably Smooth Boundary")
+p_k100 <- fit_and_plot_knn(100, "k = 100: Too Smooth, Underfit")
+
+p_k1 / p_k15 / p_k100
+```
+
+This is the bias-variance tradeoff wearing yet another costume. With **k = 1**, each new county is classified based on its single closest match — the boundary between red and blue territory becomes jagged and hyper-specific to individual data points (high variance, low bias — it will get every training point "right" but overreact to noise). With **k = 100**, the model is essentially just voting based on the overall majority class in most of the space, smoothing away almost all local structure (high bias, low variance). Somewhere in between (here, roughly k = 15) is where the boundary looks like it's tracking real patterns without chasing noise — and just as with $\lambda$ and tree depth, the right value of $k$ is chosen with cross-validation, not eyeballing.
+
+### 4. Evaluating a Classifier: New Metrics for a New Kind of Prediction
+
+#### Why RMSE Doesn't Work Here
+
+In Part 1 and Part 2, we judged models with RMSE — how far, on average, was the predicted number from the true number? That question doesn't even parse for a category. We need an entirely different evaluation toolkit, and it starts with one simple table.
+
+#### The Confusion Matrix
+
+```{r confusion-matrix}
+county_df$logit_prob <- predict(logit_model, type = "response")
+county_df$logit_pred <- factor(ifelse(county_df$logit_prob > 0.5, "High Risk", "Not High Risk"),
+                                levels = c("Not High Risk", "High Risk"))
+
+conf_mat <- table(Predicted = county_df$logit_pred, Actual = county_df$high_risk)
+conf_mat %>%
+  kable(caption = "Confusion Matrix: Predicted (rows) vs. Actual (columns)") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), full_width = FALSE)
+```
+
+Every classifier's performance boils down to four numbers, and it's worth learning their names because they show up everywhere in applied prediction research:
+
+| | Actual: High Risk | Actual: Not High Risk |
+|---|---|---|
+| **Predicted: High Risk** | True Positive (TP) — correctly flagged | False Positive (FP) — false alarm |
+| **Predicted: Not High Risk** | False Negative (FN) — missed a real risk | True Negative (TN) — correctly cleared |
+
+```{r confusion-matrix-viz, fig.height=5}
+conf_df <- as.data.frame(conf_mat)
+
+ggplot(conf_df, aes(x = Actual, y = Predicted, fill = Freq)) +
+  geom_tile(color = "white", linewidth = 1.5) +
+  geom_text(aes(label = Freq), size = 8, fontface = "bold", color = "white") +
+  scale_fill_gradient(low = "#a8c6e0", high = "#1a4c73", guide = "none") +
+  labs(title = "Confusion Matrix, Visualized",
+       subtitle = "Diagonal = correct predictions; off-diagonal = mistakes") +
+  theme_minimal(base_size = 12) +
+  theme(plot.title = element_text(face = "bold", size = 13),
+        plot.margin = ggplot2::margin(10, 15, 10, 10))
+```
+
+#### From the Confusion Matrix to Summary Metrics
+
+Different applied problems care about different kinds of mistakes, which is why there's no single "best" metric — only the right metric for the stakes at hand.
+
+- **Accuracy** = (TP + TN) / Total — overall, what fraction of predictions were correct? Simple, but misleading when one category is rare.
+- **Precision** = TP / (TP + FP) — of the counties we flagged as high-risk, how many actually were? High precision means few false alarms.
+- **Recall (Sensitivity)** = TP / (TP + FN) — of the counties that were truly high-risk, how many did we catch? High recall means we rarely miss a real case.
+
+```{r calc-metrics}
+TP <- conf_mat["High Risk", "High Risk"]
+TN <- conf_mat["Not High Risk", "Not High Risk"]
+FP <- conf_mat["High Risk", "Not High Risk"]
+FN <- conf_mat["Not High Risk", "High Risk"]
+
+accuracy <- (TP + TN) / sum(conf_mat)
+precision <- TP / (TP + FP)
+recall <- TP / (TP + FN)
+
+metrics_df <- data.frame(
+  Metric = c("Accuracy", "Precision", "Recall"),
+  Value = round(c(accuracy, precision, recall), 3),
+  Interpretation = c(
+    "Overall fraction of counties correctly classified",
+    "Of counties flagged high-risk, fraction that truly were",
+    "Of truly high-risk counties, fraction we successfully caught"
+  )
+)
+
+kable(metrics_df, caption = "Classification Metrics for Our Logistic Regression Model") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"))
+```
+
+**Why this tradeoff matters for real policy work**: imagine a state health department using this model to decide which counties get a mobile health clinic. If clinics are cheap and plentiful, they'd rather over-flag counties (favor recall, tolerate some false alarms — a missed high-risk county is the costly mistake). If clinics are scarce and expensive, they'd rather be conservative about which counties get one (favor precision — a wasted clinic visit is the costly mistake). There is no universally "correct" balance; it depends entirely on which kind of mistake is more expensive in the real-world application.
+
+#### The ROC Curve: Precision-Recall Tradeoff Across All Thresholds
+
+So far we've used 0.5 as the cutoff for "predict high-risk," but that's an arbitrary choice — we could just as easily flag anything above 0.3, or require 0.7. The **ROC curve** shows how the tradeoff between catching true positives and generating false alarms shifts as we slide that cutoff up and down.
+
+```{r roc-curve, fig.height=6}
+roc_obj <- roc(county_df$high_risk, county_df$logit_prob, levels = c("Not High Risk", "High Risk"))
+
+roc_df <- data.frame(
+  fpr = 1 - roc_obj$specificities,
+  tpr = roc_obj$sensitivities
+)
+
+ggplot(roc_df, aes(x = fpr, y = tpr)) +
+  geom_line(color = "darkgreen", linewidth = 1.3) +
+  geom_abline(intercept = 0, slope = 1, linetype = "dashed", color = "gray50") +
+  annotate("text", x = 0.6, y = 0.3, 
+           label = paste0("AUC = ", round(auc(roc_obj), 3)), size = 5, fontface = "bold") +
+  labs(title = "ROC Curve: How Good Is the Model at Any Threshold?",
+       subtitle = "The dashed diagonal is what a coin flip would achieve",
+       x = "False Positive Rate", y = "True Positive Rate (Recall)") +
+  theme_minimal(base_size = 12) +
+  theme(plot.title = element_text(face = "bold", size = 13),
+        plot.margin = ggplot2::margin(10, 15, 10, 10))
+```
+
+Reading this plot: the closer the green curve hugs the top-left corner, the better the model is at catching true positives without generating false alarms, across *every possible* cutoff — not just 0.5. The dashed diagonal line is the baseline for a model with no predictive power at all (equivalent to randomly guessing). The single-number summary of this whole curve is the **AUC (Area Under the Curve)**: 0.5 means no better than a coin flip, 1.0 means perfect separation between the two classes. AUC is one of the most widely reported metrics in applied classification research precisely because it doesn't require committing to any one threshold up front.
+
+### 5. Sociological Applications
+
+#### When Classification Is the Right Frame
+
+A great deal of applied social science is naturally binary, even when the underlying reality is continuous. Consider a few examples that map directly onto the machinery above:
+
+- **Public health**: Will this county experience an opioid overdose spike above a critical threshold next year?
+- **Criminology**: Will this individual reoffend within two years of release? (This is exactly the kind of question behind the risk-assessment tools discussed in the Molina & Garip review — COMPAS-style instruments are, at their core, classifiers.)
+- **Political sociology**: Did this county adopt a given local policy (e.g., a minimum wage increase, a paid sick leave ordinance) or not?
+- **Demography**: Will this individual migrate within the next five years?
+
+#### Logistic Regression vs. k-NN: Which to Reach For
+
+These two methods represent the same two cultures split from Part 1, now inside the classification world:
+
+| | Logistic Regression | k-NN |
+|---|---|---|
+| **Produces interpretable coefficients?** | Yes — odds ratios | No |
+| **Assumes a functional form?** | Yes (log-odds are linear in predictors) | No — fully flexible |
+| **Good for causal-style claims?** | Yes, with the same caveats as OLS | No |
+| **Good for pure prediction/risk-scoring?** | Reasonably | Often better, if enough data |
+| **Scales well to many predictors?** | Yes | Struggles — "curse of dimensionality" |
+
+If a reviewer is going to ask "so what's the effect of poverty on high-risk status," logistic regression gives you a defensible answer. If the goal is purely to build the most accurate risk-flagging tool possible and nobody's going to ask for a coefficient, k-NN (or the tree-based methods from Part 2, which also handle classification) is a legitimate competitor.
+
+### Conclusion
+
+This post extended everything from Parts 1 and 2 into the classification setting:
+
+1. **Classification vs. regression** is a fork in the road determined entirely by the outcome variable — a category instead of a number — and it requires an entirely different toolkit downstream.
+2. **Logistic regression** keeps the familiar linear-combination-of-predictors idea from OLS, but squeezes it through a sigmoid function so the output always behaves like a probability. It's the natural first stop for anyone coming from Part 1's regularized regression world (and it has its own lasso/ridge versions too).
+3. **k-NN** abandons equations entirely, classifying new cases by literally finding their nearest neighbors and taking a vote — with $k$ playing the same complexity-control role as $\lambda$ in Part 1 and tree depth in Part 2.
+4. **Evaluating classifiers** requires a completely different vocabulary than RMSE: the confusion matrix, precision, recall, and the ROC curve/AUC — with the right metric depending on which kind of mistake is more costly in your specific application.
+5. Classification methods map naturally onto a huge range of **binary sociological outcomes** — risk flags, policy adoption, recidivism, migration — anywhere the underlying research question is really "which group does this case belong to," not "what number will it produce."
+
+In the next post, we'll finally cross over into the **unsupervised** bucket from Part 1 and look at clustering — how to discover meaningful groups in data when there's no known outcome, category or otherwise, to predict at all.

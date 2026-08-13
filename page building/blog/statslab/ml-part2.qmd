@@ -1,0 +1,359 @@
+---
+title: "Machine Learning for Social Scientists, Part 2: Decision Trees, Random Forests, and Boosting"
+author: "Heeyoung Lee"
+date: "August 13, 2026"
+format: 
+  html:
+    theme: cosmo
+    css: custom.css
+    page-layout: full
+    code-fold: true
+    code-tools: true
+    toc: true
+    toc-depth: 5
+    toc-location: left
+    self-contained: true
+    fig-width: 9
+    fig-height: 6
+    fig-dpi: 300
+    smooth-scroll: true
+    highlight-style: github
+---
+
+## Machine Learning for Social Scientists, Part 2
+
+In [Part 1](#ml-part1) we covered supervised vs. unsupervised learning, the two cultures of statistics, the bias-variance tradeoff, and regularized regression (ridge, lasso, elastic net). All of those methods share one thing in common: they're still built on a straight line, just a heavily disciplined one. This post covers a completely different family of tools — **tree-based methods** — that don't assume a straight line (or any particular shape) at all. We'll build up from a single decision tree, to a forest of them, to a method that builds trees one mistake at a time (boosting), and then learn how to interpret models that no longer hand us a simple coefficient. We'll keep using the same county-level mortality example throughout.
+
+Let's load the packages we'll need:
+
+```{r library-imports, message=FALSE, warning=FALSE}
+library(dplyr)
+library(ggplot2)
+library(kableExtra)
+library(patchwork)
+library(rpart)         # Decision trees
+library(rpart.plot)    # Plotting decision trees
+library(randomForest)  # Random forests
+library(gbm)           # Gradient boosting
+library(pdp)           # Partial dependence plots
+library(tidyr)
+```
+
+### 1. From Straight Lines to Splits: What Is a Decision Tree?
+
+#### The Core Idea
+
+Every method in Part 1 — OLS, ridge, lasso — describes the relationship between predictors and an outcome with a single equation: $Y = \beta_0 + \beta_1 X_1 + \beta_2 X_2 + \dots$. A decision tree throws that assumption away entirely. Instead of a formula, it asks a sequence of yes/no questions and sorts each observation down a branch until it lands in a group with a similar outcome.
+
+This is exactly the "20 questions" game. Think about how a public health researcher might informally reason about a county's mortality risk without ever running a regression: "Is the poverty rate above 20%? If yes, is the county rural? If yes, that's a high-risk group. If no, check the physician density..." A decision tree formalizes exactly this kind of reasoning, except the algorithm decides which question to ask, and in what order, by searching the data for the splits that separate high-mortality counties from low-mortality counties most cleanly.
+
+#### A County Health Example
+
+Let's build a small, realistic dataset and grow an actual tree on it.
+
+```{r simulate-tree-data}
+set.seed(123)
+n_counties <- 400
+
+poverty_rate <- runif(n_counties, 5, 35)
+uninsured_rate <- runif(n_counties, 3, 25)
+physician_density <- runif(n_counties, 50, 400)
+rural <- rbinom(n_counties, 1, 0.4)
+obesity_rate <- runif(n_counties, 18, 42)
+
+# Mortality rate driven by a nonlinear combination + a rural interaction
+mortality_rate <- 500 + 
+  6 * poverty_rate + 
+  4 * uninsured_rate - 
+  0.3 * physician_density + 
+  3 * obesity_rate +
+  25 * rural * (poverty_rate > 20) +  # rural + high poverty is especially bad
+  rnorm(n_counties, 0, 20)
+
+county_df <- data.frame(
+  poverty_rate, uninsured_rate, physician_density, 
+  rural = factor(rural, labels = c("Urban/Suburban", "Rural")), 
+  obesity_rate, mortality_rate
+)
+
+head(county_df, 6) %>%
+  kable(digits = 1) %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"))
+```
+
+Notice something important about how this data was built: the effect of poverty depends on whether the county is rural. That's a built-in **interaction**, exactly the kind of pattern that's clumsy to capture in a linear regression (you'd have to remember to add a poverty × rural interaction term yourself) but that a tree can discover automatically.
+
+```{r fit-single-tree, fig.width=10, fig.height=7}
+single_tree <- rpart(mortality_rate ~ poverty_rate + uninsured_rate + physician_density + rural + obesity_rate,
+                      data = county_df, method = "anova",
+                      control = rpart.control(maxdepth = 3, cp = 0.01))
+
+rpart.plot(single_tree, type = 2, extra = 101, fallen.leaves = TRUE,
+           box.palette = "RdYlGn", shadow.col = "gray85",
+           main = "A Decision Tree for County Mortality Rate")
+```
+
+Read this tree from the top down, like a flowchart. Each box asks a yes/no question about a predictor. If the answer is "yes," you follow the left branch; if "no," the right branch. You keep following branches until you hit a bottom box (a "leaf"), which gives the predicted mortality rate for counties matching that combination of answers, along with the percentage of counties that land there.
+
+The tree essentially reinvents, from scratch, the "poverty matters more in rural counties" pattern we built into the simulation — without us ever telling it to look for that interaction.
+
+### 2. How Splits Are Chosen, and Why Tree Depth Needs a Leash
+
+#### Choosing a Split
+
+At each box in the tree, the algorithm considers every possible question it could ask (every predictor, at every possible cutoff value) and picks the one that makes the two resulting groups as different from each other as possible. For a continuous outcome like mortality rate, "as different as possible" usually means: pick the split that most reduces the variance of mortality within each resulting group.
+
+Think of it like sorting a messy pile of mail into two bins so that each bin is as internally similar as possible. A good first sort (say, by zip code) leaves you with two much more homogeneous piles than a bad one (say, by envelope color).
+
+#### Why Depth Needs to Be Limited — the Same Overfitting Problem, New Costume
+
+Here's where Part 1's bias-variance lesson comes back, wearing a different outfit. A tree with unlimited depth can keep splitting the data over and over until every single county sits alone in its own leaf, perfectly "predicting" every observation in the training data. This is the tree-based version of the high-degree polynomial from Part 1 — a model so flexible it memorizes the noise instead of learning the signal.
+
+**Tree depth is the regularization parameter for trees**, playing the same role that $\lambda$ played for lasso and ridge in Part 1.
+
+```{r tree-depth-comparison, fig.width=9, fig.height=5}
+set.seed(2024)
+n_sim <- 150
+x_sim <- runif(n_sim, 0, 100)
+y_sim <- 50 + 30 * sin(x_sim / 15) + rnorm(n_sim, 0, 8)
+sim_tree_df <- data.frame(x = x_sim, y = y_sim)
+
+x_grid_tree <- data.frame(x = seq(0, 100, length.out = 300))
+
+shallow_tree <- rpart(y ~ x, data = sim_tree_df, control = rpart.control(maxdepth = 2, cp = 0))
+deep_tree <- rpart(y ~ x, data = sim_tree_df, control = rpart.control(maxdepth = 12, cp = 0))
+
+x_grid_tree$shallow_pred <- predict(shallow_tree, newdata = x_grid_tree)
+x_grid_tree$deep_pred <- predict(deep_tree, newdata = x_grid_tree)
+
+p_shallow <- ggplot() +
+  geom_point(data = sim_tree_df, aes(x, y), alpha = 0.5, color = "gray40") +
+  geom_step(data = x_grid_tree, aes(x, shallow_pred), color = "steelblue", linewidth = 1.2) +
+  labs(title = "Shallow Tree (depth = 2)", subtitle = "Too simple — blocky, misses the wave pattern",
+       x = "Predictor", y = "Outcome") +
+  theme_minimal(base_size = 12) +
+  theme(plot.margin = ggplot2::margin(8, 15, 8, 8))
+
+p_deep <- ggplot() +
+  geom_point(data = sim_tree_df, aes(x, y), alpha = 0.5, color = "gray40") +
+  geom_step(data = x_grid_tree, aes(x, deep_pred), color = "firebrick", linewidth = 1.2) +
+  labs(title = "Deep Tree (depth = 12)", subtitle = "Too flexible — chases every wiggle, including noise",
+       x = "Predictor", y = "Outcome") +
+  theme_minimal(base_size = 12) +
+  theme(plot.margin = ggplot2::margin(8, 15, 8, 8))
+
+p_shallow / p_deep
+```
+
+The shallow tree draws only a few big steps — it misses the wave-like pattern entirely (underfitting, high bias). The deep tree draws dozens of tiny steps that hug almost every individual point, including the random noise around them (overfitting, high variance). Just like choosing $\lambda$ in Part 1, the right tree depth sits somewhere in between, and — just like $\lambda$ — the right value is chosen using cross-validation, not guesswork.
+
+```{r cp-cross-validation, fig.height=5.5}
+full_tree <- rpart(mortality_rate ~ poverty_rate + uninsured_rate + physician_density + rural + obesity_rate,
+                    data = county_df, method = "anova",
+                    control = rpart.control(cp = 0.001, minsplit = 10))
+
+plotcp(full_tree)
+```
+
+This plot shows cross-validated error (y-axis) against tree complexity (x-axis, running from many splits on the left to few splits on the right). The dashed horizontal line marks the simplest tree whose error is within one standard error of the best-performing tree — a common rule of thumb for picking a tree that's accurate *and* not needlessly complex.
+
+### 3. From One Tree to a Forest: Random Forests
+
+#### Why Ask Just One Tree?
+
+A single tree has an appealing property — you can literally draw it and hand it to a colleague. But it has a real weakness: it can be unstable. Change the sample of counties slightly (say, drop 20 counties and add 20 different ones), and the very first split — the one that determines the entire shape of everything below it — might change completely, cascading into a very differently-shaped tree.
+
+The fix is refreshingly simple: **grow many trees instead of one, each on a slightly different version of the data, and average their predictions.** This is called a **random forest**, and it works for the same statistical reason that averaging many noisy measurements gives you a more reliable number than trusting just one.
+
+A random forest adds two sources of randomness on top of an ordinary tree:
+
+1. **Bootstrap sampling**: each tree is grown on a random sample of counties drawn *with replacement* from the full dataset (so some counties appear multiple times, others not at all).
+2. **Random predictor subsets**: at each split, the tree is only allowed to consider a random subset of the available predictors, not all of them.
+
+Both kinds of randomness push the individual trees to disagree with each other in different ways, which is exactly what makes their *average* more reliable than any single tree.
+
+```{r random-forest-fit}
+set.seed(456)
+rf_model <- randomForest(mortality_rate ~ poverty_rate + uninsured_rate + physician_density + rural + obesity_rate,
+                          data = county_df, ntree = 500, importance = TRUE)
+
+rf_model
+```
+
+The output reports the out-of-bag (OOB) error — a built-in, free form of cross-validation. Because each tree only sees a bootstrap sample of the counties, the counties left *out* of that sample can be used to test that particular tree, without needing a separate holdout set.
+
+```{r forest-vs-single-tree-viz, fig.height=5.5}
+set.seed(789)
+rf_sim <- randomForest(y ~ x, data = sim_tree_df, ntree = 500)
+x_grid_tree$forest_pred <- predict(rf_sim, newdata = x_grid_tree)
+
+ggplot() +
+  geom_point(data = sim_tree_df, aes(x, y), alpha = 0.4, color = "gray50") +
+  geom_step(data = x_grid_tree, aes(x = x, y = deep_pred, color = "Single deep tree"), linewidth = 1) +
+  geom_line(data = x_grid_tree, aes(x = x, y = forest_pred, color = "Random forest (500 trees)"), linewidth = 1.3) +
+  scale_color_manual(values = c("Single deep tree" = "firebrick", "Random forest (500 trees)" = "darkgreen")) +
+  labs(title = "A Forest Smooths Out a Single Tree's Overreactions",
+       subtitle = "Averaging many noisy trees cancels out their individual mistakes",
+       x = "Predictor", y = "Outcome", color = "") +
+  theme_minimal(base_size = 12) +
+  theme(legend.position = "right",
+        plot.title = element_text(face = "bold", size = 13),
+        plot.margin = ggplot2::margin(10, 15, 10, 10))
+```
+
+The jagged red line (our overfit single tree from before) chases every bump in the data. The smooth green line (the forest's average prediction across 500 trees) captures the real wave pattern without the noisy overreactions. This is the practical payoff of "wisdom of crowds" applied to trees: no single tree needs to be very good, as long as their errors are different from each other, because averaging cancels out the noise while preserving the shared signal.
+
+**The tradeoff**: we've traded away the one thing a single tree had going for it — you can no longer draw a random forest on a whiteboard. A forest of 500 trees is a genuine black box. This sets up the interpretation tools in Section 5.
+
+### 4. Boosting: Learning From Your Mistakes, One Tree at a Time
+
+#### A Different Strategy for Combining Trees
+
+Random forests build many trees *independently* and average them — like asking 500 people the same question separately and taking the majority vote. **Boosting** takes a very different approach: it builds trees *sequentially*, where each new tree is trained specifically to fix the mistakes of the trees that came before it.
+
+Here's the intuition. Imagine a public health researcher building a mortality risk model in stages:
+
+1. Fit a small, simple first tree. It gets the overall pattern roughly right, but makes systematic errors for certain counties (say, it underestimates mortality for rural counties with high uninsured rates).
+2. Fit a *second* small tree, not on the original mortality rate, but specifically on the *leftover errors* (residuals) from the first tree — teaching it to correct exactly the mistakes the first tree made.
+3. Add the second tree's predictions to the first tree's predictions.
+4. Repeat: fit a third tree on the residuals that remain after trees 1 and 2, and so on, for hundreds of rounds.
+
+Each individual tree in a boosted model is deliberately kept small and weak (often just a handful of splits) — the power comes from stacking hundreds of these small correction steps on top of each other, not from any single tree being sophisticated.
+
+```{r boosting-fit}
+set.seed(999)
+boost_model <- gbm(mortality_rate ~ poverty_rate + uninsured_rate + physician_density + rural + obesity_rate,
+                    data = county_df, distribution = "gaussian",
+                    n.trees = 500, interaction.depth = 2, shrinkage = 0.01, 
+                    cv.folds = 5, verbose = FALSE)
+
+best_iter <- gbm.perf(boost_model, method = "cv", plot.it = FALSE)
+cat("Optimal number of boosting rounds (chosen by cross-validation):", best_iter)
+```
+
+```{r boosting-error-curve, fig.height=5.5}
+error_df <- data.frame(
+  iteration = 1:length(boost_model$train.error),
+  train_error = boost_model$train.error,
+  cv_error = boost_model$cv.error
+)
+
+ggplot(error_df, aes(x = iteration)) +
+  geom_line(aes(y = train_error, color = "Training error"), linewidth = 1) +
+  geom_line(aes(y = cv_error, color = "Cross-validation error"), linewidth = 1) +
+  geom_vline(xintercept = best_iter, linetype = "dashed", color = "gray40") +
+  annotate("text", x = best_iter, y = max(error_df$cv_error), 
+           label = paste0("  Best stopping point\n  (", best_iter, " trees)"), 
+           hjust = 0, size = 3.3) +
+  labs(title = "Boosting: More Trees Isn't Always Better",
+       subtitle = "Training error keeps falling; CV error eventually turns back up",
+       x = "Number of Boosting Rounds (trees added)",
+       y = "Error",
+       color = "") +
+  theme_minimal(base_size = 12) +
+  theme(legend.position = "right",
+        plot.title = element_text(face = "bold", size = 13),
+        plot.margin = ggplot2::margin(10, 20, 10, 10))
+```
+
+This should look familiar — it's the exact same training-error-versus-test-error picture from Part 1, just with "number of boosting rounds" standing in for "model complexity." Add too few trees, and the model hasn't learned enough (underfitting). Add too many, and it starts correcting for noise that isn't really there (overfitting). The dashed line marks the number of rounds cross-validation says is optimal — this is the boosting equivalent of choosing $\lambda$ in lasso, or tree depth in a single decision tree. It's the same fundamental lesson from Part 1, showing up for the third time in a new setting.
+
+**Random forest vs. boosting, in one sentence each**: a random forest is many independent trees voting together; boosting is a relay race of trees, where each runner's whole job is to fix the last runner's mistakes.
+
+### 5. Opening the Black Box: Variable Importance and Partial Dependence
+
+Random forests and boosted models predict very well, but neither one hands you a clean coefficient like $\hat{\beta} = -1.5$ that you can put in a sentence. If a reviewer asks "so what's the effect of physician density?", you need different tools to answer that question. Two of the most useful are variable importance and partial dependence plots.
+
+#### Variable Importance: Which Predictors Are Doing the Work?
+
+**The idea, in plain terms**: for each predictor, ask "how much worse do my predictions get if I take this variable away (or scramble it)?" A variable that matters a lot will hurt predictions badly when it's removed; a variable that doesn't matter won't move the needle much.
+
+```{r variable-importance, fig.height=5.5}
+importance_df <- as.data.frame(importance(rf_model)) %>%
+  tibble::rownames_to_column("variable") %>%
+  arrange(desc(`%IncMSE`))
+
+ggplot(importance_df, aes(x = reorder(variable, `%IncMSE`), y = `%IncMSE`)) +
+  geom_col(fill = "steelblue") +
+  coord_flip() +
+  labs(title = "Which Predictors Matter Most for Mortality?",
+       subtitle = "Larger bars = prediction accuracy drops more without this variable",
+       x = "", y = "Importance (% increase in error if removed)") +
+  theme_minimal(base_size = 12) +
+  theme(plot.title = element_text(face = "bold", size = 13),
+        plot.margin = ggplot2::margin(10, 15, 10, 10))
+```
+
+This ranks our five predictors by how much they contribute to the model's predictive accuracy. Note the important limitation right away: this tells us *how much* a variable matters for prediction, but not *which direction* it matters in, or whether its effect is a straight line, a curve, or something that only kicks in past a certain threshold. For that, we need the next tool.
+
+#### Partial Dependence Plots: What Direction, and What Shape?
+
+**The idea, in plain terms**: pick one predictor you care about — say, poverty rate. For a range of poverty rate values, imagine sliding *every single county* in the dataset to that same poverty rate value (keeping all their other characteristics exactly as they really are), and ask the model to predict mortality for all of them. Average those predictions. Repeat for a range of poverty rate values, and you get a curve showing how the model's predicted mortality changes as poverty rate moves, averaged over every other combination of characteristics in the data.
+
+This is the tree-based analogue of a regression coefficient — except instead of assuming the relationship is a straight line, we let the data show us its actual shape.
+
+```{r pdp-plots, fig.height=8}
+pdp_poverty <- partial(rf_model, pred.var = "poverty_rate", grid.resolution = 30)
+pdp_physician <- partial(rf_model, pred.var = "physician_density", grid.resolution = 30)
+
+p_pdp1 <- ggplot(pdp_poverty, aes(x = poverty_rate, y = yhat)) +
+  geom_line(color = "firebrick", linewidth = 1.3) +
+  labs(title = "Partial Dependence: Poverty Rate",
+       subtitle = "Predicted mortality as poverty rate changes,\naveraging over all other county characteristics",
+       x = "Poverty Rate (%)", y = "Predicted Mortality Rate") +
+  theme_minimal(base_size = 12) +
+  theme(plot.margin = ggplot2::margin(8, 15, 8, 8))
+
+p_pdp2 <- ggplot(pdp_physician, aes(x = physician_density, y = yhat)) +
+  geom_line(color = "steelblue", linewidth = 1.3) +
+  labs(title = "Partial Dependence: Physician Density",
+       subtitle = "Predicted mortality as physician density changes,\naveraging over all other county characteristics",
+       x = "Physicians per 100,000", y = "Predicted Mortality Rate") +
+  theme_minimal(base_size = 12) +
+  theme(plot.margin = ggplot2::margin(8, 15, 8, 8))
+
+p_pdp1 / p_pdp2
+```
+
+Unlike a regression coefficient, which forces the relationship to be a straight line whether or not that's realistic, the partial dependence curve is free to bend. Here, both relationships look fairly steady in direction (mortality rises with poverty, falls with physician access), but in real applications these curves often reveal thresholds — for instance, physician density might barely matter above some level, but sharply matter below it, once a county is genuinely underserved. That kind of pattern would be completely invisible in an OLS coefficient, but jumps out immediately in a PDP.
+
+### 6. Sociological Applications: Risk Prediction and Nonlinear Pattern Discovery
+
+Tree-based methods earn their place in a social scientist's toolkit through two kinds of tasks that come up constantly in applied research.
+
+#### Application 1: Risk Prediction
+
+Many sociological and public health questions are fundamentally about identifying who is at elevated risk, not about estimating a single average effect. A county health department deciding where to target a limited number of mobile health clinics doesn't need a sentence like "each 1% increase in poverty raises mortality by X" — it needs a ranked list of the counties most likely to need help. Random forests and boosted models are built exactly for this kind of task: they optimize directly for predictive accuracy, which is what risk targeting actually requires.
+
+```{r risk-ranking-demo}
+county_df$predicted_risk <- predict(rf_model, newdata = county_df)
+
+top_risk_counties <- county_df %>%
+  arrange(desc(predicted_risk)) %>%
+  head(5) %>%
+  select(poverty_rate, uninsured_rate, physician_density, rural, obesity_rate, predicted_risk)
+
+kable(top_risk_counties, digits = 1, 
+      caption = "Five Highest-Predicted-Risk Counties (Simulated Data)") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"))
+```
+
+This is precisely the kind of $\hat{Y}$-focused, prediction-culture task from Part 1 — we're not claiming to have identified *the* causal driver of mortality, only which counties look most vulnerable based on their overall profile.
+
+#### Application 2: Discovering Nonlinear Patterns and Interactions
+
+The second application is more exploratory: using tree-based methods as a diagnostic tool *before* committing to a final regression specification. Remember the rural × poverty interaction built into our simulated data at the very start of this post — a tree found it immediately, without us specifying it. In real research, you rarely know in advance which interactions or thresholds matter. Running a random forest and inspecting its variable importance and partial dependence plots is a fast, honest way to generate hypotheses about nonlinearities and interactions, which you can then build explicitly into a final, interpretable regression model (of the kind covered in the earlier panel data post) for formal hypothesis testing.
+
+This connects directly back to the "two cultures" idea from Part 1: tree-based methods here are playing a *supporting* role in an inference-focused workflow — used to explore what shape the relationships might take, with the final causal claims still resting on a transparent, interpretable model.
+
+### Conclusion
+
+Tree-based methods complete the supervised learning toolkit we started building in Part 1:
+
+1. **Decision trees** replace a single equation with a sequence of yes/no splits, discovered from the data — including interactions we never had to specify by hand.
+2. **Tree depth** is the tree-based version of $\lambda$ from Part 1: too shallow underfits, too deep overfits, and the right depth is chosen by cross-validation.
+3. **Random forests** trade away the single tree's transparency for stability, by averaging hundreds of noisy trees grown on random subsets of the data.
+4. **Boosting** builds trees sequentially, each one correcting the last one's mistakes, and needs its own form of the same complexity control (number of rounds, chosen by cross-validation).
+5. **Variable importance and partial dependence plots** let us partially re-open the black box these methods create — telling us which predictors matter, and what shape their relationship with the outcome takes.
+6. In applied sociology and public health, these methods shine at **risk prediction** (a pure $\hat{Y}$ task) and as an **exploratory diagnostic** for nonlinearities and interactions worth building into a final, interpretable causal model.
+
