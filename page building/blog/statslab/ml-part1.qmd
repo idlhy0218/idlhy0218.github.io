@@ -1,0 +1,594 @@
+---
+title: "Machine Learning Foundations, Part 1: Supervised ML and Regularization"
+author: "Heeyoung Lee"
+date: "August 12, 2026"
+format: 
+  html:
+    theme: cosmo
+    css: custom.css
+    page-layout: full
+    code-fold: true
+    code-tools: true
+    toc: true
+    toc-depth: 5
+    toc-location: left
+    self-contained: true
+    fig-width: 9
+    fig-height: 6
+    fig-dpi: 300
+    smooth-scroll: true
+    highlight-style: github
+---
+
+## Machine Learning Foundations, Part 1
+
+Every quantitative researcher eventually asks the same question: "Should I trust the coefficient, or should I trust the prediction?" Classical statistics and machine learning give different answers, and understanding *why* they differ is the single most useful thing you can learn before touching a machine learning method. This post covers four foundational ideas — supervised vs. unsupervised learning, two cultures of statistical analysis, the bias-variance tradeoff, and the logic of regularization — using the same county-level health framing from the panel data post, so the intuition carries over.
+
+Let's begin by loading the packages we'll need:
+
+```{r library-imports, message=FALSE, warning=FALSE}
+library(dplyr)
+library(ggplot2)
+library(kableExtra)
+library(patchwork)
+library(glmnet)     # For lasso and ridge regression
+library(tidyr)
+```
+
+### 1. Two Basic Flavors: Supervised vs. Unsupervised Learning
+
+Before we get into cultures and penalties, it helps to sort machine learning methods into two big buckets. Almost everything you'll hear about — lasso, ridge, decision trees, random forests, clustering, topic models — falls into one of these two categories, and knowing which bucket you're in tells you what kind of question you can even ask.
+
+**The one-sentence version: does your data have an "answer key" or not?**
+
+- **Supervised learning** — you have a known outcome you're trying to predict. Every county in your data has both the predictors *and* the actual mortality rate attached to it. The algorithm learns by comparing its guesses to the real answer, the way a student learns from a teacher who grades their homework.
+- **Unsupervised learning** — there is no known outcome. You just have a pile of county characteristics, and you're asking the algorithm to find structure or patterns in it on its own — no teacher, no answer key, no grading.
+
+#### A Health Example of Each
+
+Let's stick with our running county mortality example and see how the same dataset supports both kinds of tasks.
+
+**Supervised task**: "Using each county's poverty rate, uninsured rate, obesity rate, and physician density, predict its mortality rate." Here, mortality rate is the known outcome (the "label") sitting right there in the data for every county we've already observed. The whole point of the exercise is to get better and better at guessing it. This is exactly the kind of task that lasso, ridge, decision trees, and random forests are built for — everything covered in the rest of this post, and in most of what people mean by "machine learning" in applied research.
+
+**Unsupervised task**: "Group the 3,000 U.S. counties into a handful of health profiles, based on their poverty rate, obesity rate, opioid prescribing rate, and rural/urban status — without telling the algorithm what the groups should look like." There's no "correct" grouping to check against. The algorithm (e.g., cluster analysis) just looks for counties that resemble each other and sorts them into groups. You might end up with something like "high-poverty rural counties with elevated opioid prescribing," "urban counties with high obesity but strong healthcare access," and so on — categories nobody specified in advance, but that emerged from the data itself.
+
+```{r supervised-vs-unsupervised, fig.width=11, fig.height=5}
+set.seed(88)
+n_demo <- 80
+
+# Simulate two underlying "true" county health profiles for illustration
+profile <- sample(c("A", "B"), n_demo, replace = TRUE)
+poverty_demo <- ifelse(profile == "A", rnorm(n_demo, 22, 4), rnorm(n_demo, 10, 4))
+obesity_demo <- ifelse(profile == "A", rnorm(n_demo, 34, 4), rnorm(n_demo, 26, 4))
+mortality_demo <- 400 + 5 * poverty_demo + 3 * obesity_demo + rnorm(n_demo, 0, 15)
+
+demo_df <- data.frame(poverty = poverty_demo, obesity = obesity_demo, 
+                       mortality = mortality_demo, profile = profile)
+
+# Supervised view: predictors colored by the known outcome (mortality)
+p_supervised <- ggplot(demo_df, aes(x = poverty, y = obesity, color = mortality)) +
+  geom_point(size = 3, alpha = 0.8) +
+  scale_color_gradient(low = "gold", high = "firebrick", name = "Mortality\nRate") +
+  labs(title = "Supervised Learning",
+       subtitle = "Mortality rate is known\nfor every county",
+       x = "Poverty Rate (%)", y = "Obesity Rate (%)") +
+  theme_minimal(base_size = 12) +
+  theme(plot.title = element_text(face = "bold", size = 13),
+        plot.margin = margin(10, 15, 10, 10))
+
+# Unsupervised view: same predictors, no outcome shown, just raw points
+p_unsupervised <- ggplot(demo_df, aes(x = poverty, y = obesity)) +
+  geom_point(size = 3, alpha = 0.8, color = "gray40") +
+  labs(title = "Unsupervised Learning",
+       subtitle = "No known outcome —\nonly patterns among counties",
+       x = "Poverty Rate (%)", y = "Obesity Rate (%)") +
+  theme_minimal(base_size = 12) +
+  theme(plot.title = element_text(face = "bold", size = 13),
+        plot.margin = margin(10, 15, 10, 10))
+
+p_supervised + p_unsupervised
+```
+
+Look at the two panels above. They show the *exact same* 80 counties, plotted on the same two axes (poverty rate and obesity rate). The only difference is what information we're allowed to use:
+
+- **Left (supervised)**: each county is colored by its actual mortality rate (gold = low, red = high). The algorithm's job is to learn the relationship between the x/y position and that color, so it can predict the color (mortality rate) for a brand-new county.
+- **Right (unsupervised)**: the color is hidden — we've stripped away the outcome entirely. All the algorithm can do is notice that the points seem to fall into two loose clusters based on their position alone. It has no way of knowing whether those clusters mean anything about mortality; it's just describing structure in the predictors themselves.
+
+#### Why This Distinction Matters Before You Choose a Method
+
+Every method we'll walk through in the rest of this post — and the next one — sits cleanly in one of these two buckets:
+
+| | Supervised | Unsupervised |
+|---|---|---|
+| **Has a "right answer" during training?** | Yes | No |
+| **Typical question** | "Predict Y from X" | "Find hidden structure in X" |
+| **Examples** | Lasso, ridge, elastic net, decision trees, random forests | Cluster analysis, principal component analysis, topic modeling |
+| **How you check if it worked** | Compare predictions to the true, known outcome | Judge whether the discovered groups make substantive or statistical sense (no ground truth to check against) |
+
+The rest of this post — two cultures, bias-variance, and regularization — all lives inside the **supervised** bucket, because lasso, ridge, and elastic net are all methods for predicting a known outcome (mortality rate) from a set of predictors. Unsupervised methods raise a different set of questions entirely — mainly, "how do we know the patterns we found are real, and not just noise?" — which we'll return to in a later post.
+
+### 2. Two Cultures of Statistical Analysis
+
+#### The Core Distinction
+
+In 2001, the statistician Leo Breiman wrote a famous paper describing two very different ways that researchers approach data. He called them the "two cultures," and the distinction still organizes how we think about classical statistics versus machine learning today.
+
+**Culture 1 — Generative modeling (classical statistics).** You assume the data were generated by some underlying stochastic process, propose a model for that process (usually linear), and estimate its parameters. The goal is **inference**: understanding *how* an output relates to inputs.
+
+**Culture 2 — Predictive modeling (machine learning).** You treat the true data-generating process as unknown and unknowable. Instead of trying to describe it, you search for a function that predicts the output as accurately as possible on *new* data. The goal is **prediction**, not explanation.
+
+This is not just a philosophical distinction — it changes what a "good model" even means.
+
+| | Classical Statistics (Culture 1) | Machine Learning (Culture 2) |
+|---|---|---|
+| **Goal** | Estimate $\hat{\beta}$ — understand relationships | Estimate $\hat{Y}$ — predict new outcomes |
+| **Question asked** | "How much does income affect mortality?" | "Given this county's profile, what's its mortality rate?" |
+| **Success measured by** | Coefficient significance, theoretical fit | Accuracy on data the model has never seen |
+| **Model complexity** | Kept small and interpretable | Can be very large and complex |
+| **Risk if misused** | Missing real complexity in the world | Producing a black box that predicts well but explains nothing |
+
+#### A Concrete Example
+
+Suppose we're back in our county mortality dataset. If we're doing **inference**, our question is: "Holding other things constant, does a $1,000 increase in county median income reduce mortality, and by how much?" We want a trustworthy $\hat{\beta}$.
+
+If we're doing **prediction**, our question is completely different: "A new county just reported its income, uninsured rate, obesity rate, and physician density. What mortality rate should we expect?" We don't care whether income "causes" anything — we just want $\hat{Y}$ to be close to the county's actual mortality rate.
+
+```{r two-cultures-sim, fig.width=9}
+set.seed(42)
+n <- 300
+
+# Simulate a nonlinear true relationship between income and mortality
+income <- runif(n, 30, 90)
+true_mortality <- 900 - 6 * income + 0.04 * income^2 + rnorm(n, 0, 25)
+
+sim_df <- data.frame(income = income, mortality = true_mortality)
+
+# Culture 1: a simple linear model (inference-focused)
+linear_fit <- lm(mortality ~ income, data = sim_df)
+
+# Culture 2: a flexible model (prediction-focused) - local smoothing
+sim_df$loess_pred <- predict(loess(mortality ~ income, data = sim_df, span = 0.5))
+
+ggplot(sim_df, aes(x = income, y = mortality)) +
+  geom_point(alpha = 0.4, color = "gray40") +
+  geom_smooth(method = "lm", se = FALSE, aes(color = "Linear model\n(inference-style)"), linewidth = 1.2) +
+  geom_line(aes(y = loess_pred, color = "Flexible curve\n(prediction-style)"), linewidth = 1.2) +
+  labs(title = "Same Data, Two Different Goals",
+       subtitle = "A straight line is easy to interpret;\na flexible curve fits the data more closely",
+       x = "Median Household Income ($1000s)",
+       y = "Mortality Rate (per 100,000)",
+       color = "") +
+  theme_minimal(base_size = 12) +
+  theme(legend.position = "right",
+        plot.title = element_text(face = "bold", size = 14),
+        plot.margin = margin(10, 15, 10, 10))
+```
+
+Both lines are "correct" in their own way. The straight line gives us one clean number — a single $\hat{\beta}$ we can put in a sentence: "each additional $1,000 in income is associated with a X-unit change in mortality." The curved line gives up that clean sentence, but it tracks the *actual* pattern in the data more closely, which matters if our only goal is predicting mortality for a new county.
+
+**The key takeaway:** neither approach is "better" in general. The right choice depends on whether your research question is "why" (inference) or "what will happen" (prediction).
+
+### 3. The Bias-Variance Tradeoff and Generalization Error
+
+#### Why a Model That Fits Well Can Still Predict Badly
+
+Here's a puzzle that trips up a lot of researchers the first time they see it: a model can fit your existing data almost perfectly and still make *terrible* predictions on new data. Understanding why requires breaking prediction error into two separate pieces: **bias** and **variance**.
+
+**Bias** is the error from a model that's too simple to capture the real pattern. Think of a clock that always runs an hour late — every reading is wrong in the same, predictable direction. A straight line fit to a curved relationship has bias: it will systematically miss the curve.
+
+**Variance** is the error from a model that's *too* sensitive to the specific data it happened to see. Think of a clock that randomly runs fast or slow — you can't predict which way it will be wrong next time. A model with high variance would look completely different if you gave it a slightly different sample of the same population.
+
+$$\text{Generalization Error} = \text{Bias}^2 + \text{Variance} + \text{Irreducible Error}$$
+
+The irreducible error is just noise in the world that no model can ever remove — measurement error, unpredictable individual circumstances, and so on.
+
+#### Underfitting and Overfitting
+
+- **Underfitting** happens when the model is too simple: it misses real signal in the data. High bias, low variance.
+- **Overfitting** happens when the model is too complex: it captures not just the signal, but also the random noise specific to *this* sample. Low bias, high variance.
+
+#### The Dartboard Picture (the Classic Way to See Bias vs. Variance)
+
+Before we bring back the county data, here's a picture that makes bias and variance click for a lot of people. Imagine four different dart players, each throwing 20 darts at the same target. The bullseye represents the *true* mortality rate we're trying to hit; each dart is one prediction from repeating the same model on slightly different samples of counties.
+
+```{r dartboard, fig.width=9, fig.height=9}
+make_target <- function(n = 20, center_offset = c(0, 0), spread = 0.15, title = "", subtitle = "") {
+  set.seed(1)
+  darts <- data.frame(
+    x = rnorm(n, mean = center_offset[1], sd = spread),
+    y = rnorm(n, mean = center_offset[2], sd = spread)
+  )
+  
+  circle_data <- function(r) {
+    theta <- seq(0, 2 * pi, length.out = 100)
+    data.frame(x = r * cos(theta), y = r * sin(theta))
+  }
+  
+  ggplot() +
+    geom_polygon(data = circle_data(1), aes(x, y), fill = "#f4d1d1", color = "gray60") +
+    geom_polygon(data = circle_data(0.66), aes(x, y), fill = "#f9e8b0", color = "gray60") +
+    geom_polygon(data = circle_data(0.33), aes(x, y), fill = "#c9e8c9", color = "gray60") +
+    geom_point(data = darts, aes(x, y), size = 3, color = "black", alpha = 0.75) +
+    coord_fixed(xlim = c(-1.3, 1.3), ylim = c(-1.3, 1.3)) +
+    labs(title = title, subtitle = subtitle) +
+    theme_void(base_size = 12) +
+    theme(plot.title = element_text(face = "bold", size = 13, hjust = 0.5),
+          plot.subtitle = element_text(size = 10, hjust = 0.5),
+          plot.margin = margin(8, 8, 8, 8))
+}
+
+p1 <- make_target(center_offset = c(0, 0), spread = 0.10, 
+                   title = "Low Bias, Low Variance", subtitle = "Ideal: accurate and consistent")
+p2 <- make_target(center_offset = c(0, 0), spread = 0.35, 
+                   title = "Low Bias, High Variance", subtitle = "Overfitting: centered, but scattered")
+p3 <- make_target(center_offset = c(0.55, 0.45), spread = 0.10, 
+                   title = "High Bias, Low Variance", subtitle = "Underfitting: consistent, but off-target")
+p4 <- make_target(center_offset = c(0.55, 0.45), spread = 0.35, 
+                   title = "High Bias, High Variance", subtitle = "Worst case: inaccurate and inconsistent")
+
+(p1 + p2) / (p3 + p4)
+```
+
+Read this like a real dartboard: the bullseye (green center) is the truth. Each of the 20 dots is what the model would have predicted if it had been trained on a slightly different sample of counties.
+
+- **Top-left**: darts cluster tightly around the bullseye — this is what we want. Low bias (correct on average), low variance (consistent across samples).
+- **Top-right**: darts are centered on the bullseye *on average*, but wildly scattered — this is **overfitting**. Any one run might land far from the truth, even though the model isn't systematically wrong in one direction.
+- **Bottom-left**: darts cluster tightly, but off to one side — this is **underfitting**. The model is consistent, but consistently *wrong* the same way every time.
+- **Bottom-right**: darts are both off-target and scattered — the worst of both problems at once.
+
+Now let's make this concrete with our county data. Suppose the true relationship between income and mortality has a slight curve to it (as in the simulation above), but we don't know that — we only have a sample of counties to learn from.
+
+```{r bias-variance-sim, fig.height=8}
+set.seed(7)
+
+# True underlying function (unknown to the researcher in practice)
+true_function <- function(x) 900 - 6 * x + 0.04 * x^2
+
+# Generate one sample
+n_sample <- 40
+x_sample <- runif(n_sample, 30, 90)
+y_sample <- true_function(x_sample) + rnorm(n_sample, 0, 25)
+sample_df <- data.frame(income = x_sample, mortality = y_sample)
+
+x_grid <- seq(30, 90, length.out = 200)
+true_line <- data.frame(income = x_grid, mortality = true_function(x_grid))
+
+# Underfit: a flat model (intercept only)
+underfit_pred <- data.frame(income = x_grid, mortality = mean(y_sample))
+
+# Good fit: quadratic model (matches the true functional form)
+good_fit <- lm(mortality ~ poly(income, 2), data = sample_df)
+goodfit_pred <- data.frame(income = x_grid, 
+                            mortality = predict(good_fit, newdata = data.frame(income = x_grid)))
+
+# Overfit: a very high-degree polynomial that chases every point
+overfit_model <- lm(mortality ~ poly(income, 15), data = sample_df)
+overfit_pred <- data.frame(income = x_grid, 
+                            mortality = predict(overfit_model, newdata = data.frame(income = x_grid)))
+
+p_under <- ggplot() +
+  geom_point(data = sample_df, aes(income, mortality), alpha = 0.6, color = "gray30") +
+  geom_line(data = true_line, aes(income, mortality), color = "black", linetype = "dashed") +
+  geom_line(data = underfit_pred, aes(income, mortality), color = "steelblue", linewidth = 1.3) +
+  labs(title = "Underfitting", subtitle = "Model too simple — misses the curve (high bias)",
+       x = "Income ($1000s)", y = "Mortality Rate") +
+  theme_minimal(base_size = 12) +
+  theme(plot.margin = margin(8, 15, 8, 8))
+
+p_good <- ggplot() +
+  geom_point(data = sample_df, aes(income, mortality), alpha = 0.6, color = "gray30") +
+  geom_line(data = true_line, aes(income, mortality), color = "black", linetype = "dashed") +
+  geom_line(data = goodfit_pred, aes(income, mortality), color = "darkgreen", linewidth = 1.3) +
+  labs(title = "Good Fit", subtitle = "Captures the signal without chasing noise",
+       x = "Income ($1000s)", y = "Mortality Rate") +
+  theme_minimal(base_size = 12) +
+  theme(plot.margin = margin(8, 15, 8, 8))
+
+p_over <- ggplot() +
+  geom_point(data = sample_df, aes(income, mortality), alpha = 0.6, color = "gray30") +
+  geom_line(data = true_line, aes(income, mortality), color = "black", linetype = "dashed") +
+  geom_line(data = overfit_pred, aes(income, mortality), color = "firebrick", linewidth = 1.3) +
+  labs(title = "Overfitting", subtitle = "Model too flexible — chases noise (high variance)",
+       x = "Income ($1000s)", y = "Mortality Rate") +
+  theme_minimal(base_size = 12) +
+  theme(plot.margin = margin(8, 15, 8, 8))
+
+p_under / p_good / p_over
+```
+
+The dashed black line is the *true* relationship (which we'd never actually know in real research — it's shown here only because this is a simulation). Notice:
+
+- **Underfitting (top)**: the flat blue line ignores the curve entirely. It will be wrong in the same direction for every new county with low or high income.
+- **Good fit (middle)**: the green curve tracks the true pattern closely without overreacting to any single point.
+- **Overfitting (bottom)**: the red line wiggles wildly to pass as close as possible to every single training point — including the random noise. This model would look completely different if we resampled 40 new counties.
+
+#### Seeing It Numerically: In-Sample vs. Out-of-Sample Error
+
+The real danger of overfitting is invisible if you only look at how well a model fits the data it was trained on. You have to test it on *new* data to see the problem.
+
+```{r train-test-demo}
+set.seed(101)
+
+# Generate training data and a separate, fresh test set from the same true process
+train_x <- runif(60, 30, 90)
+train_y <- true_function(train_x) + rnorm(60, 0, 25)
+train_df <- data.frame(income = train_x, mortality = train_y)
+
+test_x <- runif(60, 30, 90)
+test_y <- true_function(test_x) + rnorm(60, 0, 25)
+test_df <- data.frame(income = test_x, mortality = test_y)
+
+# Fit models of increasing flexibility (polynomial degree = complexity)
+degrees <- 1:12
+results <- data.frame()
+
+for (d in degrees) {
+  model <- lm(mortality ~ poly(income, d), data = train_df)
+  train_pred <- predict(model)
+  test_pred <- predict(model, newdata = test_df)
+  
+  train_rmse <- sqrt(mean((train_df$mortality - train_pred)^2))
+  test_rmse <- sqrt(mean((test_df$mortality - test_pred)^2))
+  
+  results <- rbind(results, data.frame(degree = d, 
+                                        train_rmse = train_rmse, 
+                                        test_rmse = test_rmse))
+}
+
+results_long <- results %>%
+  pivot_longer(cols = c(train_rmse, test_rmse), names_to = "type", values_to = "rmse") %>%
+  mutate(type = ifelse(type == "train_rmse", "Training error (in-sample)", "Test error (out-of-sample)"))
+
+ggplot(results_long, aes(x = degree, y = rmse, color = type)) +
+  geom_line(linewidth = 1.2) +
+  geom_point(size = 2) +
+  labs(title = "Training Error Keeps Falling — Test Error Does Not",
+       subtitle = "Model complexity (polynomial degree) on the x-axis",
+       x = "Model Complexity (polynomial degree)",
+       y = "Root Mean Squared Error (RMSE)",
+       color = "") +
+  theme_minimal(base_size = 12) +
+  theme(legend.position = "right",
+        plot.title = element_text(face = "bold", size = 13),
+        plot.margin = margin(10, 15, 10, 10))
+```
+
+This is the single most important picture in this post. As we add complexity (higher polynomial degree), the **training error keeps shrinking** — a more flexible model can always fit the training data better. But the **test error** falls at first, then turns around and starts *rising* again. That turning point is where the model stops learning real signal and starts memorizing noise.
+
+**The goal of any good model — classical or machine learning — is to sit at that low point of the test error curve, not the training error curve.**
+
+### 4. The Principle of Regularization
+
+#### The Core Idea
+
+Now we get to the tool that machine learning uses to avoid landing on the wrong side of that curve: **regularization**. The idea is simple to state: instead of only minimizing error on the training data, add a penalty for model complexity.
+
+$$\underbrace{\sum_{i=1}^{n}[y_i - f(x_i)]^2}_{\text{fit to training data}} \;+\; \underbrace{\lambda R(f)}_{\text{penalty for complexity}}$$
+
+- The first term is the same thing OLS already minimizes: how far off are our predictions?
+- The second term, $\lambda R(f)$, punishes the model for being too flexible or having too-large coefficients.
+- $\lambda$ (lambda) controls *how much* we care about that penalty. In ordinary OLS, $\lambda = 0$ — no penalty at all. As $\lambda$ increases, we push the model toward simplicity.
+
+Choosing $\lambda$ is itself data-driven — it's typically selected via cross-validation, so the model doesn't just optimize the penalty by guesswork.
+
+#### Ridge, Lasso, and Elastic Net: Three Flavors of Penalty
+
+All three of these methods start from the exact same idea — penalize big coefficients — but they punish "bigness" in different ways, and that difference changes what the model does in practice.
+
+Think of it like packing a suitcase with a strict weight limit. You have 30 items (our county-level predictors: poverty rate, opioid prescribing rate, racial composition, physician density, and so on) and a budget for how much "weight" your model's coefficients are allowed to carry in total.
+
+- **Ridge regression** is like saying: "Every item can come, but the heavier ones get squeezed down more." Ridge shrinks *every* coefficient toward zero, proportionally more for large ones, but essentially never sets a coefficient to exactly zero. Every variable stays in the model, just with a smaller voice.
+
+- **Lasso** is like saying: "Some items just don't make the cut — leave them home entirely." Lasso can shrink some coefficients all the way to *exactly* zero, which means those variables are dropped from the model completely. This gives you automatic variable selection: lasso tells you which handful of predictors actually matter.
+
+- **Elastic net** is a compromise between the two: "Squeeze everything down, *and* leave some things home." It combines both penalties, weighted by a parameter $\alpha$ between 0 and 1: $\alpha = 1$ is pure lasso, $\alpha = 0$ is pure ridge, and anything in between is elastic net.
+
+$$R(f) = \underbrace{\alpha \sum_j \lvert\beta_j\rvert}_{\text{lasso part}} \;+\; \underbrace{(1-\alpha) \sum_j \beta_j^2}_{\text{ridge part}}$$
+
+**Why would you ever want ridge instead of lasso, if lasso does variable selection for you?** Two practical reasons come up constantly in county health research:
+
+1. **Correlated predictors.** County-level variables are often highly correlated with each other — for example, poverty rate, uninsured rate, and low education tend to move together. Lasso tends to arbitrarily pick just *one* of a group of correlated variables and zero out the rest, even if they're all genuinely related to the outcome. Ridge instead spreads the credit across all of them, which can be more stable and realistic.
+2. **You don't actually want to drop variables.** Sometimes you have good theoretical reasons to keep every predictor in the model (e.g., you're building a prediction tool that should always report physician density, even if its coefficient is small), and you just want to control overfitting without deleting anything. Ridge does exactly that.
+
+**Elastic net** is often the practical default when you have many correlated county-level variables and also want some of them to drop out: it handles correlated groups better than lasso alone, while still allowing some coefficients to hit exactly zero.
+
+#### A Worked Example: Predicting County Mortality From Many Health Indicators
+
+Let's build one running example and use it for the rest of this section. Imagine we're studying **county-level mortality rates**, and we have a long list of candidate predictors that public health researchers commonly consider: poverty rate, uninsured rate, physician density, hospital beds, obesity rate, smoking rate, opioid prescribing rate, and dozens more. In total, suppose we have 30 candidate variables, but in reality only a handful genuinely drive mortality — the rest are irrelevant, or just noisy proxies for the ones that matter.
+
+```{r regularization-sim}
+set.seed(2024)
+n_counties_sim <- 100
+n_predictors <- 30  # Many candidate variables
+
+# Simulate predictors (all standardized county-level variables)
+X <- matrix(rnorm(n_counties_sim * n_predictors), nrow = n_counties_sim)
+colnames(X) <- paste0("var", 1:n_predictors)
+
+# Only the first 4 variables actually matter for mortality
+true_betas <- c(8, -6, 5, -4, rep(0, n_predictors - 4))
+mortality_sim <- X %*% true_betas + rnorm(n_counties_sim, 0, 5)
+
+# Fit lasso across a range of lambda values
+lasso_fit <- glmnet(X, mortality_sim, alpha = 1)  # alpha = 1 is lasso
+
+# Extract coefficient paths
+coef_matrix <- as.matrix(coef(lasso_fit))[-1, ]  # remove intercept
+coef_df <- as.data.frame(t(coef_matrix)) %>%
+  mutate(lambda = lasso_fit$lambda) %>%
+  pivot_longer(-lambda, names_to = "variable", values_to = "coefficient") %>%
+  mutate(truly_matters = ifelse(variable %in% paste0("var", 1:4), "Actually matters", "Actually zero"))
+
+ggplot(coef_df, aes(x = log(lambda), y = coefficient, group = variable, color = truly_matters)) +
+  geom_line(alpha = 0.7) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "gray50") +
+  labs(title = "Lasso Path: Watching Coefficients Shrink to Zero",
+       subtitle = "As the penalty (lambda) increases,\nunimportant variables drop out first",
+       x = expression(log(lambda) ~ "(more penalty" %->% ")"),
+       y = "Coefficient Value",
+       color = "") +
+  scale_color_manual(values = c("Actually matters" = "firebrick", "Actually zero" = "gray70")) +
+  theme_minimal(base_size = 12) +
+  theme(legend.position = "right",
+        plot.title = element_text(face = "bold", size = 13),
+        plot.margin = margin(10, 15, 10, 10))
+```
+
+Reading this figure from left to right (as $\lambda$ grows): at first, all 30 variables have some nonzero coefficient — the model is doing what OLS would do, giving weight to noise along with signal. But as the penalty increases, the gray lines (the 26 variables that don't actually matter) collapse to zero one by one, while the four red lines (the truly important variables) survive much longer before they too eventually shrink.
+
+#### Ridge vs. Lasso, Side by Side
+
+Now let's watch ridge and lasso handle the *exact same* data differently. This makes the suitcase-packing intuition from earlier concrete.
+
+```{r ridge-vs-lasso, fig.width=11}
+# Fit ridge (alpha = 0) on the same simulated county data
+ridge_fit <- glmnet(X, mortality_sim, alpha = 0)
+
+ridge_coef_matrix <- as.matrix(coef(ridge_fit))[-1, ]
+ridge_coef_df <- as.data.frame(t(ridge_coef_matrix)) %>%
+  mutate(lambda = ridge_fit$lambda) %>%
+  pivot_longer(-lambda, names_to = "variable", values_to = "coefficient") %>%
+  mutate(truly_matters = ifelse(variable %in% paste0("var", 1:4), "Actually matters", "Actually zero"),
+         method = "Ridge: shrinks everything together")
+
+lasso_coef_df_labeled <- coef_df %>%
+  mutate(method = "Lasso: drops some to exactly zero")
+
+combined_df <- bind_rows(ridge_coef_df, lasso_coef_df_labeled)
+
+ggplot(combined_df, aes(x = log(lambda), y = coefficient, group = variable, color = truly_matters)) +
+  geom_line(alpha = 0.7) +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "gray50") +
+  facet_wrap(~method) +
+  labs(title = "Ridge vs. Lasso on the Same County Data",
+       x = expression(log(lambda) ~ "(more penalty" %->% ")"),
+       y = "Coefficient Value",
+       color = "") +
+  scale_color_manual(values = c("Actually matters" = "firebrick", "Actually zero" = "gray70")) +
+  theme_minimal(base_size = 12) +
+  theme(legend.position = "bottom",
+        plot.title = element_text(face = "bold", size = 13),
+        strip.text = element_text(face = "bold", size = 10.5),
+        plot.margin = margin(10, 15, 10, 10))
+```
+
+Notice the difference in the gray lines (the 26 variables that don't actually matter): in the **ridge panel**, they shrink smoothly toward zero but never quite touch it, even at a strong penalty. In the **lasso panel**, they crash into exactly zero and stay there. This is the core practical difference — ridge keeps every variable "a little bit in the model," while lasso makes a hard decision to kick unimportant variables out entirely.
+
+#### Choosing the Right Amount of Penalty: Cross-Validation
+
+How do we know how far along that path to go? We don't guess — we let cross-validation choose $\lambda$ by testing which value produces the best *out-of-sample* prediction.
+
+```{r cv-lambda, fig.height=6}
+set.seed(2024)
+cv_lasso <- cv.glmnet(X, mortality_sim, alpha = 1)
+
+par(mar = c(7, 4, 4, 2))
+plot(cv_lasso)
+mtext("Left dashed line: best prediction (lambda.min)", side = 1, line = 5, cex = 0.8)
+mtext("Right dashed line: simplest good model (lambda.1se)", side = 1, line = 6, cex = 0.8)
+```
+
+```{r cv-selected-vars}
+# Which variables survive at the cross-validation-selected lambda?
+selected_coefs <- coef(cv_lasso, s = "lambda.min")
+selected_df <- data.frame(
+  variable = rownames(selected_coefs)[-1],
+  coefficient = as.vector(selected_coefs)[-1]
+) %>%
+  filter(coefficient != 0) %>%
+  arrange(desc(abs(coefficient)))
+
+kable(selected_df, digits = 2, 
+      caption = "Variables Selected by Lasso at the Cross-Validation-Chosen Lambda") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"))
+```
+
+Out of 30 candidate variables, lasso correctly recovers a model built almost entirely around the four variables that actually drove mortality in our simulation — without us ever telling it which four to look for.
+
+#### When Predictors Are Correlated: Where Elastic Net Helps
+
+The example above was clean — the 30 predictors were unrelated to each other. Real county health data is rarely that tidy. Poverty, low education, and lack of insurance tend to rise and fall together across counties. Let's simulate that more realistic situation and see why lasso alone can struggle with it.
+
+```{r elastic-net-sim}
+set.seed(55)
+
+# Simulate two "true" predictors that are highly correlated with each other
+# (e.g., poverty rate and uninsured rate move together across counties)
+poverty_rate <- rnorm(n_counties_sim, 15, 5)
+uninsured_rate_corr <- poverty_rate * 0.8 + rnorm(n_counties_sim, 0, 1.5)  # correlated with poverty
+
+# Both actually contribute to mortality in the true model
+mortality_corr <- 500 + 3 * poverty_rate + 3 * uninsured_rate_corr + rnorm(n_counties_sim, 0, 10)
+
+X_corr <- cbind(poverty_rate, uninsured_rate_corr,
+                 matrix(rnorm(n_counties_sim * 8), nrow = n_counties_sim))  # 8 unrelated noise variables
+colnames(X_corr) <- c("poverty_rate", "uninsured_rate", paste0("noise", 1:8))
+
+# Fit lasso and elastic net (alpha = 0.5) at a comparable penalty
+cv_lasso_corr <- cv.glmnet(X_corr, mortality_corr, alpha = 1)
+cv_enet_corr <- cv.glmnet(X_corr, mortality_corr, alpha = 0.5)
+
+lasso_result <- coef(cv_lasso_corr, s = "lambda.min")[c("poverty_rate", "uninsured_rate"), ]
+enet_result <- coef(cv_enet_corr, s = "lambda.min")[c("poverty_rate", "uninsured_rate"), ]
+
+compare_df <- data.frame(
+  Variable = c("Poverty rate", "Uninsured rate"),
+  `Lasso coefficient` = round(lasso_result, 2),
+  `Elastic Net coefficient` = round(enet_result, 2)
+)
+
+kable(compare_df, caption = "How Lasso vs. Elastic Net Split Credit Between Two Correlated Predictors") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"))
+```
+
+The same result is often easier to absorb as a picture rather than a table. Here's a simple before-and-after bar chart: the true effect size we built into the simulation, next to what lasso and elastic net each recovered.
+
+```{r elastic-net-barchart, fig.width=9, fig.height=5}
+bar_df <- data.frame(
+  Variable = rep(c("Poverty Rate", "Uninsured Rate"), times = 3),
+  Method = rep(c("True effect", "Lasso", "Elastic Net"), each = 2),
+  Coefficient = c(3, 3, lasso_result[1], lasso_result[2], enet_result[1], enet_result[2])
+)
+bar_df$Method <- factor(bar_df$Method, levels = c("True effect", "Lasso", "Elastic Net"))
+
+ggplot(bar_df, aes(x = Variable, y = Coefficient, fill = Method)) +
+  geom_col(position = position_dodge(width = 0.7), width = 0.6) +
+  geom_hline(yintercept = 0, color = "gray40") +
+  scale_fill_manual(values = c("True effect" = "black", "Lasso" = "firebrick", "Elastic Net" = "steelblue")) +
+  labs(title = "Lasso Favors One Variable; Elastic Net Credits Both",
+       subtitle = "Both variables truly matter equally (true effect = 3 for each)",
+       x = "", y = "Estimated Coefficient") +
+  theme_minimal(base_size = 12) +
+  theme(legend.position = "right",
+        plot.title = element_text(face = "bold", size = 13),
+        plot.margin = margin(10, 15, 10, 10))
+```
+
+The black bars show the truth: both variables were built to matter equally. The red (lasso) bars are lopsided — one variable gets most of the credit, the other gets shrunk down unfairly, simply because the two predictors were correlated. The blue (elastic net) bars are much closer to equal height, matching the true, balanced picture.
+
+Both poverty rate and uninsured rate truly matter in this simulation — they were both built into the true model with equal-sized effects. But because they're highly correlated, lasso tends to arbitrarily favor one of them and push the other toward zero, as if only one mattered. Elastic net, by blending in the ridge penalty, tends to keep both variables with more balanced, sensible-looking coefficients — which better reflects the reality that poverty and lack of insurance are *both* part of the story, not competitors for a single "credit."
+
+#### Why This Matters for Applied Research
+
+If you're working with restricted-use data that includes dozens of county-level covariates — poverty rate, industry mix, opioid prescribing rates, racial composition, rurality, healthcare access measures, and so on — you're in exactly the situation these simulations represent. A simple rule of thumb for choosing among the three:
+
+| Situation | Reach for |
+|---|---|
+| Many predictors, expect only a few really matter, predictors are mostly independent of each other | **Lasso** |
+| Want to keep every predictor in the model, just controlled and stabilized | **Ridge** |
+| Many predictors, some are highly correlated with each other, and you still want some to drop out | **Elastic Net** |
+
+All three give you a principled, data-driven way to narrow down or stabilize a long list of controls, rather than picking control variables by hand — which opens the door to exactly the kind of researcher-degrees-of-freedom problem that undermines replicability.
+
+One caution carried over from the two-cultures discussion: **a regularized coefficient is not the same thing as an OLS coefficient.** Ridge, lasso, and elastic net coefficients are all *shrunk* — biased toward zero on purpose, in exchange for lower variance. They're excellent for variable selection, stabilization, and prediction. They are not, by themselves, trustworthy causal effect estimates. If your goal shifts back to inference — estimating an unbiased $\hat{\beta}$ for a specific variable of interest — the right move is to use lasso or elastic net to select your control variables, then re-estimate a classical model (like the fixed effects and random effects models from the previous post) using that shorter, defensible list.
+
+### Conclusion
+
+These four ideas fit together into a single logical chain:
+
+1. **Supervised vs. unsupervised learning** tells us whether we even have an "answer key" to learn from — and everything in this post assumes we do, because lasso, ridge, and elastic net are all supervised methods for predicting a known outcome.
+2. **Two cultures** tells us that the goal of a model — inference versus prediction — determines what "good" even means, before we run a single line of code.
+3. **Bias-variance tradeoff** tells us *why* a model that looks good on paper (low training error) can still fail in practice: it may have simply memorized noise.
+4. **Regularization** — ridge, lasso, and elastic net — gives us a concrete, data-driven tool for finding the sweet spot between underfitting and overfitting, and for narrowing down a long list of county-level predictors, rather than guessing which ones belong in the model.
+
+In the next post, we'll build on this foundation to look at tree-based methods — decision trees, random forests, and boosting — and see how these ideas about complexity and generalization show up in a completely different kind of model. In a later post, we'll cross over into the unsupervised bucket and look at clustering and topic modeling in detail.
