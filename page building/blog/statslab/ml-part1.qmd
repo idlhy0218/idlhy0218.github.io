@@ -618,7 +618,7 @@ ridge_selected_df <- data.frame(
   arrange(desc(abs(coefficient)))
 
 kable(head(ridge_selected_df, 30), digits = 3, 
-      caption = "Ridge Coefficients at Its Cross-Validation-Chosen Lambda (Top 8 by Size)") %>%
+      caption = "Ridge Coefficients at Its Cross-Validation-Chosen Lambda (All 30 Variables)") %>%
   kable_styling(bootstrap_options = c("striped", "hover", "condensed"))
 ```
 
@@ -689,11 +689,14 @@ cat("  Elastic Net:", sum(coef(cv_enet, s = "lambda.min")[-1] != 0))
 
 The key advantage of Elastic Net over Lasso becomes obvious when predictors are collinear (e.g., Poverty Rate and Uninsured Rate moving together across counties).
 
-To evaluate performance under high collinearity, we simulate two strongly correlated predictors ($r \approx 0.8$), both with an equal true effect size ($\beta = 3.0$), alongside 8 noise variables. 
+To evaluate performance under high collinearity, I simulate two strongly correlated predictors ($r \approx 0.8$), both with an equal true effect size ($\beta = 3.0$), alongside 8 noise variables.
 
-To measure how each estimator behaves, we combine two complementary evaluation tools:
-- **Cross-Validation (`cv.glmnet()`)**: Used *within each sample* to select the optimal tuning parameter $\lambda$ (`lambda.min`) for Ridge, Lasso, and Elastic Net.
-- **Monte Carlo Simulation ($B = 100$)**: Replicates the data generation and CV tuning process across 100 independent sample realizations. This allows us to quantify the true empirical **Bias**, **Variance**, and **MSE** of each estimator across samples.
+**Why we need more than one dataset here**: everywhere else in this post, we've fit each method on a single simulated dataset — exactly what you'd do in real research, since you only ever get one. But the specific thing we want to show in this section is a claim about **variance**, and variance is, by definition, a measure of how much an estimate would swing across different samples. A single dataset simply cannot show you that; it can only show you one outcome. So for this section only, I do something you would never do with real data: I regenerate the entire dataset from scratch 100 times, refit all four methods on each one, and look at how much each method's coefficients move around across those 100 versions. This is what statisticians call a **Monte Carlo simulation**, and it's a tool for demonstrating a method's general behavior in advance — not a step in an actual data-analysis workflow.
+
+To measure how each estimator behaves, I combine two complementary evaluation tools:
+
+- **Cross-Validation (`cv.glmnet()`)**: Used *within each sample* to select the optimal tuning parameter $\lambda$ (`lambda.min`) for Ridge, Lasso, and Elastic Net — this part matches what you'd actually do with a single real dataset.
+- **Monte Carlo Simulation ($B = 100$)**: Repeats the entire process above — generate data, then cross-validate — across 100 independent, freshly simulated datasets. Only by comparing results *across* these 100 repetitions can I compute an empirical **Bias**, **Variance**, and **MSE** for each method. In real research, with only one dataset in hand, you would never see these numbers directly — but knowing them in advance is exactly what should inform which method you reach for.
 
 ```{r elastic-net-sim, message=FALSE, warning=FALSE}
 set.seed(55)
@@ -766,7 +769,7 @@ v_enet  <- mean(apply(res_enet, 2, var))
 corr_summary_df <- data.frame(
   Method = c("True Effect", "OLS (Unpenalized)", "Ridge (L2)", "Lasso (L1)", "Elastic Net (L1+L2)"),
   `Poverty Rate` = c(3.00, round(ols_result[1], 2), round(ridge_result[1], 2), round(lasso_result[1], 2), round(enet_result[1], 2)),
-  `Uninsured Rate` = c(3.00, round(ols_result[2], 2), round(ridge_result[2], 2), round(lasso_result[2], 2), round(enet_result[2])),
+  `Uninsured Rate` = c(3.00, round(ols_result[2], 2), round(ridge_result[2], 2), round(lasso_result[2], 2), round(enet_result[2], 2)),
   `Abs Bias` = c(0.000, round(b_ols, 3), round(b_ridge, 3), round(b_lasso, 3), round(b_enet, 3)),
   `Variance` = c(0.000, round(v_ols, 3), round(v_ridge, 3), round(v_lasso, 3), round(v_enet, 3)),
   `MSE (Bias² + Var)` = c(0.000, round(b_ols^2 + v_ols, 3), round(b_ridge^2 + v_ridge, 3), round(b_lasso^2 + v_lasso, 3), round(b_enet^2 + v_enet, 3)),
@@ -784,70 +787,72 @@ kable(corr_summary_df, caption = "Empirical Comparison of Coefficients, Bias, Va
   kable_styling(bootstrap_options = c("striped", "hover", "condensed"))
 ```
 
-```{r elastic-net-barchart, fig.width=11, fig.height=5}
-# Left Panel: Single-Sample Estimated Coefficients
-bar_df <- data.frame(
-  Variable = rep(c("Poverty Rate", "Uninsured Rate"), times = 5),
-  Method = rep(c("True Effect", "OLS", "Ridge", "Lasso", "Elastic Net"), each = 2),
-  Coefficient = c(3.0, 3.0,
-                  unname(ols_result[1]), unname(ols_result[2]),
-                  unname(ridge_result[1]), unname(ridge_result[2]), 
-                  unname(lasso_result[1]), unname(lasso_result[2]), 
-                  unname(enet_result[1]), unname(enet_result[2]))
+```{r elastic-net-pointcharts, fig.width=11, fig.height=5}
+# Left panel: coefficient estimates across methods, as points
+coef_point_df <- data.frame(
+  Method = rep(c("True Effect", "OLS", "Ridge", "Lasso", "Elastic Net"), times = 2),
+  Variable = rep(c("Poverty Rate", "Uninsured Rate"), each = 5),
+  Coefficient = c(3.0, unname(ols_result[1]), unname(ridge_result[1]), 
+                  unname(lasso_result[1]), unname(enet_result[1]),
+                  3.0, unname(ols_result[2]), unname(ridge_result[2]), 
+                  unname(lasso_result[2]), unname(enet_result[2]))
 )
-bar_df$Method <- factor(bar_df$Method, levels = c("True Effect", "OLS", "Ridge", "Lasso", "Elastic Net"))
+coef_point_df$Method <- factor(coef_point_df$Method, 
+                                 levels = c("True Effect", "OLS", "Ridge", "Lasso", "Elastic Net"))
 
-p_coef <- ggplot(bar_df, aes(x = Variable, y = Coefficient, fill = Method)) +
-  geom_col(position = position_dodge(width = 0.75), width = 0.65) +
-  geom_hline(yintercept = 3, linetype = "dashed", color = "gray30", alpha = 0.7) +
-  geom_hline(yintercept = 0, color = "gray50") +
-  scale_fill_manual(values = c("True Effect" = "#222222",
-                               "OLS" = "#757575",
-                               "Ridge" = "#2e7d32", 
-                               "Lasso" = "#c62828", 
-                               "Elastic Net" = "#1565c0")) +
-  labs(title = "Single-Sample Estimates",
-       subtitle = "True effect size = 3.0 (dashed line)",
-       x = "", y = "Coefficient Value") +
+p_coef_point <- ggplot(coef_point_df, aes(x = Method, y = Coefficient, color = Variable)) +
+  geom_hline(yintercept = 3, linetype = "dashed", color = "gray50") +
+  geom_point(size = 5, alpha = 0.85, position = position_dodge(width = 0.4)) +
+  scale_color_manual(values = c("Poverty Rate" = "#c62828", "Uninsured Rate" = "#1565c0")) +
+  labs(title = "Coefficient Estimates Across Methods",
+       subtitle = "Dashed line = true effect (3.0 for both)",
+       x = "", y = "Coefficient Value", color = "") +
   theme_minimal(base_size = 12) +
   theme(legend.position = "bottom",
         plot.title = element_text(face = "bold", size = 13),
+        axis.text.x = element_text(angle = 20, hjust = 1),
         plot.margin = ggplot2::margin(10, 10, 10, 10))
 
-# Right Panel: Empirical Variance & Bias Trade-off Across Samples
-metrics_df <- data.frame(
-  Method = factor(c("OLS", "Ridge", "Lasso", "Elastic Net"), levels = c("OLS", "Ridge", "Lasso", "Elastic Net")),
-  Variance = c(v_ols, v_ridge, v_lasso, v_enet),
-  Bias = c(b_ols, b_ridge, b_lasso, b_enet)
+# Right panel: bias and variance across methods, as points
+bias_var_point_df <- data.frame(
+  Method = rep(c("OLS", "Ridge", "Lasso", "Elastic Net"), times = 2),
+  Metric = rep(c("Bias", "Variance"), each = 4),
+  Value = c(b_ols, b_ridge, b_lasso, b_enet,
+            v_ols, v_ridge, v_lasso, v_enet)
 )
+bias_var_point_df$Method <- factor(bias_var_point_df$Method, 
+                                     levels = c("OLS", "Ridge", "Lasso", "Elastic Net"))
 
-p_metrics <- ggplot(metrics_df, aes(x = Method, y = Variance, fill = Method)) +
-  geom_col(width = 0.55) +
-  geom_text(aes(label = sprintf("Var: %.3f\nBias: %.3f", Variance, Bias)), 
-            vjust = -0.2, size = 3.1, fontface = "bold") +
-  scale_fill_manual(values = c("OLS" = "#757575",
-                               "Ridge" = "#2e7d32", 
-                               "Lasso" = "#c62828", 
-                               "Elastic Net" = "#1565c0")) +
-  ylim(0, max(metrics_df$Variance) * 1.3) +
-  labs(title = "Empirical Variance & Bias",
-       subtitle = "Monte Carlo (B=100) across samples",
-       x = "", y = "Variance") +
+p_metrics_point <- ggplot(bias_var_point_df, aes(x = Method, y = Value, color = Metric)) +
+  geom_point(size = 5, alpha = 0.85, position = position_dodge(width = 0.4)) +
+  scale_color_manual(values = c("Bias" = "#f9a825", "Variance" = "#6a1b9a")) +
+  labs(title = "Bias and Variance Across Methods",
+       subtitle = "Monte Carlo (B = 100) across samples",
+       x = "", y = "Value", color = "") +
   theme_minimal(base_size = 12) +
-  theme(legend.position = "none",
+  theme(legend.position = "bottom",
         plot.title = element_text(face = "bold", size = 13),
+        axis.text.x = element_text(angle = 20, hjust = 1),
         plot.margin = ggplot2::margin(10, 10, 10, 10))
 
-p_coef + p_metrics + plot_layout(widths = c(1.3, 1))
+p_coef_point + p_metrics_point
 ```
 
-**Key Empirical Findings (Bias-Variance Trade-off in Action)**:
+**Reading the left panel**: each dot is one method's estimated coefficient for one variable — red dots for poverty rate, blue for uninsured rate. The dashed line marks the truth (3.0 for both). Look at how far apart the red and blue dot are at each method: a bigger vertical gap between the two dots means that method split credit less evenly between the two correlated predictors. OLS and ridge keep their two dots close together; lasso's dots are the farthest apart.
 
-- **True Effect (Black)**: Ground truth ($\beta = 3.0$).
-- **OLS (Gray)**: Unbiased ($\text{Bias} \approx 0.091$), but suffers from high **Variance ($0.329$)** because collinear predictors cause sample-to-sample instability.
-- **Ridge (Green)**: Accepts a tiny shrinkage **Bias ($0.133$)**, but slashes **Variance down to $0.055$** (an 83% reduction vs. OLS), achieving by far the lowest total MSE ($0.072$).
-- **Lasso (Red)**: Has high **Variance ($0.356$)** under collinearity because it randomly flips between correlated predictors from sample to sample.
-- **Elastic Net (Blue)**: Strikes a balanced compromise — cuts **Variance to $0.160$** (a 50% reduction vs. OLS/Lasso) while preserving sparse variable selection.
+**Reading the right panel**: each dot is one number — orange for bias, purple for variance — plotted separately for each method. Bias creeps up for every regularized method compared to OLS, which is expected: that's the deliberate cost of shrinkage. What matters is the purple (variance) dots: ridge's purple dot drops the most dramatically, lasso's barely moves down from OLS's, and elastic net's lands in between.
+
+**Key empirical findings (bias-variance tradeoff in action)**:
+
+- **OLS**: Barely any bias (0.085), but the highest variance (0.331) — with poverty rate and uninsured rate this correlated, OLS's estimates bounce around a lot from sample to sample, even though they're right on average.
+
+- **Ridge**: Trades a bit more bias (0.131) for a huge drop in variance (0.055, an 83% cut from OLS) — the best deal of the three. Its two coefficient dots in the left panel are also the closest together, meaning it splits credit between poverty and uninsured rate most evenly.
+
+- **Lasso**: Variance stays just as high as OLS (0.357) — under this much collinearity, lasso doesn't actually help. It tends to lean hard on one variable and shrug off the other, which is why its two dots in the left panel are the farthest apart: poverty rate gets a boost above 3.0, uninsured rate gets pulled down.
+
+- **Elastic Net**: A genuine middle ground — variance drops to 0.160 (about half of OLS/lasso), and its two dots sit closer together than lasso's, though not quite as close as ridge's.
+
+**The takeaway**: shrinking coefficients always adds a little bias — that's expected, not a flaw. The real question is how much stability you get back for that cost. Here, ridge gets the best deal, lasso gets almost nothing, and elastic net lands in between — which is exactly why elastic net beats lasso alone when your predictors are this correlated.
 
 #### Why This Matters for Applied Research
 
