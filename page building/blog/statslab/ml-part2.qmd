@@ -1,7 +1,7 @@
 ---
 title: "Machine Learning for Social Scientists, Part 2: Decision Trees, Random Forests, and Boosting"
 author: "Heeyoung Lee"
-date: "August 13, 2026"
+date: "August 16, 2026"
 format: 
   html:
     theme: cosmo
@@ -260,6 +260,16 @@ This should look familiar — it's the exact same training-error-versus-test-err
 
 **Random forest vs. boosting, in one sentence each**: a random forest is many independent trees voting together; boosting is a relay race of trees, where each runner's whole job is to fix the last runner's mistakes.
 
+| | Random Forest | Boosting |
+|---|---|---|
+| **How trees are built** | Independently, all at once | Sequentially, each fixing the last one's errors |
+| **What controls overfitting** | Bootstrap sampling + random predictor subsets | Learning rate (shrinkage) + number of rounds |
+| **Typical tree size** | Deep, fully-grown trees | Shallow, deliberately weak trees |
+| **Tuning sensitivity** | Fairly forgiving — hard to badly overfit | More sensitive — too many rounds can overfit |
+| **Intuition** | "Wisdom of crowds" — average out independent mistakes | "Relay race" — each runner corrects the last one's mistake |
+
+Both are answering the exact same underlying question from Part 1 — how much complexity should the model be allowed? — just through different mechanisms: random forest controls it by averaging away instability, while boosting controls it by limiting how many correction rounds it's allowed to run.
+
 ### 5. Opening the Black Box: Variable Importance and Partial Dependence
 
 Random forests and boosted models predict very well, but neither one hands you a clean coefficient like $\hat{\beta} = -1.5$ that you can put in a sentence. If a reviewer asks "so what's the effect of physician density?", you need different tools to answer that question. Two of the most useful are variable importance and partial dependence plots.
@@ -345,6 +355,20 @@ This is precisely the kind of $\hat{Y}$-focused, prediction-culture task from Pa
 The second application is more exploratory: using tree-based methods as a diagnostic tool *before* committing to a final regression specification. Remember the rural × poverty interaction built into our simulated data at the very start of this post — a tree found it immediately, without us specifying it. In real research, you rarely know in advance which interactions or thresholds matter. Running a random forest and inspecting its variable importance and partial dependence plots is a fast, honest way to generate hypotheses about nonlinearities and interactions, which you can then build explicitly into a final, interpretable regression model (of the kind covered in the earlier panel data post) for formal hypothesis testing.
 
 This connects directly back to the "two cultures" idea from Part 1: tree-based methods here are playing a *supporting* role in an inference-focused workflow — used to explore what shape the relationships might take, with the final causal claims still resting on a transparent, interpretable model.
+
+### 7. How This All Connects Back to Part 1
+
+Every method in this post is, underneath the surface, doing the same thing Part 1's regularized regressions did — just with a different knob:
+
+| Part 1 concept | Tree-based equivalent |
+|---|---|
+| $\lambda$ (penalty strength) | Tree depth (single tree) |
+| Bias-variance tradeoff | Underfitting (shallow tree) vs. overfitting (deep tree) |
+| Cross-validation to pick $\lambda$ | Cross-validation to pick tree depth, or number of boosting rounds |
+| Shrinking coefficients to reduce variance | Averaging many trees (random forest) to reduce variance |
+| A single, interpretable coefficient $\hat{\beta}$ | Variable importance + partial dependence plots (an approximation, not an exact number) |
+
+The specific mechanism changes from method to method, but the underlying logic never does: **more flexibility captures more signal, but also more noise, and the right amount of flexibility is something the data — not the researcher's intuition — should decide.**
 
 ### Conclusion
 
