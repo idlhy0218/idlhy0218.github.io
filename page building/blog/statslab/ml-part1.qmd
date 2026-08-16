@@ -514,6 +514,7 @@ ggplot(combined_df, aes(x = log(lambda), y = coefficient, group = variable, colo
 ```
 
 **Key Differences Illustrated**:
+
 - **Lasso (Left)**: Noise lines collapse directly onto the zero axis, performing **hard variable elimination** (setting 26 noise variables to exactly 0).
 - **Ridge (Right)**: All 26 gray noise lines shrink continuously toward zero, but **none reach zero**. All 30 variables remain in the model.
 
