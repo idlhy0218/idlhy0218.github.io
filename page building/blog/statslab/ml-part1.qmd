@@ -1,7 +1,7 @@
 ---
 title: "Machine Learning for Social Scientists, Part 1: Supervised ML - Ridge, Lasso, and Elastic Net"
 author: "Heeyoung Lee"
-date: "August 12, 2026"
+date: "August 15, 2026"
 format: 
   html:
     theme: cosmo
@@ -22,7 +22,7 @@ format:
 
 ## Machine Learning Foundations, Part 1
 
-Every quantitative researcher eventually asks the same question: "Should I trust the coefficient, or should I trust the prediction?" Classical statistics and machine learning give different answers, and understanding *why* they differ is the single most useful thing you can learn before touching a machine learning method. This post covers four foundational ideas — supervised vs. unsupervised learning, two cultures of statistical analysis, the bias-variance tradeoff, and the logic of regularization — using the same county-level health framing from the panel data post, so the intuition carries over.
+Every quantitative researcher eventually asks the same question: "Should I trust the coefficient, or should I trust the prediction?" Classical statistics and machine learning give different answers, and understanding *why* they differ is the single most useful thing you can learn before touching a machine learning method. This post covers three foundational ideas — supervised vs. unsupervised learning, the bias-variance tradeoff, and the logic of regularization — using the same county-level health framing from the panel data post, so the intuition carries over.
 
 Let's begin by loading the packages we'll need:
 
@@ -37,7 +37,7 @@ library(tidyr)
 
 ### 1. Two Basic Flavors: Supervised vs. Unsupervised Learning
 
-Before we get into cultures and penalties, it helps to sort machine learning methods into two big buckets. Almost everything you'll hear about — lasso, ridge, decision trees, random forests, clustering, topic models — falls into one of these two categories, and knowing which bucket you're in tells you what kind of question you can even ask.
+Before we get into bias, variance, and penalties, it helps to sort machine learning methods into two big buckets. Almost everything you'll hear about — lasso, ridge, decision trees, random forests, clustering, topic models — falls into one of these two categories, and knowing which bucket you're in tells you what kind of question you can even ask.
 
 **The one-sentence version: does your data have an "answer key" or not?**
 
@@ -74,7 +74,7 @@ p_supervised <- ggplot(demo_df, aes(x = poverty, y = obesity, color = mortality)
        x = "Poverty Rate (%)", y = "Obesity Rate (%)") +
   theme_minimal(base_size = 12) +
   theme(plot.title = element_text(face = "bold", size = 13),
-        plot.margin = margin(10, 15, 10, 10))
+        plot.margin = ggplot2::margin(10, 15, 10, 10))
 
 # Unsupervised view: same predictors, no outcome shown, just raw points
 p_unsupervised <- ggplot(demo_df, aes(x = poverty, y = obesity)) +
@@ -84,7 +84,7 @@ p_unsupervised <- ggplot(demo_df, aes(x = poverty, y = obesity)) +
        x = "Poverty Rate (%)", y = "Obesity Rate (%)") +
   theme_minimal(base_size = 12) +
   theme(plot.title = element_text(face = "bold", size = 13),
-        plot.margin = margin(10, 15, 10, 10))
+        plot.margin = ggplot2::margin(10, 15, 10, 10))
 
 p_supervised + p_unsupervised
 ```
@@ -105,72 +105,11 @@ Every method we'll walk through in the rest of this post — and the next one �
 | **Examples** | Lasso, ridge, elastic net, decision trees, random forests, logistic regression, k-NN | Cluster analysis, principal component analysis, topic modeling |
 | **How you check if it worked** | Compare predictions to the true, known outcome | Judge whether the discovered groups make substantive or statistical sense (no ground truth to check against) |
 
-The rest of this post — two cultures, bias-variance, and regularization — all lives inside the **supervised** bucket, because lasso, ridge, and elastic net are all methods for predicting a known outcome (mortality rate) from a set of predictors. Unsupervised methods raise a different set of questions entirely — mainly, "how do we know the patterns we found are real, and not just noise?" — which we'll return to in a later post.
+The rest of this post — bias-variance and regularization — all lives inside the **supervised** bucket, because lasso, ridge, and elastic net are all methods for predicting a known outcome (mortality rate) from a set of predictors. Unsupervised methods raise a different set of questions entirely — mainly, "how do we know the patterns we found are real, and not just noise?" — which we'll return to in a later post.
 
-### 2. Two Cultures of Statistical Analysis
+### 2. The Bias-Variance Tradeoff and Generalization Error
 
-#### 2-1. The Core Distinction
-
-In 2001, the statistician Leo Breiman wrote a famous paper describing two very different ways that researchers approach data. He called them the "two cultures," and the distinction still organizes how we think about classical statistics versus machine learning today.
-
-**Culture 1 — Generative modeling (classical statistics).** You assume the data were generated by some underlying stochastic process, propose a model for that process (usually linear), and estimate its parameters. The goal is **inference**: understanding *how* an output relates to inputs.
-
-**Culture 2 — Predictive modeling (machine learning).** You treat the true data-generating process as unknown and unknowable. Instead of trying to describe it, you search for a function that predicts the output as accurately as possible on *new* data. The goal is **prediction**, not explanation.
-
-This is not just a philosophical distinction — it changes what a "good model" even means.
-
-| | Classical Statistics (Culture 1) | Machine Learning (Culture 2) |
-|---|---|---|
-| **Goal** | Estimate $\hat{\beta}$ — understand relationships | Estimate $\hat{Y}$ — predict new outcomes |
-| **Question asked** | "How much does income affect mortality?" | "Given this county's profile, what's its mortality rate?" |
-| **Success measured by** | Coefficient significance, theoretical fit | Accuracy on data the model has never seen |
-| **Model complexity** | Kept small and interpretable | Can be very large and complex |
-| **Risk if misused** | Missing real complexity in the world | Producing a black box that predicts well but explains nothing |
-
-#### 2-2. A Concrete Example
-
-Suppose we're back in our county mortality dataset. If we're doing **inference**, our question is: "Holding other things constant, does a $1,000 increase in county median income reduce mortality, and by how much?" We want a trustworthy $\hat{\beta}$.
-
-If we're doing **prediction**, our question is completely different: "A new county just reported its income, uninsured rate, obesity rate, and physician density. What mortality rate should we expect?" We don't care whether income "causes" anything — we just want $\hat{Y}$ to be close to the county's actual mortality rate.
-
-```{r two-cultures-sim, fig.width=9}
-set.seed(42)
-n <- 300
-
-# Simulate a nonlinear true relationship between income and mortality
-income <- runif(n, 30, 90)
-true_mortality <- 900 - 6 * income + 0.04 * income^2 + rnorm(n, 0, 25)
-
-sim_df <- data.frame(income = income, mortality = true_mortality)
-
-# Culture 1: a simple linear model (inference-focused)
-linear_fit <- lm(mortality ~ income, data = sim_df)
-
-# Culture 2: a flexible model (prediction-focused) - local smoothing
-sim_df$loess_pred <- predict(loess(mortality ~ income, data = sim_df, span = 0.5))
-
-ggplot(sim_df, aes(x = income, y = mortality)) +
-  geom_point(alpha = 0.4, color = "gray40") +
-  geom_smooth(method = "lm", se = FALSE, aes(color = "Linear model\n(inference-style)"), linewidth = 1.2) +
-  geom_line(aes(y = loess_pred, color = "Flexible curve\n(prediction-style)"), linewidth = 1.2) +
-  labs(title = "Same Data, Two Different Goals",
-       subtitle = "A straight line is easy to interpret;\na flexible curve fits the data more closely",
-       x = "Median Household Income ($1000s)",
-       y = "Mortality Rate (per 100,000)",
-       color = "") +
-  theme_minimal(base_size = 12) +
-  theme(legend.position = "right",
-        plot.title = element_text(face = "bold", size = 14),
-        plot.margin = margin(10, 15, 10, 10))
-```
-
-Both lines are "correct" in their own way. The straight line gives us one clean number — a single $\hat{\beta}$ we can put in a sentence: "each additional $1,000 in income is associated with a X-unit change in mortality." The curved line gives up that clean sentence, but it tracks the *actual* pattern in the data more closely, which matters if our only goal is predicting mortality for a new county.
-
-**The key takeaway:** neither approach is "better" in general. The right choice depends on whether your research question is "why" (inference) or "what will happen" (prediction).
-
-### 3. The Bias-Variance Tradeoff and Generalization Error
-
-#### 3-1. Why a Model That Fits Well Can Still Predict Badly
+#### 2-1. Why a Model That Fits Well Can Still Predict Badly
 
 Here's a puzzle that trips up a lot of researchers the first time they see it: a model can fit your existing data almost perfectly and still make *terrible* predictions on new data. Understanding why requires breaking prediction error into two separate pieces: **bias** and **variance**.
 
@@ -182,61 +121,12 @@ $$\text{Generalization Error} = \text{Bias}^2 + \text{Variance} + \text{Irreduci
 
 The irreducible error is just noise in the world that no model can ever remove — measurement error, unpredictable individual circumstances, and so on.
 
-#### 3-2. Underfitting and Overfitting
+#### 2-2. Underfitting and Overfitting
 
 - **Underfitting** happens when the model is too simple: it misses real signal in the data. High bias, low variance.
 - **Overfitting** happens when the model is too complex: it captures not just the signal, but also the random noise specific to *this* sample. Low bias, high variance.
 
-#### 3-3. The Dartboard Picture (the Classic Way to See Bias vs. Variance)
-
-Before we bring back the county data, here's a picture that makes bias and variance click for a lot of people. Imagine four different dart players, each throwing 20 darts at the same target. The bullseye represents the *true* mortality rate we're trying to hit; each dart is one prediction from repeating the same model on slightly different samples of counties.
-
-```{r dartboard, fig.width=9, fig.height=9}
-make_target <- function(n = 20, center_offset = c(0, 0), spread = 0.15, title = "", subtitle = "") {
-  set.seed(1)
-  darts <- data.frame(
-    x = rnorm(n, mean = center_offset[1], sd = spread),
-    y = rnorm(n, mean = center_offset[2], sd = spread)
-  )
-  
-  circle_data <- function(r) {
-    theta <- seq(0, 2 * pi, length.out = 100)
-    data.frame(x = r * cos(theta), y = r * sin(theta))
-  }
-  
-  ggplot() +
-    geom_polygon(data = circle_data(1), aes(x, y), fill = "#f4d1d1", color = "gray60") +
-    geom_polygon(data = circle_data(0.66), aes(x, y), fill = "#f9e8b0", color = "gray60") +
-    geom_polygon(data = circle_data(0.33), aes(x, y), fill = "#c9e8c9", color = "gray60") +
-    geom_point(data = darts, aes(x, y), size = 3, color = "black", alpha = 0.75) +
-    coord_fixed(xlim = c(-1.3, 1.3), ylim = c(-1.3, 1.3)) +
-    labs(title = title, subtitle = subtitle) +
-    theme_void(base_size = 12) +
-    theme(plot.title = element_text(face = "bold", size = 13, hjust = 0.5),
-          plot.subtitle = element_text(size = 10, hjust = 0.5),
-          plot.margin = margin(8, 8, 8, 8))
-}
-
-p1 <- make_target(center_offset = c(0, 0), spread = 0.10, 
-                   title = "Low Bias, Low Variance", subtitle = "Ideal: accurate and consistent")
-p2 <- make_target(center_offset = c(0, 0), spread = 0.35, 
-                   title = "Low Bias, High Variance", subtitle = "Overfitting: centered, but scattered")
-p3 <- make_target(center_offset = c(0.55, 0.45), spread = 0.10, 
-                   title = "High Bias, Low Variance", subtitle = "Underfitting: consistent, but off-target")
-p4 <- make_target(center_offset = c(0.55, 0.45), spread = 0.35, 
-                   title = "High Bias, High Variance", subtitle = "Worst case: inaccurate and inconsistent")
-
-(p1 + p2) / (p3 + p4)
-```
-
-Read this like a real dartboard: the bullseye (green center) is the truth. Each of the 20 dots is what the model would have predicted if it had been trained on a slightly different sample of counties.
-
-- **Top-left**: darts cluster tightly around the bullseye — this is what we want. Low bias (correct on average), low variance (consistent across samples).
-- **Top-right**: darts are centered on the bullseye *on average*, but wildly scattered — this is **overfitting**. Any one run might land far from the truth, even though the model isn't systematically wrong in one direction.
-- **Bottom-left**: darts cluster tightly, but off to one side — this is **underfitting**. The model is consistent, but consistently *wrong* the same way every time.
-- **Bottom-right**: darts are both off-target and scattered — the worst of both problems at once.
-
-Now let's make this concrete with our county data. Suppose the true relationship between income and mortality has a slight curve to it (as in the simulation above), but we don't know that — we only have a sample of counties to learn from.
+Now let's make this concrete with our county data. Suppose the true relationship between income and mortality has a slight curve to it, but we don't know that — we only have a sample of counties to learn from.
 
 ```{r bias-variance-sim, fig.height=8}
 set.seed(7)
@@ -273,7 +163,7 @@ p_under <- ggplot() +
   labs(title = "Underfitting", subtitle = "Model too simple — misses the curve (high bias)",
        x = "Income ($1000s)", y = "Mortality Rate") +
   theme_minimal(base_size = 12) +
-  theme(plot.margin = margin(8, 15, 8, 8))
+  theme(plot.margin = ggplot2::margin(8, 15, 8, 8))
 
 p_good <- ggplot() +
   geom_point(data = sample_df, aes(income, mortality), alpha = 0.6, color = "gray30") +
@@ -282,7 +172,7 @@ p_good <- ggplot() +
   labs(title = "Good Fit", subtitle = "Captures the signal without chasing noise",
        x = "Income ($1000s)", y = "Mortality Rate") +
   theme_minimal(base_size = 12) +
-  theme(plot.margin = margin(8, 15, 8, 8))
+  theme(plot.margin = ggplot2::margin(8, 15, 8, 8))
 
 p_over <- ggplot() +
   geom_point(data = sample_df, aes(income, mortality), alpha = 0.6, color = "gray30") +
@@ -291,7 +181,7 @@ p_over <- ggplot() +
   labs(title = "Overfitting", subtitle = "Model too flexible — chases noise (high variance)",
        x = "Income ($1000s)", y = "Mortality Rate") +
   theme_minimal(base_size = 12) +
-  theme(plot.margin = margin(8, 15, 8, 8))
+  theme(plot.margin = ggplot2::margin(8, 15, 8, 8))
 
 p_under / p_good / p_over
 ```
@@ -302,7 +192,7 @@ The dashed black line is the *true* relationship (which we'd never actually know
 - **Good fit (middle)**: the green curve tracks the true pattern closely without overreacting to any single point.
 - **Overfitting (bottom)**: the red line wiggles wildly to pass as close as possible to every single training point — including the random noise. This model would look completely different if we resampled 40 new counties.
 
-#### 3-4. Seeing It Numerically: In-Sample vs. Out-of-Sample Error
+#### 2-3. Seeing It Numerically: In-Sample vs. Out-of-Sample Error
 
 The real danger of overfitting is invisible if you only look at how well a model fits the data it was trained on. You have to test it on *new* data to see the problem.
 
@@ -350,10 +240,10 @@ ggplot(results_long, aes(x = degree, y = rmse, color = type)) +
   theme_minimal(base_size = 12) +
   theme(legend.position = "right",
         plot.title = element_text(face = "bold", size = 13),
-        plot.margin = margin(10, 15, 10, 10))
+        plot.margin = ggplot2::margin(10, 15, 10, 10))
 ```
 
-This is the single most important picture in this post. It shows what happens as we make a model more and more complex (by raising the polynomial degree).
+This is one of the most important pictures in this post. It shows what happens as we make a model more and more complex (by raising the polynomial degree).
 
 **How the experiment works**: We split the data into two separate groups.
 
@@ -373,10 +263,88 @@ We then make the model more and more complex — degree 1, degree 2, degree 3, a
 
 **Bottom line**: the goal of any good model — classical statistics or machine learning — is to land at the point where **test error** is lowest, not where training error is lowest. If you judge a model only by its training error, you can end up picking a model that looks great on paper but performs poorly on any new county it hasn't already memorized.
 
+#### 2-4. Why More Predictors Also Cause Overfitting
 
-### 4. The Principle of Regularization
+Everything above showed overfitting happening because a *single* relationship was allowed to bend too much — a high-degree polynomial. But overfitting has a second, equally common cause in social science research: simply having **too many predictors** relative to the number of observations.
 
-#### 4-1. The Core Idea
+**The intuition**: each predictor you add gives the regression line one more "knob" it's free to turn. With enough knobs, the model can bend itself to match almost any pattern in the training data — including patterns that are just noise. In the most extreme case, if the number of predictors equals the number of observations, OLS can draw a line that passes through every single point exactly ($R^2 = 1$) — not because it found the truth, but because it ran out of room to be wrong.
+
+This also shows up as **instability**, not just a suspiciously perfect fit. Think of it this way: with only a handful of predictors, each one has plenty of counties' worth of varied evidence behind it, so its estimated effect stays fairly steady even if a few counties in the sample change. But as you add more and more predictors — especially ones that overlap with each other, like poverty rate and uninsured rate — that evidence gets stretched thinner and thinner across more coefficients. Each individual estimate now rests on a smaller, shakier slice of information, so a small change in which counties happen to be in the sample can swing it substantially. More predictors mean more chances for a few of them to look meaningfully related to the outcome purely by coincidence, and OLS has no way to tell that apart from a real signal — it just fits both equally.
+
+Let's see this directly. We'll fix the sample size at 40 counties and only 2 real predictors, then keep adding irrelevant "noise" predictors one at a time and watch what happens to model fit.
+
+```{r predictor-count-sim, fig.height=6}
+set.seed(303)
+n_fixed <- 40
+
+# Two real predictors; everything else added below will be pure noise
+x1 <- runif(n_fixed, 30, 90)
+x2 <- runif(n_fixed, 0, 30)
+true_y <- 500 + 5 * x1 - 3 * x2 + rnorm(n_fixed, 0, 20)
+
+# A separate, fresh test set from the same true process
+x1_test <- runif(n_fixed, 30, 90)
+x2_test <- runif(n_fixed, 0, 30)
+true_y_test <- 500 + 5 * x1_test - 3 * x2_test + rnorm(n_fixed, 0, 20)
+
+max_noise <- 34
+noise_train <- matrix(rnorm(n_fixed * max_noise), nrow = n_fixed)
+noise_test <- matrix(rnorm(n_fixed * max_noise), nrow = n_fixed)
+
+predictor_counts <- seq(2, 36, by = 2)
+results_predictors <- data.frame()
+
+for (p in predictor_counts) {
+  n_noise <- p - 2
+  if (n_noise == 0) {
+    train_df_p <- data.frame(y = true_y, x1 = x1, x2 = x2)
+    test_df_p <- data.frame(y = true_y_test, x1 = x1_test, x2 = x2_test)
+  } else {
+    train_df_p <- data.frame(y = true_y, x1 = x1, x2 = x2, noise_train[, 1:n_noise, drop = FALSE])
+    test_df_p <- data.frame(y = true_y_test, x1 = x1_test, x2 = x2_test, noise_test[, 1:n_noise, drop = FALSE])
+  }
+  
+  model_p <- lm(y ~ ., data = train_df_p)
+  train_r2 <- summary(model_p)$r.squared
+  test_pred_p <- predict(model_p, newdata = test_df_p)
+  test_rmse_p <- sqrt(mean((test_df_p$y - test_pred_p)^2))
+  
+  results_predictors <- rbind(results_predictors, 
+                                data.frame(n_predictors = p, train_r2 = train_r2, test_rmse = test_rmse_p))
+}
+
+p_r2 <- ggplot(results_predictors, aes(x = n_predictors, y = train_r2)) +
+  geom_line(color = "steelblue", linewidth = 1.2) +
+  geom_point(size = 2, color = "steelblue") +
+  labs(title = "Training Fit (R\u00b2) Keeps Climbing",
+       subtitle = "Only 2 of these predictors are ever real",
+       x = "Number of Predictors in the Model",
+       y = expression("Training " * R^2)) +
+  theme_minimal(base_size = 12) +
+  theme(plot.title = element_text(face = "bold", size = 13),
+        plot.margin = ggplot2::margin(8, 15, 8, 8))
+
+p_rmse <- ggplot(results_predictors, aes(x = n_predictors, y = test_rmse)) +
+  geom_line(color = "firebrick", linewidth = 1.2) +
+  geom_point(size = 2, color = "firebrick") +
+  labs(title = "Test Error Gets Worse",
+       subtitle = "Same models, evaluated on new counties",
+       x = "Number of Predictors in the Model",
+       y = "Test RMSE") +
+  theme_minimal(base_size = 12) +
+  theme(plot.title = element_text(face = "bold", size = 13),
+        plot.margin = ggplot2::margin(8, 15, 8, 8))
+
+p_r2 + p_rmse
+```
+
+Same story as before, different knob. With only 2 real predictors driving mortality, adding more and more irrelevant noise variables pushes the training $R^2$ steadily toward 1 — the model looks like it's "explaining" more and more of the data. But test error tells the opposite story: it climbs as the noise variables pile up, because each new one adds a coefficient that fits this training sample's randomness and nothing more. By the time the model has 30+ predictors chasing a pattern built from just 2, it's mostly memorizing noise.
+
+This is exactly the situation many social science datasets create without anyone intending it — a long list of plausible-sounding control variables, most of which add more noise-fitting capacity than real explanatory power. It's also exactly the problem regularization is built to solve.
+
+### 3. The Principle of Regularization
+
+#### 3-1. The Core Idea
 
 Now we get to the tool that machine learning uses to avoid landing on the wrong side of that curve: **regularization**. The idea is simple to state: instead of only minimizing error on the training data, add a penalty for model complexity.
 
@@ -388,14 +356,15 @@ $$\underbrace{\sum_{i=1}^{n}[y_i - f(x_i)]^2}_{\text{fit to training data}} \;+\
 
 Choosing $\lambda$ is itself data-driven — it's typically selected via cross-validation, so the model doesn't just optimize the penalty by guesswork.
 
-#### 4-2. Lasso, Ridge, and Elastic Net: Three Flavors of Penalty
+**What this trade actually buys us**: pushing coefficients toward zero introduces a small, deliberate **bias** — the estimates shift slightly away from their "true" values. In exchange, the model's **variance** drops: its coefficients stop swinging wildly from sample to sample. Since total prediction error decomposes as $\text{Bias}^2 + \text{Variance}$, a small increase in bias can be more than offset by a large drop in variance — meaning the *total* error, and prediction accuracy on new data, actually improves. This trade tends to pay off most when predictors are numerous or highly correlated, exactly the setting where OLS's variance is largest to begin with.
+
+#### 3-2. Lasso, Ridge, and Elastic Net: Three Flavors of Penalty
 
 The three primary regularized regression methods differ in how they define the penalty term $R(f)$: All three of these methods start from the exact same idea — penalize big coefficients — but they punish "bigness" in different ways, and that difference changes what the model does in practice.
 
 Think of it like packing a suitcase with a strict weight limit. You have 30 items (our county-level predictors: poverty rate, opioid prescribing rate, racial composition, physician density, and so on) and a budget for how much "weight" your model's coefficients are allowed to carry in total.
 
-
-##### 4-2-1. Lasso ($L_1$ Penalty)
+##### 3-2-1. Lasso ($L_1$ Penalty)
 
 "Some items just don't make the cut — leave them home entirely." Lasso can shrink some coefficients all the way to *exactly* zero, which means those variables are dropped from the model completely. This gives you automatic variable selection: lasso tells you which handful of predictors actually matter.
 
@@ -404,7 +373,7 @@ $$\min_{\beta} \sum_{i=1}^{n} [y_i - f(x_i)]^2 \;+\; \lambda \sum_{j=1}^{p} \lve
 - **Mechanism**: Punishes the sum of *absolute* values of coefficients.
 - **Behavior**: The $L_1$ penalty retains a constant derivative down to zero, driving coefficients of non-essential variables to **exactly zero**. Performs automatic feature selection.
 
-##### 4-2-2. Ridge Regression ($L_2$ Penalty)
+##### 3-2-2. Ridge Regression ($L_2$ Penalty)
 
 "Every item can come, but the heavier ones get squeezed down more." Ridge shrinks *every* coefficient toward zero, proportionally more for large ones, but essentially never sets a coefficient to exactly zero. Every variable stays in the model, just with a smaller voice.
 
@@ -413,7 +382,7 @@ $$\min_{\beta} \sum_{i=1}^{n} [y_i - f(x_i)]^2 \;+\; \lambda \sum_{j=1}^{p} \bet
 - **Mechanism**: Punishes the sum of *squared* coefficients.
 - **Behavior**: Shrinks all coefficients continuously toward zero, but **never sets any coefficient to exactly zero**. Every variable remains in the model.
 
-##### 4-2-3. Elastic Net (Blended Penalty)
+##### 3-2-3. Elastic Net (Blended Penalty)
 
 Compromise between the Lasso and Ridge: "Squeeze everything down, *and* leave some things home." It combines both penalties, weighted by a parameter $\alpha$ between 0 and 1: $\alpha = 1$ is pure lasso, $\alpha = 0$ is pure ridge, and anything in between is elastic net.
 
@@ -429,11 +398,11 @@ $$\min_{\beta} \sum_{i=1}^{n} [y_i - f(x_i)]^2 \;+\; \lambda \left[ \alpha \sum_
 
 **Elastic net** is often the practical default when you have many correlated county-level variables and also want some of them to drop out: it handles correlated groups better than lasso alone, while still allowing some coefficients to hit exactly zero.
 
-#### 4-3. A Worked Example: Predicting County Mortality
+#### 3-3. A Worked Example: Predicting County Mortality
 
 To compare these methods empirically, we simulate a county health dataset with $n = 100$ counties and $p = 30$ candidate predictors. In the true underlying data-generating process, only the first 4 variables drive mortality ($\beta_1=8, \beta_2=-6, \beta_3=5, \beta_4=-4$), while the remaining 26 variables are pure noise ($\beta_{5\dots30} = 0$).
 
-##### 4-3-1. Lasso in Action ($L_1$ Penalty)
+##### 3-3-1. Lasso in Action ($L_1$ Penalty)
 
 We first fit Lasso ($\alpha = 1$) across a continuum of penalty values ($\lambda$):
 
@@ -480,7 +449,7 @@ ggplot(coef_df, aes(x = log(lambda), y = coefficient, group = variable, color = 
 - As $\lambda$ increases, the 26 noise variables (gray lines) drop to zero one by one.
 - The 4 true signals (red lines) resist shrinkage longer, demonstrating how Lasso isolates true drivers through **sparse variable selection**.
 
-##### 4-3-2. Ridge in Action ($L_2$ Penalty)
+##### 3-3-2. Ridge in Action ($L_2$ Penalty)
 
 Next, we fit Ridge Regression ($\alpha = 0$) on the exact same dataset:
 
@@ -514,7 +483,7 @@ ggplot(ridge_coef_df, aes(x = log(lambda), y = coefficient, group = variable, co
 - As $\lambda$ increases, all 30 coefficients shrink smoothly toward zero.
 - Crucially, **none of the 26 noise variables hit zero exactly**. Every single variable remains in the model, regardless of how large $\lambda$ becomes.
 
-##### 4-3-3. Lasso vs. Ridge, Side by Side
+##### 3-3-3. Lasso vs. Ridge, Side by Side
 
 Placing Lasso ($\alpha = 1$) and Ridge ($\alpha = 0$) side by side on the exact same dataset highlights their fundamental structural difference:
 
@@ -548,7 +517,7 @@ ggplot(combined_df, aes(x = log(lambda), y = coefficient, group = variable, colo
 - **Lasso (Left)**: Noise lines collapse directly onto the zero axis, performing **hard variable elimination** (setting 26 noise variables to exactly 0).
 - **Ridge (Right)**: All 26 gray noise lines shrink continuously toward zero, but **none reach zero**. All 30 variables remain in the model.
 
-##### 4-3-4. Choosing the Right Amount of Penalty: Cross-Validation
+##### 3-3-4. Choosing the Right Amount of Penalty: Cross-Validation
 
 How do we choose $\lambda$? We don't guess — we use $k$-fold cross-validation (`cv.glmnet()`) to find the penalty that minimizes out-of-sample prediction error. The data is split into $k$ folds; the model trains on $k-1$ folds and tests on the remaining fold, repeating until every fold serves as the test set once.
 
@@ -624,7 +593,7 @@ kable(head(ridge_selected_df, 30), digits = 3,
 
 Ridge correctly ranks the 4 true predictors at the top, but shrinks all 30 coefficients continuously rather than performing variable selection.
 
-##### 4-3-5. Elastic Net on the Same Data: Combining Ridge and Lasso
+##### 3-3-5. Elastic Net on the Same Data: Combining Ridge and Lasso
 
 How does **Elastic Net** ($\alpha = 0.5$) differ from Lasso ($\alpha = 1$) and Ridge ($\alpha = 0$)? 
 
@@ -685,7 +654,7 @@ cat("  Elastic Net:", sum(coef(cv_enet, s = "lambda.min")[-1] != 0))
 - **Lasso (12/30 non-zero)**: Aggressive selection; zeroes out 18 noise variables.
 - **Elastic Net (17/30 non-zero)**: Balanced selection; zeroes out 13 noise variables while offering smoother shrinkage for surviving predictors.
 
-##### 4-3-6. Handling Correlated Predictors: A Direct Comparison
+##### 3-3-6. Handling Correlated Predictors: A Direct Comparison
 
 The key advantage of Elastic Net over Lasso becomes obvious when predictors are collinear (e.g., Poverty Rate and Uninsured Rate moving together across counties).
 
@@ -693,7 +662,7 @@ To evaluate performance under high collinearity, I simulate two strongly correla
 
 **Two ways to check "variance" here**: what we want to show is how much each method's coefficients would swing across different samples. The correct way to check that is a **Monte Carlo simulation** — regenerate the dataset from scratch many times and see how much each method's answer changes. But every other example in this post uses just one dataset, which is what you'd actually have in real research. So I'll do both: first, a $k$-fold version that stays consistent with "one dataset only," then the full Monte Carlo version, so we can see how much they agree.
 
-###### 4-3-6-1. Version 1: k-Fold Cross-Validation on One Dataset
+###### 3-3-6-1. Version 1: k-Fold Cross-Validation on One Dataset
 
 This uses only the single dataset below, split into 10 folds. Each fold trains on a different 90% of the counties, and comparing coefficients across folds gives a rough sense of how stable each method is — without ever generating new data.
 
@@ -781,7 +750,7 @@ kable(kfold_summary_df, caption = "Bias, Variance, and MSE from 10-Fold Cross-Va
 
 Ridge has the lowest variance here, as expected. But its bias is large enough that its MSE ends up close to — or even slightly worse than — OLS's. Lasso looks like the worst option on every measure. This is a useful first read, but with only 10 folds that overlap heavily with each other, it's a fairly noisy estimate. Let's check it against the "real" answer.
 
-###### 4-3-6-2. Version 2: Monte Carlo Simulation (100 Fresh Datasets)
+###### 3-3-6-2. Version 2: Monte Carlo Simulation (100 Fresh Datasets)
 
 This time, instead of splitting one dataset into folds, I generate 100 completely new datasets from scratch and refit every method on each one. This is the textbook-correct way to measure variance — just not something you could ever do with real data, since real data only comes once.
 
@@ -862,13 +831,13 @@ ggplot(compare_df, aes(x = Method, y = Value, color = Metric)) +
         plot.margin = ggplot2::margin(10, 10, 10, 10))
 ```
 
-###### 4-3-6-3. Comparing the Two Versions
+###### 3-3-6-3. Comparing the Two Versions
 
 Look at ridge's purple (variance) dot in both panels: low in the k-fold version, and just as low — or lower — in the Monte Carlo version. That part agrees. But the overall ranking shifts once we use the full 100-dataset version: with more independent samples, ridge's advantage becomes cleaner, and lasso's problems become clearer too.
 
 **The takeaway**: $k$-fold cross-validation on one dataset gets the broad shape of the story right — ridge is the most stable, lasso is the least — but it's a noisier, lower-resolution picture. It shares 80% of its data across every "different" fold, so it can't fully separate a method's true stability from one unlucky split of the data. Monte Carlo is the more trustworthy answer, but it needs 100 datasets you'll never actually have. In practice, this means: trust the general pattern from a $k$-fold check on your own data, but don't take its exact numbers too literally — the deeper truth about a method's stability is something you learn once, in advance, from exercises like this one, not something you re-derive from scratch every time you fit a model to a single real dataset.
 
-#### 4-4. Why This Matters for Applied Research
+#### 3-4. Why This Matters for Applied Research
 
 When working with high-dimensional observational data (e.g., county health indicators), which method to reach for depends on what your predictors look like:
 
@@ -880,13 +849,12 @@ When working with high-dimensional observational data (e.g., county health indic
 
 **One important caution**: every regularized coefficient here is intentionally shrunk toward zero — that's the whole point, and it's what buys the drop in variance. But it also means these coefficients aren't unbiased estimates of a "true" causal effect anymore. They're excellent for prediction and for narrowing down a long list of candidate variables. If your actual goal is a trustworthy causal estimate — a number you'd report as "the effect of X" — the better workflow is to use lasso or elastic net just to *select* which control variables belong in the model, then re-estimate that shorter list with a standard, unpenalized method (like the fixed and random effects models covered in an earlier post in this series).
 
-### 5. Conclusion
+### 4. Conclusion
 
-Supervised regularization links four core concepts into a cohesive workflow:
+Supervised regularization links three core concepts into a cohesive workflow:
 
 1. **Supervised Framework**: Learning from labeled outcomes ($Y$) to predict new data.
-2. **Two Cultures**: Prioritizing out-of-sample prediction accuracy ($\hat{Y}$) over in-sample coefficient interpretation ($\hat{\beta}$).
-3. **Bias-Variance Tradeoff**: Balancing model capacity to avoid overfitting training noise.
-4. **Regularization**: Using $\lambda$ penalties (Ridge, Lasso, Elastic Net) to control complexity systematically.
+2. **Bias-Variance Tradeoff**: Balancing model capacity to avoid overfitting training noise — whether that flexibility comes from a curve that bends too much, or simply from having too many predictors.
+3. **Regularization**: Using $\lambda$ penalties (Ridge, Lasso, Elastic Net) to control complexity systematically.
 
 In the next post, we will explore **tree-based methods** (Decision Trees, Random Forests, Gradient Boosting) to see how non-linear complexity and variance reduction operate in non-parametric models.
