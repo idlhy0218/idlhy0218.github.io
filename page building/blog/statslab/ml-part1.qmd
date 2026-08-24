@@ -20,7 +20,7 @@ format:
     highlight-style: github
 ---
 
-## Machine Learning Foundations, Part 1
+## Machine Learning for Social Scientists, Part 1
 
 Every quantitative researcher eventually asks the same question: "Should I trust the coefficient, or should I trust the prediction?" Classical statistics and machine learning give different answers, and understanding *why* they differ is the single most useful thing you can learn before touching a machine learning method. This post covers three foundational ideas — supervised vs. unsupervised learning, the bias-variance tradeoff, and the logic of regularization — using the same county-level health framing from the panel data post, so the intuition carries over.
 

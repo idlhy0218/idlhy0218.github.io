@@ -10,7 +10,7 @@ format:
     code-fold: true
     code-tools: true
     toc: true
-    toc-depth: 5
+    toc-depth: 6
     toc-location: left
     self-contained: true
     fig-width: 9
@@ -22,7 +22,7 @@ format:
 
 ## Machine Learning for Social Scientists, Part 2
 
-In [Part 1](#ml-part1) we covered supervised vs. unsupervised learning, the two cultures of statistics, the bias-variance tradeoff, and regularized regression (ridge, lasso, elastic net). All of those methods share one thing in common: they're still built on a straight line, just a heavily disciplined one. This post covers a completely different family of tools — **tree-based methods** — that don't assume a straight line (or any particular shape) at all. We'll build up from a single decision tree, to a forest of them, to a method that builds trees one mistake at a time (boosting), and then learn how to interpret models that no longer hand us a simple coefficient. We'll keep using the same county-level mortality example throughout.
+In [Part 1](#ml-part1) we covered supervised vs. unsupervised learning, the bias-variance tradeoff, and regularized regression (ridge, lasso, elastic net). All of those methods share one thing in common: they're still built on a straight line, just a heavily disciplined one. This post covers a completely different family of tools — **tree-based methods** — that don't assume a straight line (or any particular shape) at all. We'll build up from a single decision tree, to a forest of them, to a method that builds trees one mistake at a time (boosting), and then learn how to interpret models that no longer hand us a simple coefficient. We'll keep using the same county-level mortality example throughout.
 
 Let's load the packages we'll need:
 
@@ -41,13 +41,13 @@ library(tidyr)
 
 ### 1. From Straight Lines to Splits: What Is a Decision Tree?
 
-#### The Core Idea
+#### 1-1. The Core Idea
 
 Every method in Part 1 — OLS, ridge, lasso — describes the relationship between predictors and an outcome with a single equation: $Y = \beta_0 + \beta_1 X_1 + \beta_2 X_2 + \dots$. A decision tree throws that assumption away entirely. Instead of a formula, it asks a sequence of yes/no questions and sorts each observation down a branch until it lands in a group with a similar outcome.
 
 This is exactly the "20 questions" game. Think about how a public health researcher might informally reason about a county's mortality risk without ever running a regression: "Is the poverty rate above 20%? If yes, is the county rural? If yes, that's a high-risk group. If no, check the physician density..." A decision tree formalizes exactly this kind of reasoning, except the algorithm decides which question to ask, and in what order, by searching the data for the splits that separate high-mortality counties from low-mortality counties most cleanly.
 
-#### A County Health Example
+#### 1-2. A County Health Example
 
 Let's build a small, realistic dataset and grow an actual tree on it.
 
@@ -99,13 +99,13 @@ The tree essentially reinvents, from scratch, the "poverty matters more in rural
 
 ### 2. How Splits Are Chosen, and Why Tree Depth Needs a Leash
 
-#### Choosing a Split
+#### 2-1. Choosing a Split
 
 At each box in the tree, the algorithm considers every possible question it could ask (every predictor, at every possible cutoff value) and picks the one that makes the two resulting groups as different from each other as possible. For a continuous outcome like mortality rate, "as different as possible" usually means: pick the split that most reduces the variance of mortality within each resulting group.
 
 Think of it like sorting a messy pile of mail into two bins so that each bin is as internally similar as possible. A good first sort (say, by zip code) leaves you with two much more homogeneous piles than a bad one (say, by envelope color).
 
-#### Why Depth Needs to Be Limited — the Same Overfitting Problem, New Costume
+#### 2-2. Why Depth Needs to Be Limited — the Same Overfitting Problem, New Costume
 
 Here's where Part 1's bias-variance lesson comes back, wearing a different outfit. A tree with unlimited depth can keep splitting the data over and over until every single county sits alone in its own leaf, perfectly "predicting" every observation in the training data. This is the tree-based version of the high-degree polynomial from Part 1 — a model so flexible it memorizes the noise instead of learning the signal.
 
@@ -147,6 +147,16 @@ p_shallow / p_deep
 
 The shallow tree draws only a few big steps — it misses the wave-like pattern entirely (underfitting, high bias). The deep tree draws dozens of tiny steps that hug almost every individual point, including the random noise around them (overfitting, high variance). Just like choosing $\lambda$ in Part 1, the right tree depth sits somewhere in between, and — just like $\lambda$ — the right value is chosen using cross-validation, not guesswork.
 
+**The math behind this, simply**: `rpart` doesn't just count depth — it uses a complexity parameter called $cp$, which works a lot like $\lambda$ from Part 1. Every time the tree considers a new split, that split only survives if it improves the model's fit by *more* than $cp$:
+
+$$\text{Error before split} - \text{Error after split} > cp$$
+
+- **Large $cp$** → only splits that help a lot are allowed → shallow, simple tree (more bias, less variance)
+- **Small $cp$** → even splits that barely help get kept → deep, complex tree (less bias, more variance)
+- **$cp = 0$** → no penalty at all → the tree keeps splitting until it perfectly memorizes the training data
+
+This is the exact same idea as the $\lambda R(f)$ penalty from Part 1's regularization — just phrased as "how much improvement do you need to justify one more split?" instead of "how much do we penalize large coefficients?"
+
 ```{r cp-cross-validation, fig.height=5.5}
 full_tree <- rpart(mortality_rate ~ poverty_rate + uninsured_rate + physician_density + rural + obesity_rate,
                     data = county_df, method = "anova",
@@ -159,7 +169,7 @@ This plot shows cross-validated error (y-axis) against tree complexity (x-axis, 
 
 ### 3. From One Tree to a Forest: Random Forests
 
-#### Why Ask Just One Tree?
+#### 3-1. Why Ask Just One Tree?
 
 A single tree has an appealing property — you can literally draw it and hand it to a colleague. But it has a real weakness: it can be unstable. Change the sample of counties slightly (say, drop 20 counties and add 20 different ones), and the very first split — the one that determines the entire shape of everything below it — might change completely, cascading into a very differently-shaped tree.
 
@@ -180,7 +190,9 @@ rf_model <- randomForest(mortality_rate ~ poverty_rate + uninsured_rate + physic
 rf_model
 ```
 
-The output reports the out-of-bag (OOB) error — a built-in, free form of cross-validation. Because each tree only sees a bootstrap sample of the counties, the counties left *out* of that sample can be used to test that particular tree, without needing a separate holdout set.
+The output reports the out-of-bag (OOB) error — a built-in, free form of cross-validation. Here's why it works: each individual tree in the forest is grown on a **bootstrap sample** — a random sample of counties drawn *with replacement*. On average, about one-third of the counties get left out of any given tree's bootstrap sample entirely (they just never got picked). Those leftover counties are called that tree's **out-of-bag** counties.
+
+Since that particular tree never saw those counties during training, it can be used to test on them — exactly like a held-out test set, except we didn't have to set one aside ourselves. Every tree in the forest has its own different set of out-of-bag counties, so by the time all 500 trees are grown, every county in the data has been "held out" and tested on by roughly a third of the trees. Averaging those results gives the OOB error — a legitimate estimate of how well the model would perform on new data, computed automatically as a side effect of how random forests are built, with no extra cross-validation step required.
 
 ```{r forest-vs-single-tree-viz, fig.height=5.5}
 set.seed(789)
@@ -207,7 +219,7 @@ The jagged red line (our overfit single tree from before) chases every bump in t
 
 ### 4. Boosting: Learning From Your Mistakes, One Tree at a Time
 
-#### A Different Strategy for Combining Trees
+#### 4-1. A Different Strategy for Combining Trees
 
 Random forests build many trees *independently* and average them — like asking 500 people the same question separately and taking the majority vote. **Boosting** takes a very different approach: it builds trees *sequentially*, where each new tree is trained specifically to fix the mistakes of the trees that came before it.
 
@@ -224,7 +236,7 @@ Each individual tree in a boosted model is deliberately kept small and weak (oft
 set.seed(999)
 boost_model <- gbm(mortality_rate ~ poverty_rate + uninsured_rate + physician_density + rural + obesity_rate,
                     data = county_df, distribution = "gaussian",
-                    n.trees = 500, interaction.depth = 2, shrinkage = 0.01, 
+                    n.trees = 1000, interaction.depth = 2, shrinkage = 0.05, 
                     cv.folds = 5, verbose = FALSE)
 
 best_iter <- gbm.perf(boost_model, method = "cv", plot.it = FALSE)
@@ -274,7 +286,7 @@ Both are answering the exact same underlying question from Part 1 — how much c
 
 Random forests and boosted models predict very well, but neither one hands you a clean coefficient like $\hat{\beta} = -1.5$ that you can put in a sentence. If a reviewer asks "so what's the effect of physician density?", you need different tools to answer that question. Two of the most useful are variable importance and partial dependence plots.
 
-#### Variable Importance: Which Predictors Are Doing the Work?
+#### 5-1. Variable Importance: Which Predictors Are Doing the Work?
 
 **The idea, in plain terms**: for each predictor, ask "how much worse do my predictions get if I take this variable away (or scramble it)?" A variable that matters a lot will hurt predictions badly when it's removed; a variable that doesn't matter won't move the needle much.
 
@@ -296,9 +308,13 @@ ggplot(importance_df, aes(x = reorder(variable, `%IncMSE`), y = `%IncMSE`)) +
 
 This ranks our five predictors by how much they contribute to the model's predictive accuracy. Note the important limitation right away: this tells us *how much* a variable matters for prediction, but not *which direction* it matters in, or whether its effect is a straight line, a curve, or something that only kicks in past a certain threshold. For that, we need the next tool.
 
-#### Partial Dependence Plots: What Direction, and What Shape?
+#### 5-2. Partial Dependence Plots: What Direction, and What Shape?
 
-**The idea, in plain terms**: pick one predictor you care about — say, poverty rate. For a range of poverty rate values, imagine sliding *every single county* in the dataset to that same poverty rate value (keeping all their other characteristics exactly as they really are), and ask the model to predict mortality for all of them. Average those predictions. Repeat for a range of poverty rate values, and you get a curve showing how the model's predicted mortality changes as poverty rate moves, averaged over every other combination of characteristics in the data.
+**The idea, in plain terms**: pick one predictor you care about — say, poverty rate. Here's the trick: take a specific poverty rate value, say 20%. Now imagine reaching into the dataset and relabeling *every single county's* poverty rate to exactly 20% — even the ones that were originally at 5% or 35% — while leaving everything else about each county untouched (its uninsured rate, physician density, rural status, all stay exactly as they really are). Run all 400 of these "modified" counties through the model and get 400 predicted mortality rates. Average those 400 predictions into one number.
+
+That one number is the model's answer to: "If every county in America had a poverty rate of exactly 20%, what would the average predicted mortality rate be?"
+
+Now repeat the whole exercise at a different poverty rate — say 25% — relabeling all 400 counties again and averaging their new predictions. Then 30%. Then 10%. Do this across a whole range of poverty rate values, and plot the resulting averages against the poverty rate value used. The result is a curve showing how the model's prediction shifts as poverty rate moves, with every other county characteristic averaged out of the picture. This is what a partial dependence plot (PDP) shows.
 
 This is the tree-based analogue of a regression coefficient — except instead of assuming the relationship is a straight line, we let the data show us its actual shape.
 
@@ -325,13 +341,17 @@ p_pdp2 <- ggplot(pdp_physician, aes(x = physician_density, y = yhat)) +
 p_pdp1 / p_pdp2
 ```
 
-Unlike a regression coefficient, which forces the relationship to be a straight line whether or not that's realistic, the partial dependence curve is free to bend. Here, both relationships look fairly steady in direction (mortality rises with poverty, falls with physician access), but in real applications these curves often reveal thresholds — for instance, physician density might barely matter above some level, but sharply matter below it, once a county is genuinely underserved. That kind of pattern would be completely invisible in an OLS coefficient, but jumps out immediately in a PDP.
+Unlike a regression coefficient, which forces the relationship to be a straight line whether or not that's realistic, the partial dependence curve is free to bend — and that flexibility is exactly what pays off here. Look closely at the poverty rate curve: it's not a smooth, steady line. Around 22%, predicted mortality jumps up noticeably faster than it did just below that point. That's not decoration — it's the model telling us there may be a **threshold effect**: below roughly 22% poverty, additional poverty seems to matter only modestly, but somewhere past that point, the relationship steepens.
+
+This is exactly the kind of pattern an OLS coefficient is structurally incapable of showing you. A regression coefficient gives you one slope for the entire range of poverty rate — it has no way to say "the effect is gentle here, but steep over there." A PDP has no such restriction; it just traces out whatever shape the model actually learned. If a threshold like this turned up in a real analysis, it would be a strong, concrete lead: maybe 22% poverty is roughly where county services start breaking down, or where a specific safety-net program's eligibility cutoff sits. Either way, it's a hypothesis worth chasing in a follow-up analysis — precisely the "exploratory diagnostic" role tree-based methods play in the workflow described later in this post.
+
+The physician density curve, by contrast, looks comparatively steady across its range in this simulation — but in real applications, that curve is often where a threshold shows up instead: physician density might barely matter once a county is reasonably well-served, but sharply matter below some critical level, once a county becomes genuinely underserved. Whichever variable it shows up in, this is the core advantage of a PDP over a coefficient: it doesn't just tell you *whether* a predictor matters, but *where* its effect changes shape — something no single number can ever convey.
 
 ### 6. Sociological Applications: Risk Prediction and Nonlinear Pattern Discovery
 
 Tree-based methods earn their place in a social scientist's toolkit through two kinds of tasks that come up constantly in applied research.
 
-#### Application 1: Risk Prediction
+#### 6-1. Application 1: Risk Prediction
 
 Many sociological and public health questions are fundamentally about identifying who is at elevated risk, not about estimating a single average effect. A county health department deciding where to target a limited number of mobile health clinics doesn't need a sentence like "each 1% increase in poverty raises mortality by X" — it needs a ranked list of the counties most likely to need help. Random forests and boosted models are built exactly for this kind of task: they optimize directly for predictive accuracy, which is what risk targeting actually requires.
 
@@ -350,7 +370,7 @@ kable(top_risk_counties, digits = 1,
 
 This is precisely the kind of $\hat{Y}$-focused, prediction-culture task from Part 1 — we're not claiming to have identified *the* causal driver of mortality, only which counties look most vulnerable based on their overall profile.
 
-#### Application 2: Discovering Nonlinear Patterns and Interactions
+#### 6-2. Application 2: Discovering Nonlinear Patterns and Interactions
 
 The second application is more exploratory: using tree-based methods as a diagnostic tool *before* committing to a final regression specification. Remember the rural × poverty interaction built into our simulated data at the very start of this post — a tree found it immediately, without us specifying it. In real research, you rarely know in advance which interactions or thresholds matter. Running a random forest and inspecting its variable importance and partial dependence plots is a fast, honest way to generate hypotheses about nonlinearities and interactions, which you can then build explicitly into a final, interpretable regression model (of the kind covered in the earlier panel data post) for formal hypothesis testing.
 
@@ -370,7 +390,7 @@ Every method in this post is, underneath the surface, doing the same thing Part 
 
 The specific mechanism changes from method to method, but the underlying logic never does: **more flexibility captures more signal, but also more noise, and the right amount of flexibility is something the data — not the researcher's intuition — should decide.**
 
-### Conclusion
+### 8. Conclusion
 
 Tree-based methods complete the supervised learning toolkit we started building in Part 1:
 
@@ -381,3 +401,4 @@ Tree-based methods complete the supervised learning toolkit we started building 
 5. **Variable importance and partial dependence plots** let us partially re-open the black box these methods create — telling us which predictors matter, and what shape their relationship with the outcome takes.
 6. In applied sociology and public health, these methods shine at **risk prediction** (a pure $\hat{Y}$ task) and as an **exploratory diagnostic** for nonlinearities and interactions worth building into a final, interpretable causal model.
 
+In the next post, we'll shift from predicting a continuous outcome (mortality rate — any number, on a smooth scale) to predicting a category instead: is this county high-risk or not? Did the county adopt the policy or not? That shift changes more than just the outcome variable — it calls for a different toolkit entirely, starting with logistic regression and k-nearest neighbors, and a whole new set of ways to check whether a model is any good (accuracy alone won't cut it — we'll need tools like confusion matrices, precision, recall, and ROC curves). We'll ground it, as always, in the same kind of county-level questions this series has used throughout: which counties are likely to cross a risk threshold, and how confident should we be in that call?
