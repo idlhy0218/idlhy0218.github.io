@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Longitudinal Trends: Student First-Day Survey (2025–2026)</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, Arial, sans-serif;
+    background: #f8fafc;
+    color: #1e293b;
+    padding: 30px 16px 60px;
+    line-height: 1.5;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+  }
+  .nav-bar {
+    max-width: 840px;
+    margin: 0 auto 16px;
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+  }
+  .nav-tabs {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .nav-tab {
+    display: inline-block;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 12.5px;
+    font-weight: 600;
+    text-decoration: none;
+    color: #64748b;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    transition: all 0.15s ease;
+    white-space: nowrap;
+  }
+  .nav-tab:hover {
+    color: #0f172a;
+    border-color: #cbd5e1;
+  }
+  .nav-tab.active-tab {
+    background: #1e293b;
+    color: #ffffff;
+    border-color: #1e293b;
+  }
+  .page {
+    max-width: 840px;
+    margin: 0 auto;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 44px 44px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+    overflow: hidden;
+  }
+  .report-title {
+    font-size: 20px;
+    font-weight: 700;
+    color: #1e293b;
+    margin-bottom: 6px;
+    letter-spacing: -0.01em;
+    line-height: 1.35;
+  }
+  .report-sub {
+    font-size: 13px;
+    color: #64748b;
+    padding-bottom: 16px;
+    border-bottom: 1.5px solid #e2e8f0;
+    margin-bottom: 0;
+    line-height: 1.4;
+  }
+  .sec-head {
+    font-size: 11px;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: #64748b;
+    font-weight: 700;
+    margin: 34px 0 18px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid #e2e8f0;
+  }
+  .stat-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 6px;
+  }
+  .stat {
+    background: #f8fafc;
+    padding: 14px 14px;
+    border-right: 1px solid #e2e8f0;
+  }
+  .stat:last-child { border-right: none; }
+  .stat-lbl { font-size: 11px; color: #64748b; font-weight: 500; margin-bottom: 4px; }
+  .stat-val { font-size: 22px; font-weight: 700; color: #1e293b; line-height: 1.2; }
+  .stat-sub { font-size: 11px; color: #94a3b8; margin-top: 2px; }
+  .trend-badge {
+    display: inline-block;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 10px;
+    font-weight: 600;
+    margin-top: 4px;
+  }
+  .badge-up { background: #dcfce7; color: #15803d; }
+  .badge-down { background: #fee2e2; color: #b91c1c; }
+  .badge-neutral { background: #f1f5f9; color: #475569; }
+  .fig { margin-bottom: 26px; }
+  .fig-title { font-size: 13.5px; font-weight: 600; color: #1e293b; margin-bottom: 3px; line-height: 1.35; }
+  .fig-note { font-size: 11.5px; color: #64748b; margin-bottom: 10px; }
+  .panel {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 16px 20px 18px;
+  }
+  .chart-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 14px;
+    margin-bottom: 14px;
+    padding-bottom: 10px;
+    border-bottom: 1px dashed #e2e8f0;
+  }
+  .legend-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11.5px;
+    color: #334155;
+    font-weight: 500;
+  }
+  .legend-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 2px;
+    display: inline-block;
+    flex-shrink: 0;
+  }
+  .cw { position: relative; width: 100%; }
+  .insight-box {
+    margin-top: 14px;
+    padding: 10px 14px;
+    background: #ffffff;
+    border-left: 3.5px solid #3d5a80;
+    border-radius: 0 6px 6px 0;
+    font-size: 12px;
+    color: #334155;
+    line-height: 1.5;
+  }
+  .insight-title { font-weight: 600; color: #1e293b; margin-bottom: 2px; }
+  @media (max-width: 680px) {
+    .page { padding: 24px 18px; }
+    .stat-row { grid-template-columns: repeat(2, 1fr); }
+    .stat:nth-child(2) { border-right: none; }
+    .stat:nth-child(1), .stat:nth-child(2) { border-bottom: 1px solid #e2e8f0; }
+  }
+</style>
+</head>
+<body>
+
+<div class="nav-bar">
+  <div class="nav-tabs">
+    <a href="Survey_Report.html" class="nav-tab">All Cohorts (N=342)</a>
+    <a href="Survey_Report_2026_Fall.html" class="nav-tab">Fall 2026 Only (N=50)</a>
+    <a href="Survey_Report_Trends.html" class="nav-tab active-tab">Longitudinal Trends (2025–2026)</a>
+  </div>
+</div>
+
+<div class="page">
+
+  <h1 class="report-title">Longitudinal Trends &amp; Cross-Cohort Analysis</h1>
+  <p class="report-sub">Comparing First-Day Student Survey Responses: Fall 2025 (n=103) &middot; Spring 2026 (n=189) &middot; Fall 2026 (n=50) &middot; Total N = 342</p>
+
+  <p class="sec-head">1. Key Trend Highlights</p>
+  <div class="stat-row">
+    <div class="stat">
+      <p class="stat-lbl">Device Ban Support</p>
+      <p class="stat-val">+18.8%</p>
+      <p class="stat-sub">13.2% &rarr; 32.0%</p>
+      <span class="trend-badge badge-up">&uarr; Rapid Surge</span>
+    </div>
+    <div class="stat">
+      <p class="stat-lbl">AI Quality Optimism</p>
+      <p class="stat-val">-16.4%</p>
+      <p class="stat-sub">20.4% &rarr; 4.0%</p>
+      <span class="trend-badge badge-down">&darr; Steep Drop</span>
+    </div>
+    <div class="stat">
+      <p class="stat-lbl">Lecture Preference</p>
+      <p class="stat-val">+17.8%</p>
+      <p class="stat-sub">49.5% &rarr; 67.3%</p>
+      <span class="trend-badge badge-up">&uarr; Steady Rise</span>
+    </div>
+    <div class="stat">
+      <p class="stat-lbl">Paid AI Adoption</p>
+      <p class="stat-val">~2.9%</p>
+      <p class="stat-sub">2% &middot; 3.7% &middot; 2%</p>
+      <span class="trend-badge badge-neutral">&rarr; Stable Base</span>
+    </div>
+  </div>
+
+  <p class="sec-head">2. Shift 1: Classroom Environment &amp; Learning Preferences</p>
+  <div class="fig">
+    <p class="fig-title">Figure 1. Preferred Classroom Environment over Time (%)</p>
+    <p class="fig-note">Fall 2025 (n=103) vs. Spring 2026 (n=189) vs. Fall 2026 (n=49)</p>
+    <div class="panel">
+      <div class="chart-legend"><span class="legend-badge"><span class="legend-dot" style="background:#3d5a80;"></span><span class="legend-text">Lecture-based</span></span><span class="legend-badge"><span class="legend-dot" style="background:#2d6a4f;"></span><span class="legend-text">Interactive / discussion-based</span></span><span class="legend-badge"><span class="legend-dot" style="background:#e07a5f;"></span><span class="legend-text">Project-focused</span></span><span class="legend-badge"><span class="legend-dot" style="background:#94a3b8;"></span><span class="legend-text">Mixed / Flexible</span></span></div>
+      <div class="cw" style="height:210px"><canvas id="t1"></canvas></div>
+      <div class="insight-box" style="border-left-color: #3d5a80;">
+        <p class="insight-title">Key Insight:</p>
+        In Fall 2025, students were evenly split between Lecture-based (49.5%) and Interactive/Discussion (49.5%). By Fall 2026, lecture preference surged to <strong>67.3%</strong>, while interactive preference decreased to <strong>22.4%</strong>.
+      </div>
+    </div>
+  </div>
+
+  <div class="fig">
+    <p class="fig-title">Figure 2. Assignment Format Preference Trends (%)</p>
+    <p class="fig-note">Fall 2025 (n=103) vs. Spring 2026 (n=188) vs. Fall 2026 (n=50)</p>
+    <div class="panel">
+      <div class="chart-legend"><span class="legend-badge"><span class="legend-dot" style="background:#2d6a4f;"></span><span class="legend-text">Short, frequent assignments</span></span><span class="legend-badge"><span class="legend-dot" style="background:#3d5a80;"></span><span class="legend-text">In-class activities</span></span><span class="legend-badge"><span class="legend-dot" style="background:#e07a5f;"></span><span class="legend-text">Longer individual projects</span></span><span class="legend-badge"><span class="legend-dot" style="background:#94a3b8;"></span><span class="legend-text">Longer group projects</span></span></div>
+      <div class="cw" style="height:220px"><canvas id="t2"></canvas></div>
+      <div class="insight-box" style="border-left-color: #2d6a4f;">
+        <p class="insight-title">Key Insight:</p>
+        Preference for short, frequent assignments remained consistent at <strong>~60%</strong>. However, longer individual projects rose notably to <strong>26.0%</strong> in Fall 2026 (up from 7%–10%), while in-class group activities dropped from 27% to 14%, reflecting a higher proportion of upperclassmen/seniors.
+      </div>
+    </div>
+  </div>
+
+  <p class="sec-head">3. Shift 2: Emerging Device Policy Attitudes</p>
+  <div class="fig">
+    <p class="fig-title">Figure 3. Agreement with Prohibiting Electronic Devices in Class (%)</p>
+    <p class="fig-note">Spring 2026 (n=189) vs. Fall 2026 (n=50) &middot; Scale: 1 (Strongly disagree) to 5 (Strongly agree)</p>
+    <div class="panel">
+      <div class="chart-legend"><span class="legend-badge"><span class="legend-dot" style="background:#94a3b8;"></span><span class="legend-text">Strongly disagree (1)</span></span><span class="legend-badge"><span class="legend-dot" style="background:#cbd5e1;"></span><span class="legend-text">Disagree (2)</span></span><span class="legend-badge"><span class="legend-dot" style="background:#e2e8f0;"></span><span class="legend-text">Neutral (3)</span></span><span class="legend-badge"><span class="legend-dot" style="background:#81b29a;"></span><span class="legend-text">Agree (4)</span></span><span class="legend-badge"><span class="legend-dot" style="background:#2d6a4f;"></span><span class="legend-text">Strongly agree (5)</span></span></div>
+      <div class="cw" style="height:210px"><canvas id="t3"></canvas></div>
+      <div class="insight-box" style="border-left-color: #4a6274;">
+        <p class="insight-title">Key Insight:</p>
+        Agreement with prohibiting classroom devices (ratings 4 &amp; 5) surged from <strong>13.2% to 32.0%</strong> (+18.8 percentage points), with disagreement (ratings 1 &amp; 2) falling from 59.8% to 34.0%.
+      </div>
+    </div>
+  </div>
+
+  <div class="fig">
+    <p class="fig-title">Figure 4. Reported Distraction from Peers' Electronic Device Use (%)</p>
+    <p class="fig-note">Spring 2026 (n=189) vs. Fall 2026 (n=50) &middot; Scale: 1 (Never) to 5 (Always)</p>
+    <div class="panel">
+      <div class="chart-legend"><span class="legend-badge"><span class="legend-dot" style="background:#81b29a;"></span><span class="legend-text">Never (1)</span></span><span class="legend-badge"><span class="legend-dot" style="background:#a7c957;"></span><span class="legend-text">Rarely (2)</span></span><span class="legend-badge"><span class="legend-dot" style="background:#f4a261;"></span><span class="legend-text">Sometimes (3)</span></span><span class="legend-badge"><span class="legend-dot" style="background:#e76f51;"></span><span class="legend-text">Often (4)</span></span><span class="legend-badge"><span class="legend-dot" style="background:#b91c1c;"></span><span class="legend-text">Always (5)</span></span></div>
+      <div class="cw" style="height:210px"><canvas id="t4"></canvas></div>
+      <div class="insight-box" style="border-left-color: #4a6274;">
+        <p class="insight-title">Key Insight:</p>
+        Students reporting frequent distraction (ratings 3, 4, 5) increased from <strong>22.8% to 42.0%</strong>. The proportion experiencing low/no distraction fell from 77.2% to 58.0%.
+      </div>
+    </div>
+  </div>
+
+  <p class="sec-head">4. Shift 3: AI Attitudes &amp; Perceived Quality</p>
+  <div class="fig">
+    <p class="fig-title">Figure 5. Perceived Effect of AI on Schoolwork Quality over Time (%)</p>
+    <p class="fig-note">Fall 2025 (n=103) vs. Spring 2026 (n=188) vs. Fall 2026 (n=50) &middot; Scale: 1 (Much worse) to 5 (Much better)</p>
+    <div class="panel">
+      <div class="chart-legend"><span class="legend-badge"><span class="legend-dot" style="background:#b91c1c;"></span><span class="legend-text">Much worse (1)</span></span><span class="legend-badge"><span class="legend-dot" style="background:#e76f51;"></span><span class="legend-text">Somewhat worse (2)</span></span><span class="legend-badge"><span class="legend-dot" style="background:#94a3b8;"></span><span class="legend-text">No change (3)</span></span><span class="legend-badge"><span class="legend-dot" style="background:#81b29a;"></span><span class="legend-text">Somewhat better (4)</span></span><span class="legend-badge"><span class="legend-dot" style="background:#2d6a4f;"></span><span class="legend-text">Much better (5)</span></span></div>
+      <div class="cw" style="height:210px"><canvas id="t5"></canvas></div>
+      <div class="insight-box" style="border-left-color: #4a4580;">
+        <p class="insight-title">Key Insight:</p>
+        Optimism that AI improves work quality plummeted from <strong>20.4% (Fall 25) and 20.2% (Spring 26) down to just 4.0% (Fall 26)</strong>. Meanwhile, 44.0% of Fall 2026 respondents felt AI lowers work quality.
+      </div>
+    </div>
+  </div>
+
+  <div class="fig">
+    <p class="fig-title">Figure 6. Preferred Instructor Guidance on AI over Time (%)</p>
+    <p class="fig-note">Fall 2025 (n=103) vs. Spring 2026 (n=189) vs. Fall 2026 (n=47)</p>
+    <div class="panel">
+      <div class="chart-legend"><span class="legend-badge"><span class="legend-dot" style="background:#3d5a80;"></span><span class="legend-text">Provide specific guidelines</span></span><span class="legend-badge"><span class="legend-dot" style="background:#2d6a4f;"></span><span class="legend-text">Teach effective prompting</span></span><span class="legend-badge"><span class="legend-dot" style="background:#94a3b8;"></span><span class="legend-text">Ignore AI / traditional methods</span></span><span class="legend-badge"><span class="legend-dot" style="background:#e07a5f;"></span><span class="legend-text">Design AI-resistant assignments</span></span></div>
+      <div class="cw" style="height:210px"><canvas id="t6"></canvas></div>
+      <div class="insight-box" style="border-left-color: #7b4f2e;">
+        <p class="insight-title">Key Insight:</p>
+        Across all three cohorts, the vast majority of students (53%–61%) favor <strong>explicit guidelines</strong>, and 24%–30% want <strong>effective prompting instruction</strong>. Calls to ignore AI or implement bans remain a minority preference (~8%–18%).
+      </div>
+    </div>
+  </div>
+
+  <div class="fig">
+    <p class="fig-title">Figure 7. Negative Impacts Experienced from AI Use (%)</p>
+    <p class="fig-note">Fall 2025 (n=100) vs. Spring 2026 (n=187) vs. Fall 2026 (n=50)</p>
+    <div class="panel">
+      <div class="chart-legend"><span class="legend-badge"><span class="legend-dot" style="background:#7b4f2e;"></span><span class="legend-text">Incorrect information</span></span><span class="legend-badge"><span class="legend-dot" style="background:#e07a5f;"></span><span class="legend-text">Reduced motivation to think deeply</span></span><span class="legend-badge"><span class="legend-dot" style="background:#f4a261;"></span><span class="legend-text">Less satisfaction from work</span></span><span class="legend-badge"><span class="legend-dot" style="background:#94a3b8;"></span><span class="legend-text">Spending too much time</span></span><span class="legend-badge"><span class="legend-dot" style="background:#cbd5e1;"></span><span class="legend-text">All of the above</span></span></div>
+      <div class="cw" style="height:210px"><canvas id="t7"></canvas></div>
+      <div class="insight-box" style="border-left-color: #7b4f2e;">
+        <p class="insight-title">Key Insight:</p>
+        <strong>Incorrect information</strong> (42%–49%) and <strong>reduced cognitive motivation</strong> (~32%–34%) consistently represent the top two student-reported pitfalls of AI. In Fall 2026, diminished satisfaction from completing work also grew to 16.0%.
+      </div>
+    </div>
+  </div>
+
+  <p class="sec-head">5. Summary of Stable Baselines</p>
+  <div class="panel" style="font-size:12.5px; line-height:1.6; color:#334155;">
+    <ul style="padding-left: 20px;">
+      <li style="margin-bottom: 6px;"><strong>AI Familiarity:</strong> Stable at a mean of <strong>2.9 / 5</strong> across all cohorts (~46%–50% reporting moderate familiarity).</li>
+      <li style="margin-bottom: 6px;"><strong>AI Usage Frequency for Schoolwork:</strong> Remains low at a mean of <strong>2.0–2.2 / 5</strong>; over 69% of students in every term report using AI "Rarely" or "Never" for coursework.</li>
+      <li style="margin-bottom: 6px;"><strong>Paid Subscriptions:</strong> Sustained at <strong>~2% to 3.7%</strong>, indicating negligible uptake of premium AI subscriptions among undergraduate cohorts.</li>
+    </ul>
+  </div>
+
+</div>
+
+<script>
+const TERMS = ['Fall 2025', 'Spring 2026', 'Fall 2026'];
+const DEV_TERMS = ['Spring 2026', 'Fall 2026'];
+
+function renderGroupedBar(canvasId, labels, datasets) {
+  var el = document.getElementById(canvasId);
+  if (!el) return;
+  new Chart(el, {
+    type: 'bar',
+    data: {
+      labels: labels,
+      datasets: datasets.map(function(ds) {
+        return {
+          label: ds.label,
+          data: ds.data,
+          backgroundColor: ds.color,
+          borderRadius: 3,
+          borderSkipped: false
+        };
+      })
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      layout: { padding: { top: 8, bottom: 4, left: 4, right: 4 } },
+      plugins: {
+        legend: {
+          display: false
+        },
+        tooltip: {
+          callbacks: {
+            label: function(ctx) {
+              return ctx.dataset.label + ': ' + ctx.parsed.y.toFixed(1) + '%';
+            }
+          }
+        }
+      },
+      scales: {
+        x: {
+          grid: { display: false },
+          ticks: { font: { size: 11, family: 'Inter, sans-serif' }, color: '#475569' }
+        },
+        y: {
+          min: 0,
+          max: 100,
+          grid: { color: '#f1f5f9' },
+          ticks: {
+            font: { size: 10, family: 'Inter, sans-serif' },
+            color: '#94a3b8',
+            callback: function(val) { return val + '%'; }
+          }
+        }
+      }
+    }
+  });
+}
+
+// Fig 1: Environment
+renderGroupedBar('t1', TERMS, [{"label": "Lecture-based", "data": [49.5, 60.3, 67.3], "color": "#3d5a80"}, {"label": "Interactive / discussion-based", "data": [49.5, 30.7, 22.4], "color": "#2d6a4f"}, {"label": "Project-focused", "data": [1.0, 4.8, 6.1], "color": "#e07a5f"}, {"label": "Mixed / Flexible", "data": [0.0, 4.2, 4.1], "color": "#94a3b8"}]);
+
+// Fig 2: Assignment
+renderGroupedBar('t2', TERMS, [{"label": "Short, frequent assignments", "data": [61.2, 60.1, 60.0], "color": "#2d6a4f"}, {"label": "In-class activities", "data": [26.2, 27.1, 14.0], "color": "#3d5a80"}, {"label": "Longer individual projects", "data": [9.7, 6.9, 26.0], "color": "#e07a5f"}, {"label": "Longer group projects", "data": [2.9, 3.7, 0.0], "color": "#94a3b8"}]);
+
+// Fig 3: Device Prohibition
+renderGroupedBar('t3', DEV_TERMS, [{"label": "Strongly disagree (1)", "data": [33.9, 16.0], "color": "#94a3b8"}, {"label": "Disagree (2)", "data": [25.9, 18.0], "color": "#cbd5e1"}, {"label": "Neutral (3)", "data": [27.0, 34.0], "color": "#e2e8f0"}, {"label": "Agree (4)", "data": [7.4, 20.0], "color": "#81b29a"}, {"label": "Strongly agree (5)", "data": [5.8, 12.0], "color": "#2d6a4f"}]);
+
+// Fig 4: Device Distraction
+renderGroupedBar('t4', DEV_TERMS, [{"label": "Never (1)", "data": [37.6, 18.0], "color": "#81b29a"}, {"label": "Rarely (2)", "data": [39.7, 40.0], "color": "#a7c957"}, {"label": "Sometimes (3)", "data": [16.9, 32.0], "color": "#f4a261"}, {"label": "Often (4)", "data": [3.7, 10.0], "color": "#e76f51"}, {"label": "Always (5)", "data": [2.1, 0.0], "color": "#b91c1c"}]);
+
+// Fig 5: Quality
+renderGroupedBar('t5', TERMS, [{"label": "Much worse (1)", "data": [15.5, 17.0, 16.0], "color": "#b91c1c"}, {"label": "Somewhat worse (2)", "data": [20.4, 16.5, 28.0], "color": "#e76f51"}, {"label": "No change (3)", "data": [43.7, 46.3, 52.0], "color": "#94a3b8"}, {"label": "Somewhat better (4)", "data": [16.5, 17.0, 4.0], "color": "#81b29a"}, {"label": "Much better (5)", "data": [3.9, 3.2, 0.0], "color": "#2d6a4f"}]);
+
+// Fig 6: Guidance
+renderGroupedBar('t6', TERMS, [{"label": "Provide specific guidelines", "data": [61.2, 52.9, 59.6], "color": "#3d5a80"}, {"label": "Teach effective prompting", "data": [24.3, 27.0, 29.8], "color": "#2d6a4f"}, {"label": "Ignore AI / traditional methods", "data": [8.7, 18.0, 8.5], "color": "#94a3b8"}, {"label": "Design AI-resistant assignments", "data": [4.9, 2.1, 0.0], "color": "#e07a5f"}]);
+
+// Fig 7: Negatives
+renderGroupedBar('t7', TERMS, [{"label": "Incorrect information", "data": [49.0, 49.2, 42.0], "color": "#7b4f2e"}, {"label": "Reduced motivation to think deeply", "data": [32.0, 34.2, 32.0], "color": "#e07a5f"}, {"label": "Less satisfaction from work", "data": [10.0, 3.7, 16.0], "color": "#f4a261"}, {"label": "Spending too much time", "data": [2.0, 5.9, 8.0], "color": "#94a3b8"}, {"label": "All of the above", "data": [4.0, 2.7, 2.0], "color": "#cbd5e1"}]);
+</script>
+</body>
+</html>
