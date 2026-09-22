@@ -332,6 +332,13 @@
     <script>
         const statsLabPosts = [
             {
+                id: 'ml-part3',
+                title: 'Machine Learning for Social Scientists, Part 3: The Transition to Classification',
+                date: 'Sep 21, 2026',
+                description: 'Covers the transition from regression to classification: logistic regression, k-nearest neighbors (k-NN), and model evaluation metrics including confusion matrices, ROC curves, and AUC in R.',
+                file: 'blog/statslab/ml-part3.html'
+            },
+            {
                 id: 'ml-part2',
                 title: 'Machine Learning for Social Scientists, Part 2: Decision Trees, Random Forests, and Boosting',
                 date: 'Aug 16, 2026',
@@ -578,6 +585,21 @@
                         }
                     `;
                     doc.head.appendChild(style);
+
+                    // Support inter-tutorial hash links inside iframe (e.g. #ml-part1, #ml-part2)
+                    doc.addEventListener('click', (e) => {
+                        const link = e.target.closest('a');
+                        if (link) {
+                            const href = link.getAttribute('href');
+                            if (href && href.startsWith('#')) {
+                                const targetId = href.substring(1);
+                                if (statsLabPosts.some(p => p.id === targetId)) {
+                                    e.preventDefault();
+                                    window.location.hash = targetId;
+                                }
+                            }
+                        }
+                    });
                 } catch (e) {
                     console.warn("Cross-origin or frame block: could not inject custom iframe CSS", e);
                 }
