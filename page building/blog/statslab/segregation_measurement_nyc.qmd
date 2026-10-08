@@ -1,0 +1,1062 @@
+---
+title: "Measuring Spatial Segregation: Beyond the Moving Truck — A Practical Guide for Social Scientists"
+author: "Heeyoung Lee"
+date: "October 7, 2026"
+format:
+  html:
+    theme: cosmo
+    css: custom.css
+    page-layout: full
+    code-fold: true
+    code-tools: true
+    toc: true
+    toc-depth: 6
+    toc-location: left
+    embed-resources: true
+    fig-width: 9
+    fig-height: 6
+    fig-dpi: 300
+    smooth-scroll: true
+    highlight-style: github
+execute:
+  warning: false
+  message: false
+---
+
+```{r}
+#| label: setup
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(patchwork)
+library(scales)
+library(kableExtra)
+library(sf)
+library(tigris)
+
+options(tigris_use_cache = TRUE, knitr.kable.NA = "")
+```
+
+## Introduction
+
+Every student in urban sociology, economics, or public policy learns about segregation early on. You are usually handed a single number, almost always the **Dissimilarity Index ($D$)**, and told that a value above $0.60$ means "high segregation."
+
+Consider two cities with the same 50/50 composition. In the first, every neighborhood reflects that 50/50 balance. In the second, the northern neighborhoods are 100% Group B and the southern neighborhoods are 100% Group A.
+
+No one would say these two cities feel the same to live in, and $D$ does tell them apart ($0.0$ versus $1.0$). But what happens when we move beyond simple 50/50 toys into real, multiracial, unequal metropolises? What if a city is 95% White, or what if the two groups are neighbors on a map but never share a block?
+
+In this post, we walk through the **five dimensions of residential racial segregation**. We calculate every index directly from census tract data for New York City (2024 ACS 5-Year Estimates), compare **White residents with Black, Hispanic, and Asian residents**, and map the spatial pattern behind each measure.
+
+## 1. The Big Picture: Massey and Denton's Five Dimensions
+
+In their 1988 paper, *"The Dimensions of Residential Segregation,"* Douglas Massey and Nancy Denton showed that segregation is not a single concept. It spans **five distinct dimensions**:
+
+| Dimension | Conceptual question | Indices covered in this post |
+| :--- | :--- | :--- |
+| **1. Evenness** | Are groups spread across neighborhoods in the same proportion as in the whole city? | Dissimilarity ($D$), Gini ($G$), Atkinson ($A_b$); multigroup $D_m$ and entropy ($H$) |
+| **2. Exposure / Isolation** | How likely are members of different groups to encounter one another in their neighborhoods? | Isolation (${}_xP^*_x$), Interaction / exposure (${}_xP^*_y$), correlation ratio ($\eta^2$) |
+| **3. Concentration** | How little physical space does a group occupy? | Delta ($\text{DEL}$), Absolute ($\text{ACO}$) and Relative ($\text{RCO}$) Concentration |
+| **4. Centralization** | Is a group clustered near the urban core? | Proportion in the central city ($\text{PCC}$), Absolute ($\text{ACE}$) and Relative ($\text{RCE}$) Centralization |
+| **5. Clustering** | Do a group's neighborhoods adjoin one another, forming a large enclave? | Absolute ($\text{ACL}$) and Relative ($\text{RCL}$) Clustering, Spatial Proximity ($\text{SP}$), distance-decay isolation and exposure ($DP_{xx}$, $DP_{xy}$) |
+
+Evenness and exposure need only the tract table, so they are called **aspatial**. Concentration, centralization, and clustering also need geography (land area, distance to the center, adjacency). Most applied work reports only the first two dimensions, but the last three answer questions the first two cannot. Wu, Wong, and Huang (2025) review how these measures have been extended into multigroup and spatial frameworks.
+
+The figure below pictures each dimension with a pair of toy cities, with **low** segregation on top and **high** segregation below. Black squares are the minority group, white squares are the majority group, and thick outlines mark tract boundaries. The exposure panels zoom in on one resident (circled) and their tract (orange), and the concentration panels draw each person as a dot so you can see how crowded the land is.
+
+```{r}
+#| label: fig-five-dimensions
+#| fig-cap: "The five dimensions of segregation as toy cities: low versus high segregation on each."
+#| fig-width: 11
+#| fig-height: 6.8
+local({
+  dims <- c("1. Evenness\nSame mix everywhere?", "2. Exposure\nWho are your neighbors?",
+            "3. Concentration\nHow much land is used?", "4. Centralization\nHow close to the center?",
+            "5. Clustering\nDo the tracts touch?")
+  lv     <- c("Low segregation", "High segregation")
+  dark   <- "#1C1917"; light <- "#E7E2D9"; orange <- "#d95f02"
+
+  # Cells (people or tracts) and tract outlines in the unit square; row 1 is the top
+  grid_cells <- function(black) {
+    n <- nrow(black)
+    expand.grid(i = 1:n, j = 1:n) %>%
+      mutate(xmin = (j - 1) / n, xmax = j / n, ymin = 1 - i / n, ymax = 1 - (i - 1) / n,
+             black = black[cbind(i, j)])
+  }
+  grid_tracts <- function(n) {
+    expand.grid(i = 1:n, j = 1:n) %>%
+      mutate(xmin = (j - 1) / n, xmax = j / n, ymin = 1 - i / n, ymax = 1 - (i - 1) / n)
+  }
+
+  # 8 x 8 people in 4 x 4 tracts (2 x 2 people each)
+  one_each <- function(r, c) { m <- matrix(FALSE, 8, 8); m[seq(r, 8, 2), seq(c, 8, 2)] <- TRUE; m }
+  blocks   <- function(tract_cols) {       # whole tracts are black; tract_cols[a] is the black tract in tract-row a
+    m <- matrix(FALSE, 8, 8)
+    for (a in 1:4) m[(2 * a - 1):(2 * a), (2 * tract_cols[a] - 1):(2 * tract_cols[a])] <- TRUE
+    m
+  }
+  even_lo <- one_each(1, 1)                # one black person in every tract
+  even_hi <- blocks(c(2, 4, 1, 3))         # four all-black tracts
+  expo_lo <- one_each(2, 2)
+  expo_hi <- blocks(c(3, 2, 4, 1))
+  focal_rect <- tibble(xmin = 0.25, xmax = 0.5, ymin = 0.5, ymax = 0.75)   # tract in row 2, column 2
+  focal_pt   <- tibble(x = 3.5 / 8, y = 1 - 3.5 / 8)                       # person in row 4, column 4
+
+  # Concentration: 3 x 3 tracts with the same number of residents (4 dots) but unequal land area
+  edge <- c(0, cumsum(c(3, 1, 2) / 6))
+  conc <- function(black_codes) {
+    t <- expand.grid(a = 1:3, b = 1:3) %>%
+      mutate(xmin = edge[b], xmax = edge[b + 1], ymin = edge[a], ymax = edge[a + 1],
+             black = FALSE, minority = (10 * b + a) %in% black_codes)
+    dots <- merge(t, expand.grid(u = c(0.27, 0.73), v = c(0.27, 0.73))) %>%
+      mutate(x = xmin + u * (xmax - xmin), y = ymin + v * (ymax - ymin)) %>%
+      select(x, y, minority)
+    list(cells = t, dots = dots)
+  }
+  conc_lo <- conc(c(11, 13, 31))   # minority lives in the three largest tracts
+  conc_hi <- conc(c(22, 23, 32))   # minority lives in three small tracts
+
+  # Centralization and clustering: 6 x 6 tracts, 12 of them black
+  ii <- as.vector(row(matrix(0, 6, 6))); jj <- as.vector(col(matrix(0, 6, 6)))
+  m6 <- function(v) matrix(v, 6, 6)
+  edge_tr <- ii %in% c(1, 6) | jj %in% c(1, 6)
+  cent_lo <- m6(edge_tr & ii %in% c(1, 2, 5, 6) & jj %in% c(1, 2, 5, 6))
+  cent_hi <- m6(ii %in% 2:5 & jj %in% 2:5 & !(ii %in% c(2, 5) & jj %in% c(2, 5)))
+  clus_lo <- m6((ii + jj) %% 2 == 0 & jj %% 3 != 0)
+  clus_hi <- m6(ii %in% 4:6 & jj %in% 1:4)
+
+  mk_panel <- function(d, l, cells, tracts, caption, dots = NULL, rect = NULL, pt = NULL) {
+    tag <- function(x) if (!is.null(x)) mutate(x, dim = d, level = l)
+    list(cells = tag(cells), tracts = tag(tracts), dots = tag(dots), rect = tag(rect), pt = tag(pt),
+         cap = tibble(dim = d, level = l, text = caption))
+  }
+
+  panels <- list(
+    mk_panel(dims[1], lv[1], grid_cells(even_lo), grid_tracts(4), "Every tract has the same mix as the whole city: 1 black person in 4."),
+    mk_panel(dims[1], lv[2], grid_cells(even_hi), grid_tracts(4), "Each tract is all black or all white."),
+    mk_panel(dims[2], lv[1], grid_cells(expo_lo), grid_tracts(4), "The circled person's neighbors: 3 of 4 are white.", rect = focal_rect, pt = focal_pt),
+    mk_panel(dims[2], lv[2], grid_cells(expo_hi), grid_tracts(4), "The circled person's neighbors: all are black.", rect = focal_rect, pt = focal_pt),
+    mk_panel(dims[3], lv[1], conc_lo$cells, conc_lo$cells, "Same number of people per tract. Black residents are spread over a lot of land.", dots = conc_lo$dots),
+    mk_panel(dims[3], lv[2], conc_hi$cells, conc_hi$cells, "Same number of people per tract. Black residents are packed into little land.", dots = conc_hi$dots),
+    mk_panel(dims[4], lv[1], grid_cells(cent_lo), grid_tracts(6), "Black tracts are far from the city center (star)."),
+    mk_panel(dims[4], lv[2], grid_cells(cent_hi), grid_tracts(6), "Black tracts surround the city center (star)."),
+    mk_panel(dims[5], lv[1], grid_cells(clus_lo), grid_tracts(6), "Black tracts are scattered, like a checkerboard."),
+    mk_panel(dims[5], lv[2], grid_cells(clus_hi), grid_tracts(6), "Black tracts touch and form one large enclave."))
+
+  collect <- function(part) bind_rows(lapply(panels, `[[`, part)) %>%
+    mutate(dim = factor(dim, dims), level = factor(level, lv))
+  cells <- collect("cells") %>% mutate(fill = ifelse(black, dark, light))
+  dots  <- collect("dots")  %>% mutate(fill = ifelse(minority, dark, "white"))
+  caps  <- collect("cap") %>%
+    mutate(text = sapply(text, function(s) paste(strwrap(s, 30), collapse = "\n"), USE.NAMES = FALSE))
+  stars <- expand.grid(dim = dims[4], level = lv, x = 0.5, y = 0.5) %>%
+    mutate(dim = factor(dim, dims), level = factor(level, lv))
+
+  ggplot() +
+    geom_rect(data = cells, aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax, fill = fill),
+              color = "gray65", linewidth = 0.15) +
+    geom_rect(data = collect("tracts"), aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax),
+              fill = NA, color = "gray10", linewidth = 0.5) +
+    geom_rect(data = collect("rect"), aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax),
+              fill = NA, color = orange, linewidth = 1.4) +
+    geom_point(data = dots, aes(x, y, fill = fill), shape = 21, size = 3, color = "gray30") +
+    geom_point(data = collect("pt"), aes(x, y), shape = 1, size = 5, stroke = 1.3, color = orange) +
+    geom_point(data = stars, aes(x, y), shape = 8, size = 3, color = orange, stroke = 1) +
+    geom_text(data = caps, aes(x = 0.5, y = -0.04, label = text), size = 2.9, vjust = 1, lineheight = 0.95) +
+    scale_fill_identity() +
+    facet_grid(level ~ dim, switch = "y") +
+    coord_fixed(xlim = c(0, 1), ylim = c(-0.3, 1), expand = FALSE) +
+    theme_void(base_size = 11) +
+    theme(strip.text = element_text(face = "bold", size = 9.5),
+          strip.text.x = element_text(margin = margin(b = 8)),
+          strip.text.y.left = element_text(size = 10, margin = margin(r = 8)),
+          panel.spacing = unit(0.6, "lines"),
+          plot.margin = margin(10, 10, 5, 10))
+})
+```
+
+Read each column as one question about the same two groups. **Evenness** asks whether every tract has the same mix. **Exposure** asks who lives around a typical resident. **Concentration** asks how much land the group uses; every tract has the same number of residents, so crowded dots mean dense land use. **Centralization** asks how close the group is to the city center. **Clustering** asks whether the group's tracts touch.
+
+### 1.1 Setting the stage: New York City, 2024
+
+```{r}
+#| label: load-data
+#| results: hide
+tract_path <- "e:/1. Data/ACS/Segregation Index/tractpop(2009-2024)_261006.rds"
+master_tracts <- readRDS(tract_path)
+
+nyc_fips <- c("36005", "36047", "36061", "36081", "36085")
+nyc_sf <- tracts(state = "36", county = substr(nyc_fips, 3, 5),
+                 cb = TRUE, year = 2022, progress_bar = FALSE)
+
+# Tract geometry joined to 2024 attributes, projected to UTM 18N (meters)
+tr <- nyc_sf %>%
+  inner_join(filter(master_tracts, county_fips %in% nyc_fips, year == 2024),
+             by = c("GEOID" = "tract_fips")) %>%
+  filter(po_tot > 0, ALAND > 0) %>%
+  st_transform(32618) %>%
+  mutate(area = ALAND / 2589988)   # land area in square miles
+```
+
+```{r}
+#| label: helpers
+# Groups: White is non-Hispanic; the other three are compared with White
+grp     <- c(White = "po_whi", Black = "po_blk", Hispanic = "po_his", Asian = "po_asi")
+minor   <- grp[-1]
+grp_col <- c(White = "#2b5c8f", Black = "#7A1A1A", Hispanic = "#d95f02", Asian = "#1b7837")
+
+d  <- st_drop_geometry(tr)
+M  <- as.matrix(d[unname(grp)]); colnames(M) <- names(grp)
+wh <- d$po_whi
+x_of <- function(g) d[[grp[[g]]]]
+
+# Apply an index to each minority-vs-White pair, or to each of the four groups
+pair <- function(f, ...) sapply(names(minor), function(g) f(x_of(g), wh, ...))
+each <- function(f, ...) sapply(names(grp),   function(g) f(x_of(g), ...))
+
+# Tables
+as_tab <- function(...) {
+  l <- list(...)
+  data.frame(Index = names(l), do.call(rbind, l), row.names = NULL, check.names = FALSE)
+}
+show_tbl <- function(tab, cap) {
+  kable(tab, digits = 3, caption = cap, format.args = list(big.mark = ",")) %>%
+    kable_styling(bootstrap_options = c("striped", "hover", "condensed"), full_width = FALSE)
+}
+pct <- function(x) percent(x, accuracy = 0.1)
+
+# Maps: one long sf object with a `panel` and a `value` column per facet
+long_sf <- function(vals) {
+  bind_rows(lapply(names(vals), function(p) transmute(tr, panel = p, value = vals[[p]]))) %>%
+    mutate(panel = factor(panel, names(vals)))
+}
+pair_vals <- function(f, ...)
+  setNames(lapply(names(minor), function(g) f(x_of(g), wh, ...)), paste(names(minor), "vs. White"))
+grp_vals <- function(f, ...)
+  setNames(lapply(names(grp), function(g) f(x_of(g), ...)), names(grp))
+
+theme_map <- theme_void(base_size = 11) +
+  theme(plot.title = element_text(face = "bold", size = 13),
+        plot.subtitle = element_text(color = "gray30"),
+        strip.text = element_text(face = "bold"),
+        legend.position = "bottom", legend.key.width = unit(1.2, "cm"),
+        legend.title = element_text(size = 9), legend.text = element_text(size = 8))
+
+# ggplot2 renamed `trans` to `transform` in 3.5.0
+tr_arg <- if (packageVersion("ggplot2") >= "3.5.0") "transform" else "trans"
+
+cbar <- guide_colorbar(title.position = "top", title.hjust = 0.5)
+
+# Sequential scale (light = low, dark = high), capped at the 99th percentile if `v` is supplied
+seq_scale <- function(name, v = NULL, trans = "identity", ...) {
+  lim <- if (is.null(v)) NULL else c(0, quantile(v, 0.99, na.rm = TRUE))
+  do.call(scale_fill_viridis_c,
+          c(list(name = name, option = "magma", direction = -1, begin = 0.1,
+                 limits = lim, oob = squish, guide = cbar, ...),
+            setNames(list(trans), tr_arg)))
+}
+# Diverging scale centered on zero; the pseudo-log stretch keeps small values visible
+div_scale <- function(v, name) {
+  q <- quantile(abs(v), 0.99, na.rm = TRUE)
+  do.call(scale_fill_gradient2,
+          c(list(name = name, low = "#2166AC", mid = "#F7F7F7", high = "#B2182B", midpoint = 0,
+                 limits = c(-q, q), oob = squish, guide = cbar),
+            setNames(list(pseudo_log_trans(sigma = q / 10)), tr_arg)))
+}
+seq_fn <- function(name, trans = "identity", ...) function(v) seq_scale(name, v, trans, ...)
+div_fn <- function(name) function(v) div_scale(v, name)
+
+map_facets <- function(df, sc, title, subtitle = NULL, ncol = 3) {
+  ggplot(df) +
+    geom_sf(aes(fill = value), color = NA) +
+    sc +
+    facet_wrap(~panel, ncol = ncol) +
+    labs(title = title, subtitle = subtitle) +
+    theme_map
+}
+
+# One map per panel, each with its own color scale, so every panel uses the full gradient
+map_panels <- function(vals, scale_fn, title, subtitle = NULL, ncol = 3, extra = NULL) {
+  plots <- lapply(names(vals), function(p) {
+    ggplot(mutate(tr, v = vals[[p]])) + geom_sf(aes(fill = v), color = NA) + extra +
+      scale_fn(vals[[p]]) + labs(title = p) + theme_map +
+      theme(plot.title = element_text(size = 11))
+  })
+  wrap_plots(plots, ncol = ncol) +
+    plot_annotation(title = title, subtitle = subtitle,
+                    theme = theme(plot.title = element_text(face = "bold", size = 14),
+                                  plot.subtitle = element_text(color = "gray30")))
+}
+```
+
+New York City has **`r format(nrow(tr), big.mark = ",")` census tracts** and **`r format(sum(d$po_tot), big.mark = ",")` residents** in the 2024 ACS 5-Year Estimates.
+
+```{r}
+#| label: table-overview
+tibble(Group = c(names(grp), "Other (residual)"),
+       Population = c(colSums(M), sum(d$po_tot) - sum(M))) %>%
+  mutate(Share = pct(Population / sum(Population))) %>%
+  show_tbl("Table 1: Citywide demographics of New York City (2024 ACS 5-Year)")
+```
+
+**Data note.** The four groups are treated as mutually exclusive: non-Hispanic White, Black alone, Hispanic (any race), and Asian alone. Please confirm in your data dictionary that `po_blk` and `po_asi` exclude Hispanic residents. Otherwise exposure shares and the multigroup indices double count them. The residual (American Indian, Pacific Islander, multiracial, and other) is labeled "Other" and is not analyzed as a group.
+
+Let's first see where each group lives:
+
+```{r}
+#| label: fig-share-maps
+#| fig-cap: "Share of tract population by group, New York City, 2024."
+#| fig-height: 9
+shares <- grp_vals(function(x) x / d$po_tot)
+
+map_panels(shares, seq_fn("Share of tract population", labels = percent),
+           "Who lives where?", "Each panel has its own color scale.", ncol = 2)
+```
+
+The groups occupy visibly different parts of the city. The question for the rest of the post is how to turn this visual impression into rigorous, comparable numbers.
+
+## 2. Dimension 1: Evenness
+
+**The one-sentence version: if we poured all residents evenly across all tracts, how far is the actual city from that blend?**
+
+Evenness measures how differently two groups are distributed across spatial units. A perfectly even distribution means every tract has the same demographic composition as the city overall.
+
+### 2.1 Pairwise dissimilarity ($D$): the "moving truck" index
+
+The most famous metric in urban sociology is the **Dissimilarity Index**, developed by Duncan and Duncan (1955a):
+
+$$D = \frac{1}{2} \sum_{i=1}^n \left| \frac{x_i}{X} - \frac{y_i}{Y} \right|$$
+
+where:
+
+- $x_i, y_i$ are the populations of Group $X$ (the minority group) and Group $Y$ (White residents) in tract $i$.
+- $X, Y$ are the citywide populations of the two groups.
+- $n$ is the number of census tracts.
+
+How to interpret $D$:
+
+- $D$ ranges from $0.0$ (complete integration) to $1.0$ (complete separation).
+- **The "moving truck" rule**: $D$ is the share of Group $X$ (or of Group $Y$) that would have to move to another tract for the two groups to be distributed identically.
+- **Rule of thumb**: $D < 0.30$ is low, $0.30$ to $0.60$ is moderate, and $D > 0.60$ is high.
+
+**In plain words:** Imagine a lecture hall where you want every row to have the same mix of two groups as the whole class. $D$ tells you what share of one group would have to switch seats to make that happen. A $D$ of $0.70$ means about 70% of the group would have to move, so the bigger the number, the more separated the groups are.
+
+Each tract contributes $\frac{1}{2}\left|x_i/X - y_i/Y\right|$ to $D$. The signed version of that term shows *which way* each tract is out of balance: positive where the minority group is over-represented, negative where White residents are. The positive terms sum to $D$, and so do the negative terms in absolute value.
+
+```{r}
+#| label: fig-map-dissim
+#| fig-cap: "Tract-level contributions to dissimilarity (signed), by pair."
+#| fig-height: 5.5
+dissim  <- function(x, y) 0.5 * sum(abs(x / sum(x) - y / sum(y)))
+local_d <- function(x, y) (x / sum(x) - y / sum(y)) * 1000
+
+D_pair <- pair(dissim)
+
+map_panels(pair_vals(local_d), div_fn("Group share minus White share\n(per 1,000)"),
+           "Where does dissimilarity come from?",
+           "Red: the group is over-represented. Blue: White residents are over-represented.")
+```
+
+### 2.2 The Gini index ($G$): respecting the transfers principle
+
+Dissimilarity is wonderfully intuitive, but it does not satisfy the **transfers principle**. If a resident moves from a tract where the group is heavily over-represented to another tract where it is still over-represented (both above the citywide share), $D$ does not change. The Gini index does detect such moves:
+
+$$G = \frac{\sum_{i} \sum_{j} t_i t_j \left| p_i - p_j \right|}{2 T^2 P (1 - P)}$$
+
+where $t_i = x_i + y_i$ is the two-group population of tract $i$, $p_i = x_i / t_i$ is the minority proportion in tract $i$, $T = \sum_i t_i$, and $P = X / T$.
+
+Just like the income Gini coefficient, the segregation Gini is twice the area between the **segregation Lorenz curve** and the 45-degree line of equality. Tracts are ordered by minority share, and the curve plots the cumulative share of the minority group against the cumulative share of White residents. $G$ is never smaller than $D$, because $D$ is the largest vertical gap between the curve and the diagonal.
+
+**In plain words:** You may know the Gini index as a measure of income inequality. The segregation Gini asks the same question about neighborhoods: how unequal are their group mixes? It compares every neighborhood with every other one, so it notices people shifting between two already-segregated neighborhoods, which $D$ misses.
+
+```{r}
+#| label: fig-lorenz
+#| fig-cap: "Segregation Lorenz curves: the further below the diagonal, the higher the Gini index."
+#| fig-width: 6.5
+#| fig-height: 6.5
+lorenz <- function(x, y) {
+  k <- x + y > 0; x <- x[k]; y <- y[k]
+  o <- order(x / (x + y))
+  data.frame(cum_y = c(0, cumsum(y[o]) / sum(y)), cum_x = c(0, cumsum(x[o]) / sum(x)))
+}
+gini <- function(x, y) {
+  L <- lorenz(x, y)
+  1 - sum(diff(L$cum_y) * (head(L$cum_x, -1) + tail(L$cum_x, -1)))
+}
+
+G_pair <- pair(gini)
+
+bind_rows(lapply(names(minor), function(g) cbind(group = g, lorenz(x_of(g), wh)))) %>%
+  ggplot(aes(cum_y, cum_x, color = group)) +
+  geom_abline(linetype = "dashed", color = "gray50") +
+  geom_line(linewidth = 1) +
+  scale_color_manual(values = grp_col, name = NULL) +
+  coord_equal() +
+  labs(x = "Cumulative share of White residents", y = "Cumulative share of the group",
+       title = "Segregation Lorenz curves (each group vs. White)") +
+  theme_minimal(base_size = 11) +
+  theme(plot.title = element_text(face = "bold"), legend.position = "bottom")
+```
+
+Each tract also contributes to $G$. The tract-level contributions below sum exactly to the citywide $G$ for each pair:
+
+```{r}
+#| label: fig-map-gini
+#| fig-cap: "Tract-level contributions to the Gini index, by pair."
+#| fig-height: 5.5
+local_gini <- function(x, y) {
+  t <- x + y; p <- ifelse(t > 0, x / t, 0); P <- sum(x) / sum(t)
+  as.vector(abs(outer(p, p, "-")) %*% t) * t / (2 * sum(t)^2 * P * (1 - P)) * 1000
+}
+
+map_panels(pair_vals(local_gini), seq_fn("Contribution to G (x 1,000)", "sqrt"),
+           "Where does the Gini index come from?",
+           "Large, tract-heavy departures from the citywide mix contribute most.")
+```
+
+### 2.3 The Atkinson index ($A_b$): where in the distribution does segregation sit?
+
+What if a researcher cares specifically about minority *exclusion* (tracts with almost no minority residents) versus *hyper-concentration* (enclaves with a very high minority share)? The **Atkinson segregation index** (Atkinson 1970; James and Taeuber 1985) adds a shape parameter $b \in (0, 1)$:
+
+$$A_b = 1 - \left[ \sum_{i=1}^n \left( \frac{x_i}{X} \right)^b \left( \frac{y_i}{Y} \right)^{1-b} \right]^{\frac{1}{1-b}}$$
+
+- **$b < 0.5$** (for example $A_{0.1}$) gives more weight to tracts where the minority is under-represented ($p_i < P$). It is sensitive to **exclusion from predominantly White tracts**.
+- **$b = 0.5$** weights both ends symmetrically.
+- **$b > 0.5$** (for example $A_{0.9}$) gives more weight to tracts where the minority is over-represented ($p_i > P$). It is sensitive to **enclave hyper-concentration**.
+
+**In plain words:** Think of $b$ as a dial that decides which kind of neighborhood you worry about most. Turn it low to focus on neighborhoods where a group is almost absent (shut out), and turn it high to focus on neighborhoods where the group is packed in. Reading the index at both ends tells you whether segregation is more about exclusion or more about enclaves.
+
+The first figure traces $A_b$ across the full range of $b$. The maps classify tracts by how far their minority share is from the pair's citywide share, which is exactly the contrast that $b$ re-weights.
+
+```{r}
+#| label: fig-atkinson
+#| fig-cap: "Atkinson index as a function of the sensitivity parameter b."
+#| fig-width: 7
+#| fig-height: 4.5
+atkinson <- function(x, y, b = 0.5) 1 - sum((x / sum(x))^b * (y / sum(y))^(1 - b))^(1 / (1 - b))
+
+A_01 <- pair(atkinson, b = 0.1)
+A_05 <- pair(atkinson, b = 0.5)
+A_09 <- pair(atkinson, b = 0.9)
+
+bs <- seq(0.05, 0.95, 0.05)
+bind_rows(lapply(names(minor), function(g)
+  tibble(group = g, b = bs, A = sapply(bs, function(b) atkinson(x_of(g), wh, b))))) %>%
+  ggplot(aes(b, A, color = group)) +
+  geom_line(linewidth = 1) +
+  scale_color_manual(values = grp_col, name = NULL) +
+  labs(x = "b (low: exclusion-sensitive; high: enclave-sensitive)", y = "Atkinson index",
+       title = "Atkinson index across b (each group vs. White)") +
+  theme_minimal(base_size = 11) +
+  theme(plot.title = element_text(face = "bold"), legend.position = "bottom")
+```
+
+```{r}
+#| label: fig-map-atkinson
+#| fig-cap: "Tract minority share relative to the pair's citywide share."
+#| fig-height: 6.5
+lq_labels <- c("Exclusion (< 0.25x)", "Under-represented", "Near citywide share",
+               "Over-represented", "Enclave (> 1.75x)")
+lq_class <- function(x, y) {
+  p <- x / (x + y); P <- sum(x) / (sum(x) + sum(y))
+  cut(p / P, c(-Inf, 0.25, 0.75, 1.25, 1.75, Inf), labels = lq_labels)
+}
+
+lq <- long_sf(pair_vals(lq_class))
+map_facets(lq,
+           scale_fill_manual(values = setNames(c("#2b5c8f", "#9ab9d6", "#F5F2EC", "#e6a07a", "#912222"), lq_labels),
+                             name = "Group share / citywide group share", na.value = "gray90", drop = FALSE),
+           "Exclusion and enclaves", "Share is the group's percentage of the two-group population in each tract.") +
+  guides(fill = guide_legend(nrow = 2))
+```
+
+### 2.4 Multigroup evenness: generalized dissimilarity ($D_m$) and entropy ($H$)
+
+In a diverse city like New York, a series of pairwise comparisons misses the full picture. Two multigroup indices treat all four groups at once. Let $p_{ik}$ be the share of group $k$ in tract $i$, $P_k$ its citywide share, and $t_i$ the four-group population of tract $i$.
+
+**Multigroup dissimilarity** (Morgan 1975; Sakoda 1981) normalizes total divergence by Simpson's diversity index $I = 1 - \sum_k P_k^2$:
+
+$$D_m = \frac{\sum_k \sum_i t_i \left| p_{ik} - P_k \right|}{2 T I}$$
+
+**In plain words:** $D$ compares two groups, and $D_m$ extends the same idea to many groups at once. For every neighborhood it asks how far its mix of all groups is from the citywide mix, then averages those gaps. A score near $0$ means every neighborhood looks like a small copy of the whole city.
+
+**Theil's entropy index** (Theil 1972; Reardon and Firebaugh 2002) measures how much less diverse the average tract is than the city:
+
+$$H = \sum_{i=1}^n \frac{t_i}{T} \, \frac{E - E_i}{E}, \qquad E = \sum_k P_k \ln \frac{1}{P_k}, \quad E_i = \sum_k p_{ik} \ln \frac{1}{p_{ik}}$$
+
+$H = 0$ when every tract mirrors the city and $H = 1$ when every tract contains a single group.
+
+**In plain words:** Entropy is a measure of diversity: a tract with an even mix of all groups scores high, and a tract with only one group scores zero. $H$ asks how much less diverse the average neighborhood is than the whole city. If every neighborhood is as diverse as the city, $H$ is $0$, and if each neighborhood holds just one group, $H$ is $1$. Both indices below use the four groups only, so the residual "Other" category is excluded.
+
+```{r}
+#| label: fig-map-multigroup
+#| fig-cap: "Multigroup evenness: local diversity and tract contributions to D_m and H."
+#| fig-width: 11
+#| fig-height: 5.5
+multigroup <- function(M) {
+  t <- rowSums(M); P <- colSums(M) / sum(t); S <- M / t
+  E  <- -sum(P * log(P))
+  Ei <- -rowSums(ifelse(S > 0, S * log(S), 0))
+  data.frame(div = Ei / log(ncol(M)),
+             dm  = t * rowSums(abs(sweep(S, 2, P))) / (2 * sum(t) * (1 - sum(P^2))),
+             h   = t * (E - Ei) / (E * sum(t)))
+}
+mg <- multigroup(M)
+
+map1 <- function(v, sc, title) {
+  ggplot(mutate(tr, v = v)) + geom_sf(aes(fill = v), color = NA) + sc +
+    labs(title = title) + theme_map
+}
+map1(mg$div, seq_scale("Normalized entropy", mg$div, labels = percent), "Local diversity (0 to 100%)") +
+  map1(mg$dm * 1000, seq_scale("x 1,000", mg$dm * 1000, "sqrt"), "Contribution to D_m") +
+  map1(mg$h  * 1000, div_scale(mg$h * 1000, "x 1,000"), "Contribution to H")
+```
+
+### 2.5 Empirical lab 1: evenness in New York City
+
+```{r}
+#| label: table-evenness
+tab_even <- as_tab("Dissimilarity (D)" = D_pair, "Gini (G)" = G_pair,
+                   "Atkinson (b = 0.1, exclusion-sensitive)" = A_01,
+                   "Atkinson (b = 0.5, symmetric)" = A_05,
+                   "Atkinson (b = 0.9, enclave-sensitive)" = A_09)
+show_tbl(tab_even, "Table 2: Evenness of each group relative to White residents, New York City (2024)")
+
+multi <- c("Multigroup dissimilarity (Dm)" = sum(mg$dm, na.rm = TRUE),
+           "Entropy index (H)" = sum(mg$h, na.rm = TRUE))
+show_tbl(data.frame(Index = names(multi), "Four groups" = multi, row.names = NULL, check.names = FALSE),
+         "Table 3: Multigroup evenness (White, Black, Hispanic, Asian)")
+```
+
+**Key takeaways**
+
+1. **Dissimilarity.** For the Black-White pair, `r pct(D_pair["Black"])` of either group would have to move for the two to be evenly distributed. The comparable figures are `r pct(D_pair["Hispanic"])` for Hispanic-White and `r pct(D_pair["Asian"])` for Asian-White.
+2. **Gini.** The Gini index is never below $D$ (Black-White: $G =$ `r round(G_pair["Black"], 3)` vs. $D =$ `r round(D_pair["Black"], 3)`). A large gap between the two signals that segregation is also driven by transfers that $D$ ignores.
+3. **Atkinson.** For Black-White, $A_{0.1} =$ `r round(A_01["Black"], 3)` and $A_{0.9} =$ `r round(A_09["Black"], 3)`. Comparing the two shows whether the pattern comes more from exclusion (tracts where the group is scarce) or from enclaves (tracts where it is dominant). Read the maps above for where those tracts are.
+4. **Multigroup.** With all four groups at once, $D_m =$ `r round(multi[1], 3)` and $H =$ `r round(multi[2], 3)`.
+
+## 3. Dimension 2: Exposure and isolation
+
+**The one-sentence version: when a typical resident steps out the front door, what share of the neighbors are like them, and what share are someone else?**
+
+Evenness has a blind spot: it is silent about group size. Imagine a town that is 99% White and 1% Black. Even with $D = 0.0$ (perfect evenness), the average Black resident lives in a tract that is 99% White. That experience of isolation is invisible to evenness measures, which is why we need **exposure and isolation** measures.
+
+### 3.1 Isolation (${}_xP^*_x$) and exposure (${}_xP^*_y$)
+
+Lieberson (1981) formalized the probability of contact between groups:
+
+$${}_xP^*_x = \sum_{i=1}^n \frac{x_i}{X} \, \frac{x_i}{t_i}, \qquad {}_xP^*_y = \sum_{i=1}^n \frac{x_i}{X} \, \frac{y_i}{t_i}$$
+
+- **Isolation** (${}_xP^*_x$) is the average share of Group $X$ in the tract of a typical member of Group $X$.
+- **Exposure / interaction** (${}_xP^*_y$) is the average share of Group $Y$ in the tract of a typical member of Group $X$.
+
+**In plain words (isolation):** Pick a random member of the group and look at their neighbors. Isolation is the average share of those neighbors who belong to the same group. If it is 50%, a typical group member lives in a tract where half the residents are in their own group.
+
+**In plain words (exposure):** Run the same experiment, but now count the neighbors from another group. Exposure to White residents is the average White share among a group's neighbors. It is the flip side of isolation: the lower it is, the less everyday contact there is across groups.
+
+Here $t_i$ is the *total* tract population, so exposure to all groups, including one's own and "Other," sums to one. The exposure index is **asymmetric**: the exposure of Black residents to White neighbors (${}_{\text{Black}}P^*_{\text{White}}$) is not the exposure of White residents to Black neighbors (${}_{\text{White}}P^*_{\text{Black}}$), because the two groups have different sizes.
+
+### 3.2 The correlation ratio ($\eta^2$)
+
+Because raw isolation rises mechanically with a group's citywide share, Bell (1954) proposed the **correlation ratio** to isolate pure spatial separation from group size:
+
+$$\eta^2 = \frac{{}_xP^*_x - P_x}{1 - P_x}$$
+
+where $P_x = X / T$ is the citywide share of Group $X$. It equals $0$ when the group is spread evenly (isolation equals the citywide share) and $1$ when the group lives entirely apart.
+
+**In plain words:** A big group is isolated almost automatically: if a group is 60% of a city, its members will have many same-group neighbors even in a perfectly mixed city. $\eta^2$ subtracts that built-in amount, so it shows only the extra isolation caused by where people live. It runs from $0$ (no extra isolation) to $1$ (completely apart).
+
+### 3.3 Empirical lab 2: exposure in New York City
+
+```{r}
+#| label: table-exposure
+P    <- colSums(M) / sum(d$po_tot)                                 # citywide shares
+expo <- t(sweep(M, 2, colSums(M), "/")) %*% (M / d$po_tot)         # row g: average tract of a group-g resident
+expo <- cbind(expo, Other = 1 - rowSums(expo))
+iso  <- sapply(names(grp), function(g) expo[g, g])
+eta2 <- (iso - P) / (1 - P)
+
+tab_expo <- as_tab("Citywide share (P)" = P, "Isolation" = iso,
+                   "Exposure to White" = expo[, "White"],
+                   "Normalized isolation (eta-squared)" = eta2)
+show_tbl(tab_expo, "Table 4: Isolation and exposure by group, New York City (2024)")
+```
+
+```{r}
+#| label: fig-exposure-bars
+#| fig-cap: "Average neighborhood composition experienced by a resident of each group."
+#| fig-width: 8
+#| fig-height: 4.5
+city <- c(P, Other = 1 - sum(P))
+lev  <- c("Citywide", names(grp))
+
+rbind(Citywide = city, expo) %>%
+  as.data.frame() %>% tibble::rownames_to_column("who") %>%
+  pivot_longer(-who, names_to = "neighbor", values_to = "share") %>%
+  mutate(who = factor(who, rev(lev), rev(c("Citywide mix", paste("Avg.", names(grp), "resident")))),
+         neighbor = factor(neighbor, c(names(grp), "Other"))) %>%
+  ggplot(aes(who, share, fill = neighbor)) +
+  geom_col(width = 0.7) +
+  coord_flip() +
+  scale_fill_manual(values = c(grp_col, Other = "gray75"), name = "Neighbors") +
+  scale_y_continuous(labels = percent, expand = c(0, 0)) +
+  labs(x = NULL, y = "Share of tract population", title = "Whose neighborhood is it?") +
+  theme_minimal(base_size = 11) +
+  theme(plot.title = element_text(face = "bold"), legend.position = "bottom")
+```
+
+Each tract contributes to the citywide isolation and exposure indices in proportion to where group members actually live. The maps show where a group's isolation is experienced and where each minority group meets White neighbors:
+
+```{r}
+#| label: fig-map-isolation
+#| fig-cap: "Tract contributions to isolation (x 1,000), by group."
+#| fig-height: 9
+local_iso <- function(x) x / sum(x) * x / d$po_tot * 1000
+local_exp <- function(x, y) x / sum(x) * y / d$po_tot * 1000
+
+map_panels(grp_vals(local_iso), seq_fn("Contribution to isolation (x 1,000)", "sqrt"),
+           "Where is isolation experienced?",
+           "Dark tracts are where many group members live and the group dominates the tract.", ncol = 2)
+```
+
+```{r}
+#| label: fig-map-exposure
+#| fig-cap: "Tract contributions to exposure to White residents (x 1,000), by group."
+#| fig-height: 5.5
+map_panels(pair_vals(local_exp), seq_fn("Contribution to exposure to White (x 1,000)", "sqrt"),
+           "Where do group members meet White neighbors?",
+           "Dark tracts combine many group members with a large White share.")
+```
+
+**Key takeaways**
+
+1. The average Black resident lives in a tract that is **`r pct(expo["Black", "Black"])` Black** and **`r pct(expo["Black", "White"])` White**, although Black residents are only `r pct(P["Black"])` of the city and White residents `r pct(P["White"])`.
+2. The average Hispanic resident lives in a tract that is `r pct(expo["Hispanic", "Hispanic"])` Hispanic and `r pct(expo["Hispanic", "White"])` White. The average Asian resident lives in a tract that is `r pct(expo["Asian", "Asian"])` Asian and `r pct(expo["Asian", "White"])` White.
+3. The average White resident lives in a tract that is `r pct(expo["White", "White"])` White. White residents' exposure to Black, Hispanic, and Asian neighbors is `r pct(expo["White", "Black"])`, `r pct(expo["White", "Hispanic"])`, and `r pct(expo["White", "Asian"])`, which illustrates the asymmetry of exposure.
+4. Comparing $\eta^2$ across groups (`r paste(names(grp), round(eta2, 3), sep = " = ", collapse = ", ")`) removes the effect of group size and shows how far each group is spatially set apart.
+
+## 4. Dimension 3: Concentration
+
+**The one-sentence version: does a group occupy a small share of the city's land, packed into dense tracts?**
+
+Evenness compares *people* with *people*. Concentration compares people with *land*. A group is highly concentrated if its members are packed into a small physical area. This dimension needs the **land area** of each tract (`ALAND` from the Census cartographic boundary file, converted to square miles).
+
+```{r}
+#| label: spatial-setup
+area <- d$area; A <- sum(area)
+cent <- st_centroid(st_geometry(tr))          # tract centroids (meters, UTM 18N)
+
+# Tracts ordered from smallest to largest land area
+o_area <- order(area); t_asc <- d$po_tot[o_area]; a_asc <- area[o_area]
+```
+
+### 4.1 Delta ($\text{DEL}$)
+
+The **Delta index** (Duncan, Cuzzort, and Duncan 1961) is the concentration analogue of dissimilarity, with land area in place of the comparison group:
+
+$$\text{DEL} = \frac{1}{2} \sum_{i=1}^n \left| \frac{x_i}{X} - \frac{a_i}{A} \right|$$
+
+where $a_i$ is the land area of tract $i$ and $A$ is total land area. $\text{DEL}$ is the share of the group that would have to move to achieve uniform *density* across the city's land.
+
+**In plain words:** Picture the city's land as a pizza and a group's members as toppings. If the toppings were spread evenly, every slice would hold the same number. $\text{DEL}$ is the share of group members who would have to move so that every square mile holds the same number of them.
+
+### 4.2 Absolute concentration ($\text{ACO}$)
+
+$\text{ACO}$ compares the average land area on which group members live with the smallest and largest possible values:
+
+$$\text{ACO} = 1 - \frac{\sum_{i=1}^{n} x_i a_i / X \;-\; \sum_{i=1}^{n_1} t_i a_i / T_1}{\sum_{i=n_2}^{n} t_i a_i / T_2 \;-\; \sum_{i=1}^{n_1} t_i a_i / T_1}$$
+
+Tracts are ranked from smallest to largest by land area. $n_1$ is the rank at which the cumulative total population, counted from the smallest tract up, first reaches $X$, with $T_1 = \sum_{i \le n_1} t_i$. $n_2$ is the corresponding rank counted from the largest tract down, with $T_2 = \sum_{i \ge n_2} t_i$. $\text{ACO} = 1$ means the group lives on the least land it could; $\text{ACO} = 0$ means on the most.
+
+**In plain words:** $\text{ACO}$ asks whether a group spreads out over a lot of land or is squeezed onto a small amount. It compares the group's actual land use with the least and the most land it could possibly occupy. A score near $1$ means the group is as crowded as it could be, and near $0$ means it is as spread out as it could be.
+
+### 4.3 Relative concentration ($\text{RCO}$)
+
+$\text{RCO}$ compares the concentration of Group $X$ with that of Group $Y$:
+
+$$\text{RCO} = \frac{\left( \sum_i x_i a_i / X \right) \Big/ \left( \sum_i y_i a_i / Y \right) - 1}{\left( \sum_{i=1}^{n_1} t_i a_i / T_1 \right) \Big/ \left( \sum_{i=n_2}^{n} t_i a_i / T_2 \right) - 1}$$
+
+with $n_1$ defined from $X$ and $n_2$ from $Y$. $\text{RCO} > 0$ means $X$ is more concentrated than $Y$.
+
+**In plain words:** $\text{ACO}$ looks at one group alone, while $\text{RCO}$ sets two groups side by side and asks which one is packed more tightly into small areas. A positive value means the first group is more squeezed together than White residents are. A negative value means it has more room.
+
+### 4.4 Empirical lab 3: concentration in New York City
+
+```{r}
+#| label: table-concentration
+delta <- function(x) 0.5 * sum(abs(x / sum(x) - area / A))
+
+# Population-weighted mean area of the first tracts (in the given order) that house N residents
+ext_area <- function(N, t, a) {
+  k <- which(cumsum(t) >= N)[1]
+  weighted.mean(a[1:k], t[1:k])
+}
+aco <- function(x) {
+  X  <- sum(x)
+  lo <- ext_area(X, t_asc, a_asc); hi <- ext_area(X, rev(t_asc), rev(a_asc))
+  1 - (sum(x * area) / X - lo) / (hi - lo)
+}
+rco <- function(x, y) {
+  X <- sum(x); Y <- sum(y)
+  ((sum(x * area) / X) / (sum(y * area) / Y) - 1) /
+    (ext_area(X, t_asc, a_asc) / ext_area(Y, rev(t_asc), rev(a_asc)) - 1)
+}
+
+tab_conc <- bind_rows(
+  as_tab("Delta (DEL)" = each(delta), "Absolute concentration (ACO)" = each(aco)),
+  as_tab("Relative concentration vs. White (RCO)" = pair(rco)))
+show_tbl(tab_conc, "Table 5: Concentration indices, New York City (2024); RCO compares each group with White residents")
+```
+
+```{r}
+#| label: fig-map-density
+#| fig-cap: "Population density by group (persons per square mile, log scale)."
+#| fig-height: 9
+map_panels(grp_vals(function(x) log10(x / area + 1)), seq_fn("log10 (persons per sq. mile + 1)"),
+           "How densely does each group live?", "Concentration is high when a group is dense in a small part of the city.", ncol = 2)
+```
+
+```{r}
+#| label: fig-map-delta
+#| fig-cap: "Tract contributions to Delta (signed), by group."
+#| fig-height: 9
+local_delta <- function(x) (x / sum(x) - area / A) * 1000
+
+map_panels(grp_vals(local_delta), div_fn("Group share minus land share (per 1,000)"),
+           "Where is each group over-concentrated?",
+           "Red: the tract holds more of the group than its share of the city's land.", ncol = 2)
+```
+
+```{r}
+#| label: fig-conc-curve
+#| fig-cap: "Concentration curves: cumulative share of each group against cumulative land area."
+#| fig-width: 7
+#| fig-height: 6
+bind_rows(lapply(names(grp), function(g)
+  data.frame(group = g, land = c(0, cumsum(a_asc) / A),
+             share = c(0, cumsum(x_of(g)[o_area]) / sum(x_of(g)))))) %>%
+  ggplot(aes(land, share, color = group)) +
+  geom_abline(linetype = "dashed", color = "gray50") +
+  geom_line(linewidth = 1) +
+  scale_color_manual(values = grp_col, name = NULL) +
+  coord_equal() +
+  labs(x = "Cumulative share of land (smallest tracts first)", y = "Cumulative share of the group",
+       title = "A group packed into small tracts rises steeply above the diagonal") +
+  theme_minimal(base_size = 11) +
+  theme(plot.title = element_text(face = "bold", size = 11), legend.position = "bottom")
+```
+
+**Key takeaways**
+
+1. $\text{DEL}$ for the four groups is `r paste(names(grp), round(each(delta), 3), sep = " = ", collapse = ", ")`. For each group, that share of residents would have to move to equalize density across the city's land.
+2. $\text{ACO}$ is `r paste(names(grp), round(each(aco), 3), sep = " = ", collapse = ", ")`. Values near $1$ mean the group occupies close to the least land it could.
+3. $\text{RCO}$ against White residents is `r paste(names(minor), round(pair(rco), 3), sep = " = ", collapse = ", ")`. A positive value means the group is more concentrated in space than White residents.
+
+## 5. Dimension 4: Centralization
+
+**The one-sentence version: does a group live close to the urban core, or out toward the periphery?**
+
+Centralization depends on a definition of "the center." We use **Midtown Manhattan (Times Square)** as the central point and measure the distance in miles from each tract centroid. This choice is a modeling decision, not a fact about New York, and you can change `ctr` below to test sensitivity (for example, City Hall or Downtown Brooklyn).
+
+```{r}
+#| label: central-setup
+ctr    <- st_sfc(st_point(c(-73.9855, 40.7580)), crs = 4326) %>% st_transform(32618)   # Times Square
+dist_c <- as.numeric(st_distance(cent, ctr)) / 1609.344                                  # miles
+
+miles <- c(5, 10, 15, 20)
+rings <- st_sf(miles = miles,
+               geometry = do.call(c, lapply(miles, function(r) st_boundary(st_buffer(ctr, r * 1609.344))))) %>%
+  st_crop(st_bbox(tr))
+ctr_sf <- st_sf(geometry = ctr)
+```
+
+### 5.1 Proportion in the central city ($\text{PCC}$)
+
+The simplest measure is the share of a group living in the central city. New York City is itself a central city, so as a proxy we use the share living in **Manhattan** (county FIPS 36061).
+
+**In plain words:** This is the simplest centralization measure: of everyone in the group, what percent live in the central city? If that percentage is much higher for one group than for another, that group is more centralized.
+
+### 5.2 Absolute and relative centralization ($\text{ACE}$, $\text{RCE}$)
+
+Order the tracts by increasing distance from the center. Let $X_i$, $Y_i$, and $A_i$ be the cumulative proportions of Group $X$, Group $Y$, and land area through tract $i$ (with $X_0 = Y_0 = A_0 = 0$):
+
+$$\text{ACE} = \sum_{i=1}^n X_{i-1} A_i - \sum_{i=1}^n X_i A_{i-1}, \qquad \text{RCE} = \sum_{i=1}^n X_{i-1} Y_i - \sum_{i=1}^n X_i Y_{i-1}$$
+
+Both range from $-1$ to $1$. A positive $\text{ACE}$ means the group is concentrated near the center relative to land area, and a negative value means it is concentrated toward the periphery. A positive $\text{RCE}$ means Group $X$ lives closer to the center than Group $Y$.
+
+**In plain words (ACE):** Line up the tracts from the city center outward, like rings around a bullseye. $\text{ACE}$ asks whether a group's members stand mostly in the inner rings, compared with how much land those rings hold. Positive means near the center, negative means toward the edges, and zero means no clear pattern.
+
+**In plain words (RCE):** $\text{ACE}$ compares a group with the land, and $\text{RCE}$ compares it with another group. It asks whether the group lives closer to the center than White residents do. Positive means closer to the center, and negative means farther out.
+
+```{r}
+#| label: table-centralization
+by_dist   <- order(dist_c)
+cum_share <- function(v) c(0, cumsum(v[by_dist]) / sum(v))
+cross     <- function(X, Y) sum(head(X, -1) * tail(Y, -1)) - sum(tail(X, -1) * head(Y, -1))
+
+ace <- function(x) cross(cum_share(x), cum_share(area))
+rce <- function(x, y) cross(cum_share(x), cum_share(y))
+manh <- d$county_fips == "36061"
+pcc  <- function(x) sum(x[manh]) / sum(x)
+
+tab_cent <- bind_rows(
+  as_tab("Share living in Manhattan (PCC proxy)" = each(pcc),
+         "Absolute centralization (ACE)" = each(ace)),
+  as_tab("Relative centralization vs. White (RCE)" = pair(rce)))
+show_tbl(tab_cent, "Table 6: Centralization indices, New York City (2024); center = Times Square")
+```
+
+```{r}
+#| label: fig-map-distance
+#| fig-cap: "Distance from the central point (Times Square)."
+#| fig-height: 6.5
+ggplot(mutate(tr, dist = dist_c)) +
+  geom_sf(aes(fill = dist), color = NA) +
+  geom_sf(data = rings, color = "gray20", linetype = "dashed", linewidth = 0.3) +
+  geom_sf(data = ctr_sf, shape = 8, size = 3) +
+  scale_fill_gradient(low = "#912222", high = "#F5F2EC", name = "Miles from center") +
+  labs(title = "The reference geometry for centralization", subtitle = "Dashed rings every 5 miles; star = Times Square") +
+  theme_map
+```
+
+```{r}
+#| label: fig-map-rings
+#| fig-cap: "Group shares with 5-mile rings from the center."
+#| fig-height: 9
+map_panels(shares, seq_fn("Share of tract population", labels = percent),
+           "Where do groups live relative to the core?", "Dashed rings every 5 miles from Times Square.", ncol = 2,
+           extra = geom_sf(data = rings, color = "gray20", linetype = "dashed", linewidth = 0.25, inherit.aes = FALSE))
+```
+
+```{r}
+#| label: fig-cent-curve
+#| fig-cap: "Cumulative share of each group and of land with distance from the center."
+#| fig-width: 8
+#| fig-height: 5
+bind_rows(
+  lapply(names(grp), function(g)
+    data.frame(series = g, miles = dist_c[by_dist], share = cumsum(x_of(g)[by_dist]) / sum(x_of(g)))),
+  data.frame(series = "Land area", miles = dist_c[by_dist], share = cumsum(area[by_dist]) / A)) %>%
+  ggplot(aes(miles, share, color = series, linetype = series == "Land area")) +
+  geom_line(linewidth = 1) +
+  scale_color_manual(values = c(grp_col, "Land area" = "black"), name = NULL) +
+  scale_linetype_manual(values = c("solid", "dashed"), guide = "none") +
+  scale_y_continuous(labels = percent) +
+  labs(x = "Distance from Times Square (miles)", y = "Cumulative share",
+       title = "A group above the land curve is centralized") +
+  theme_minimal(base_size = 11) +
+  theme(plot.title = element_text(face = "bold"), legend.position = "bottom")
+```
+
+**Key takeaways**
+
+1. The share of each group living in Manhattan is `r paste(names(grp), pct(each(pcc)), sep = " = ", collapse = ", ")`.
+2. $\text{ACE}$ is `r paste(names(grp), round(each(ace), 3), sep = " = ", collapse = ", ")`. Positive values indicate centralization relative to land area, negative values indicate a more peripheral location.
+3. $\text{RCE}$ against White residents is `r paste(names(minor), round(pair(rce), 3), sep = " = ", collapse = ", ")`. A positive value means the group lives closer to Times Square than White residents do.
+4. Because New York has several centers, re-run the chunk with a different `ctr` to see how sensitive these indices are to the definition of "the core."
+
+## 6. Dimension 5: Clustering
+
+**The one-sentence version: do a group's neighborhoods touch one another and form a large contiguous enclave, or are they scattered?**
+
+### 6.1 The checkerboard problem
+
+Every index above shares one limitation, known as the **checkerboard problem** (White 1983): the formulas treat tracts as independent islands. Rearranging tracts on the map does not change them.
+
+```{r}
+#| label: fig-checkerboard
+#| fig-cap: "The checkerboard problem: two arrangements with the same D."
+#| fig-width: 9
+#| fig-height: 4
+grid <- expand.grid(x = 1:4, y = 1:4)
+toy <- bind_rows(
+  mutate(grid, city = "Checkerboard (alternating)", black = (x + y) %% 2 == 0),
+  mutate(grid, city = "Clustered (east vs. west)",   black = x <= 2)) %>%
+  mutate(type = ifelse(black, "Black", "White"))
+
+ggplot(toy, aes(x, y, fill = type)) +
+  geom_tile(color = "white", linewidth = 1.2) +
+  facet_wrap(~city) +
+  scale_fill_manual(values = c(Black = "#1C1917", White = "#E7E2D9")) +
+  theme_void(base_size = 12) +
+  labs(title = "The checkerboard problem",
+       subtitle = "Both cities have D = 1.0, but only the right city forms a contiguous enclave") +
+  theme(plot.title = element_text(face = "bold", size = 13),
+        strip.text = element_text(face = "bold", size = 11), legend.position = "none")
+```
+
+Spatial measures solve this by building *distance* into the calculation.
+
+### 6.2 A distance-decay toolkit
+
+Let $d_{ij}$ be the distance in miles between tract centroids, and let $c_{ij} = \exp(-d_{ij})$ be a distance-decay weight, so nearby tracts count more. Within a tract, $d_{ii} = (0.6\, a_i)^{1/2}$. Let $P_{xx} = \sum_i \sum_j \frac{x_i}{X}\frac{x_j}{X} c_{ij}$ be the average proximity between members of Group $X$, with $P_{yy}$ and $P_{tt}$ defined likewise.
+
+**Absolute clustering** (White 1983; Massey and Denton 1988) is a standardized measure of how close a group's members are to each other:
+
+$$\text{ACL} = \frac{\sum_i \frac{x_i}{X} \sum_j c_{ij} x_j - \frac{X}{n}\sum_i\sum_j c_{ij}}{\sum_i \frac{x_i}{X} \sum_j c_{ij} t_j - \frac{X}{n}\sum_i\sum_j c_{ij}}$$
+
+**In plain words (ACL):** Do the members of a group live near each other or far apart? $\text{ACL}$ looks at the distances between the neighborhoods of all pairs of group members, with nearby pairs counting more. High values mean the group's neighborhoods are bunched together like one big enclave, and low values mean they are scattered around the city.
+
+**Relative clustering** compares the clustering of the two groups: $\text{RCL} = P_{xx}/P_{yy} - 1$.
+
+**In plain words (RCL):** $\text{ACL}$ asks whether one group is bunched up, and $\text{RCL}$ asks whether it is more bunched up than another group. It compares how close Group $X$'s members are to each other with how close Group $Y$'s members are to each other. A positive value means $X$ is more clustered than $Y$.
+
+**Spatial proximity** (White 1986) compares within-group proximity with the proximity of all residents:
+
+$$\text{SP} = \dfrac{X P_{xx} + Y P_{yy}}{T P_{tt}}$$
+
+$\text{SP} = 1$ means no group clusters more than the other; larger values mean each group lives nearer its own members than the other group's.
+
+**In plain words (SP):** Do people live closer to their own group than to the other group? $\text{SP}$ compares the typical distance between members of the same group with the typical distance between all residents. A value of $1$ means no difference, and the further above $1$ it climbs, the more each group sticks to its own side of the city.
+
+**Distance-decay isolation and exposure** (Morgan 1983) are spatially smoothed versions of ${}_xP^*_x$ and ${}_xP^*_y$:
+
+$$DP_{xx} = \sum_i \frac{x_i}{X} \sum_j K_{ij} \frac{x_j}{t_j}, \qquad DP_{xy} = \sum_i \frac{x_i}{X} \sum_j K_{ij} \frac{y_j}{t_j}, \qquad K_{ij} = \frac{c_{ij} t_j}{\sum_k c_{ik} t_k}$$
+
+Here each tract's "neighborhood" is a distance-weighted average of nearby tracts rather than the tract alone.
+
+**In plain words (distance-decay isolation and exposure):** Ordinary isolation only counts the people inside your own tract. The distance-decay version also counts nearby tracts, giving closer ones more weight, like asking who lives within a short walk and not just on your own block. $DP_{xx}$ tells you how many of those nearby neighbors are in your group, and $DP_{xy}$ tells you how many are in the other group.
+
+```{r}
+#| label: clustering-functions
+# Distance-decay weights (miles); within-tract distance (0.6 * area)^0.5
+xy <- st_coordinates(cent)
+C  <- exp(-as.matrix(dist(xy)) / 1609.344)
+diag(C) <- exp(-sqrt(0.6 * d$area))
+
+K <- sweep(C, 2, d$po_tot, "*"); K <- K / rowSums(K)    # row-normalized neighborhood weights
+
+pxx <- function(x, y = x, W = C) drop((x / sum(x)) %*% W %*% (y / sum(y)))
+acl <- function(x) {
+  X <- sum(x); n <- length(x); cs <- sum(C)
+  (X * pxx(x) - X / n * cs) / (sum(x / X * (C %*% d$po_tot)) - X / n * cs)
+}
+rcl <- function(x, y) pxx(x) / pxx(y) - 1
+sp  <- function(x, y, W = C) {
+  t <- x + y
+  (sum(x) * pxx(x, W = W) + sum(y) * pxx(y, W = W)) / (sum(t) * pxx(t, W = W))
+}
+dp  <- function(x, y = x) sum(x / sum(x) * (K %*% (y / d$po_tot)))
+
+# Back to the toy cities: D cannot tell them apart, SP can
+toy_tab <- toy %>% group_by(city) %>% summarise(
+  D  = dissim(100 * black, 100 * (!black)),
+  SP = {Ct <- exp(-as.matrix(dist(cbind(x, y)))); diag(Ct) <- exp(-sqrt(0.6))
+        sp(100 * black, 100 * (!black), Ct)})
+show_tbl(toy_tab, "Table 7: Same dissimilarity, different spatial proximity")
+```
+
+### 6.3 Empirical lab 4: clustering in New York City
+
+Beyond the formal indices, a simple descriptive check: classify a tract as a **contiguous enclave** if the group is the majority there *and* the average of its adjacent tracts is also majority-group. A **majority tract with non-majority neighbors** is an isolated pocket, not an enclave.
+
+```{r}
+#| label: table-clustering
+# Adjacent tracts (within 50 m), excluding the tract itself
+nb <- Map(setdiff, st_is_within_distance(tr, tr, dist = 50), seq_len(nrow(tr)))
+nb_mean <- function(v) vapply(nb, function(i) if (length(i)) mean(v[i]) else 0, numeric(1))
+
+enc_lev <- c("Contiguous enclave", "Isolated majority tract", "Other")
+enclave <- function(s) {
+  lag <- nb_mean(s)
+  factor(case_when(s > 0.5 & lag > 0.5 ~ enc_lev[1], s > 0.5 ~ enc_lev[2], TRUE ~ enc_lev[3]), enc_lev)
+}
+enc_share <- function(x) sum(x[enclave(x / d$po_tot) == enc_lev[1]]) / sum(x)
+
+tab_clus <- bind_rows(
+  as_tab("Absolute clustering (ACL)" = each(acl),
+         "Distance-decay isolation (DPxx)" = each(dp),
+         "Share living in a contiguous majority enclave" = each(enc_share)),
+  as_tab("Relative clustering vs. White (RCL)" = pair(rcl),
+         "Spatial proximity with White (SP)" = pair(sp),
+         "Distance-decay exposure to White (DPxy)" = pair(dp)))
+show_tbl(tab_clus, "Table 8: Clustering indices, New York City (2024); pair rows compare each group with White residents")
+```
+
+The first map smooths each group's tract share over a distance-decay neighborhood, which is exactly the "local environment" behind $DP_{xx}$. The second flags contiguous enclaves.
+
+```{r}
+#| label: fig-map-smooth
+#| fig-cap: "Distance-decay neighborhood share by group."
+#| fig-height: 9
+map_panels(grp_vals(function(x) as.vector(K %*% (x / d$po_tot))),
+           seq_fn("Distance-weighted neighborhood share", labels = percent),
+           "The neighborhood each resident actually experiences",
+           "Each tract's share smoothed over nearby tracts (weights exp(-miles)).", ncol = 2)
+```
+
+```{r}
+#| label: fig-map-enclaves
+#| fig-cap: "Contiguous majority enclaves by group."
+#| fig-height: 9
+en <- long_sf(grp_vals(function(x) enclave(x / d$po_tot)))
+map_facets(en,
+           scale_fill_manual(values = setNames(c("#912222", "#e6a07a", "#E7E2D9"), enc_lev), name = NULL, drop = FALSE),
+           "Contiguous enclaves, not checkerboards",
+           "Enclave: majority tract whose adjacent tracts are also majority on average.", ncol = 2)
+```
+
+**Key takeaways**
+
+1. $\text{SP}$ against White residents is `r paste(names(minor), round(pair(sp), 3), sep = " = ", collapse = ", ")`. Values above $1$ mean the group lives nearer its own members than White residents.
+2. Distance-decay isolation $DP_{xx}$ is `r paste(names(grp), round(each(dp), 3), sep = " = ", collapse = ", ")`, which is the average own-group share of the smoothed neighborhood of a typical group member.
+3. The share of each group living in a contiguous majority enclave is `r paste(names(grp), pct(each(enc_share)), sep = " = ", collapse = ", ")`.
+4. Results depend on the decay function and the distance unit (miles here). Report your choice, and test an alternative before drawing strong conclusions.
+
+## 7. All five dimensions at a glance
+
+```{r}
+#| label: table-scorecard
+sel <- function(tab) tab[c("Index", names(minor))]
+
+score <- bind_rows(Evenness = tab_even, Exposure = sel(tab_expo), Concentration = sel(tab_conc),
+                   Centralization = sel(tab_cent), Clustering = sel(tab_clus), .id = "Dimension")
+idx <- c(table(factor(score$Dimension, unique(score$Dimension))))
+
+kable(score[-1], digits = 3, caption = "Table 9: Scorecard of segregation indices, Black, Hispanic, and Asian residents (White residents as the reference where a pair is needed)") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), full_width = FALSE) %>%
+  pack_rows(index = idx)
+```
+
+Read each row on its own scale and by its own definition. A group can score low on evenness but high on isolation, or high on clustering and low on centralization. That is the point of Massey and Denton's framework: segregation is a profile across dimensions, not a single number.
+
+## 8. The social scientist's decision guide
+
+When you write an empirical paper or thesis, which index should you use?
+
+| If your research question is about... | Recommended metric | Why? |
+| :--- | :--- | :--- |
+| **Housing discrimination and policy barriers** | Dissimilarity ($D$) or Gini ($G$) | Measures spatial sorting independent of group size. |
+| **Peer effects, school quality, social capital** | Isolation (${}_xP^*_x$) and exposure (${}_xP^*_y$) | Captures the probability of who you actually interact with. |
+| **Comparing places with different group shares** | Correlation ratio ($\eta^2$) | Removes the mechanical effect of group size on isolation. |
+| **Exclusion from affluent neighborhoods** | Atkinson ($A_{0.1}$) | Heavily weights tracts with very few minority residents. |
+| **Hyper-segregated enclaves** | Atkinson ($A_{0.9}$) | Sensitive to extreme over-representation. |
+| **Multiracial, diverse cities** | Multigroup $D_m$ or entropy ($H$) | Handles four or more groups without binary reduction. |
+| **Land use, density, access to space** | Delta (DEL), ACO, RCO | Compares people with the land they occupy. |
+| **Proximity to jobs, transit, the urban core** | ACE, RCE | Positions groups relative to a defined center. |
+| **Enclaves, spatial spillovers, neighborhood effects** | SP, ACL, RCL, $DP_{xx}$ | Rewards adjacent minority tracts and penalizes checkerboards. |
+
+## 9. Discussion questions for students
+
+1. Why is the Gini index never smaller than the Dissimilarity index, and in what situations would the two diverge most?
+2. Why is it misleading to compare raw isolation between New York City (about 22% Black) and Atlanta (about 50% Black)? Which index would you use to compare them fairly?
+3. Black-White and Hispanic-White pairs can have similar dissimilarity but very different exposure. What features of group size and location produce that pattern?
+4. How would the ACE for Black residents change if the "center" were Downtown Brooklyn instead of Times Square? What does this say about the choice of reference point?
+5. Construct a city of 16 tracts with the same $D$ as the checkerboard but a higher $\text{SP}$. What changed on the map?
+
+## References and further reading
+
+- **Atkinson, A. B. (1970)**. *On the Measurement of Inequality*. Journal of Economic Theory, 2(3), 244-263.
+- **Bell, W. (1954)**. *A Probability Model for the Measurement of Ecological Segregation*. Social Forces, 32(4), 357-364.
+- **Duncan, O. D., & Duncan, B. (1955a)**. *A Methodological Analysis of Segregation Indexes*. American Sociological Review, 20(2), 210-217.
+- **Duncan, O. D., Cuzzort, R. P., & Duncan, B. (1961)**. *Statistical Geography: Problems in Analyzing Areal Data*. Free Press.
+- **James, D. R., & Taeuber, K. E. (1985)**. *Measures of Segregation*. Sociological Methodology, 15, 1-32.
+- **Lieberson, S. (1981)**. *An Asymmetrical Approach to Segregation*. In C. Peach, V. Robinson, & S. Smith (Eds.), *Ethnic Segregation in Cities*. Croom Helm.
+- **Massey, D. S., & Denton, N. A. (1988)**. *The Dimensions of Residential Segregation*. Social Forces, 67(2), 281-315.
+- **Morgan, B. S. (1983)**. *A Distance-Decay Based Interaction Index to Measure Residential Segregation*. Area, 15(3), 211-217.
+- **Reardon, S. F., & Firebaugh, G. (2002)**. *Measures of Multigroup Segregation*. Sociological Methodology, 32(1), 33-67.
+- **Reardon, S. F., & O'Sullivan, D. (2004)**. *Measures of Spatial Segregation*. Sociological Methodology, 34(1), 121-162.
+- **Sakoda, J. M. (1981)**. *A Generalized Index of Dissimilarity*. Demography, 18(2), 245-250.
+- **Theil, H. (1972)**. *Statistical Decomposition Analysis*. North-Holland Publishing Company.
+- **White, M. J. (1983)**. *The Measurement of Spatial Segregation*. American Journal of Sociology, 88(5), 1008-1018.
+- **White, M. J. (1986)**. *Segregation and Diversity Measures in Population Distribution*. Population Index, 52(2), 198-221.
+- **Wu, C., Wong, D. W., & Huang, X. (2025)**. *Segregation: What is in a Name? A Review of Segregation Measurement and a Prospective Framework*. Spatial Demography, 13(1), 1-29.
