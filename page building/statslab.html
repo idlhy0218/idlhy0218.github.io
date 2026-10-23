@@ -593,24 +593,56 @@
                     `;
                     doc.head.appendChild(style);
 
-                    // Support inter-tutorial hash links inside iframe (e.g. #ml-part1, #ml-part2)
+                    // Support inter-tutorial links & prevent in-page TOC/anchor clicks from polluting browser history
                     doc.addEventListener('click', (e) => {
                         const link = e.target.closest('a');
-                        if (link) {
-                            const href = link.getAttribute('href');
-                            if (href && href.startsWith('#')) {
-                                const targetId = href.substring(1);
-                                if (statsLabPosts.some(p => p.id === targetId)) {
-                                    e.preventDefault();
-                                    window.location.hash = targetId;
-                                }
+                        if (!link) return;
+                        const href = link.getAttribute('href');
+                        if (href && href.startsWith('#')) {
+                            const targetId = href.substring(1);
+                            if (!targetId) return;
+
+                            // 1. Inter-tutorial link (e.g. #ml-part1)
+                            if (statsLabPosts.some(p => p.id === targetId)) {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                window.location.hash = targetId;
+                                return;
+                            }
+
+                            // 2. In-page TOC / heading anchor
+                            const decodedId = decodeURIComponent(targetId);
+                            const targetEl = doc.getElementById(targetId) || 
+                                             doc.getElementById(decodedId) || 
+                                             doc.getElementsByName(targetId)[0] || 
+                                             doc.getElementsByName(decodedId)[0];
+                            if (targetEl) {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                targetEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
                             }
                         }
-                    });
+                    }, true); // Use capture phase so Quarto/zenscroll pushState doesn't trigger
                 } catch (e) {
                     console.warn("Cross-origin or frame block: could not inject custom iframe CSS", e);
                 }
             });
+
+            let currentLoadedId = null;
+
+            function loadIframe(file, id) {
+                if (currentLoadedId === id) return;
+                currentLoadedId = id;
+                try {
+                    if (iframe.contentWindow) {
+                        iframe.contentWindow.location.replace(file);
+                    } else {
+                        iframe.src = file;
+                    }
+                } catch (err) {
+                    iframe.src = file;
+                }
+            }
 
             // Router based on hash
             function router() {
@@ -619,8 +651,8 @@
                 const container = document.querySelector('.container');
 
                 if (matchedPost) {
-                    // Show reader view
-                    iframe.src = matchedPost.file;
+                    // Show reader view without pushing extra iframe navigation into browser history
+                    loadIframe(matchedPost.file, matchedPost.id);
                     overviewEl.style.display = 'none';
                     detailEl.style.display = 'flex';
                     if (container) container.classList.add('reader-active');
@@ -628,7 +660,16 @@
                     window.scrollTo(0, 0);
                 } else {
                     // Show list overview
-                    iframe.src = 'about:blank';
+                    currentLoadedId = null;
+                    try {
+                        if (iframe.contentWindow) {
+                            iframe.contentWindow.location.replace('about:blank');
+                        } else {
+                            iframe.src = 'about:blank';
+                        }
+                    } catch (err) {
+                        iframe.src = 'about:blank';
+                    }
                     detailEl.style.display = 'none';
                     overviewEl.style.display = 'block';
                     if (container) container.classList.remove('reader-active');
@@ -638,10 +679,24 @@
 
             // Bind Event Listeners
             window.addEventListener('hashchange', router);
+            window.addEventListener('popstate', router);
+
             backBtn.addEventListener('click', (e) => {
                 e.preventDefault();
-                window.location.hash = '';
+                if (window.location.hash) {
+                    window.history.back();
+                } else {
+                    router();
+                }
             });
+
+            // If accessed directly with a hash (e.g. external link, bookmark, direct URL),
+            // insert the overview list into browser history so the browser Back button returns to the list.
+            if (window.location.hash) {
+                const initialHash = window.location.hash;
+                history.replaceState({ view: 'overview' }, '', window.location.pathname);
+                history.pushState({ view: 'detail', id: initialHash.slice(1) }, '', window.location.pathname + initialHash);
+            }
 
             // Run router on load
             router();
