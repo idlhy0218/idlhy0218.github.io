@@ -559,7 +559,7 @@ Here $t_i$ is the *total* tract population, so exposure to all groups, including
 
 Because raw isolation rises mechanically with a group's citywide share, Bell (1954) proposed the **correlation ratio** to isolate pure spatial separation from group size:
 
-$$\eta^2 = \frac{{}_xP^*_x - P_x}{1 - P_x}$$
+$$\eta^2 = \frac{ {}_xP^*_x - P_x}{1 - P_x}$$
 
 where $P_x = X / T$ is the citywide share of Group $X$. It equals $0$ when the group is spread evenly (isolation equals the citywide share) and $1$ when the group lives entirely apart.
 
