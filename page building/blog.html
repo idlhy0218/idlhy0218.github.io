@@ -1,7 +1,8 @@
 <!-- 
   [Legacy URL Redirect Manager]
-  Role: Automatically redirects legacy blog URL hashes (e.g., #twfe, #did_tutorial, #map_art_1)
-  to their corresponding updated pages in Stats Lab (statslab.html) or Gallery (gallery.html).
+  Role: Permanently forwards legacy /blog.html requests to Stats Lab (statslab.html) or Gallery (gallery.html).
+  NOTE: This file is fully automated. You DO NOT need to edit this file when adding new posts.
+        Manage all posts exclusively in statslab.html!
 -->
 <!DOCTYPE html>
 <html lang="en">
@@ -51,50 +52,24 @@
     <script>
         let targetUrl = 'statslab.html';
         (function() {
-            // Get URL Hash (e.g. #fe_be_re)
-            let hash = window.location.hash.replace('#', '');
+            // Get URL Hash (e.g. #fe_be_re, #did_tutorial)
+            let hash = window.location.hash.replace('#', '').trim();
             
-            // Map legacy underscores/differences if needed
-            if (hash === 'understanding_meta_analysis') {
-                hash = 'understanding-meta-analysis';
-            }
-            if (hash === 'control') {
-                hash = 'what_is_control';
-            }
-            
-            // Map legacy hash IDs to their new relative Stats Lab URLs with hash routing
-            const redirects = {
-                'understanding_e_log_exp': 'statslab.html#understanding_e_log_exp',
-                'segregation_measurement_nyc': 'statslab.html#segregation_measurement_nyc',
-                'ml-part3': 'statslab.html#ml-part3',
-                'ml-part2': 'statslab.html#ml-part2',
-                'ml-part1': 'statslab.html#ml-part1',
-                'understanding-meta-analysis': 'statslab.html#understanding-meta-analysis',
-                'staggered_did': 'statslab.html#staggered_did',
-                'did_tutorial': 'statslab.html#did_tutorial',
-                'twfe': 'statslab.html#twfe',
-                'fe_be_re': 'statslab.html#fe_be_re',
-                'multilevel': 'statslab.html#multilevel',
-                'kitagawa_decomposition': 'statslab.html#kitagawa_decomposition',
-                'event_history': 'statslab.html#event_history',
-                'interaction': 'statslab.html#interaction',
-                'what_is_control': 'statslab.html#what_is_control',
-                'opportunity_insights': 'blog/studynotes/chetty.html',
-                
-                // Map legacy gallery hashes to the new Gallery tab
-                'map_art_1': 'gallery.html',
-                'map_art_2': 'gallery.html',
-                'map_art_3': 'gallery.html',
-                'map_art_4': 'gallery.html',
-                'map_art_5': 'gallery.html',
-                'seoul_life_exp_skin': 'gallery.html'
-            };
+            // 1. Legacy non-StatsLab redirects
+            if (hash === 'opportunity_insights') {
+                targetUrl = 'blog/studynotes/chetty.html';
+            } else if (hash.startsWith('map_art_') || hash === 'seoul_life_exp_skin') {
+                targetUrl = 'gallery.html';
+            } else if (hash) {
+                // 2. Normalization for legacy aliases
+                if (hash === 'control') hash = 'what_is_control';
+                if (hash === 'understanding_meta_analysis') hash = 'understanding-meta-analysis';
 
-            if (hash && redirects[hash]) {
-                targetUrl = redirects[hash];
+                // 3. Fully dynamic forward: automatically routes any current or future post hash!
+                targetUrl = 'statslab.html#' + hash;
             }
 
-            // Perform redirect
+            // Perform instant redirect
             window.location.replace(targetUrl);
         })();
     </script>
@@ -103,7 +78,7 @@
 <body>
     <div class="redirect-box">
         <h2>Page Moved</h2>
-        <p>This content has moved to a new standalone page.</p>
+        <p>This content has moved to the new Stats Lab page.</p>
         <p>You are being redirected automatically. If you are not redirected, <a href="statslab.html" id="fallback-link">click here to proceed</a>.</p>
     </div>
     <script>
