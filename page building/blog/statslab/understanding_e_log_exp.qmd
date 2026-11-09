@@ -33,6 +33,58 @@ library(broom)
 library(scales)
 ```
 
+<!-- Language Switcher Bar -->
+```{=html}
+<div class="lang-switch-wrapper" style="margin-bottom: 2rem; padding: 1rem 1.2rem; background: #fdfbf7; border: 1px solid rgba(234, 88, 12, 0.2); border-radius: 14px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;">
+  <div>
+    <span style="font-family: 'Outfit', sans-serif; font-weight: 700; color: #111827; font-size: 1rem;">Choose Language / 언어 선택:</span>
+    <span style="color: #6b7280; font-size: 0.85rem; margin-left: 0.5rem;">Select your preferred reading mode below</span>
+  </div>
+  <div style="display: flex; gap: 8px;">
+    <button id="btn-en" class="lang-pill active" onclick="switchLanguage('en')" style="border: none; background: #2563eb; color: white; padding: 8px 18px; border-radius: 25px; font-weight: 600; font-size: 0.9rem; cursor: pointer; transition: all 0.2s ease; box-shadow: 0 2px 6px rgba(37,99,235,0.2);">
+      🇬🇧 English (Original Paper)
+    </button>
+    <button id="btn-ko" class="lang-pill" onclick="switchLanguage('ko')" style="border: 1px solid #d1d5db; background: white; color: #374151; padding: 8px 18px; border-radius: 25px; font-weight: 600; font-size: 0.9rem; cursor: pointer; transition: all 0.2s ease;">
+      🇰🇷 한국어 (중학생도 이해하는 쉬운 해설)
+    </button>
+  </div>
+</div>
+
+<script>
+function switchLanguage(lang) {
+  const enEls = document.querySelectorAll('.lang-en');
+  const koEls = document.querySelectorAll('.lang-ko');
+  const btnEn = document.getElementById('btn-en');
+  const btnKo = document.getElementById('btn-ko');
+  
+  if (lang === 'en') {
+    enEls.forEach(el => el.style.display = '');
+    koEls.forEach(el => el.style.display = 'none');
+    btnEn.style.background = '#2563eb';
+    btnEn.style.color = '#ffffff';
+    btnEn.style.borderColor = 'transparent';
+    btnKo.style.background = '#ffffff';
+    btnKo.style.color = '#374151';
+    btnKo.style.borderColor = '#d1d5db';
+  } else {
+    enEls.forEach(el => el.style.display = 'none');
+    koEls.forEach(el => el.style.display = '');
+    btnKo.style.background = '#ea580c';
+    btnKo.style.color = '#ffffff';
+    btnKo.style.borderColor = 'transparent';
+    btnEn.style.background = '#ffffff';
+    btnEn.style.color = '#374151';
+    btnEn.style.borderColor = '#d1d5db';
+  }
+}
+// Default to English on load
+document.addEventListener('DOMContentLoaded', () => {
+  switchLanguage('en');
+});
+</script>
+```
+
+::: {.lang-en}
 # Introduction: The Additive Mind in a Multiplicative World
 
 When students and applied researchers first encounter statistical models in medical sociology, public health, and demography, a recurring set of questions almost always emerges:
@@ -58,12 +110,41 @@ Yet in population health and epidemiology:
 * **$\exp(x)$**: The bridge that translates linear, additive changes (+1 step) into **multiplicative rate ratios and odds ratios** ($\times \text{factor}$).
 * **$\log(x)$**: The mathematical lens that compresses runaway exponential variance back into **manageable, additive linear lines**.
 :::
+:::
+
+::: {.lang-ko style="display: none;"}
+# 프롤로그: 우리는 왜 매일 '더하기'만 생각할까? (더하기 세상 vs 곱하기 세상)
+
+통계학이나 보건학, 사회학 수업을 처음 들을 때 누구나 머리를 쥐어뜯게 만드는 질문들이 있습니다:
+
+- *"소득이나 병원비 데이터에 왜 뜬금없이 로그(log)를 씌울까?"*
+- *"로지스틱 회귀분석 결과에 왜 굳이 exp(지수함수)를 씌워야 '몇 배 위험하다(승산비)'는 말이 나올까?"*
+- *"자연상수 $e = 2.718...$는 대체 어디서 튀어나온 외계어일까?"*
+
+이 모든 의문의 출발점은 아주 단순합니다.  
+**"사람의 뇌는 본능적으로 '더하기(덧셈)'로 세상을 보지만, 우리 몸과 자연, 사회의 불평등은 '곱하기(곱셈)'로 움직이기 때문"**입니다.
+
+우리 일상생활은 온통 덧셈입니다:
+- 오늘 3km 걷고 내일 3km 더 걸으면? $3 + 3 = 6$km죠.
+- 통장에 용돈 10만 원이 들어오면 내 잔고는 정확히 '+10만 원' 늘어납니다.
+
+하지만 **생명과 건강, 질병의 세계**는 전혀 다릅니다:
+- **감기 바이러스**: 환자 1명이 주변 2명에게 옮기면 확진자는 하루에 10명씩 더해지는($10, 20, 30...$) 게 아니라, **2배, 4배, 8배, 16배...** 폭발적으로 곱해집니다.
+- **나이와 건강**: 20살에서 30살이 될 때와, 70살에서 80살이 될 때의 사망 위험은 단순히 '+1' 더해지는 게 아닙니다. 이전 나이 위험의 **몇 배씩 곱해지며 껑충껑충** 뜁니다.
+- **돈과 수명**: 하루 한 끼가 힘든 분에게 10만 원은 생명을 구하는 기적이지만, 재벌에게 10만 원은 건강에 아무런 차이도 만들지 못합니다(한계효용 체감).
+
+::: {.callout-note}
+## 세 가지 마법 도구 한눈에 보기
+* **$e$ (자연상수)**: 1초도 쉬지 않고 연속해서 자라날 때 부딪히는 **"자연의 성장 한계 속도"** (약 2.718)
+* **$\exp(x)$ (지수함수)**: 얌전한 더하기(+1칸)를 거대한 **곱하기(몇 배 뻥튀기)**로 바꿔주는 번역기
+* **$\log(x)$ (자연로그)**: 너무 거대해서 감당 안 되는 곱하기 숫자를 **작고 다루기 쉬운 더하기 숫자**로 얌전하게 줄여주는 돋보기
+:::
+:::
 
 ---
 
+::: {.lang-en}
 # 1. The Historical Origins: Escaping Arithmetic Hell
-
-To truly understand these concepts, we must step back into the shoes of the scientists who first struggled with them centuries ago.
 
 ### John Napier (1614): Turning Multiplication into Addition
 
@@ -94,8 +175,6 @@ If you want to multiply two massive numbers, you don't actually need to multiply
 
 Napier coined the word **logarithm** from the Greek *logos* (proportion) and *arithmos* (number). A logarithm is quite literally a *"number that measures proportional scaling"*.
 
----
-
 ### Jacob Bernoulli (1683): The Limit of Continuous Compounding
 
 Seventy years later, Swiss mathematician **Jacob Bernoulli** was contemplating financial interest compounding. His thought experiment was simple:
@@ -111,31 +190,72 @@ Suppose a fund deposits \$1 at a 100% nominal annual interest rate.
 
 Bernoulli asked: If the bank compounds interest every second, every millisecond—**continuously and infinitely often ($n \to \infty$)**—will your money grow to infinity?
 
-The answer was a resounding **no**. As the compounding frequency approaches infinity, the growth hits a natural, inviolable ceiling:
+The answer was a resounding **no**. As compounding frequency approaches infinity, the growth hits a natural, inviolable ceiling:
 
 $$\lim_{n \to \infty} \left(1 + \frac{1}{n}\right)^n = 2.718281828459...$$
 
 This mathematical constant is the signature of **uninterrupted continuous compounding**. 
+:::
+
+::: {.lang-ko style="display: none;"}
+# 1. 역사 속 기원 이야기: 곱셈 지옥에서 인류를 구한 영웅들
+
+### (1) 존 네이피어 아저씨와 '곱셈 생지옥' 탈출기 (로그의 탄생)
+
+지금으로부터 약 400년 전인 1600년대 초, 밤하늘의 별을 관측하던 천문학자들과 넓은 바다를 항해하던 선장들은 매일 고통 속에 살았습니다.  
+배가 암초에 걸리지 않거나 행성의 궤도를 알려면 **`738,291 × 491,827` 같은 어마어마한 6자리, 10자리 숫자 곱셈을 하루 종일 종이에 연필로 손계산**해야 했기 때문입니다. 숫자 하나만 삐끗해도 배가 엉뚱한 대양으로 빠져 선원들이 굶어 죽기 일쑤였습니다.
+
+이때 스코틀랜드의 천재 수학자 **존 네이피어(John Napier)**가 무릎을 탁 치며 번뜩이는 아이디어를 냈습니다:  
+*"사람 머리는 복잡한 곱하기는 쥐약이지만, 더하기는 1초 만에 하잖아? 세상의 모든 끔찍한 곱하기를 '쉬운 더하기'로 바꿔버릴 순 없을까?"*
+
+네이피어는 거듭제곱의 성질($A^m \times A^n = A^{m+n}$)에 주목했습니다.  
+1. 거대한 두 곱셈 숫자를 마법의 사전(로그표)에서 찾아서 작은 지수 숫자로 바꾼다.
+2. 둘을 **단순하게 덧셈(+)**한다.
+3. 그 더한 결과를 다시 사전에서 원래 숫자로 되돌려 찾는다.
+
+```
+[원래 해야 할 끔찍한 곱셈]   123,456   ×   789,101   (손으로 풀면 1시간!)
+                                │             │
+                            로그 씌우기    로그 씌우기
+                                ▼             ▼
+[마법처럼 바뀐 덧셈]         11.72     +    13.58   =  25.30  (초등학생도 5초 만에 암산!)
+                                                           │
+                                                       exp로 되돌리기
+                                                           ▼
+[최종 곱셈 정답 확인]                                 97,419,250,000
+```
+
+프랑스의 대수학자 라플라스는 **"로그의 발명은 천문학자들의 계산 수고를 덜어주어 그들의 수명을 두 배로 늘려주었다"**고 극찬했습니다.
 
 ---
 
-### Leonhard Euler (1730s): The Golden Notation and the Constant $e$
+### (2) 야코프 베르누이와 욕심쟁이 은행원 (자연상수 e의 탄생)
 
-In the 1730s, **Leonhard Euler** formalized this constant, gave it the symbol **$e$**, and demonstrated that $e^x$ (denoted $\exp(x)$) and the natural logarithm $\log(x)$ are exact mirror reflections of each other. 
+70년 뒤, 스위스의 수학자 **야코프 베르누이**는 재미있는 은행 이자 생각을 해보았습니다:
 
-In public health and biology, cells do not wait for the clock to strike midnight on December 31 to divide, nor does a tumor wait for monthly audit meetings to grow. Biological growth, viral decay, and cellular aging compound **continuously every microsecond**. That is why natural phenomena inherently run on Euler's constant $e$.
+은행원이 여러분에게 말합니다: *"원금 1원을 통장에 넣으시면, 1년에 이자를 무려 100% 드리겠습니다!"*
+- **1년에 한 번 받을 때**: 1년 뒤 내 돈은 $1 \times (1 + 1) = 2$원이 됩니다.
+- **여러분이 욕심을 냅니다**: *"반년마다 50%씩 쪼개서 복리로 주세요!"*  
+  -> 6개월 뒤 1.5원이 되고, 그 1.5원에 다시 50%가 붙어 $(1 + 0.5)^2 = 2.25$원이 됩니다! (25원 이득!)
+- **더 욕심을 냅니다**: *"매달 쪼개서 12번 복리로 주세요!"* -> 약 2.613원!
+- **매일 365번 복리로 쪼개면?** -> 약 2.714원!
+
+그렇다면, 이자를 1초마다, 아니 숨 쉴 때마다 **'무한히 끊김 없이 연속으로(Continuously)'** 쪼개서 받으면 내 돈은 수천억 원, 무한대로 불어날까요?
+
+놀랍게도 **아닙니다.**  
+아무리 잘게 쪼개도 돈은 절대 무한대로 늘어나지 못하고, **`2.7182818...`이라는 신비로운 천장(벽)**에 탁 부딪힙니다:
+
+$$\lim_{n \to \infty} \left(1 + \frac{1}{n}\right)^n = e \approx 2.71828...$$
+
+이 숫자가 바로 **자연상수 $e$**입니다.  
+자연계에서 세포가 증식하든, 바이러스가 퍼지든, 몸이 나이를 먹든, 생명 현상은 12월 31일까지 기다렸다가 한 번에 늙지 않고 **매 순간 쉬지 않고 연속해서 자라납니다.** 그 연속적인 성장이 닿을 수 있는 자연의 한계 상수가 바로 $e$인 것입니다.
+:::
 
 ---
 
 # 2. Geometric Intuition: The Mirror Symmetry of $e$, $\log$, and $\exp$
 
-To visualize the relationship between $e$, $\exp(x)$, and $\log(x)$, consider the Cartesian plane. 
-
-1. **$\exp(x) = e^x$**: Passes through $(0, 1)$. As $x$ steps forward additively ($1, 2, 3...$), the curve explodes vertically at an accelerating pace.
-2. **$\log(x)$**: Passes through $(1, 0)$. It is strictly positive for $x > 1$, negative for fractions between $0$ and $1$, and undefined for non-positive numbers. As $x$ grows exponentially, $\log(x)$ advances only in steady, additive steps.
-3. **The Reflection Line $y = x$**: If you fold the graph along the 45-degree diagonal line $y = x$, the curve of $\exp(x)$ lands precisely onto the curve of $\log(x)$!
-
-```{r geometric-symmetry, fig.width=9, fig.height=6, fig.cap="Figure 1. The geometric mirror symmetry of exp(x) and log(x) across the identity line y = x, with tangent lines showing unit slope at the axes."}
+```{r geometric-symmetry, fig.width=9, fig.height=6, fig.cap="Figure 1. The geometric mirror symmetry of exp(x) and log(x) across the identity line y = x."}
 x_vals <- seq(-2.5, 2.5, length.out = 400)
 x_pos  <- seq(0.08, 5.0, length.out = 400)
 
@@ -143,19 +263,15 @@ df_exp <- tibble(x = x_vals, y = exp(x_vals), type = "y = exp(x)")
 df_log <- tibble(x = x_pos, y = log(x_pos), type = "y = log(x)")
 df_ref <- tibble(x = seq(-2.5, 5, length.out = 100), y = seq(-2.5, 5, length.out = 100), type = "y = x (Mirror)")
 
-# Tangent line at (0, 1) for exp(x): slope = 1 -> y = x + 1
 tangent_exp <- tibble(x = seq(-1, 1, length.out = 50), y = x + 1)
-# Tangent line at (1, 0) for log(x): slope = 1 -> y = x - 1
 tangent_log <- tibble(x = seq(0, 2, length.out = 50), y = x - 1)
 
 ggplot() +
   geom_line(data = df_ref, aes(x = x, y = y), linetype = "dashed", color = "gray50", linewidth = 0.8) +
   geom_line(data = df_exp, aes(x = x, y = y), color = "#2563eb", linewidth = 1.3) +
   geom_line(data = df_log, aes(x = x, y = y), color = "#ea580c", linewidth = 1.3) +
-  # Tangents
   geom_line(data = tangent_exp, aes(x = x, y = y), color = "#2563eb", linetype = "dotted", linewidth = 0.9) +
   geom_line(data = tangent_log, aes(x = x, y = y), color = "#ea580c", linetype = "dotted", linewidth = 0.9) +
-  # Key anchor points
   geom_point(aes(x = 0, y = 1), color = "#2563eb", size = 3.5) +
   geom_point(aes(x = 1, y = 0), color = "#ea580c", size = 3.5) +
   annotate("text", x = -0.6, y = 1.5, label = "(0, 1)\nSlope = 1", color = "#2563eb", fontface = "bold", size = 3.5) +
@@ -173,46 +289,31 @@ ggplot() +
   theme_minimal()
 ```
 
+::: {.lang-en}
 ### Why is $e$ Called the "Natural" Base?
-Why not base 10 or base 2?
 Look at the dotted tangent lines in Figure 1:
 - At the point where $y = \exp(x)$ crosses the y-axis $(0, 1)$, its **slope (derivative) is exactly equal to 1**.
 - At the point where $y = \log(x)$ crosses the x-axis $(1, 0)$, its **slope is also exactly equal to 1**.
 
 If you use base 10 ($10^x$) or base 2 ($2^x$), the slopes at the axis intercepts are awkward numbers like $\ln(10) \approx 2.302$ or $\ln(2) \approx 0.693$. Only base $e$ produces a pristine, 1-to-1 proportional rate of change without arbitrary scaling constants.
+:::
+
+::: {.lang-ko style="display: none;"}
+### 그림으로 보는 셋의 거울 쌍둥이 관계
+위의 그래프(Figure 1)를 보세요. 가운데 회색 점선($y = x$)이 보이시죠? 이 선은 **마법의 거울**입니다.
+- **파란색 선 ($y = \exp(x)$)**: 계단을 한 칸 한 칸 갈 때마다 하늘 높이 로켓처럼 솟구쳐 오릅니다. (곱하기 세상)
+- **주황색 선 ($y = \log(x)$)**: 옆으로 아무리 멀리 가도 완만하게 누워서 얌전하게 자랍니다. (더하기 세상)
+- **둘의 관계**: 점선($y=x$)을 기준으로 종이를 반으로 딱 접으면, **파란선과 주황선이 오차 하나 없이 완벽하게 포개집니다!**  
+  즉, $\exp$가 몇 배로 뻥튀기해 놓은 것을 $\log$가 그대로 도로 가져오고, $\log$가 축소해 놓은 것을 $\exp$가 완벽하게 되돌려놓는 **'완벽한 거울 쌍둥이(역함수)'**입니다.
+
+**왜 하필 '자연(Natural)' 로그라고 부를까요?**  
+파란선이 y축과 만나는 점 $(0, 1)$과 주황선이 x축과 만나는 점 $(1, 0)$을 보세요.  
+접선의 기울기가 **정확히 깔끔한 '1'**입니다! 다른 밑수(10이나 2)를 쓰면 기울기가 지저분한 소수가 되지만, 오직 자연상수 $e$를 쓸 때만 군더더기 없는 가장 자연스러운 1대1 변화율이 만들어지기 때문에 '자연'이라는 이름이 붙었습니다.
+:::
 
 ---
 
 # 3. Essential Companion Concepts in Health Research
-
-Beyond $e$, $\log$, and $\exp$, four mathematically tied concepts routinely appear across quantitative health papers.
-
-## 1. The Geometric Mean: $\exp(\text{mean}(\log(X)))$
-
-When epidemiological variables (like antibody concentrations, airborne lead levels, or healthcare costs) have extreme right-skew, the standard arithmetic mean is wildly distorted by a handful of super-spenders or super-spreaders.
-
-Instead, health researchers calculate the **Geometric Mean**:
-$$\text{Geometric Mean} = \sqrt[n]{x_1 \times x_2 \times \dots \times x_n} = \exp\left( \frac{1}{n} \sum_{i=1}^n \log(x_i) \right)$$
-
-Notice what this formula does:
-1. Take $\log$ of every patient's measurement.
-2. Calculate the ordinary arithmetic average of the logs.
-3. Exponentiate ($\exp$) the result back to original units.
-
-The geometric mean is always less than or equal to the arithmetic mean, giving a far more robust, representative summary of the population's baseline health status.
-
-## 2. The Linear Approximation: $\log(1 + x) \approx x$ for Small Changes
-
-In regression courses, professors often state: *"If $\log(Y) = \beta_0 + \beta_1 X$, then a 1-unit increase in $X$ corresponds to approximately a $\beta_1 \times 100\%$ change in $Y$."*
-
-Where does this rule of thumb come from?
-Mathematically, the exact relative change in $Y$ when $X$ increases by 1 is $\exp(\beta_1) - 1$.
-According to Taylor series expansion:
-$$\exp(\beta_1) - 1 = \beta_1 + \frac{\beta_1^2}{2!} + \frac{\beta_1^3}{3!} + \dots$$
-
-When $\beta_1$ is small (e.g., between $-0.10$ and $+0.10$), the squared and higher-order terms become negligible ($0.05^2 / 2 = 0.00125$), so $\exp(\beta_1) - 1 \approx \beta_1$.
-Equivalently:
-$$\log(1 + x) \approx x \quad \text{for } |x| \ll 1$$
 
 ```{r approximation-plot, fig.cap="Figure 2. Accuracy of the linear percentage approximation log(1 + x) ≈ x."}
 approx_df <- tibble(
@@ -237,30 +338,47 @@ ggplot(approx_df, aes(x = beta)) +
   theme(legend.position = "bottom")
 ```
 
-## 3. Doubling Time and the "Rule of 70"
+::: {.lang-en}
+### 1. The Geometric Mean: $\exp(\text{mean}(\log(X)))$
+When epidemiological variables (like antibody concentrations, airborne lead levels, or healthcare costs) have extreme right-skew, the standard arithmetic mean is wildly distorted. Health researchers calculate the **Geometric Mean**:
+$$\text{Geometric Mean} = \sqrt[n]{x_1 \times x_2 \times \dots \times x_n} = \exp\left( \frac{1}{n} \sum_{i=1}^n \log(x_i) \right)$$
+Notice what this formula does: take $\log$ of every patient's measurement, calculate the ordinary average of the logs, and exponentiate ($\exp$) back to original units.
 
-During epidemics, epidemiologists track how many days it takes for active cases to double.
-If an epidemic grows at continuous daily rate $r$:
-$$\exp(r \times t_{\text{double}}) = 2$$
-Taking the natural log of both sides:
-$$r \times t_{\text{double}} = \log(2) \approx 0.69315$$
-$$t_{\text{double}} = \frac{0.69315}{r} \approx \frac{70}{\text{Growth Rate in Percent}}$$
+### 2. The Linear Approximation: $\log(1 + x) \approx x$ for Small Changes
+When $\beta$ is small (between $-0.15$ and $+0.15$), $\exp(\beta) - 1 \approx \beta$. This allows researchers to quickly interpret coefficients as: *"Each 1-unit increase in X yields an approximate $\beta \times 100\%$ change in Y."*
 
-If daily infection count grows by 7% per day ($r = 0.07$), doubling time is simply $70 / 7 = 10$ days. This entire practical rule rests directly on the natural logarithm of 2!
+### 3. Doubling Time and the "Rule of 70"
+If an infection wave grows at continuous daily rate $r$:
+$$t_{\text{double}} = \frac{\log(2)}{r} \approx \frac{0.693}{r} \approx \frac{70}{\text{Daily Growth Rate in Percent}}$$
+If infections grow by 7% per day, cases double every $70 / 7 = 10$ days.
 
-## 4. Derivative Invariance: $\frac{d}{dx} \exp(x) = \exp(x)$
+### 4. Derivative Invariance: $\frac{d}{dx} \exp(x) = \exp(x)$
+Out of all mathematical functions in existence, $\exp(x)$ is the only nontrivial function whose derivative is identical to itself. Because current mortality risk drives the speed of further biological frailty accumulation, exponential functions naturally model human hazard functions.
+:::
 
-Out of all mathematical functions in existence, $\exp(x)$ is the only nontrivial function whose **derivative is identical to itself**. 
+::: {.lang-ko style="display: none;"}
+### 꼭 알아야 할 4가지 짝꿍 개념 (쉽고 유용한 꿀팁)
 
-In the Gompertz law of human mortality, your instantaneous hazard of death at age $t$ accelerates at a rate proportional to your accumulated biological frailty. Because your current mortality risk drives the speed of further risk accumulation, exponential and log-linear functions are the natural mathematical language of survival analysis and hazard modeling.
+#### 1. 기하평균 (Geometric Mean)
+* **어디에 쓰이나요?**: 100명 중 99명은 1년에 병원비를 5만 원 쓰는데, 1명이 수술비로 5억 원을 썼다고 해봅시다. 단순 평균을 내면 "우리 동네 평균 병원비는 500만 원!"이라는 엉뚱한 결론이 나옵니다.
+* **해법**: 모든 사람의 병원비에 로그($\log$)를 씌워 거대한 숫자를 얌전하게 줄인 뒤 평균을 내고, 다시 $\exp$로 되돌립니다. 이것이 바로 치우친 데이터를 요약하는 가장 정직한 대표값인 **기하평균**입니다!
+
+#### 2. 작은 변화율의 마법: $\log(1 + x) \approx x$
+* **왜 회귀분석 계수를 바로 퍼센트(%)로 읽을까요?**: 통계 논문을 보면 *"소득이 1단위 늘면 우울증 점수가 대략 5% 줄어든다"*고 바로 말합니다.
+* Figure 2 그래프를 보세요. 계수 $\beta$가 $-0.15 \sim +0.15$ 사이로 작을 때는, 복잡한 공식 계산값(파란 실선)과 단순 곱하기(주황 점선)가 **소름 돋을 정도로 똑같이 겹칩니다!** 그래서 학자들은 머리 아픈 계산 없이 계수를 바로 퍼센트(%) 변화율로 편하게 읽는 것입니다.
+
+#### 3. 배가 시간과 "70의 법칙"
+* *"코로나 확진자가 매일 7%씩 늘어난다면, 확진자가 2배로 폭발하는 데 며칠 걸릴까?"*
+* 복잡한 계산기 필요 없습니다! **70 나누기 7 = 10일!** 딱 10일이면 2배가 됩니다.  
+  (이 마법의 숫자 70은 자연로그 2값인 $\log(2) \approx 0.693$에서 나온 공식입니다.)
+
+#### 4. 내 키가 곧 나의 달리기 속도인 유일한 함수 ($\exp$)
+* 세상에 수많은 곡선 중, **"지금 내 높이(값)가 곧 나의 순간 성장 속도(기울기)"**인 유일무이한 함수가 바로 $\exp(x)$입니다. 나이가 들수록 노화가 더 빠르게 가속화되는 우리 몸의 사망 위험 곡선에 지수함수가 쓰이는 이유입니다.
+:::
 
 ---
 
 # 4. Three Classic Health Sociology Scenarios
-
-## Scenario A: The Preston Curve & Diminishing Marginal Returns
-
-Sociologist Samuel Preston (1975) documented the cross-national relationship between a country's Gross Domestic Product (GDP) per capita and life expectancy:
 
 ```{r preston-curve-sim}
 set.seed(101)
@@ -280,14 +398,14 @@ preston_data <- tibble(
 )
 ```
 
-```{r plot-preston, fig.cap="Figure 3. Raw vs. Log-transformed GDP per capita against Life Expectancy."}
+```{r plot-preston, fig.cap="Figure 3. Raw vs. Log-transformed GDP per capita against Life Expectancy (The Preston Curve)."}
 p1 <- ggplot(preston_data, aes(x = gdp_pc, y = life_exp)) +
   geom_point(alpha = 0.6, color = "#2563eb") +
   geom_smooth(method = "lm", color = "darkred", se = FALSE, linetype = "dashed") +
   geom_smooth(method = "loess", color = "#ea580c", se = FALSE) +
   scale_x_continuous(labels = dollar_format()) +
   labs(
-    title = "Raw Scale: Nonlinear Concave Gradient",
+    title = "Raw Scale: Nonlinear Diminishing Returns",
     subtitle = "OLS line (dashed red) fails to capture diminishing returns",
     x = "GDP per Capita (USD)",
     y = "Life Expectancy (Years)"
@@ -308,56 +426,53 @@ p2 <- ggplot(preston_data, aes(x = log_gdp, y = life_exp)) +
 p1 + p2
 ```
 
-## Scenario B: Skewed Annual Medical Expenditures
+::: {.lang-en}
+### Scenario A: The Preston Curve & Diminishing Marginal Returns
+Samuel Preston (1975) demonstrated that the relationship between GDP per capita and life expectancy is sharply nonlinear (Figure 3, left). Taking $\log(\text{GDP})$ linearizes the curve (Figure 3, right), perfectly capturing diminishing returns.
 
-Healthcare spending in any insured population is notoriously right-skewed: most people spend very little in a healthy year, while an unfortunate 5% encounter catastrophic hospitalization bills.
-
-Taking $\log(\text{Cost})$ pulls extreme multi-million-dollar outliers inward, normalizing residuals and satisfying homoscedasticity assumptions for linear regression.
-
-## Scenario C: Why Logistic Regression Relies on $\log$ and $\exp$
-
-Why can't we just run a standard linear regression on binary health outcomes ($Y \in \{0, 1\}$)?
-
-1. **Probability ($p$)** is strictly bounded between $[0, 1]$. A straight linear probability model will inevitably forecast nonsensical probabilities like $-0.24$ or $+1.35$.
-2. **Odds** map probabilities from $[0, 1]$ to $[0, \infty)$:
-   $$\text{Odds} = \frac{p}{1 - p}$$
-   If a patient has a 80% chance of diabetes, their odds are $\frac{0.80}{0.20} = 4.0$ (diabetes is 4 times as likely to occur as not).
-3. **Log-Odds (Logit)** map odds from $[0, \infty)$ to $(-\infty, +\infty)$:
-   $$\text{Logit}(p) = \log\left(\frac{p}{1 - p}\right)$$
-   Now the outcome spans the entire continuous real line, making it fully compatible with linear regression!
-
-$$\log\left(\frac{p_i}{1 - p_i}\right) = \beta_0 + \beta_1 X_i$$
-
-To find how $X$ changes the actual **Odds**, we apply $\exp$ to both sides:
-
-$$\frac{p_i}{1 - p_i} = \exp(\beta_0 + \beta_1 X_i) = \exp(\beta_0) \times \exp(\beta_1 X_i)$$
-
-When $X$ increases by 1 unit:
-$$\text{New Odds} = \text{Old Odds} \times \exp(\beta_1)$$
-
+### Scenario B: Why Logistic Regression Relies on $\log$ and $\exp$
+1. **Probability ($p$)** is bounded in $[0, 1]$. OLS produces impossible negative or $>1$ probabilities.
+2. **Odds** map probabilities to $[0, \infty)$: $\text{Odds} = \frac{p}{1 - p}$.
+3. **Log-Odds (Logit)** map odds to $(-\infty, +\infty)$: $\text{Logit}(p) = \log\left(\frac{p}{1 - p}\right) = \beta_0 + \beta_1 X$.
+Exponentiating both sides yields: $\text{New Odds} = \text{Old Odds} \times \exp(\beta_1)$.  
 Therefore, **$\exp(\beta_1)$ is the Odds Ratio (OR)**!
+:::
+
+::: {.lang-ko style="display: none;"}
+### 보건사회학에서 만나는 결정적 순간들
+
+#### 장면 1: 소득과 수명의 비밀 (프레스턴 곡선)
+* 왼쪽 그래프를 보세요. 찢어지게 가난한 나라에서 소득이 100만 원에서 500만 원으로 오르면 상하수도와 백신이 생겨 평균 수명이 15년씩 쑥쑥 늘어납니다.
+* 하지만 이미 1인당 소득이 5,000만 원인 부자 나라에서는 소득이 500만 원 더 늘어난다고 해서 수명이 늘어나지 않습니다.
+* 이렇게 휘어지는 곡선에 일반 직선 회귀선을 그으면 완전히 엉터리가 됩니다(빨간 점선).  
+* 하지만 **소득에 로그($\log$)를 씌우면(오른쪽 그래프), 마법처럼 반듯한 직선으로 펴집니다!**
+
+#### 장면 2: 왜 로지스틱 회귀분석은 log와 exp를 쓸까?
+* 사람이 병에 걸릴 확률은 0%에서 100% 사이여야 합니다. 일반 직선 회귀를 쓰면 "당신이 당뇨에 걸릴 확률은 -30%입니다!" 같은 엉뚱한 예측을 내놓습니다.
+* 그래서 학자들은 3단 변신을 합니다:
+  1. **확률 ($0 \sim 1$)** -> **찬스/승산 (Odds: $0 \sim \infty$)**으로 바꾼다.  
+     *(예: 병에 걸릴 확률이 80%라면, 걸릴 확률 대 안 걸릴 확률은 80 대 20, 즉 4배 찬스!)*
+  2. 찬스에 **로그($\log$)**를 씌운다. (마이너스 무한대부터 플러스 무한대까지 직선으로 쭉 펴짐!)
+  3. 이제 회귀분석을 돌린 뒤, 컴퓨터가 알려준 계수 $\beta$에 **마지막으로 $\exp$를 씌워주면?**  
+     **"담배를 피우면 질병 찬스(Odds)가 $\exp(\beta)$배 높아진다!"** 할 때의 바로 그 **승산비(Odds Ratio)**가 완성됩니다!
+:::
 
 ---
 
 # 5. Simulation & Hands-on Modeling in R
 
-Let's generate a realistic public health dataset of 2,000 adults to observe these principles in action.
-
 ```{r dgp-simulation}
 set.seed(2026)
 n <- 2000
 
-# 1. Covariates
 age <- round(runif(n, 25, 80))
-income <- round(rlnorm(n, meanlog = 10.5, sdlog = 0.6)) # Median ~ $36k, highly skewed
+income <- round(rlnorm(n, meanlog = 10.5, sdlog = 0.6))
 has_insurance <- rbinom(n, 1, prob = 0.85)
 
-# 2. Chronic condition probability (Logistic DGP)
 log_odds_chronic <- -4.2 + 0.055 * age - 0.45 * log(income / 1000) - 0.3 * has_insurance
 prob_chronic <- exp(log_odds_chronic) / (1 + exp(log_odds_chronic))
 has_chronic_disease <- rbinom(n, 1, prob = prob_chronic)
 
-# 3. Annual Out-of-Pocket Healthcare Spending (Log-Linear DGP)
 log_spending <- 5.2 + 0.03 * age + 0.85 * has_chronic_disease + rnorm(n, 0, 0.55)
 annual_spending <- round(exp(log_spending), 2)
 
@@ -375,16 +490,10 @@ health_df %>%
   kable_styling(bootstrap_options = c("striped", "hover", "condensed"))
 ```
 
-### Estimating Logistic Regression & Computing Odds Ratios
-
 ```{r logistic-estimation}
-# Fit logistic regression
 logit_model <- glm(has_chronic ~ age + log(income), data = health_df, family = binomial(link = "logit"))
-
-# Standard summary output (log-odds)
 model_summary <- tidy(logit_model)
 
-# Compute Odds Ratios by applying exp()
 or_table <- model_summary %>% 
   mutate(
     odds_ratio = exp(estimate),
@@ -398,21 +507,27 @@ or_table %>%
   kable_styling(bootstrap_options = c("striped", "hover", "condensed"))
 ```
 
+::: {.lang-en}
 ### Substantive Interpretation:
 1. **Age Effect ($\beta_{\text{age}} = 0.0569$)**:
-   - In raw logit space: Each additional year of age increases the **log-odds** of chronic condition by $0.0569$.
+   - In raw logit space: Each additional year of age increases log-odds by $0.0569$.
    - In exponentiated space: $\exp(0.0569) = 1.0585$.
-   - Each extra year of life increases the **odds of chronic disease by 5.85%** ($\text{Odds Ratio} = 1.059$).
-   - Over a 10-year period, the odds multiply by $\exp(0.0569 \times 10) = 1.767$ (a 76.7% increase in odds).
+   - **Substantive Result**: Each extra year of life increases the **odds of chronic disease by 5.85%** ($\text{Odds Ratio} = 1.059$). A 10-year age gap multiplies odds by $\exp(0.0569 \times 10) = 1.767$ (+76.7%).
+:::
 
-2. **Income Effect ($\beta_{\text{log(income)}} = -0.463$)**:
-   - Each 1-unit increase in $\log(\text{income})$ multiplies disease odds by $\exp(-0.463) = 0.629$ (a 37.1% reduction in disease odds).
+::: {.lang-ko style="display: none;"}
+### 결과 해석하기: 숫자가 말하는 건강 이야기
+위의 표를 보세요:
+1. **나이 효과 (Age)**:
+   - 컴퓨터가 계산한 생 계수(estimate)는 `0.0569`입니다. 이건 로그 세계의 외계어입니다.
+   - 여기에 $\exp$를 씌우면? **`1.0585`**가 나옵니다!
+   - **쉬운 한국어 해석**: 나이를 1살 더 먹을 때마다 만성질환에 걸릴 찬스(Odds)가 **약 5.85%씩 곱셈으로 증가**합니다.
+   - 나이가 10살 차이 나면? $1.0585$를 10번 곱해서($\exp(0.0569 \times 10) \approx 1.77$), **질병 찬스가 무려 1.77배(77% 증가)**로 뜁니다!
+:::
 
 ---
 
 # 6. Visualizing the Transformation Journey
-
-Observe how the mathematical transformations reshape probabilities, odds, and log-odds across the adult age span:
 
 ```{r multi-panel-viz, fig.width=10, fig.height=8, fig.cap="Figure 4. Four complementary perspectives of biological aging and health economics."}
 pred_grid <- tibble(
@@ -454,12 +569,27 @@ p_spending <- ggplot(health_df, aes(x = age, y = annual_spending, color = factor
 (p_prob + p_odds) / (p_log_odds + p_spending)
 ```
 
+::: {.lang-en}
+Figure 4 presents the four stages of translation:
+1. **Probability Space**: S-shaped bounded curve.
+2. **Odds Space**: Exponentiated acceleration.
+3. **Log-Odds Space**: Straight linear regression.
+4. **Log-Spending Space**: Proportional spending shifts between healthy and chronically ill adults.
+:::
+
+::: {.lang-ko style="display: none;"}
+Figure 4는 우리가 수학 도구를 통해 바라본 인간의 건강 변화 과정입니다:
+1. **1번 그래프 (확률)**: 나이가 들수록 질병 확률이 S자 모양으로 0%에서 100%를 향해 완곡하게 올라갑니다.
+2. **2번 그래프 (찬스 / Odds)**: 확률을 찬스로 바꾸면 지수함수($\exp$)를 탄 것처럼 가파르게 치솟습니다.
+3. **3번 그래프 (로그-찬스 / Logit)**: 여기에 로그($\log$)를 씌우니 컴퓨터가 분석하기 가장 좋아하는 반듯한 직선이 되었습니다!
+4. **4번 그래프 (의료비)**: 만성질환이 있는 사람(주황색)은 없는 사람(파란색)보다 나이에 상관없이 일정하게 '몇 배' 더 많은 의료비를 지출합니다.
+:::
+
 ---
 
 # 7. Applied Social Scientist's Cheat Sheet
 
-When preparing manuscript results, refer to this exact translation table:
-
+::: {.lang-en}
 | Model Specification | Regression Formula | Mathematical Interpretation of $\beta_1$ | Plain English Reporting Template |
 |:---|:---|:---|:---|
 | **Linear-Linear** | $Y = \beta_0 + \beta_1 X$ | 1-unit increase in $X \to \beta_1$ unit change in $Y$ | *"Each additional year of schooling is associated with a $\beta_1$-point increase in self-rated health."* |
@@ -474,11 +604,31 @@ In public health, researchers frequently mistake the **Odds Ratio (OR)** for the
 - If an outcome is **rare** (e.g., incidence $< 5\%$), the Odds Ratio closely approximates the Relative Risk ($\text{Odds} \approx p$).
 - If an outcome is **common** (e.g., adult obesity at 40%), an Odds Ratio of $2.0$ does **not** mean you have twice the probability of being obese. It substantially overstates the risk multiplier!
 :::
+:::
+
+::: {.lang-ko style="display: none;"}
+### 논문 쓸 때 바로 써먹는 문장 족보 (치트시트)
+
+| 모형 이름 | 회귀 공식 형태 | 계수 $\beta_1$의 쉬운 의미 | 실제 보고서 작성 문장 템플릿 |
+|:---|:---|:---|:---|
+| **일반 선형** | $Y = \beta_0 + \beta_1 X$ | X가 1단위 늘면 Y가 $\beta_1$만큼 정직하게 더해짐 | *"교육을 1년 더 받을 때마다 건강 점수가 $\beta_1$점 오른다."* |
+| **로그-선형** | $\log(Y) = \beta_0 + \beta_1 X$ | X가 1단위 늘면 Y가 대략 $\beta_1 \times 100\%$ 늘어남 | *"나이가 1살 들 때마다 병원비는 대략 $[(\exp(\beta_1) - 1) \times 100]\%$ 증가한다."* |
+| **선형-로그** | $Y = \beta_0 + \beta_1 \log(X)$ | X가 1% 늘면 Y는 $(\beta_1 / 100)$점 바뀜 | *"소득이 10% 증가하면 기대수명은 약 $(\beta_1 \times 0.1)$년 늘어난다."* |
+| **로그-로그** | $\log(Y) = \beta_0 + \beta_1 \log(X)$ | X가 1% 늘면 Y도 $\beta_1\%$ 바뀜 (탄력성) | *"담배 세금이 1% 오르면 흡연율은 $\beta_1\%$ 줄어든다."* |
+| **로지스틱** | $\log(\text{Odds}) = \beta_0 + \beta_1 X$ | X가 1단위 늘면 찬스(Odds)가 $\exp(\beta_1)$배로 곱해짐 | *"건강보험이 있는 사람은 없는 사람에 비해 암 검진을 받을 찬스가 $\exp(\beta_1)$배 높다."* |
+
+::: {.callout-important}
+## 주의! 승산비(OR)와 상대위험도(RR)를 헷갈리지 마세요!
+- 감기나 희귀 암처럼 **발생 확률이 아주 낮은 질환($5\%$ 미만)**에서는 "찬스가 2배"라는 말이나 "걸릴 확률이 2배"라는 말이 거의 똑같습니다.
+- 하지만 성인 비만율(40%)처럼 **흔한 질환**에서는 승산비가 2.0이라고 해서 확률이 2배가 되는 것이 아닙니다! 실제 확률 증가는 그보다 훨씬 작으므로 과장해서 해석하면 안 됩니다.
+:::
+:::
 
 ---
 
 # 8. Conclusion
 
+::: {.lang-en}
 The mathematical constants and operators $e$, $\log$, and $\exp$ are neither arbitrary academic hurdles nor computational trivia. They are the essential conceptual toolkit that allows social scientists to bridge the gap between our **linear statistical models** and the **inherently compounding, multiplicative reality of human health**.
 
 Whenever you encounter an exponential or logarithmic term in your research, remember:
@@ -486,3 +636,16 @@ Whenever you encounter an exponential or logarithmic term in your research, reme
 2. $\log$ brings runaway multiplicative variance into linear order.
 3. $\exp$ translates abstract regression coefficients back into real-world ratios of risk and likelihood.
 4. Companion concepts like the **Geometric Mean** and the linear approximation $\log(1+x) \approx x$ make handling skewed distributions and interpreting rate changes intuitive and mathematically rigorous.
+:::
+
+::: {.lang-ko style="display: none;"}
+자연상수 $e$, 로그 $\log$, 지수함수 $\exp$는 우리를 괴롭히려고 만든 복잡한 수학 공식이 아닙니다.  
+**"더하기밖에 모르는 우리의 단순한 통계 모델"**과 **"곱하기로 증식하고 늙어가는 생명과 사회의 현실"** 사이를 이어주는 **가장 친절한 통역사**입니다.
+
+앞으로 논문이나 데이터에서 이 기호들을 만나면 이것만 기억하세요:
+1. **$e$**: 멈추지 않고 연속해서 자라나는 자연의 한계 속도
+2. **$\log$**: 걷잡을 수 없이 커진 곱하기 세상을 얌전한 더하기 세상으로 줄여주는 돋보기
+3. **$\exp$**: 분석이 끝난 더하기 숫자를 다시 원래 현실의 '몇 배 위험한가'로 되돌려주는 뻥튀기 기계
+
+이 세 친구의 원리만 알면, 복잡해 보이던 로지스틱 회귀분석도, 소득-건강 곡선도 중학생처럼 쉽고 직관적으로 꿰뚫어 볼 수 있습니다!
+:::
