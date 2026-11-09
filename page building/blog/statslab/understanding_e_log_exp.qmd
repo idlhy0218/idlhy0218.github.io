@@ -2,7 +2,7 @@
 title: "Demystifying e, Log, and Exp in Health Sociology: Origins, Intuition, and Practical Applications"
 author: "Heeyoung Lee"
 date: "Nov 08, 2026"
-format: 
+format:
   html:
     theme: cosmo
     css: custom.css
@@ -25,12 +25,18 @@ execute:
 
 ```{r setup, message=FALSE, warning=FALSE}
 library(tidyverse)
-library(ggplot2)
 library(patchwork)
 library(kableExtra)
 library(knitr)
 library(broom)
 library(scales)
+
+theme_set(theme_minimal(base_size = 12))
+
+col_blue   <- "#2563eb"
+col_orange <- "#ea580c"
+col_green  <- "#059669"
+col_gray   <- "gray45"
 ```
 
 <!-- Language Switcher Bar -->
@@ -38,14 +44,14 @@ library(scales)
 <div class="lang-switch-wrapper" style="margin-bottom: 2rem; padding: 1rem 1.2rem; background: #fdfbf7; border: 1px solid rgba(234, 88, 12, 0.2); border-radius: 14px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;">
   <div>
     <span style="font-family: 'Outfit', sans-serif; font-weight: 700; color: #111827; font-size: 1rem;">Choose Language / 언어 선택:</span>
-    <span style="color: #6b7280; font-size: 0.85rem; margin-left: 0.5rem;">Select your preferred reading mode below</span>
+    <span style="color: #6b7280; font-size: 0.85rem; margin-left: 0.5rem;">Figures and code are shared across both versions.</span>
   </div>
   <div style="display: flex; gap: 8px;">
     <button id="btn-en" class="lang-pill active" onclick="switchLanguage('en')" style="border: none; background: #2563eb; color: white; padding: 8px 18px; border-radius: 25px; font-weight: 600; font-size: 0.9rem; cursor: pointer; transition: all 0.2s ease; box-shadow: 0 2px 6px rgba(37,99,235,0.2);">
-      🇬🇧 English (Original Paper)
+      🇬🇧 English
     </button>
     <button id="btn-ko" class="lang-pill" onclick="switchLanguage('ko')" style="border: 1px solid #d1d5db; background: white; color: #374151; padding: 8px 18px; border-radius: 25px; font-weight: 600; font-size: 0.9rem; cursor: pointer; transition: all 0.2s ease;">
-      🇰🇷 한국어 (중학생도 이해하는 쉬운 해설)
+      🇰🇷 한국어
     </button>
   </div>
 </div>
@@ -56,7 +62,7 @@ function switchLanguage(lang) {
   const koEls = document.querySelectorAll('.lang-ko');
   const btnEn = document.getElementById('btn-en');
   const btnKo = document.getElementById('btn-ko');
-  
+
   if (lang === 'en') {
     enEls.forEach(el => el.style.display = '');
     koEls.forEach(el => el.style.display = 'none');
@@ -85,300 +91,918 @@ document.addEventListener('DOMContentLoaded', () => {
 ```
 
 ::: {.lang-en}
-# Introduction: The Additive Mind in a Multiplicative World
+# Introduction: An Additive Mind in a Multiplicative World
 
-When students and applied researchers first encounter statistical models in medical sociology, public health, and demography, a recurring set of questions almost always emerges:
+When students and applied researchers first meet statistical models in medical sociology, public health, and demography, the same questions keep coming back:
 
-- *"Why did we log-transform annual medical expenditures or family income?"*
-- *"Why do we need to exponentiate ($\exp$) the coefficients in logistic regression to get Odds Ratios?"*
-- *"Where on earth does the mathematical constant $e \approx 2.71828$ come from, and why is it everywhere in population health?"*
+- *"Why do we log-transform annual medical expenditures or family income?"*
+- *"Why do we exponentiate ($\exp$) logistic regression coefficients to get odds ratios?"*
+- *"Where does the constant $e \approx 2.71828$ come from, and why does it show up everywhere in population health?"*
 
-The root of this confusion is straightforward: **human intuition naturally thinks additively, but biological and social processes operate multiplicatively.**
+All three questions have the same root: **our intuition thinks in additions, but many biological and social processes work through multiplication.**
 
-In our daily intuition:
-- If you walk 3 miles today and 3 miles tomorrow, you add them up: $3 + 3 = 6$ miles.
-- If you receive a \$1,000 raise, your bank balance increases by exactly \$1,000.
+### Same difference, different ratio
 
-Yet in population health and epidemiology:
-- An extra decade of life does not merely *add* 5 deaths per 1,000 people; it **multiplies** your underlying mortality risk (e.g., your hazard doubles or triples).
-- A \$1,000 raise radically transforms the nutrition, housing security, and life expectancy of an impoverished household, but has virtually zero biological impact on a multi-millionaire.
-- When an infectious pathogen spreads through an unimmunized community, cases do not increase by 10 each day ($10, 20, 30...$); each infected individual infects multiple others, causing cases to compound ($10, 25, 62, 156...$).
+Consider two people who each receive a \$10,000 raise:
+
+- Person A goes from \$10,000 to \$20,000 a year. The *difference* is \$10,000, and the *ratio* is 2. Their income doubled.
+- Person B goes from \$100,000 to \$110,000 a year. The *difference* is the same \$10,000, but the *ratio* is only 1.1. Their income rose by 10%.
+
+Which raise is more likely to change Person A's and Person B's diet, housing security, and stress levels? Almost everyone answers "Person A." That answer already contains the key idea of this post: **in many health processes, what matters is the ratio of change, not the absolute difference.** The logarithm is the tool that turns ratios into differences, so that a model built on addition can describe a world that runs on multiplication.
+
+### Additive change vs. multiplicative change
+
+In daily life, most quantities change additively:
+
+- Walk 3 miles today and 3 more tomorrow, and you have walked $3 + 3 = 6$ miles.
+- Deposit \$1,000, and your balance rises by exactly \$1,000.
+
+In population health, many quantities change multiplicatively:
+
+- **Aging**: Adult mortality risk does not rise by a fixed number of deaths per year of age. It rises by a roughly fixed *proportion* each year, so that it doubles about every eight years in adulthood (we will see this in Section 3).
+- **Income**: The same \$1,000 means a great deal for a poor household and almost nothing for a wealthy one. Equal *proportional* increases tend to have more similar effects than equal *absolute* increases.
+- **Infection**: When each infected person infects others, case counts do not rise by a fixed amount each day ($10, 25, 40, 55, \dots$). They rise by a fixed factor each day ($10, 15, 22.5, 33.8, \dots$).
+
+Figure 1 compares these two kinds of growth. The left panel uses an ordinary (linear) vertical axis; the right panel uses a logarithmic axis.
+:::
+
+::: {.lang-ko style="display: none;"}
+# 들어가며: 더하기로 생각하는 머리, 곱하기로 움직이는 세상
+
+의료사회학, 보건학, 인구학에서 통계 모형을 처음 배우면 거의 누구나 비슷한 질문을 하게 됩니다.
+
+- *"소득이나 연간 의료비에는 왜 로그를 씌울까?"*
+- *"로지스틱 회귀 계수에는 왜 exp를 씌워야 오즈비가 될까?"*
+- *"자연상수 $e \approx 2.71828$은 어디서 나온 숫자이고, 왜 인구 건강 연구 곳곳에 등장할까?"*
+
+세 질문의 뿌리는 같습니다. **우리는 직관적으로 더하기로 생각하지만, 생물학적·사회적 과정의 상당수는 곱하기로 움직입니다.**
+
+### 차이는 같아도 비율은 다르다
+
+연봉이 똑같이 1천만 원 오른 두 사람을 생각해 봅시다.
+
+- A씨는 연 1천만 원에서 2천만 원이 되었습니다. *차이*는 1천만 원, *비율*은 2배입니다. 소득이 두 배가 되었습니다.
+- B씨는 연 1억 원에서 1억 1천만 원이 되었습니다. *차이*는 똑같이 1천만 원이지만 *비율*은 1.1배, 즉 10% 증가입니다.
+
+식생활, 주거 안정, 스트레스 수준이 더 크게 달라질 사람은 누구일까요? 대부분 A씨라고 답합니다. 이 답 안에 이 글의 핵심이 들어 있습니다. **건강과 관련된 많은 과정에서 중요한 것은 절대적인 차이보다 변화의 비율입니다.** 로그는 비율을 차이로 바꿔 주는 도구입니다. 그래서 덧셈으로 만들어진 통계 모형으로 곱셈으로 움직이는 세상을 설명할 수 있게 해 줍니다.
+
+### 더하기로 변하는 것과 곱하기로 변하는 것
+
+일상에서 접하는 양은 대부분 더하기로 변합니다.
+
+- 오늘 3km, 내일 3km를 걸으면 모두 $3 + 3 = 6$km를 걸은 것입니다.
+- 통장에 10만 원을 넣으면 잔고는 정확히 10만 원 늘어납니다.
+
+그런데 인구 건강에서는 곱하기로 변하는 양이 많습니다.
+
+- **나이**: 성인의 사망 위험은 나이가 한 살 늘 때마다 일정한 *수*만큼 오르는 것이 아니라 일정한 *비율*만큼 오릅니다. 그 결과 성인기에는 대략 8년마다 두 배가 됩니다(3절에서 그림으로 확인합니다).
+- **소득**: 같은 10만 원이라도 형편이 어려운 가구에는 큰돈이고, 부유한 가구에는 거의 아무 차이도 만들지 못합니다. 같은 *금액*보다 같은 *비율*의 소득 증가가 비슷한 효과를 내는 경향이 있습니다.
+- **감염병**: 감염자 한 명이 여러 명에게 병을 옮기면 확진자 수는 매일 같은 수만큼 늘지 않습니다($10, 25, 40, 55, \dots$). 매일 같은 배수로 늘어납니다($10, 15, 22.5, 33.8, \dots$).
+
+그림 1은 두 가지 증가 방식을 비교합니다. 왼쪽은 일반적인 세로축, 오른쪽은 로그 눈금 세로축입니다.
+:::
+
+```{r fig-additive-multiplicative, fig.width=10, fig.height=5, fig.cap="Figure 1. Additive growth (+15 cases per day) vs. multiplicative growth (×1.5 per day), shown on a linear axis and a log axis."}
+growth_df <- tibble(day = 0:12) %>%
+  mutate(
+    Additive       = 10 + 15 * day,
+    Multiplicative = 10 * 1.5^day
+  ) %>%
+  pivot_longer(-day, names_to = "process", values_to = "cases")
+
+growth_colors <- c(Additive = col_blue, Multiplicative = col_orange)
+growth_labels <- c(Additive = "Additive: +15 cases per day", Multiplicative = "Multiplicative: x1.5 per day")
+
+p_growth_raw <- ggplot(growth_df, aes(day, cases, color = process)) +
+  geom_line(linewidth = 1.2) +
+  geom_point(size = 2) +
+  scale_color_manual(values = growth_colors, labels = growth_labels) +
+  scale_x_continuous(breaks = 0:12) +
+  labs(title = "Linear axis",
+       subtitle = "Additive growth leads early; multiplicative growth overtakes on day 6",
+       x = "Day", y = "Cases", color = NULL)
+
+p_growth_log <- ggplot(growth_df, aes(day, cases, color = process)) +
+  geom_line(linewidth = 1.2) +
+  geom_point(size = 2) +
+  scale_color_manual(values = growth_colors, labels = growth_labels) +
+  scale_y_log10(labels = comma) +
+  scale_x_continuous(breaks = 0:12) +
+  labs(title = "Log axis",
+       subtitle = "Growth by a constant ratio becomes a straight line",
+       x = "Day", y = "Cases (log scale)", color = NULL)
+
+(p_growth_raw + p_growth_log) +
+  plot_layout(guides = "collect") &
+  theme(legend.position = "bottom")
+```
+
+::: {.lang-en}
+Three things in Figure 1 are worth noticing:
+
+1. **Early on, multiplicative growth looks harmless.** For the first five days the additive process is ahead. This is why exponential processes such as epidemics are often underestimated in their early stages.
+2. **Later, multiplicative growth dominates.** By day 12 the multiplicative process has about seven times as many cases.
+3. **On a log axis, the multiplicative process becomes a straight line.** A constant ratio per day becomes a constant *distance* per day. The additive process, meanwhile, bends downward on the log axis, because adding 15 to an ever larger number is a smaller and smaller proportional change.
+
+The third point is the whole reason we use logarithms in regression. If a process grows by a constant ratio, taking the log turns it into a process that grows by a constant amount, and constant-amount change is exactly what a linear model describes.
 
 ::: {.callout-note}
-## The Core Purpose of $e$, $\log$, and $\exp$
-* **$e$ (Euler's Number)**: The universal constant of **continuous, compounding growth**.
-* **$\exp(x)$**: The bridge that translates linear, additive changes (+1 step) into **multiplicative rate ratios and odds ratios** ($\times \text{factor}$).
-* **$\log(x)$**: The mathematical lens that compresses runaway exponential variance back into **manageable, additive linear lines**.
+## The roles of $e$, $\log$, and $\exp$ at a glance
+* **$e$ (Euler's number, about 2.718)**: The base of continuous growth. It is what you get when growth compounds at every instant rather than at fixed intervals.
+* **$\log(x)$**: Converts the multiplicative world into the additive world. Ratios become differences, and constant-ratio growth becomes a straight line.
+* **$\exp(x)$**: Converts the additive world back into the multiplicative world. A regression coefficient on the log scale becomes a ratio (an odds ratio, a rate ratio, or a ratio of geometric means).
+:::
+
+::: {.callout-tip}
+## Notation used in this post
+In this post, $\log$ always means the **natural logarithm** (base $e$), sometimes written $\ln$. In R, `log()` is the natural log and `log10()` is the base-10 log. In Stata, both `ln()` and `log()` are natural logs, and `log10()` is base 10. When a statistics textbook writes "log" without a base, it almost always means the natural log.
 :::
 :::
 
 ::: {.lang-ko style="display: none;"}
-# 프롤로그: 우리는 왜 매일 '더하기'만 생각할까? (더하기 세상 vs 곱하기 세상)
+그림 1에서 눈여겨볼 점은 세 가지입니다.
 
-통계학이나 보건학, 사회학 수업을 처음 들을 때 누구나 머리를 쥐어뜯게 만드는 질문들이 있습니다:
+1. **처음에는 곱하기 증가가 별것 아닌 것처럼 보입니다.** 첫 5일 동안은 오히려 더하기 증가가 앞섭니다. 감염병 같은 지수적 과정을 초기에 과소평가하기 쉬운 이유가 여기에 있습니다.
+2. **시간이 지나면 곱하기 증가가 압도합니다.** 12일째에는 곱하기 증가 쪽의 확진자가 약 7배 많습니다.
+3. **로그 눈금에서는 곱하기 증가가 직선이 됩니다.** 하루에 일정한 비율로 늘어나는 것이, 로그 축에서는 하루에 일정한 *거리*만큼 올라가는 것으로 바뀝니다. 반대로 더하기 증가는 로그 축에서 점점 꺾입니다. 커져 가는 숫자에 똑같이 15를 더하는 것은 비율로 보면 점점 작은 변화이기 때문입니다.
 
-- *"소득이나 병원비 데이터에 왜 뜬금없이 로그(log)를 씌울까?"*
-- *"로지스틱 회귀분석 결과에 왜 굳이 exp(지수함수)를 씌워야 '몇 배 위험하다(승산비)'는 말이 나올까?"*
-- *"자연상수 $e = 2.718...$는 대체 어디서 튀어나온 외계어일까?"*
-
-이 모든 의문의 출발점은 아주 단순합니다.  
-**"사람의 뇌는 본능적으로 '더하기(덧셈)'로 세상을 보지만, 우리 몸과 자연, 사회의 불평등은 '곱하기(곱셈)'로 움직이기 때문"**입니다.
-
-우리 일상생활은 온통 덧셈입니다:
-- 오늘 3km 걷고 내일 3km 더 걸으면? $3 + 3 = 6$km죠.
-- 통장에 용돈 10만 원이 들어오면 내 잔고는 정확히 '+10만 원' 늘어납니다.
-
-하지만 **생명과 건강, 질병의 세계**는 전혀 다릅니다:
-- **감기 바이러스**: 환자 1명이 주변 2명에게 옮기면 확진자는 하루에 10명씩 더해지는($10, 20, 30...$) 게 아니라, **2배, 4배, 8배, 16배...** 폭발적으로 곱해집니다.
-- **나이와 건강**: 20살에서 30살이 될 때와, 70살에서 80살이 될 때의 사망 위험은 단순히 '+1' 더해지는 게 아닙니다. 이전 나이 위험의 **몇 배씩 곱해지며 껑충껑충** 뜁니다.
-- **돈과 수명**: 하루 한 끼가 힘든 분에게 10만 원은 생명을 구하는 기적이지만, 재벌에게 10만 원은 건강에 아무런 차이도 만들지 못합니다(한계효용 체감).
+세 번째 점이 회귀분석에서 로그를 쓰는 이유의 전부라고 해도 과언이 아닙니다. 일정한 비율로 커지는 과정에 로그를 씌우면 일정한 양만큼 커지는 과정이 됩니다. 그리고 일정한 양만큼 변하는 관계는 선형 모형이 가장 잘 설명하는 관계입니다.
 
 ::: {.callout-note}
-## 세 가지 마법 도구 한눈에 보기
-* **$e$ (자연상수)**: 1초도 쉬지 않고 연속해서 자라날 때 부딪히는 **"자연의 성장 한계 속도"** (약 2.718)
-* **$\exp(x)$ (지수함수)**: 얌전한 더하기(+1칸)를 거대한 **곱하기(몇 배 뻥튀기)**로 바꿔주는 번역기
-* **$\log(x)$ (자연로그)**: 너무 거대해서 감당 안 되는 곱하기 숫자를 **작고 다루기 쉬운 더하기 숫자**로 얌전하게 줄여주는 돋보기
+## $e$, $\log$, $\exp$의 역할 한눈에 보기
+* **$e$ (자연상수, 약 2.718)**: 연속적인 성장의 밑입니다. 정해진 간격마다가 아니라 매 순간 복리로 불어날 때 나타나는 수입니다.
+* **$\log(x)$**: 곱하기의 세계를 더하기의 세계로 옮깁니다. 비율은 차이가 되고, 일정한 비율의 증가는 직선이 됩니다.
+* **$\exp(x)$**: 더하기의 세계를 다시 곱하기의 세계로 옮깁니다. 로그 척도의 회귀 계수가 비(오즈비, 발생률비, 기하평균의 비)로 바뀝니다.
+:::
+
+::: {.callout-tip}
+## 이 글의 표기
+이 글에서 $\log$는 언제나 **자연로그**(밑이 $e$인 로그)를 뜻하며, $\ln$으로 쓰기도 합니다. R에서 `log()`는 자연로그, `log10()`은 상용로그입니다. Stata에서는 `ln()`과 `log()`가 모두 자연로그이고 `log10()`이 상용로그입니다. 통계 교과서에서 밑을 적지 않고 "log"라고 쓰면 거의 언제나 자연로그입니다.
 :::
 :::
 
 ---
 
 ::: {.lang-en}
-# 1. The Historical Origins: Escaping Arithmetic Hell
+# 1. Historical Origins: Escaping Arithmetic Hell
 
-### John Napier (1614): Turning Multiplication into Addition
+### John Napier (1614): Turning multiplication into addition
 
-In the early 17th century, astronomers like Johannes Kepler and navigational cartographers were drowning in numbers. Calculating planetary orbits or navigating across oceans required multiplying and dividing numbers with ten or fifteen digits by hand. A single calculation could take days, and a tiny arithmetic slip ruined entire expeditions. The French mathematician Pierre-Simon Laplace famously noted that Napier's invention *"by shortening the labours, doubled the life of the astronomer."*
+In the early seventeenth century, astronomers and navigators spent much of their working lives on arithmetic. Computing a planetary position or a ship's course meant multiplying and dividing long numbers by hand, and a single slip could ruin weeks of work.
 
-Scottish mathematician **John Napier** had a brilliant insight:  
-*"Humans find multiplication exhausting and error-prone, but addition is effortless. What if we could transform every multiplication problem into an addition problem?"*
+In 1614 the Scottish mathematician **John Napier** published a solution. His idea was simple to state: multiplication is slow and error-prone, but addition is quick. If every number could be rewritten as a power of some fixed base, then multiplying two numbers would only require *adding* their exponents, because
 
-Napier noticed a fundamental property of exponents:
-$$A^m \times A^n = A^{m+n}$$
+$$A^m \times A^n = A^{m+n}.$$
 
-If you want to multiply two massive numbers, you don't actually need to multiply them directly! Instead:
-1. Translate both numbers into their "power" equivalents using a lookup table (the **Logarithm**).
-2. Simply **add** the two exponents together.
-3. Translate the sum back into a regular number using an inverse lookup table (the **Exponential**).
+The procedure works like this:
+
+1. Look up each number in a table to find its exponent (its **logarithm**).
+2. **Add** the two logarithms.
+3. Look up the sum in the table in reverse to get the product.
 
 ```
-[The Multiplicative World]    123,456   ×   789,101   (Tedious manual calculation)
-                                 │             │
-                             take log       take log
-                                 ▼             ▼
-[The Additive World]          11.7236   +   13.5786  =  25.3022  (Simple addition!)
-                                                           │
-                                                       apply exp
-                                                           ▼
-[Final Result Retrieved]                              97,419,250,000
+[Multiplicative world]   123,456      x      789,101      (slow by hand)
+                            |                    |
+                         take log             take log
+                            v                    v
+[Additive world]         11.72364     +      13.57865   =  25.30229   (easy)
+                                                              |
+                                                          apply exp
+                                                              v
+[Back to the original scale]                           97,419,253,056
 ```
 
-Napier coined the word **logarithm** from the Greek *logos* (proportion) and *arithmos* (number). A logarithm is quite literally a *"number that measures proportional scaling"*.
+Napier coined the word **logarithm** from the Greek *logos* (ratio, proportion) and *arithmos* (number). A logarithm is, quite literally, a number that measures ratios.
 
-### Jacob Bernoulli (1683): The Limit of Continuous Compounding
+A few historical clarifications are useful here, because popular accounts often blur them:
 
-Seventy years later, Swiss mathematician **Jacob Bernoulli** was contemplating financial interest compounding. His thought experiment was simple:
+- **Napier's original logarithms were not the natural logarithms we use today.** They were defined in a different way, for trigonometric calculation, and are only indirectly related to base $e$.
+- **Henry Briggs**, an English mathematician who visited Napier, developed **base-10 (common) logarithms**. Briggs published his first tables in 1617, and base-10 tables became the everyday calculating tool of scientists and engineers for more than three centuries.
+- The **slide rule** is a physical version of the same idea. Its scales are marked at distances proportional to logarithms, so sliding one scale along another adds two lengths, and adding lengths multiplies the numbers.
 
-Suppose a fund deposits \$1 at a 100% nominal annual interest rate.
-- **Compounded Annually ($n = 1$)**: At year's end, you have $\$1 \times (1 + 1)^1 = \$2.00$.
-- **Compounded Semi-Annually ($n = 2$)**: After 6 months, you get 50% interest (\$1.50). In the second half, that \$1.50 earns another 50%:
-  $$\$1 \times \left(1 + \frac{1}{2}\right)^2 = 1.50^2 = \$2.25$$
-- **Compounded Monthly ($n = 12$)**:
-  $$\$1 \times \left(1 + \frac{1}{12}\right)^{12} \approx \$2.613$$
-- **Compounded Daily ($n = 365$)**:
-  $$\$1 \times \left(1 + \frac{1}{365}\right)^{365} \approx \$2.7145$$
+A remark often attributed to the French mathematician Pierre-Simon Laplace says that logarithms, by shortening the labor of calculation, doubled the life of the astronomer.
 
-Bernoulli asked: If the bank compounds interest every second, every millisecond—**continuously and infinitely often ($n \to \infty$)**—will your money grow to infinity?
+### Jacob Bernoulli (1683): The limit of continuous compounding
 
-The answer was a resounding **no**. As compounding frequency approaches infinity, the growth hits a natural, inviolable ceiling:
+About seventy years later, the Swiss mathematician **Jacob Bernoulli** studied a question about compound interest. Suppose you deposit \$1 at a nominal annual interest rate of 100%. How much do you have after one year?
 
-$$\lim_{n \to \infty} \left(1 + \frac{1}{n}\right)^n = 2.718281828459...$$
+- **Compounded once a year**: $\$1 \times (1 + 1)^1 = \$2.00$.
+- **Compounded twice a year**: Each half-year pays 50%. After six months you have \$1.50, and the second half-year pays 50% on \$1.50, not on \$1:
+  $$\$1 \times \left(1 + \tfrac{1}{2}\right)^2 = \$2.25.$$
+- **Compounded $n$ times a year**: $\$1 \times \left(1 + \tfrac{1}{n}\right)^n$.
 
-This mathematical constant is the signature of **uninterrupted continuous compounding**. 
+Compounding more often always helps, because interest starts earning interest sooner. Bernoulli asked what happens if compounding becomes infinitely frequent. Does the balance grow without limit? Table 1 and Figure 2 show the answer.
 :::
 
 ::: {.lang-ko style="display: none;"}
-# 1. 역사 속 기원 이야기: 곱셈 지옥에서 인류를 구한 영웅들
+# 1. 역사 속 기원: 곱셈 지옥에서 벗어나기
 
-### (1) 존 네이피어 아저씨와 '곱셈 생지옥' 탈출기 (로그의 탄생)
+### 존 네이피어(1614): 곱셈을 덧셈으로 바꾸다
 
-지금으로부터 약 400년 전인 1600년대 초, 밤하늘의 별을 관측하던 천문학자들과 넓은 바다를 항해하던 선장들은 매일 고통 속에 살았습니다.  
-배가 암초에 걸리지 않거나 행성의 궤도를 알려면 **`738,291 × 491,827` 같은 어마어마한 6자리, 10자리 숫자 곱셈을 하루 종일 종이에 연필로 손계산**해야 했기 때문입니다. 숫자 하나만 삐끗해도 배가 엉뚱한 대양으로 빠져 선원들이 굶어 죽기 일쑤였습니다.
+17세기 초 천문학자와 항해사들은 일하는 시간의 상당 부분을 계산에 썼습니다. 행성의 위치나 배의 항로를 구하려면 자릿수가 긴 숫자를 손으로 곱하고 나눠야 했고, 한 번만 실수해도 몇 주의 작업이 헛수고가 되었습니다.
 
-이때 스코틀랜드의 천재 수학자 **존 네이피어(John Napier)**가 무릎을 탁 치며 번뜩이는 아이디어를 냈습니다:  
-*"사람 머리는 복잡한 곱하기는 쥐약이지만, 더하기는 1초 만에 하잖아? 세상의 모든 끔찍한 곱하기를 '쉬운 더하기'로 바꿔버릴 순 없을까?"*
+1614년 스코틀랜드의 수학자 **존 네이피어(John Napier)**가 해결책을 내놓았습니다. 생각 자체는 간단합니다. 곱셈은 느리고 틀리기 쉽지만 덧셈은 빠릅니다. 모든 수를 어떤 고정된 밑의 거듭제곱으로 바꿔 쓸 수 있다면, 두 수를 곱하는 일은 지수를 *더하는* 일로 바뀝니다.
 
-네이피어는 거듭제곱의 성질($A^m \times A^n = A^{m+n}$)에 주목했습니다.  
-1. 거대한 두 곱셈 숫자를 마법의 사전(로그표)에서 찾아서 작은 지수 숫자로 바꾼다.
-2. 둘을 **단순하게 덧셈(+)**한다.
-3. 그 더한 결과를 다시 사전에서 원래 숫자로 되돌려 찾는다.
+$$A^m \times A^n = A^{m+n}$$
+
+계산 순서는 다음과 같습니다.
+
+1. 표에서 각 수의 지수(**로그**)를 찾습니다.
+2. 두 로그를 **더합니다**.
+3. 더한 값을 표에서 거꾸로 찾아 곱셈의 답을 얻습니다.
 
 ```
-[원래 해야 할 끔찍한 곱셈]   123,456   ×   789,101   (손으로 풀면 1시간!)
-                                │             │
-                            로그 씌우기    로그 씌우기
-                                ▼             ▼
-[마법처럼 바뀐 덧셈]         11.72     +    13.58   =  25.30  (초등학생도 5초 만에 암산!)
-                                                           │
-                                                       exp로 되돌리기
-                                                           ▼
-[최종 곱셈 정답 확인]                                 97,419,250,000
+[곱하기의 세계]          123,456      x      789,101      (손으로 하면 오래 걸림)
+                            |                    |
+                         로그 취하기          로그 취하기
+                            v                    v
+[더하기의 세계]          11.72364     +      13.57865   =  25.30229   (간단한 덧셈)
+                                                              |
+                                                          exp 취하기
+                                                              v
+[원래 척도로 돌아오기]                                  97,419,253,056
 ```
 
-프랑스의 대수학자 라플라스는 **"로그의 발명은 천문학자들의 계산 수고를 덜어주어 그들의 수명을 두 배로 늘려주었다"**고 극찬했습니다.
+네이피어는 그리스어 *logos*(비, 비율)와 *arithmos*(수)를 합쳐 **logarithm**이라는 말을 만들었습니다. 이름 그대로 로그는 비율을 재는 수입니다.
 
----
+대중적인 설명에서 흔히 뭉뚱그려지는 역사적 사실 몇 가지를 바로잡아 두겠습니다.
 
-### (2) 야코프 베르누이와 욕심쟁이 은행원 (자연상수 e의 탄생)
+- **네이피어가 처음 만든 로그는 오늘날의 자연로그와 다릅니다.** 삼각법 계산을 위해 다른 방식으로 정의한 것이어서, 밑 $e$와는 간접적으로만 관련됩니다.
+- 네이피어를 찾아가 함께 연구한 영국의 수학자 **헨리 브리그스(Henry Briggs)**가 **밑이 10인 상용로그**를 발전시켰습니다. 브리그스는 1617년에 첫 로그표를 펴냈고, 상용로그표는 이후 300년 넘게 과학자와 공학자의 일상적인 계산 도구였습니다.
+- **계산자(slide rule)**는 같은 원리를 물건으로 만든 것입니다. 눈금이 로그에 비례하는 거리에 새겨져 있어서, 두 자를 밀어 길이를 더하면 숫자가 곱해집니다.
 
-70년 뒤, 스위스의 수학자 **야코프 베르누이**는 재미있는 은행 이자 생각을 해보았습니다:
+프랑스의 수학자 라플라스는 로그가 계산의 수고를 줄여 천문학자의 수명을 두 배로 늘렸다고 말했다고 전해집니다.
 
-은행원이 여러분에게 말합니다: *"원금 1원을 통장에 넣으시면, 1년에 이자를 무려 100% 드리겠습니다!"*
-- **1년에 한 번 받을 때**: 1년 뒤 내 돈은 $1 \times (1 + 1) = 2$원이 됩니다.
-- **여러분이 욕심을 냅니다**: *"반년마다 50%씩 쪼개서 복리로 주세요!"*  
-  -> 6개월 뒤 1.5원이 되고, 그 1.5원에 다시 50%가 붙어 $(1 + 0.5)^2 = 2.25$원이 됩니다! (25원 이득!)
-- **더 욕심을 냅니다**: *"매달 쪼개서 12번 복리로 주세요!"* -> 약 2.613원!
-- **매일 365번 복리로 쪼개면?** -> 약 2.714원!
+### 야코프 베르누이(1683): 연속 복리의 한계
 
-그렇다면, 이자를 1초마다, 아니 숨 쉴 때마다 **'무한히 끊김 없이 연속으로(Continuously)'** 쪼개서 받으면 내 돈은 수천억 원, 무한대로 불어날까요?
+약 70년 뒤 스위스의 수학자 **야코프 베르누이(Jacob Bernoulli)**는 복리 이자에 관한 문제를 연구했습니다. 연 이자율이 100%인 통장에 1원을 넣으면 1년 뒤 얼마가 될까요?
 
-놀랍게도 **아닙니다.**  
-아무리 잘게 쪼개도 돈은 절대 무한대로 늘어나지 못하고, **`2.7182818...`이라는 신비로운 천장(벽)**에 탁 부딪힙니다:
+- **1년에 한 번 이자를 붙이면**: $1 \times (1 + 1)^1 = 2$원입니다.
+- **1년에 두 번 붙이면**: 반년마다 50%씩 붙습니다. 6개월 뒤 1.5원이 되고, 다음 6개월에는 1원이 아니라 1.5원에 50%가 붙습니다.
+  $$1 \times \left(1 + \tfrac{1}{2}\right)^2 = 2.25\text{원}$$
+- **1년에 $n$번 붙이면**: $1 \times \left(1 + \tfrac{1}{n}\right)^n$원입니다.
 
-$$\lim_{n \to \infty} \left(1 + \frac{1}{n}\right)^n = e \approx 2.71828...$$
+이자를 자주 붙일수록 이자에 이자가 더 일찍 붙기 시작하므로 결과는 늘 커집니다. 베르누이는 이자를 붙이는 횟수가 무한히 많아지면 어떻게 되는지 물었습니다. 잔고가 끝없이 커질까요? 표 1과 그림 2가 답을 보여 줍니다.
+:::
 
-이 숫자가 바로 **자연상수 $e$**입니다.  
-자연계에서 세포가 증식하든, 바이러스가 퍼지든, 몸이 나이를 먹든, 생명 현상은 12월 31일까지 기다렸다가 한 번에 늙지 않고 **매 순간 쉬지 않고 연속해서 자라납니다.** 그 연속적인 성장이 닿을 수 있는 자연의 한계 상수가 바로 $e$인 것입니다.
+```{r bernoulli-table}
+bern_table <- tibble(
+  schedule = c("Annually", "Semiannually", "Quarterly", "Monthly",
+               "Weekly", "Daily", "Hourly", "Every minute"),
+  n = c(1, 2, 4, 12, 52, 365, 8760, 525600)
+) %>%
+  mutate(
+    balance = (1 + 1 / n)^n,
+    gap_from_e = exp(1) - balance
+  )
+
+bern_table %>%
+  kbl(digits = c(0, 0, 6, 6),
+      col.names = c("Compounding schedule", "n per year", "Balance after 1 year", "Gap from e"),
+      format.args = list(big.mark = ","),
+      caption = "Table 1. Growth of $1 at 100% annual interest under different compounding schedules") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), full_width = FALSE)
+```
+
+```{r fig-bernoulli, fig.width=9, fig.height=5, fig.cap="Figure 2. As compounding becomes more frequent, (1 + 1/n)^n rises but never passes e = 2.71828..."}
+bern_curve <- tibble(n = unique(round(10^seq(0, 5.75, length.out = 400)))) %>%
+  mutate(balance = (1 + 1 / n)^n)
+
+ggplot(bern_curve, aes(n, balance)) +
+  geom_hline(yintercept = exp(1), linetype = "dashed", color = col_gray) +
+  geom_line(color = col_blue, linewidth = 1.2) +
+  geom_point(data = bern_table, color = col_orange, size = 2.5) +
+  geom_text(data = filter(bern_table, n <= 12), aes(label = schedule),
+            hjust = 0, nudge_x = 0.08, vjust = 1.2, size = 3, color = "gray25") +
+  geom_text(data = filter(bern_table, n > 12), aes(label = schedule),
+            vjust = 1.8, size = 3, color = "gray25") +
+  annotate("text", x = 1.5, y = exp(1) + 0.05, label = "e = 2.71828...", hjust = 0, color = col_gray, fontface = "italic") +
+  scale_x_log10(labels = comma) +
+  coord_cartesian(ylim = c(1.9, 2.8)) +
+  labs(title = "Bernoulli's question: what happens as compounding becomes continuous?",
+       subtitle = "The balance approaches a ceiling instead of growing without limit",
+       x = "Number of compounding periods per year, n (log scale)",
+       y = "Balance after 1 year ($)")
+```
+
+::: {.lang-en}
+The balance rises quickly at first and then levels off. No matter how often interest is compounded, it never passes a ceiling of about 2.71828:
+
+$$\lim_{n \to \infty} \left(1 + \frac{1}{n}\right)^n = e = 2.718281828\dots$$
+
+Bernoulli showed that the limit lies between 2 and 3. The letter $e$ for this constant came later, from **Leonhard Euler**, who used it in writings from the late 1720s onward. In his 1748 textbook *Introductio in analysin infinitorum*, Euler treated logarithms as exponents and connected $e$, the exponential function, and the natural logarithm in essentially the form we use today.
+
+### From interest rates to growth rates
+
+Bernoulli's result generalizes. If a quantity grows at a nominal rate $r$ per unit of time, compounded $n$ times per unit, then after $t$ units it has been multiplied by $(1 + r/n)^{nt}$. As $n \to \infty$, this becomes
+
+$$\left(1 + \frac{r}{n}\right)^{nt} \;\longrightarrow\; e^{rt}.$$
+
+Here $r$ is called the **continuous growth rate**. This formula is the reason $e$ appears throughout population health. Cells divide, infections spread, and populations age continuously in time, not in yearly batches. When a process grows (or decays) at a rate proportional to its current size, its trajectory is $e^{rt}$, and its logarithm, $rt$, is a straight line in time.
+:::
+
+::: {.lang-ko style="display: none;"}
+잔고는 처음에는 빠르게 늘다가 점점 평평해집니다. 이자를 아무리 자주 붙여도 약 2.71828이라는 천장을 넘지 못합니다.
+
+$$\lim_{n \to \infty} \left(1 + \frac{1}{n}\right)^n = e = 2.718281828\dots$$
+
+베르누이는 이 극한값이 2와 3 사이에 있다는 것을 보였습니다. 이 상수에 $e$라는 이름을 붙인 사람은 그 뒤의 **레온하르트 오일러(Leonhard Euler)**로, 1720년대 후반부터 이 기호를 썼습니다. 오일러는 1748년 교과서 『무한 해석 입문(Introductio in analysin infinitorum)』에서 로그를 지수로 다루면서 $e$, 지수함수, 자연로그의 관계를 오늘날과 거의 같은 형태로 정리했습니다.
+
+### 이자율에서 성장률로
+
+베르누이의 결과는 일반화할 수 있습니다. 어떤 양이 단위 시간당 명목 비율 $r$로, 단위 시간마다 $n$번씩 복리로 커진다면, $t$만큼 시간이 흐른 뒤에는 $(1 + r/n)^{nt}$배가 됩니다. $n$을 무한히 키우면 다음과 같습니다.
+
+$$\left(1 + \frac{r}{n}\right)^{nt} \;\longrightarrow\; e^{rt}$$
+
+이때 $r$을 **연속 성장률**이라고 부릅니다. 이 식이 인구 건강 연구 곳곳에 $e$가 등장하는 이유입니다. 세포 분열, 감염 전파, 노화는 1년 단위로 한꺼번에 일어나지 않고 시간 속에서 끊임없이 일어납니다. 어떤 양이 현재 크기에 비례하는 속도로 커지거나 줄어들면 그 궤적은 $e^{rt}$가 되고, 여기에 로그를 씌운 $rt$는 시간에 대한 직선이 됩니다.
 :::
 
 ---
 
-# 2. Geometric Intuition: The Mirror Symmetry of $e$, $\log$, and $\exp$
+::: {.lang-en}
+# 2. Geometric Intuition: How $\exp$ and $\log$ Mirror Each Other
 
-```{r geometric-symmetry, fig.width=9, fig.height=6, fig.cap="Figure 1. The geometric mirror symmetry of exp(x) and log(x) across the identity line y = x."}
+### Inverse functions
+
+$\exp$ and $\log$ undo each other:
+
+$$\log(\exp(x)) = x, \qquad \exp(\log(x)) = x \quad (x > 0).$$
+
+A useful way to read $\log(x)$ is as the answer to a question: **"$e$ raised to what power gives $x$?"**
+
+| Expression | Value | Meaning |
+|:---|:---|:---|
+| $\log(1)$ | $0$ | $e^0 = 1$. A ratio of 1 means no change. |
+| $\log(e)$ | $1$ | $e^1 = e$. Multiplying by $e \approx 2.72$ is one log unit. |
+| $\log(e^2)$ | $2$ | Multiplying by $e$ twice is two log units. |
+| $\log(2)$ | $0.693$ | Doubling is about 0.69 log units. |
+| $\log(0.5)$ | $-0.693$ | Halving is about $-0.69$ log units. |
+
+The last two rows show something important. **On the log scale, doubling and halving are the same distance in opposite directions.** In general, the log of a ratio is positive for growth, negative for shrinkage, and zero for no change. This is why a coefficient of zero on the log scale corresponds to a ratio of one (an odds ratio of 1, a rate ratio of 1) on the original scale.
+
+Figure 3 plots both functions.
+:::
+
+::: {.lang-ko style="display: none;"}
+# 2. 기하학적 직관: 거울처럼 마주 보는 $\exp$와 $\log$
+
+### 서로의 역함수
+
+$\exp$와 $\log$는 서로를 되돌립니다.
+
+$$\log(\exp(x)) = x, \qquad \exp(\log(x)) = x \quad (x > 0)$$
+
+$\log(x)$는 **"$e$를 몇 제곱하면 $x$가 되는가?"**라는 질문의 답으로 읽으면 이해하기 쉽습니다.
+
+| 식 | 값 | 의미 |
+|:---|:---|:---|
+| $\log(1)$ | $0$ | $e^0 = 1$. 비율이 1이면 변화가 없습니다. |
+| $\log(e)$ | $1$ | $e^1 = e$. 약 2.72배가 로그 1단위입니다. |
+| $\log(e^2)$ | $2$ | $e$배를 두 번 하면 로그 2단위입니다. |
+| $\log(2)$ | $0.693$ | 두 배는 로그 약 0.69단위입니다. |
+| $\log(0.5)$ | $-0.693$ | 절반은 로그 약 $-0.69$단위입니다. |
+
+마지막 두 줄이 중요합니다. **로그 척도에서 두 배와 절반은 방향만 반대이고 거리는 같습니다.** 일반적으로 비율에 로그를 씌우면 증가일 때 양수, 감소일 때 음수, 변화가 없을 때 0이 됩니다. 로그 척도의 계수 0이 원래 척도의 비율 1(오즈비 1, 발생률비 1)에 대응하는 것도 이 때문입니다.
+
+그림 3은 두 함수를 함께 그린 것입니다.
+:::
+
+```{r geometric-symmetry, fig.width=9, fig.height=6, fig.cap="Figure 3. exp(x) and log(x) are mirror images across the line y = x. Both tangent slopes equal exactly 1 at the axis crossings."}
 x_vals <- seq(-2.5, 2.5, length.out = 400)
 x_pos  <- seq(0.08, 5.0, length.out = 400)
 
-df_exp <- tibble(x = x_vals, y = exp(x_vals), type = "y = exp(x)")
-df_log <- tibble(x = x_pos, y = log(x_pos), type = "y = log(x)")
-df_ref <- tibble(x = seq(-2.5, 5, length.out = 100), y = seq(-2.5, 5, length.out = 100), type = "y = x (Mirror)")
+df_exp <- tibble(x = x_vals, y = exp(x_vals))
+df_log <- tibble(x = x_pos, y = log(x_pos))
+df_ref <- tibble(x = seq(-2.5, 5, length.out = 100), y = seq(-2.5, 5, length.out = 100))
 
 tangent_exp <- tibble(x = seq(-1, 1, length.out = 50), y = x + 1)
 tangent_log <- tibble(x = seq(0, 2, length.out = 50), y = x - 1)
 
 ggplot() +
   geom_line(data = df_ref, aes(x = x, y = y), linetype = "dashed", color = "gray50", linewidth = 0.8) +
-  geom_line(data = df_exp, aes(x = x, y = y), color = "#2563eb", linewidth = 1.3) +
-  geom_line(data = df_log, aes(x = x, y = y), color = "#ea580c", linewidth = 1.3) +
-  geom_line(data = tangent_exp, aes(x = x, y = y), color = "#2563eb", linetype = "dotted", linewidth = 0.9) +
-  geom_line(data = tangent_log, aes(x = x, y = y), color = "#ea580c", linetype = "dotted", linewidth = 0.9) +
-  geom_point(aes(x = 0, y = 1), color = "#2563eb", size = 3.5) +
-  geom_point(aes(x = 1, y = 0), color = "#ea580c", size = 3.5) +
-  annotate("text", x = -0.6, y = 1.5, label = "(0, 1)\nSlope = 1", color = "#2563eb", fontface = "bold", size = 3.5) +
-  annotate("text", x = 1.6, y = -0.4, label = "(1, 0)\nSlope = 1", color = "#ea580c", fontface = "bold", size = 3.5) +
-  annotate("text", x = -1.5, y = 3.8, label = "y = exp(x)\n[Multiplication World]", color = "#2563eb", fontface = "bold") +
-  annotate("text", x = 3.8, y = 0.5, label = "y = log(x)\n[Addition World]", color = "#ea580c", fontface = "bold") +
-  annotate("text", x = 3.5, y = 4.2, label = "Reflection Axis (y = x)", color = "gray30", fontface = "italic") +
+  geom_line(data = df_exp, aes(x = x, y = y), color = col_blue, linewidth = 1.3) +
+  geom_line(data = df_log, aes(x = x, y = y), color = col_orange, linewidth = 1.3) +
+  geom_line(data = tangent_exp, aes(x = x, y = y), color = col_blue, linetype = "dotted", linewidth = 0.9) +
+  geom_line(data = tangent_log, aes(x = x, y = y), color = col_orange, linetype = "dotted", linewidth = 0.9) +
+  geom_point(aes(x = 0, y = 1), color = col_blue, size = 3.5) +
+  geom_point(aes(x = 1, y = 0), color = col_orange, size = 3.5) +
+  annotate("text", x = -0.6, y = 1.5, label = "(0, 1)\nSlope = 1", color = col_blue, fontface = "bold", size = 3.5) +
+  annotate("text", x = 1.6, y = -0.4, label = "(1, 0)\nSlope = 1", color = col_orange, fontface = "bold", size = 3.5) +
+  annotate("text", x = -1.5, y = 3.8, label = "y = exp(x)\n[Multiplicative world]", color = col_blue, fontface = "bold") +
+  annotate("text", x = 3.8, y = 0.5, label = "y = log(x)\n[Additive world]", color = col_orange, fontface = "bold") +
+  annotate("text", x = 3.5, y = 4.2, label = "Mirror line (y = x)", color = "gray30", fontface = "italic") +
   coord_fixed(xlim = c(-2.5, 5), ylim = c(-2.5, 5)) +
   labs(
-    title = "The Geometric Dance of Exp and Log",
-    subtitle = "Inverse mirror images across y = x. Notice the tangent slopes are exactly 1 at (0,1) and (1,0).",
-    x = "x",
-    y = "y"
-  ) +
-  theme_minimal()
+    title = "exp and log as mirror images",
+    subtitle = "Inverse functions reflect across y = x; tangent slopes are exactly 1 at (0, 1) and (1, 0)",
+    x = "x", y = "y"
+  )
 ```
 
 ::: {.lang-en}
-### Why is $e$ Called the "Natural" Base?
-Look at the dotted tangent lines in Figure 1:
-- At the point where $y = \exp(x)$ crosses the y-axis $(0, 1)$, its **slope (derivative) is exactly equal to 1**.
-- At the point where $y = \log(x)$ crosses the x-axis $(1, 0)$, its **slope is also exactly equal to 1**.
+### Reading Figure 3
 
-If you use base 10 ($10^x$) or base 2 ($2^x$), the slopes at the axis intercepts are awkward numbers like $\ln(10) \approx 2.302$ or $\ln(2) \approx 0.693$. Only base $e$ produces a pristine, 1-to-1 proportional rate of change without arbitrary scaling constants.
+- **Blue curve, $y = \exp(x)$**: Each step to the right multiplies the height by the same factor ($e \approx 2.72$ per unit). The curve is always positive and rises faster and faster.
+- **Orange curve, $y = \log(x)$**: Defined only for $x > 0$. It rises steeply near zero and then flattens: going from 1 to 10 adds 2.3 units, and going from 10 to 100 adds the same 2.3 units, even though the second step covers ten times more ground.
+- **The mirror**: Fold the figure along the dashed line $y = x$ and the two curves land exactly on top of each other. Every point $(a, b)$ on the exp curve has a partner $(b, a)$ on the log curve. That is what it means to be inverse functions.
+
+### Why is $e$ called the "natural" base?
+
+Look at the dotted tangent lines. Where $y = \exp(x)$ crosses the y-axis at $(0, 1)$, its slope is exactly 1. Where $y = \log(x)$ crosses the x-axis at $(1, 0)$, its slope is also exactly 1. With base 10 or base 2, these slopes would be $\log(10) \approx 2.303$ or $\log(2) \approx 0.693$, and every formula in calculus would carry those constants around. Base $e$ is the only base for which the rate of change at the starting point is exactly 1, which keeps the formulas clean.
+
+That slope of 1 has a practical payoff. Near $x = 0$, the exp curve and its tangent line $y = 1 + x$ are almost the same, so
+
+$$\exp(x) \approx 1 + x \quad \text{and} \quad \log(1 + x) \approx x \quad \text{when } x \text{ is small.}$$
+
+This approximation is the reason researchers can read small log-scale coefficients directly as percentages. We return to it in Section 3.
+
+### Reading a log axis
+
+Many figures in health research use a log axis, as in the right panel of Figure 1. Figure 4 shows how such an axis differs from an ordinary one.
 :::
 
 ::: {.lang-ko style="display: none;"}
-### 그림으로 보는 셋의 거울 쌍둥이 관계
-위의 그래프(Figure 1)를 보세요. 가운데 회색 점선($y = x$)이 보이시죠? 이 선은 **마법의 거울**입니다.
-- **파란색 선 ($y = \exp(x)$)**: 계단을 한 칸 한 칸 갈 때마다 하늘 높이 로켓처럼 솟구쳐 오릅니다. (곱하기 세상)
-- **주황색 선 ($y = \log(x)$)**: 옆으로 아무리 멀리 가도 완만하게 누워서 얌전하게 자랍니다. (더하기 세상)
-- **둘의 관계**: 점선($y=x$)을 기준으로 종이를 반으로 딱 접으면, **파란선과 주황선이 오차 하나 없이 완벽하게 포개집니다!**  
-  즉, $\exp$가 몇 배로 뻥튀기해 놓은 것을 $\log$가 그대로 도로 가져오고, $\log$가 축소해 놓은 것을 $\exp$가 완벽하게 되돌려놓는 **'완벽한 거울 쌍둥이(역함수)'**입니다.
+### 그림 3 읽기
 
-**왜 하필 '자연(Natural)' 로그라고 부를까요?**  
-파란선이 y축과 만나는 점 $(0, 1)$과 주황선이 x축과 만나는 점 $(1, 0)$을 보세요.  
-접선의 기울기가 **정확히 깔끔한 '1'**입니다! 다른 밑수(10이나 2)를 쓰면 기울기가 지저분한 소수가 되지만, 오직 자연상수 $e$를 쓸 때만 군더더기 없는 가장 자연스러운 1대1 변화율이 만들어지기 때문에 '자연'이라는 이름이 붙었습니다.
+- **파란 곡선 $y = \exp(x)$**: 오른쪽으로 한 단위 갈 때마다 높이가 같은 배수($e \approx 2.72$배)로 커집니다. 언제나 양수이고, 갈수록 더 가파르게 올라갑니다.
+- **주황 곡선 $y = \log(x)$**: $x > 0$에서만 정의됩니다. 0 근처에서는 가파르게 오르다가 점점 완만해집니다. 1에서 10으로 갈 때 2.3단위 오르고, 10에서 100으로 갈 때도 똑같이 2.3단위 오릅니다. 두 번째 구간이 열 배 넓은데도 그렇습니다.
+- **거울 관계**: 점선 $y = x$를 따라 그림을 접으면 두 곡선이 정확히 겹칩니다. exp 곡선 위의 점 $(a, b)$에는 log 곡선 위의 짝 $(b, a)$가 있습니다. 역함수라는 말의 뜻이 바로 이것입니다.
+
+### $e$를 왜 "자연스러운" 밑이라고 할까?
+
+점선으로 그린 접선을 보세요. $y = \exp(x)$가 y축과 만나는 점 $(0, 1)$에서 기울기는 정확히 1입니다. $y = \log(x)$가 x축과 만나는 점 $(1, 0)$에서도 기울기가 정확히 1입니다. 밑을 10이나 2로 하면 이 기울기가 $\log(10) \approx 2.303$이나 $\log(2) \approx 0.693$이 되고, 미적분의 모든 공식에 이런 상수가 따라붙습니다. 출발점의 변화율이 정확히 1이 되는 밑은 $e$ 하나뿐이어서 공식이 가장 깔끔해집니다.
+
+기울기가 1이라는 사실은 실제로도 쓸모가 있습니다. $x = 0$ 근처에서 exp 곡선과 접선 $y = 1 + x$는 거의 같습니다. 그래서 다음 근사가 성립합니다.
+
+$$x\text{가 작을 때}\quad \exp(x) \approx 1 + x, \qquad \log(1 + x) \approx x$$
+
+연구자들이 로그 척도의 작은 계수를 곧바로 퍼센트로 읽을 수 있는 이유가 이 근사입니다. 3절에서 다시 다룹니다.
+
+### 로그 축 읽는 법
+
+그림 1의 오른쪽처럼 보건 연구의 그림에는 로그 축이 자주 등장합니다. 그림 4는 로그 축이 일반 축과 어떻게 다른지 보여 줍니다.
+:::
+
+```{r fig-log-number-line, fig.width=10, fig.height=4.5, fig.cap="Figure 4. The same ten values on a linear axis and on a log axis. On a log axis, equal distances mean equal ratios."}
+nl_df <- tibble(value = c(1, 2, 5, 10, 20, 50, 100, 200, 500, 1000))
+
+number_line_theme <- theme(
+  axis.text.y = element_blank(),
+  panel.grid.major.y = element_blank(),
+  panel.grid.minor.y = element_blank()
+)
+
+p_nl_lin <- ggplot(nl_df, aes(value, 0)) +
+  geom_hline(yintercept = 0, color = "gray70") +
+  geom_point(size = 3, color = col_blue) +
+  geom_text(aes(label = comma(value)), vjust = -1.2, size = 3.2, check_overlap = TRUE) +
+  scale_x_continuous(labels = comma, breaks = c(0, 250, 500, 750, 1000)) +
+  coord_cartesian(ylim = c(-0.5, 1)) +
+  labs(title = "Linear axis: equal distances = equal differences",
+       subtitle = "Values from 1 to 100 are crowded into the left edge",
+       x = NULL, y = NULL) +
+  number_line_theme
+
+ratio_marks <- tibble(x = c(1, 10, 100), xend = c(10, 100, 1000))
+
+p_nl_log <- ggplot(nl_df, aes(value, 0)) +
+  geom_hline(yintercept = 0, color = "gray70") +
+  geom_segment(data = ratio_marks, aes(x = x, xend = xend, y = -0.3, yend = -0.3),
+               inherit.aes = FALSE, color = col_orange,
+               arrow = arrow(length = unit(0.15, "cm"), ends = "both")) +
+  geom_text(data = ratio_marks, aes(x = sqrt(x * xend), y = -0.45, label = "x10"),
+            inherit.aes = FALSE, color = col_orange, size = 3.2, fontface = "bold") +
+  geom_point(size = 3, color = col_blue) +
+  geom_text(aes(label = comma(value)), vjust = -1.2, size = 3.2) +
+  scale_x_log10(labels = comma, breaks = c(1, 10, 100, 1000)) +
+  coord_cartesian(ylim = c(-0.6, 1)) +
+  labs(title = "Log axis: equal distances = equal ratios",
+       subtitle = "1 to 10, 10 to 100, and 100 to 1,000 are each a tenfold step and take the same space",
+       x = NULL, y = NULL) +
+  number_line_theme
+
+p_nl_lin / p_nl_log
+```
+
+::: {.lang-en}
+Three rules make log axes easy to read:
+
+1. **Equal distances mean equal ratios.** Moving from 1 to 10 takes the same space as moving from 100 to 1,000.
+2. **Parallel lines mean a constant ratio.** If two groups' lines run parallel on a log axis, one group's values are a fixed multiple of the other's at every point. We will see this with healthcare spending in Figure 12.
+3. **The base does not change the shape.** Base-10 and natural logs differ only by a constant factor, $\log_{10}(x) = \log(x) / \log(10)$. A ggplot axis made with `scale_y_log10()` has the same shape as one made with natural logs; only the tick labels differ.
+
+### The rules of logarithms and where they appear in research
+
+Every use of logs in this post rests on a handful of rules.
+
+| Rule | Formula | Where it appears in research |
+|:---|:---|:---|
+| Product becomes sum | $\log(ab) = \log a + \log b$ | Multiplicative effects in the outcome become additive coefficients in the model. |
+| Quotient becomes difference | $\log(a/b) = \log a - \log b$ | A difference in log outcomes is the log of a ratio. Log rate ratios and log odds ratios are differences on the log scale. |
+| Power becomes product | $\log(a^k) = k \log a$ | A 10-year age difference with a per-year coefficient $\beta$ is $10\beta$ on the log scale, or $\exp(\beta)^{10}$ on the ratio scale. |
+| Log of 1 is 0 | $\log 1 = 0$ | A coefficient of 0 means a ratio of 1 (no effect). A confidence interval for a ratio is checked against 1, not 0. |
+| Defined only for positive numbers | $\log x$ requires $x > 0$ | Outcomes with zeros (no doctor visits, no spending) need special care. See Section 4. |
+:::
+
+::: {.lang-ko style="display: none;"}
+로그 축은 세 가지 규칙만 알면 쉽게 읽힙니다.
+
+1. **같은 거리는 같은 비율입니다.** 1에서 10까지의 간격과 100에서 1,000까지의 간격이 같습니다.
+2. **평행한 선은 일정한 비율을 뜻합니다.** 두 집단의 선이 로그 축에서 평행하다면, 어느 지점에서든 한 집단의 값이 다른 집단의 일정한 배수라는 뜻입니다. 그림 12의 의료비 그래프에서 확인할 수 있습니다.
+3. **밑이 달라도 모양은 같습니다.** 상용로그와 자연로그는 상수배만큼만 다릅니다($\log_{10}(x) = \log(x) / \log(10)$). ggplot의 `scale_y_log10()`으로 만든 축은 자연로그로 만든 축과 모양이 똑같고, 눈금에 적힌 숫자만 다릅니다.
+
+### 로그의 법칙과 연구에서 쓰이는 곳
+
+이 글에 나오는 로그의 쓰임새는 모두 몇 가지 법칙에 기대고 있습니다.
+
+| 법칙 | 식 | 연구에서 쓰이는 곳 |
+|:---|:---|:---|
+| 곱은 합이 된다 | $\log(ab) = \log a + \log b$ | 결과변수에서 곱으로 작용하는 효과가 모형에서는 더해지는 계수가 됩니다. |
+| 나눗셈은 뺄셈이 된다 | $\log(a/b) = \log a - \log b$ | 로그 결과변수의 차이는 비율의 로그입니다. 로그 발생률비와 로그 오즈비는 로그 척도의 차이입니다. |
+| 거듭제곱은 곱이 된다 | $\log(a^k) = k \log a$ | 나이 1세당 계수가 $\beta$라면 10세 차이는 로그 척도에서 $10\beta$, 비율로는 $\exp(\beta)^{10}$입니다. |
+| 1의 로그는 0이다 | $\log 1 = 0$ | 계수 0은 비율 1, 즉 효과가 없음을 뜻합니다. 비율의 신뢰구간은 0이 아니라 1을 포함하는지 봅니다. |
+| 양수에서만 정의된다 | $\log x$는 $x > 0$일 때만 | 0이 있는 결과변수(병원 방문 0회, 의료비 0원)는 따로 신경 써야 합니다. 4절에서 다룹니다. |
 :::
 
 ---
 
-# 3. Essential Companion Concepts in Health Research
+::: {.lang-en}
+# 3. Companion Concepts for Health Research
 
-```{r approximation-plot, fig.cap="Figure 2. Accuracy of the linear percentage approximation log(1 + x) ≈ x."}
-approx_df <- tibble(
-  beta = seq(-0.5, 0.5, length.out = 200),
-  exact_pct = (exp(beta) - 1) * 100,
-  approx_pct = beta * 100
+### A running example
+
+To keep the examples connected, the rest of this post uses one simulated health survey of 2,000 adults. The simulation is built so that we know the true values and can check whether our models recover them.
+
+- **Age**: uniform between 25 and 80.
+- **Income**: log-normal, so it is right-skewed like real income data.
+- **Health insurance**: 85% insured.
+- **Chronic disease**: generated from a logistic model in which the log-odds rise with age, fall with log income, and fall with insurance.
+- **Annual healthcare spending**: generated on the log scale, so spending rises by a constant *percentage* with each year of age and is a constant *multiple* higher for people with a chronic condition.
+:::
+
+::: {.lang-ko style="display: none;"}
+# 3. 보건 연구에서 함께 알아 둘 개념
+
+### 이 글 전체에서 쓰는 예제 자료
+
+예제끼리 이어지도록, 이 절부터는 성인 2,000명을 대상으로 한 가상의 건강 조사 자료 하나를 계속 사용합니다. 참값을 알고 시뮬레이션했기 때문에, 모형이 그 값을 제대로 찾아내는지 확인할 수 있습니다.
+
+- **나이**: 25세에서 80세 사이 균등분포
+- **소득**: 실제 소득 자료처럼 오른쪽으로 꼬리가 긴 로그정규분포
+- **건강보험**: 85%가 가입
+- **만성질환**: 로지스틱 모형으로 생성. 로그 오즈는 나이가 많을수록 높고, 로그 소득이 높을수록, 보험이 있을수록 낮습니다.
+- **연간 의료비**: 로그 척도에서 생성. 나이가 한 살 많을 때마다 일정한 *비율*로 늘고, 만성질환이 있으면 일정한 *배수*만큼 많습니다.
+:::
+
+```{r dgp-simulation}
+set.seed(2026)
+n <- 2000
+
+age           <- round(runif(n, 25, 80))
+income        <- round(rlnorm(n, meanlog = 10.5, sdlog = 0.6))
+has_insurance <- rbinom(n, 1, prob = 0.85)
+
+# True model for chronic disease (log-odds scale)
+log_odds_chronic    <- -4.2 + 0.055 * age - 0.45 * log(income / 1000) - 0.3 * has_insurance
+prob_chronic        <- exp(log_odds_chronic) / (1 + exp(log_odds_chronic))
+has_chronic_disease <- rbinom(n, 1, prob = prob_chronic)
+
+# True model for spending (log scale)
+log_spending    <- 5.2 + 0.03 * age + 0.85 * has_chronic_disease + rnorm(n, 0, 0.55)
+annual_spending <- round(exp(log_spending), 2)
+
+health_df <- tibble(
+  id              = 1:n,
+  age             = age,
+  income          = income,
+  has_insurance   = has_insurance,
+  has_chronic     = has_chronic_disease,
+  annual_spending = annual_spending
 )
 
-ggplot(approx_df, aes(x = beta)) +
-  geom_line(aes(y = exact_pct, color = "Exact: [exp(β) - 1] × 100%"), linewidth = 1.2) +
-  geom_line(aes(y = approx_pct, color = "Approximation: β × 100%"), linetype = "dashed", linewidth = 1.2) +
-  scale_color_manual(values = c("Exact: [exp(β) - 1] × 100%" = "#2563eb", "Approximation: β × 100%" = "#ea580c")) +
-  geom_vline(xintercept = c(-0.15, 0.15), linetype = "dotted", color = "gray40") +
-  labs(
-    title = "Why Social Scientists Can Treat β as Percentage Change",
-    subtitle = "Between -0.15 and +0.15, the approximation is nearly indistinguishable from ground truth",
-    x = "Regression Coefficient (β)",
-    y = "Estimated Percentage Change in Outcome (%)",
-    color = "Calculation Method"
-  ) +
-  theme_minimal() +
+health_df %>%
+  head(6) %>%
+  kbl(caption = "Table 2. First six rows of the simulated health survey",
+      format.args = list(big.mark = ",")) %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), full_width = FALSE)
+```
+
+```{r spending-stats}
+spend_am  <- mean(health_df$annual_spending)
+spend_med <- median(health_df$annual_spending)
+spend_gm  <- exp(mean(log(health_df$annual_spending)))
+```
+
+::: {.lang-en}
+### 3.1 The geometric mean: $\exp(\text{mean}(\log X))$
+
+Suppose three patients spend \$100, \$1,000, and \$10,000 on healthcare in a year. The ordinary (arithmetic) mean is \$3,700, which is higher than what two of the three patients spent. The **geometric mean** is
+
+$$\sqrt[3]{100 \times 1{,}000 \times 10{,}000} = \sqrt[3]{10^9} = 1{,}000,$$
+
+which sits in the middle of the three values *in ratio terms*: \$1,000 is ten times \$100, and \$10,000 is ten times \$1,000.
+
+In general,
+
+$$\text{Geometric mean} = \sqrt[n]{x_1 \times x_2 \times \dots \times x_n} = \exp\left( \frac{1}{n} \sum_{i=1}^n \log(x_i) \right).$$
+
+The right-hand side describes a three-step recipe that should look familiar from Napier: take the log of every value, compute the ordinary average of the logs, and exponentiate back to the original units. In other words, **the geometric mean is the arithmetic mean computed in the additive world and translated back.**
+
+Some properties worth knowing:
+
+- The geometric mean is never larger than the arithmetic mean. They are equal only when all values are identical.
+- For log-normal data, the geometric mean is close to the median.
+- It is the natural summary for quantities that vary by multiples, such as antibody titers (reported as geometric mean titers), environmental exposure concentrations, and healthcare costs.
+
+Figure 5 shows the three summaries for spending in our simulated survey. The arithmetic mean is \$`r comma(round(spend_am))`, the median is \$`r comma(round(spend_med))`, and the geometric mean is \$`r comma(round(spend_gm))`.
+:::
+
+::: {.lang-ko style="display: none;"}
+### 3.1 기하평균: $\exp(\text{mean}(\log X))$
+
+환자 세 명이 1년 동안 의료비로 각각 10만 원, 100만 원, 1,000만 원을 썼다고 합시다. 보통의 평균(산술평균)은 370만 원으로, 세 명 중 두 명이 쓴 금액보다 큽니다. **기하평균**은 다음과 같습니다.
+
+$$\sqrt[3]{10 \times 100 \times 1{,}000} = \sqrt[3]{10^6} = 100\text{(만 원)}$$
+
+100만 원은 *비율로 보면* 세 값의 한가운데입니다. 10만 원의 10배가 100만 원이고, 100만 원의 10배가 1,000만 원이기 때문입니다.
+
+일반적인 식은 다음과 같습니다.
+
+$$\text{기하평균} = \sqrt[n]{x_1 \times x_2 \times \dots \times x_n} = \exp\left( \frac{1}{n} \sum_{i=1}^n \log(x_i) \right)$$
+
+오른쪽 식은 네이피어의 계산법과 똑같은 세 단계입니다. 모든 값에 로그를 씌우고, 로그 값들의 평균을 구한 뒤, exp로 원래 단위로 되돌립니다. 다시 말해 **기하평균은 더하기의 세계에서 구한 산술평균을 원래 척도로 옮겨 놓은 것**입니다.
+
+알아 두면 좋은 성질이 있습니다.
+
+- 기하평균은 산술평균보다 클 수 없습니다. 모든 값이 같을 때만 둘이 같아집니다.
+- 로그정규분포를 따르는 자료에서는 기하평균이 중앙값과 비슷합니다.
+- 항체가(기하평균 항체가로 보고합니다), 환경 노출 농도, 의료비처럼 몇 배씩 차이 나는 양을 요약할 때 잘 맞습니다.
+
+그림 5는 예제 자료의 의료비를 세 가지 방식으로 요약한 것입니다. 산술평균은 \$`r comma(round(spend_am))`, 중앙값은 \$`r comma(round(spend_med))`, 기하평균은 \$`r comma(round(spend_gm))`입니다.
+:::
+
+```{r fig-geometric-mean, fig.width=10, fig.height=5, fig.cap="Figure 5. Distribution of simulated annual healthcare spending on a linear axis and a log axis, with three summary statistics."}
+stat_lines <- tibble(
+  stat  = factor(c("Arithmetic mean", "Median", "Geometric mean"),
+                 levels = c("Arithmetic mean", "Median", "Geometric mean")),
+  value = c(spend_am, spend_med, spend_gm)
+)
+stat_colors <- c("Arithmetic mean" = col_orange, "Median" = col_green, "Geometric mean" = col_blue)
+
+p_gm_raw <- ggplot(health_df, aes(annual_spending)) +
+  geom_histogram(bins = 60, fill = "gray80", color = "white") +
+  geom_vline(data = stat_lines, aes(xintercept = value, color = stat), linewidth = 1) +
+  scale_x_continuous(labels = dollar) +
+  scale_color_manual(values = stat_colors) +
+  labs(title = "Linear axis", subtitle = "Long right tail pulls the arithmetic mean upward",
+       x = "Annual spending", y = "Number of people", color = NULL)
+
+p_gm_log <- ggplot(health_df, aes(annual_spending)) +
+  geom_histogram(bins = 60, fill = "gray80", color = "white") +
+  geom_vline(data = stat_lines, aes(xintercept = value, color = stat), linewidth = 1) +
+  scale_x_log10(labels = dollar) +
+  scale_color_manual(values = stat_colors) +
+  labs(title = "Log axis", subtitle = "Roughly symmetric; the geometric mean sits at the center",
+       x = "Annual spending (log scale)", y = "Number of people", color = NULL)
+
+(p_gm_raw + p_gm_log) +
+  plot_layout(guides = "collect") &
   theme(legend.position = "bottom")
 ```
 
 ::: {.lang-en}
-### 1. The Geometric Mean: $\exp(\text{mean}(\log(X)))$
-When epidemiological variables (like antibody concentrations, airborne lead levels, or healthcare costs) have extreme right-skew, the standard arithmetic mean is wildly distorted. Health researchers calculate the **Geometric Mean**:
-$$\text{Geometric Mean} = \sqrt[n]{x_1 \times x_2 \times \dots \times x_n} = \exp\left( \frac{1}{n} \sum_{i=1}^n \log(x_i) \right)$$
-Notice what this formula does: take $\log$ of every patient's measurement, calculate the ordinary average of the logs, and exponentiate ($\exp$) back to original units.
+On the linear axis, a small number of very high spenders stretch the distribution to the right and pull the arithmetic mean above the median. On the log axis, the distribution is close to symmetric, and the geometric mean falls near its center.
 
-### 2. The Linear Approximation: $\log(1 + x) \approx x$ for Small Changes
-When $\beta$ is small (between $-0.15$ and $+0.15$), $\exp(\beta) - 1 \approx \beta$. This allows researchers to quickly interpret coefficients as: *"Each 1-unit increase in X yields an approximate $\beta \times 100\%$ change in Y."*
+::: {.callout-warning}
+## The geometric mean does not replace the arithmetic mean
+If the question is about totals, such as a hospital budget or the total cost of a program, the arithmetic mean is the right quantity, because total cost equals the number of people times the arithmetic mean. The geometric mean describes a *typical* person on the ratio scale; it does not add up to the total. This distinction returns in Section 4, where it becomes the *retransformation problem*.
+:::
 
-### 3. Doubling Time and the "Rule of 70"
-If an infection wave grows at continuous daily rate $r$:
-$$t_{\text{double}} = \frac{\log(2)}{r} \approx \frac{0.693}{r} \approx \frac{70}{\text{Daily Growth Rate in Percent}}$$
-If infections grow by 7% per day, cases double every $70 / 7 = 10$ days.
+### 3.2 The small-change approximation: reading $\beta$ as a percentage
 
-### 4. Derivative Invariance: $\frac{d}{dx} \exp(x) = \exp(x)$
-Out of all mathematical functions in existence, $\exp(x)$ is the only nontrivial function whose derivative is identical to itself. Because current mortality risk drives the speed of further biological frailty accumulation, exponential functions naturally model human hazard functions.
+Suppose you fit a model with a logged outcome, $\log(Y) = \beta_0 + \beta_1 X$. A one-unit increase in $X$ adds $\beta_1$ to $\log(Y)$, which means $Y$ is *multiplied* by $\exp(\beta_1)$. The exact percentage change is therefore
+
+$$\text{Exact percentage change} = \left(\exp(\beta_1) - 1\right) \times 100\%.$$
+
+Section 2 showed that $\exp(x) \approx 1 + x$ near zero. So when $\beta_1$ is small,
+
+$$\left(\exp(\beta_1) - 1\right) \times 100\% \approx \beta_1 \times 100\%.$$
+
+That is why papers often say "a coefficient of 0.03 means about a 3% increase." Figure 6 shows how far this shortcut can be trusted.
 :::
 
 ::: {.lang-ko style="display: none;"}
-### 꼭 알아야 할 4가지 짝꿍 개념 (쉽고 유용한 꿀팁)
+일반 축에서는 의료비를 아주 많이 쓴 소수 때문에 분포가 오른쪽으로 길게 늘어지고, 산술평균이 중앙값보다 위로 끌려 올라갑니다. 로그 축에서는 분포가 거의 좌우대칭이 되고, 기하평균이 그 가운데에 놓입니다.
 
-#### 1. 기하평균 (Geometric Mean)
-* **어디에 쓰이나요?**: 100명 중 99명은 1년에 병원비를 5만 원 쓰는데, 1명이 수술비로 5억 원을 썼다고 해봅시다. 단순 평균을 내면 "우리 동네 평균 병원비는 500만 원!"이라는 엉뚱한 결론이 나옵니다.
-* **해법**: 모든 사람의 병원비에 로그($\log$)를 씌워 거대한 숫자를 얌전하게 줄인 뒤 평균을 내고, 다시 $\exp$로 되돌립니다. 이것이 바로 치우친 데이터를 요약하는 가장 정직한 대표값인 **기하평균**입니다!
+::: {.callout-warning}
+## 기하평균이 산술평균을 대신하지는 못합니다
+병원 예산이나 사업 총비용처럼 *합계*가 궁금하다면 산술평균을 써야 합니다. 총비용은 인원수에 산술평균을 곱한 값이기 때문입니다. 기하평균은 비율의 척도에서 *전형적인* 사람을 나타낼 뿐, 더해서 합계가 되지는 않습니다. 이 구분은 4절의 *재변환 문제*에서 다시 등장합니다.
+:::
 
-#### 2. 작은 변화율의 마법: $\log(1 + x) \approx x$
-* **왜 회귀분석 계수를 바로 퍼센트(%)로 읽을까요?**: 통계 논문을 보면 *"소득이 1단위 늘면 우울증 점수가 대략 5% 줄어든다"*고 바로 말합니다.
-* Figure 2 그래프를 보세요. 계수 $\beta$가 $-0.15 \sim +0.15$ 사이로 작을 때는, 복잡한 공식 계산값(파란 실선)과 단순 곱하기(주황 점선)가 **소름 돋을 정도로 똑같이 겹칩니다!** 그래서 학자들은 머리 아픈 계산 없이 계수를 바로 퍼센트(%) 변화율로 편하게 읽는 것입니다.
+### 3.2 작은 변화의 근사: $\beta$를 퍼센트로 읽기
 
-#### 3. 배가 시간과 "70의 법칙"
-* *"코로나 확진자가 매일 7%씩 늘어난다면, 확진자가 2배로 폭발하는 데 며칠 걸릴까?"*
-* 복잡한 계산기 필요 없습니다! **70 나누기 7 = 10일!** 딱 10일이면 2배가 됩니다.  
-  (이 마법의 숫자 70은 자연로그 2값인 $\log(2) \approx 0.693$에서 나온 공식입니다.)
+결과변수에 로그를 씌운 모형 $\log(Y) = \beta_0 + \beta_1 X$를 추정했다고 합시다. $X$가 1단위 늘면 $\log(Y)$에 $\beta_1$이 더해지고, 이는 $Y$가 $\exp(\beta_1)$배가 된다는 뜻입니다. 따라서 정확한 변화율은 다음과 같습니다.
 
-#### 4. 내 키가 곧 나의 달리기 속도인 유일한 함수 ($\exp$)
-* 세상에 수많은 곡선 중, **"지금 내 높이(값)가 곧 나의 순간 성장 속도(기울기)"**인 유일무이한 함수가 바로 $\exp(x)$입니다. 나이가 들수록 노화가 더 빠르게 가속화되는 우리 몸의 사망 위험 곡선에 지수함수가 쓰이는 이유입니다.
+$$\text{정확한 변화율} = \left(\exp(\beta_1) - 1\right) \times 100\%$$
+
+2절에서 $x$가 0 근처일 때 $\exp(x) \approx 1 + x$임을 보았습니다. 그러므로 $\beta_1$이 작으면 다음 근사가 성립합니다.
+
+$$\left(\exp(\beta_1) - 1\right) \times 100\% \approx \beta_1 \times 100\%$$
+
+논문에서 "계수 0.03은 약 3% 증가를 뜻한다"고 쓰는 이유입니다. 그림 6은 이 근사를 어디까지 믿어도 되는지 보여 줍니다.
+:::
+
+```{r approximation-plot, fig.width=9, fig.height=6, fig.cap="Figure 6. The exact percentage change [exp(β) - 1] × 100% vs. the approximation β × 100%."}
+approx_df <- tibble(
+  beta       = seq(-0.5, 0.5, length.out = 200),
+  exact_pct  = (exp(beta) - 1) * 100,
+  approx_pct = beta * 100
+)
+
+ggplot(approx_df, aes(x = beta)) +
+  annotate("rect", xmin = -0.1, xmax = 0.1, ymin = -Inf, ymax = Inf, alpha = 0.08, fill = col_green) +
+  geom_line(aes(y = exact_pct, color = "Exact: [exp(β) - 1] × 100%"), linewidth = 1.2) +
+  geom_line(aes(y = approx_pct, color = "Approximation: β × 100%"), linetype = "dashed", linewidth = 1.2) +
+  scale_color_manual(values = c("Exact: [exp(β) - 1] × 100%" = col_blue, "Approximation: β × 100%" = col_orange)) +
+  geom_vline(xintercept = c(-0.1, 0.1), linetype = "dotted", color = "gray40") +
+  annotate("text", x = 0, y = 55, label = "Safe zone\n|β| < 0.1", color = col_green, fontface = "bold", size = 3.5) +
+  labs(
+    title = "When can a coefficient be read directly as a percentage?",
+    subtitle = "Within about ±0.1 the two lines nearly coincide; beyond that the gap widens quickly",
+    x = "Regression coefficient (β)",
+    y = "Percentage change in outcome (%)",
+    color = NULL
+  ) +
+  theme(legend.position = "bottom")
+```
+
+```{r approximation-table}
+tibble(beta = c(-0.5, -0.2, -0.1, -0.05, 0.05, 0.1, 0.2, 0.5, 1.0)) %>%
+  mutate(
+    approx_pct = beta * 100,
+    exact_pct  = (exp(beta) - 1) * 100,
+    error_pp   = approx_pct - exact_pct
+  ) %>%
+  kbl(digits = c(2, 1, 1, 1),
+      col.names = c("Coefficient β", "Approximation (%)", "Exact (%)", "Error (percentage points)"),
+      caption = "Table 3. How large is the error of the β × 100% shortcut?") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), full_width = FALSE)
+```
+
+::: {.lang-en}
+Table 3 suggests a practical rule: **if $|\beta| < 0.1$, reading $\beta \times 100$ as a percentage is fine; otherwise compute $\exp(\beta) - 1$.** Two patterns stand out:
+
+- **The approximation always understates increases and overstates decreases.** A coefficient of 0.5 is not a 50% increase but a 65% increase. A coefficient of $-0.5$ is not a 50% decrease but a 39% decrease.
+- **The error grows fast.** At $\beta = 1$, the shortcut says 100% while the truth is 172%.
+
+There is also a reason to like log units on their own terms. On the percentage scale, going from 100 to 200 is $+100\%$, but going back from 200 to 100 is $-50\%$. On the log scale, the two moves are $+0.693$ and $-0.693$: symmetric, and they add up to zero. Economists sometimes call a difference of 0.01 in logs "one log point" for this reason.
+
+### 3.3 Doubling time and the "rule of 70"
+
+If something grows continuously at rate $r$ per day, it has been multiplied by $e^{rt}$ after $t$ days. Setting $e^{rt} = 2$ and solving for $t$:
+
+$$t_{\text{double}} = \frac{\log 2}{r} \approx \frac{0.693}{r} \approx \frac{70}{\text{growth rate in percent}}.$$
+
+The 70 in the "rule of 70" is $100 \times \log 2 \approx 69.3$, rounded for convenience. If infections grow by 7% per day, they double in about $70 / 7 = 10$ days.
+
+The same logic gives the **half-life** of anything that decays at a constant proportional rate $k$, such as a drug being cleared from the bloodstream: $t_{1/2} = \log 2 / k$.
+
+One subtlety: the rule of 70 is exact for *continuous* growth. If growth is compounded once per day, the exact doubling time is $\log 2 / \log(1 + r)$, which is slightly longer. Table 4 compares the three calculations.
+:::
+
+::: {.lang-ko style="display: none;"}
+표 3에서 실용적인 기준을 얻을 수 있습니다. **$|\beta| < 0.1$이면 $\beta \times 100$을 퍼센트로 읽어도 괜찮고, 그보다 크면 $\exp(\beta) - 1$을 계산해야 합니다.** 두 가지 경향이 눈에 띕니다.
+
+- **근사값은 증가를 늘 작게, 감소를 늘 크게 말합니다.** 계수 0.5는 50% 증가가 아니라 65% 증가입니다. 계수 $-0.5$는 50% 감소가 아니라 39% 감소입니다.
+- **오차가 빠르게 커집니다.** $\beta = 1$이면 근사값은 100%인데 실제로는 172%입니다.
+
+로그 단위 자체에도 장점이 있습니다. 퍼센트로 보면 100에서 200으로 가는 것은 $+100\%$인데, 200에서 100으로 돌아오는 것은 $-50\%$입니다. 로그로 보면 두 변화는 $+0.693$과 $-0.693$으로 대칭이고, 더하면 정확히 0입니다. 경제학자들이 로그 0.01의 차이를 "1 로그 포인트"라고 부르며 즐겨 쓰는 이유입니다.
+
+### 3.3 두 배가 되는 시간과 "70의 법칙"
+
+어떤 양이 하루에 연속 성장률 $r$로 커진다면, $t$일 뒤에는 $e^{rt}$배가 됩니다. $e^{rt} = 2$로 놓고 $t$를 구하면 다음과 같습니다.
+
+$$t_{\text{두 배}} = \frac{\log 2}{r} \approx \frac{0.693}{r} \approx \frac{70}{\text{퍼센트로 나타낸 성장률}}$$
+
+"70의 법칙"의 70은 $100 \times \log 2 \approx 69.3$을 편의상 반올림한 값입니다. 감염자가 하루 7%씩 늘면 약 $70 / 7 = 10$일 만에 두 배가 됩니다.
+
+같은 원리로, 혈중 약물 농도처럼 일정한 비율 $k$로 줄어드는 양의 **반감기**도 구할 수 있습니다. $t_{1/2} = \log 2 / k$입니다.
+
+한 가지 짚어 둘 점이 있습니다. 70의 법칙은 *연속* 성장일 때 정확합니다. 하루에 한 번씩 복리로 늘어난다면 정확한 배가 시간은 $\log 2 / \log(1 + r)$로, 조금 더 깁니다. 표 4는 세 가지 계산을 비교합니다.
+:::
+
+```{r doubling-table}
+tibble(r = c(0.01, 0.02, 0.05, 0.07, 0.10, 0.20)) %>%
+  mutate(
+    pct        = r * 100,
+    rule_70    = 70 / pct,
+    continuous = log(2) / r,
+    discrete   = log(2) / log(1 + r)
+  ) %>%
+  select(-r) %>%
+  kbl(digits = 1,
+      col.names = c("Daily growth rate (%)", "Rule of 70", "Exact, continuous: log(2)/r",
+                    "Exact, once-daily compounding: log(2)/log(1 + r)"),
+      caption = "Table 4. Doubling time in days under three calculations") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), full_width = FALSE)
+```
+
+::: {.lang-en}
+For small growth rates the three columns are nearly identical. At high growth rates, such as 20% per day, the rule of 70 and the continuous formula understate the doubling time under once-daily compounding by about 9%. (The "rule of 72," often quoted in finance, is a slightly better fit for annual compounding at moderate interest rates.)
+
+### 3.4 The function that is its own derivative, and the Gompertz law of mortality
+
+The exponential function has a special property:
+
+$$\frac{d}{dx} \exp(x) = \exp(x).$$
+
+At every point, the slope of the curve equals its height. To be precise, any function of the form $c \cdot e^x$ has this property, and $e^x$ is the unique one with $f(0) = 1$.
+
+More generally, if a quantity changes at a rate proportional to its current size, $f'(x) = b\, f(x)$, then the quantity must follow $f(x) = a \cdot e^{bx}$. This is the mathematical form of "the bigger it is, the faster it grows."
+
+In 1825 the British actuary **Benjamin Gompertz** proposed that adult mortality follows exactly this pattern. The **Gompertz law** says that the hazard of death at age $x$ is
+
+$$h(x) = a \cdot e^{bx}, \qquad \log h(x) = \log a + b\,x.$$
+
+On the original scale, mortality curves upward steeply with age. On the log scale, it is a straight line with slope $b$. In many human populations, adult mortality roughly doubles every 7 to 8 years, which corresponds to $b \approx \log 2 / 8 \approx 0.087$ per year. Figure 7 draws this pattern with illustrative parameters.
+:::
+
+::: {.lang-ko style="display: none;"}
+성장률이 낮을 때는 세 값이 거의 같습니다. 하루 20%처럼 성장률이 높으면, 하루 한 번 복리로 늘어나는 경우에 70의 법칙과 연속 공식은 배가 시간을 약 9% 짧게 잡습니다. (금융에서 자주 쓰는 "72의 법칙"은 적당한 이자율에서 연 1회 복리일 때 조금 더 잘 맞습니다.)
+
+### 3.4 도함수가 자기 자신인 함수와 곰페르츠 사망률 법칙
+
+지수함수에는 특별한 성질이 있습니다.
+
+$$\frac{d}{dx} \exp(x) = \exp(x)$$
+
+곡선 위 어느 점에서든 기울기가 높이와 같습니다. 엄밀히 말하면 $c \cdot e^x$ 꼴의 함수는 모두 이 성질을 갖고, 그중 $f(0) = 1$인 함수는 $e^x$ 하나뿐입니다.
+
+더 일반적으로, 어떤 양이 현재 크기에 비례하는 속도로 변한다면($f'(x) = b\, f(x)$) 그 양은 반드시 $f(x) = a \cdot e^{bx}$를 따릅니다. "클수록 더 빨리 커진다"를 수식으로 쓴 것입니다.
+
+1825년 영국의 보험계리사 **벤저민 곰페르츠(Benjamin Gompertz)**는 성인의 사망률이 바로 이 형태를 따른다고 제안했습니다. **곰페르츠 법칙**에 따르면 $x$세의 사망 위험률은 다음과 같습니다.
+
+$$h(x) = a \cdot e^{bx}, \qquad \log h(x) = \log a + b\,x$$
+
+원래 척도에서 사망률은 나이가 들수록 가파르게 휘어 올라갑니다. 로그 척도에서는 기울기가 $b$인 직선입니다. 여러 인구집단에서 성인 사망률은 대략 7~8년마다 두 배가 되는데, 이는 $b \approx \log 2 / 8 \approx 0.087$(1년당)에 해당합니다. 그림 7은 예시용 모수로 이 모습을 그린 것입니다.
+:::
+
+```{r fig-gompertz, fig.width=10, fig.height=5, fig.cap="Figure 7. An illustrative Gompertz mortality curve (death rate doubling every 8 years from 1 per 1,000 at age 30) on a linear axis and a log axis. Parameters are illustrative, not estimates for a specific population."}
+b_gomp <- log(2) / 8
+
+gomp_df <- tibble(age = 30:90) %>%
+  mutate(rate_per_1000 = 1 * exp(b_gomp * (age - 30)))
+
+gomp_marks <- tibble(age = seq(30, 86, by = 8)) %>%
+  mutate(rate_per_1000 = 1 * exp(b_gomp * (age - 30)))
+
+p_gomp_raw <- ggplot(gomp_df, aes(age, rate_per_1000)) +
+  geom_line(color = col_blue, linewidth = 1.2) +
+  geom_point(data = gomp_marks, color = col_orange, size = 2.5) +
+  labs(title = "Linear axis", subtitle = "Mortality curves sharply upward with age",
+       x = "Age", y = "Annual deaths per 1,000")
+
+p_gomp_log <- ggplot(gomp_df, aes(age, rate_per_1000)) +
+  geom_line(color = col_blue, linewidth = 1.2) +
+  geom_point(data = gomp_marks, color = col_orange, size = 2.5) +
+  geom_text(data = gomp_marks, aes(label = comma(rate_per_1000, accuracy = 1)),
+            vjust = -1, size = 3, color = col_orange) +
+  scale_y_log10(labels = comma) +
+  labs(title = "Log axis", subtitle = "A straight line: each 8 years (orange points) doubles the rate",
+       x = "Age", y = "Annual deaths per 1,000 (log scale)")
+
+p_gomp_raw + p_gomp_log
+```
+
+::: {.lang-en}
+The Gompertz pattern explains why so many models in health research use a log link. In a Poisson regression of death counts or a Cox proportional hazards model, the coefficient on age is the slope $b$ in Figure 7's right panel, and $\exp(b)$ is the **rate ratio** or **hazard ratio** per year of age. The Gompertz law fits adult ages well; it does not describe childhood mortality, and at the very oldest ages the increase in mortality tends to slow down.
+:::
+
+::: {.lang-ko style="display: none;"}
+곰페르츠 법칙은 보건 연구의 많은 모형이 로그 연결함수를 쓰는 이유를 잘 보여 줍니다. 사망자 수를 분석하는 포아송 회귀나 콕스 비례위험모형에서 나이의 계수는 그림 7 오른쪽 직선의 기울기 $b$이고, $\exp(b)$는 나이 1세당 **발생률비** 또는 **위험비**입니다. 곰페르츠 법칙은 성인기에는 잘 맞지만 아동기 사망률은 설명하지 못하며, 아주 고령에서는 사망률이 오르는 속도가 느려지는 경향이 있습니다.
 :::
 
 ---
 
+::: {.lang-en}
 # 4. Three Classic Health Sociology Scenarios
+
+### Scenario A: The Preston curve and diminishing returns
+
+In 1975 the demographer **Samuel Preston** described the cross-national relationship between national income and life expectancy. Among poor countries, small increases in income go with large gains in life expectancy. Among rich countries, the same dollar increase goes with almost no gain. The curve rises steeply and then flattens.
+
+Figure 8 reproduces this shape with simulated country data. The left panel uses GDP per capita in dollars; the right panel uses the log of GDP per capita.
+:::
+
+::: {.lang-ko style="display: none;"}
+# 4. 보건사회학의 대표적인 세 장면
+
+### 장면 A: 프레스턴 곡선과 체감하는 효과
+
+1975년 인구학자 **새뮤얼 프레스턴(Samuel Preston)**은 국가별 소득과 기대수명의 관계를 정리했습니다. 가난한 나라에서는 소득이 조금만 늘어도 기대수명이 크게 늘어납니다. 부유한 나라에서는 같은 금액이 늘어도 기대수명에는 거의 변화가 없습니다. 곡선이 가파르게 오르다가 평평해지는 모양입니다.
+
+그림 8은 가상의 국가 자료로 이 모양을 재현한 것입니다. 왼쪽은 1인당 GDP를 달러 그대로, 오른쪽은 1인당 GDP에 로그를 씌워 그렸습니다.
+:::
 
 ```{r preston-curve-sim}
 set.seed(101)
@@ -392,260 +1016,909 @@ life_expectancy <- pmin(85, pmax(45, life_expectancy))
 
 preston_data <- tibble(
   country_id = 1:n_countries,
-  gdp_pc = gdp_per_capita,
-  log_gdp = log(gdp_per_capita),
-  life_exp = round(life_expectancy, 1)
+  gdp_pc     = gdp_per_capita,
+  log_gdp    = log(gdp_per_capita),
+  life_exp   = round(life_expectancy, 1)
 )
+
+preston_lm <- lm(life_exp ~ log_gdp, data = preston_data)
+b_preston  <- unname(coef(preston_lm)["log_gdp"])
 ```
 
-```{r plot-preston, fig.cap="Figure 3. Raw vs. Log-transformed GDP per capita against Life Expectancy (The Preston Curve)."}
+```{r plot-preston, fig.width=10, fig.height=5, fig.cap="Figure 8. Simulated data: GDP per capita and life expectancy on the original scale (left) and with GDP logged (right)."}
 p1 <- ggplot(preston_data, aes(x = gdp_pc, y = life_exp)) +
-  geom_point(alpha = 0.6, color = "#2563eb") +
+  geom_point(alpha = 0.6, color = col_blue) +
   geom_smooth(method = "lm", color = "darkred", se = FALSE, linetype = "dashed") +
-  geom_smooth(method = "loess", color = "#ea580c", se = FALSE) +
+  geom_smooth(method = "loess", color = col_orange, se = FALSE) +
   scale_x_continuous(labels = dollar_format()) +
   labs(
-    title = "Raw Scale: Nonlinear Diminishing Returns",
-    subtitle = "OLS line (dashed red) fails to capture diminishing returns",
-    x = "GDP per Capita (USD)",
-    y = "Life Expectancy (Years)"
-  ) +
-  theme_minimal()
+    title = "Original scale: diminishing returns",
+    subtitle = "A straight OLS line (dashed red) misses the curve (orange)",
+    x = "GDP per capita (USD)",
+    y = "Life expectancy (years)"
+  )
 
 p2 <- ggplot(preston_data, aes(x = log_gdp, y = life_exp)) +
-  geom_point(alpha = 0.6, color = "#2563eb") +
-  geom_smooth(method = "lm", color = "#ea580c", se = TRUE) +
+  geom_point(alpha = 0.6, color = col_blue) +
+  geom_smooth(method = "lm", color = col_orange, se = TRUE) +
   labs(
-    title = "Log Scale: Linear Relationship Restored",
-    subtitle = "Each 1-unit increase in log(GDP) yields steady life expectancy gain",
-    x = "Log(GDP per Capita)",
-    y = "Life Expectancy (Years)"
-  ) +
-  theme_minimal()
+    title = "Log scale: a straight line",
+    subtitle = "Each 1-unit increase in log GDP adds about the same number of years",
+    x = "log(GDP per capita)",
+    y = "Life expectancy (years)"
+  )
 
 p1 + p2
 ```
 
 ::: {.lang-en}
-### Scenario A: The Preston Curve & Diminishing Marginal Returns
-Samuel Preston (1975) demonstrated that the relationship between GDP per capita and life expectancy is sharply nonlinear (Figure 3, left). Taking $\log(\text{GDP})$ linearizes the curve (Figure 3, right), perfectly capturing diminishing returns.
+A straight line drawn through the left panel is wrong in a systematic way: it is too low for poor countries and too high for rich ones. After logging GDP, the relationship becomes nearly straight.
 
-### Scenario B: Why Logistic Regression Relies on $\log$ and $\exp$
-1. **Probability ($p$)** is bounded in $[0, 1]$. OLS produces impossible negative or $>1$ probabilities.
-2. **Odds** map probabilities to $[0, \infty)$: $\text{Odds} = \frac{p}{1 - p}$.
-3. **Log-Odds (Logit)** map odds to $(-\infty, +\infty)$: $\text{Logit}(p) = \log\left(\frac{p}{1 - p}\right) = \beta_0 + \beta_1 X$.
-Exponentiating both sides yields: $\text{New Odds} = \text{Old Odds} \times \exp(\beta_1)$.  
-Therefore, **$\exp(\beta_1)$ is the Odds Ratio (OR)**!
+The fitted model is $\widehat{\text{life expectancy}} = \hat\beta_0 + `r round(b_preston, 2)` \times \log(\text{GDP})$. How should we read the slope of `r round(b_preston, 2)`?
+
+- **Per log unit**: A one-unit increase in $\log(\text{GDP})$ means GDP is multiplied by $e \approx 2.72$. Such an increase goes with about `r round(b_preston, 2)` more years of life expectancy.
+- **Per doubling**: Doubling GDP adds $\log 2 = 0.693$ to $\log(\text{GDP})$, so the predicted gain is $`r round(b_preston, 2)` \times 0.693 = `r round(b_preston * log(2), 2)`$ years, *whether the country starts at \$1,000 or \$40,000*.
+- **Per 10% increase**: $`r round(b_preston, 2)` \times \log(1.1) = `r round(b_preston * log(1.1), 2)`$ years.
+
+Table 5 makes the diminishing returns explicit.
 :::
 
 ::: {.lang-ko style="display: none;"}
-### 보건사회학에서 만나는 결정적 순간들
+왼쪽 그림에 그은 직선은 체계적으로 틀립니다. 가난한 나라에서는 너무 낮고, 부유한 나라에서는 너무 높습니다. GDP에 로그를 씌우면 관계가 거의 직선이 됩니다.
 
-#### 장면 1: 소득과 수명의 비밀 (프레스턴 곡선)
-* 왼쪽 그래프를 보세요. 찢어지게 가난한 나라에서 소득이 100만 원에서 500만 원으로 오르면 상하수도와 백신이 생겨 평균 수명이 15년씩 쑥쑥 늘어납니다.
-* 하지만 이미 1인당 소득이 5,000만 원인 부자 나라에서는 소득이 500만 원 더 늘어난다고 해서 수명이 늘어나지 않습니다.
-* 이렇게 휘어지는 곡선에 일반 직선 회귀선을 그으면 완전히 엉터리가 됩니다(빨간 점선).  
-* 하지만 **소득에 로그($\log$)를 씌우면(오른쪽 그래프), 마법처럼 반듯한 직선으로 펴집니다!**
+추정된 모형은 $\widehat{\text{기대수명}} = \hat\beta_0 + `r round(b_preston, 2)` \times \log(\text{GDP})$입니다. 기울기 `r round(b_preston, 2)`는 어떻게 읽어야 할까요?
 
-#### 장면 2: 왜 로지스틱 회귀분석은 log와 exp를 쓸까?
-* 사람이 병에 걸릴 확률은 0%에서 100% 사이여야 합니다. 일반 직선 회귀를 쓰면 "당신이 당뇨에 걸릴 확률은 -30%입니다!" 같은 엉뚱한 예측을 내놓습니다.
-* 그래서 학자들은 3단 변신을 합니다:
-  1. **확률 ($0 \sim 1$)** -> **찬스/승산 (Odds: $0 \sim \infty$)**으로 바꾼다.  
-     *(예: 병에 걸릴 확률이 80%라면, 걸릴 확률 대 안 걸릴 확률은 80 대 20, 즉 4배 찬스!)*
-  2. 찬스에 **로그($\log$)**를 씌운다. (마이너스 무한대부터 플러스 무한대까지 직선으로 쭉 펴짐!)
-  3. 이제 회귀분석을 돌린 뒤, 컴퓨터가 알려준 계수 $\beta$에 **마지막으로 $\exp$를 씌워주면?**  
-     **"담배를 피우면 질병 찬스(Odds)가 $\exp(\beta)$배 높아진다!"** 할 때의 바로 그 **승산비(Odds Ratio)**가 완성됩니다!
+- **로그 1단위 기준**: $\log(\text{GDP})$가 1 늘면 GDP는 $e \approx 2.72$배가 됩니다. 이만큼 늘 때 기대수명은 약 `r round(b_preston, 2)`년 늘어납니다.
+- **두 배 기준**: GDP가 두 배가 되면 $\log(\text{GDP})$에 $\log 2 = 0.693$이 더해지므로, 예측되는 증가는 $`r round(b_preston, 2)` \times 0.693 = `r round(b_preston * log(2), 2)`$년입니다. *출발점이 1,000달러든 40,000달러든 같습니다.*
+- **10% 증가 기준**: $`r round(b_preston, 2)` \times \log(1.1) = `r round(b_preston * log(1.1), 2)`$년입니다.
+
+표 5는 효과가 체감하는 모습을 숫자로 보여 줍니다.
 :::
 
----
-
-# 5. Simulation & Hands-on Modeling in R
-
-```{r dgp-simulation}
-set.seed(2026)
-n <- 2000
-
-age <- round(runif(n, 25, 80))
-income <- round(rlnorm(n, meanlog = 10.5, sdlog = 0.6))
-has_insurance <- rbinom(n, 1, prob = 0.85)
-
-log_odds_chronic <- -4.2 + 0.055 * age - 0.45 * log(income / 1000) - 0.3 * has_insurance
-prob_chronic <- exp(log_odds_chronic) / (1 + exp(log_odds_chronic))
-has_chronic_disease <- rbinom(n, 1, prob = prob_chronic)
-
-log_spending <- 5.2 + 0.03 * age + 0.85 * has_chronic_disease + rnorm(n, 0, 0.55)
-annual_spending <- round(exp(log_spending), 2)
-
-health_df <- tibble(
-  id = 1:n,
-  age = age,
-  income = income,
-  has_chronic = has_chronic_disease,
-  annual_spending = annual_spending
-)
-
-health_df %>% 
-  head(6) %>% 
-  kbl(caption = "Sample of Simulated Health Survey Dataset") %>% 
-  kable_styling(bootstrap_options = c("striped", "hover", "condensed"))
-```
-
-```{r logistic-estimation}
-logit_model <- glm(has_chronic ~ age + log(income), data = health_df, family = binomial(link = "logit"))
-model_summary <- tidy(logit_model)
-
-or_table <- model_summary %>% 
+```{r preston-gains}
+tibble(
+  scenario = c("Poor country: $1,000 to $2,000",
+               "Rich country: $40,000 to $41,000",
+               "Rich country: $40,000 to $80,000"),
+  from = c(1000, 40000, 40000),
+  to   = c(2000, 41000, 80000)
+) %>%
   mutate(
-    odds_ratio = exp(estimate),
-    ci_lower = exp(estimate - 1.96 * std.error),
-    ci_upper = exp(estimate + 1.96 * std.error)
-  ) %>% 
-  select(term, estimate, std.error, odds_ratio, ci_lower, ci_upper, p.value)
-
-or_table %>% 
-  kbl(digits = 4, caption = "Logistic Regression: Raw Log-Odds vs. Exponentiated Odds Ratios") %>% 
-  kable_styling(bootstrap_options = c("striped", "hover", "condensed"))
+    abs_increase = to - from,
+    ratio        = to / from,
+    gain_years   = b_preston * log(to / from)
+  ) %>%
+  select(scenario, abs_increase, ratio, gain_years) %>%
+  kbl(digits = c(0, 0, 3, 2),
+      col.names = c("Scenario", "Absolute increase ($)", "Ratio (to / from)", "Predicted gain (years)"),
+      format.args = list(big.mark = ","),
+      caption = "Table 5. Predicted life expectancy gains from the log-GDP model") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), full_width = FALSE)
 ```
 
 ::: {.lang-en}
-### Substantive Interpretation:
-1. **Age Effect ($\beta_{\text{age}} = 0.0569$)**:
-   - In raw logit space: Each additional year of age increases log-odds by $0.0569$.
-   - In exponentiated space: $\exp(0.0569) = 1.0585$.
-   - **Substantive Result**: Each extra year of life increases the **odds of chronic disease by 5.85%** ($\text{Odds Ratio} = 1.059$). A 10-year age gap multiplies odds by $\exp(0.0569 \times 10) = 1.767$ (+76.7%).
+The same \$1,000 increase is worth `r round(b_preston * log(2), 2)` years in the poor country and only `r round(b_preston * log(41/40), 2)` years in the rich one. A doubling, by contrast, is worth the same `r round(b_preston * log(2), 2)` years in both. This is what it means to say the effect of income is **proportional**: the log model assumes that equal *ratios* have equal effects.
+
+The data here are simulated. Preston's own study made a further point: the whole curve shifted upward between the 1930s and the 1960s, so at any given income level, countries in the later period had higher life expectancy. He concluded that income growth explained only a modest share of the gains in life expectancy, with much of the rest attributable to other factors such as public health measures and medical technology.
+
+### Scenario B: Why logistic regression relies on $\log$ and $\exp$
+
+Many health outcomes are binary: diagnosed or not, screened or not, died or survived. We want to model the probability $p$ of the outcome. A linear model $p = \beta_0 + \beta_1 X$ has an obvious problem: probabilities must lie between 0 and 1, but a straight line keeps going and can predict a probability of $-0.3$ or $1.2$.
+
+Logistic regression solves this with two transformations, each of which removes one boundary.
+
+**Step 1: From probability to odds.** The odds are the probability that the event happens divided by the probability that it does not:
+
+$$\text{Odds} = \frac{p}{1 - p}.$$
+
+Odds are familiar from betting. A probability of 0.8 means the event happens 80 times for every 20 times it does not, so the odds are $0.8 / 0.2 = 4$, or "4 to 1." Odds range from 0 to $+\infty$, which removes the upper boundary of 1.
+
+**Step 2: From odds to log-odds.** Taking the log of the odds removes the lower boundary of 0:
+
+$$\text{logit}(p) = \log\left(\frac{p}{1 - p}\right), \qquad -\infty < \text{logit}(p) < +\infty.$$
+
+Now the outcome can take any real value, and a linear predictor fits naturally:
+
+$$\log\left(\frac{p}{1 - p}\right) = \beta_0 + \beta_1 X.$$
+
+Table 6 shows how the three scales line up.
 :::
 
 ::: {.lang-ko style="display: none;"}
-### 결과 해석하기: 숫자가 말하는 건강 이야기
-위의 표를 보세요:
-1. **나이 효과 (Age)**:
-   - 컴퓨터가 계산한 생 계수(estimate)는 `0.0569`입니다. 이건 로그 세계의 외계어입니다.
-   - 여기에 $\exp$를 씌우면? **`1.0585`**가 나옵니다!
-   - **쉬운 한국어 해석**: 나이를 1살 더 먹을 때마다 만성질환에 걸릴 찬스(Odds)가 **약 5.85%씩 곱셈으로 증가**합니다.
-   - 나이가 10살 차이 나면? $1.0585$를 10번 곱해서($\exp(0.0569 \times 10) \approx 1.77$), **질병 찬스가 무려 1.77배(77% 증가)**로 뜁니다!
+똑같이 1,000달러가 늘어도 가난한 나라에서는 `r round(b_preston * log(2), 2)`년, 부유한 나라에서는 `r round(b_preston * log(41/40), 2)`년에 그칩니다. 반면 두 배가 되면 어느 쪽이든 똑같이 `r round(b_preston * log(2), 2)`년입니다. 소득의 효과가 **비례적**이라는 말은 이런 뜻입니다. 로그 모형은 같은 *비율*의 변화가 같은 효과를 낸다고 가정합니다.
+
+여기서 쓴 자료는 가상 자료입니다. 프레스턴의 실제 연구는 한 가지를 더 보여 주었습니다. 1930년대에서 1960년대 사이에 곡선 전체가 위로 이동해서, 같은 소득 수준이라도 나중 시기의 나라들이 기대수명이 더 길었습니다. 프레스턴은 기대수명 증가 가운데 소득 증가로 설명되는 부분은 크지 않고, 나머지 상당 부분은 공중보건 조치나 의료 기술 같은 다른 요인에서 비롯되었다고 결론지었습니다.
+
+### 장면 B: 로지스틱 회귀가 log와 exp에 기대는 이유
+
+건강 결과에는 이분형이 많습니다. 진단을 받았는지, 검진을 받았는지, 사망했는지 같은 것들입니다. 우리가 모형화하려는 것은 그 사건이 일어날 확률 $p$입니다. 선형 모형 $p = \beta_0 + \beta_1 X$에는 분명한 문제가 있습니다. 확률은 0과 1 사이에 있어야 하는데, 직선은 끝없이 뻗어 나가서 $-0.3$이나 $1.2$ 같은 확률을 예측할 수 있습니다.
+
+로지스틱 회귀는 두 번의 변환으로 이 문제를 풉니다. 한 번에 경계를 하나씩 없애는 방식입니다.
+
+**1단계: 확률에서 오즈로.** 오즈(odds)는 사건이 일어날 확률을 일어나지 않을 확률로 나눈 값입니다.
+
+$$\text{오즈} = \frac{p}{1 - p}$$
+
+내기에서 쓰는 "몇 대 몇"과 같은 개념입니다. 확률이 0.8이면 사건이 일어나지 않는 20번마다 일어나는 경우가 80번이므로 오즈는 $0.8 / 0.2 = 4$, 곧 "4 대 1"입니다. 오즈는 0부터 $+\infty$까지의 값을 가지므로 위쪽 경계 1이 사라집니다.
+
+**2단계: 오즈에서 로그 오즈로.** 오즈에 로그를 씌우면 아래쪽 경계 0도 사라집니다.
+
+$$\text{logit}(p) = \log\left(\frac{p}{1 - p}\right), \qquad -\infty < \text{logit}(p) < +\infty$$
+
+이제 결과변수가 어떤 실수 값이든 가질 수 있으므로 선형 예측식을 자연스럽게 쓸 수 있습니다.
+
+$$\log\left(\frac{p}{1 - p}\right) = \beta_0 + \beta_1 X$$
+
+표 6은 세 가지 척도가 어떻게 대응하는지 보여 줍니다.
+:::
+
+```{r logit-ladder}
+tibble(p = c(0.01, 0.05, 0.10, 0.20, 0.50, 0.80, 0.90, 0.95, 0.99)) %>%
+  mutate(odds = p / (1 - p), logit = log(odds)) %>%
+  kbl(digits = 3,
+      col.names = c("Probability p", "Odds p / (1 - p)", "Log-odds log(odds)"),
+      caption = "Table 6. Probability, odds, and log-odds side by side") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), full_width = FALSE)
+```
+
+::: {.lang-en}
+Notice the symmetry in Table 6. A probability of 0.5 corresponds to odds of 1 and log-odds of 0. Probabilities of 0.2 and 0.8 have log-odds of $-1.386$ and $+1.386$. The log-odds scale treats "unlikely" and "likely" as mirror images, just as the log scale treated halving and doubling.
+
+**Where the odds ratio comes from.** Compare two people whose $X$ differs by one unit. Their log-odds differ by $\beta_1$:
+
+$$\log(\text{Odds}_{X+1}) - \log(\text{Odds}_X) = \beta_1.$$
+
+By the quotient rule, the left side is the log of a ratio, so
+
+$$\log\left(\frac{\text{Odds}_{X+1}}{\text{Odds}_X}\right) = \beta_1 \quad\Longrightarrow\quad \frac{\text{Odds}_{X+1}}{\text{Odds}_X} = \exp(\beta_1).$$
+
+**$\exp(\beta_1)$ is the odds ratio (OR).** It tells us by what factor the odds are multiplied for a one-unit increase in $X$, and it is the same factor at every value of $X$.
+
+**But the odds ratio is not a change in probability.** Because the S-shaped curve is steep in the middle and flat at the ends, the same step on the log-odds scale produces very different changes in probability depending on where you start. Figure 9 shows this.
+:::
+
+::: {.lang-ko style="display: none;"}
+표 6의 대칭성을 보세요. 확률 0.5는 오즈 1, 로그 오즈 0에 대응합니다. 확률 0.2와 0.8의 로그 오즈는 $-1.386$과 $+1.386$입니다. 로그 척도가 절반과 두 배를 거울처럼 다루었던 것처럼, 로그 오즈 척도는 "일어나기 어려움"과 "일어나기 쉬움"을 거울처럼 다룹니다.
+
+**오즈비는 어디서 나올까?** $X$가 1단위 다른 두 사람을 비교해 봅시다. 두 사람의 로그 오즈는 $\beta_1$만큼 차이가 납니다.
+
+$$\log(\text{오즈}_{X+1}) - \log(\text{오즈}_X) = \beta_1$$
+
+나눗셈 법칙에 따라 왼쪽은 비율의 로그이므로 다음과 같이 쓸 수 있습니다.
+
+$$\log\left(\frac{\text{오즈}_{X+1}}{\text{오즈}_X}\right) = \beta_1 \quad\Longrightarrow\quad \frac{\text{오즈}_{X+1}}{\text{오즈}_X} = \exp(\beta_1)$$
+
+**$\exp(\beta_1)$이 오즈비(odds ratio, OR)입니다.** $X$가 1단위 늘 때 오즈가 몇 배가 되는지를 알려 주며, $X$가 어떤 값에 있든 그 배수는 같습니다.
+
+**그러나 오즈비는 확률의 변화가 아닙니다.** S자 곡선은 가운데가 가파르고 양 끝이 평평하기 때문에, 로그 오즈 척도에서 같은 거리만큼 움직여도 출발점에 따라 확률은 아주 다르게 변합니다. 그림 9가 이를 보여 줍니다.
+:::
+
+```{r fig-logit-steps, fig.width=10, fig.height=5, fig.cap="Figure 9. Equal steps on the log-odds scale (each step multiplies the odds by e ≈ 2.72) produce unequal changes in probability."}
+s_curve <- tibble(z = seq(-5, 5, length.out = 400), p = plogis(z))
+steps   <- tibble(z = -4:4, p = plogis(z))
+step_change <- tibble(from = -4:3, to = -3:4) %>%
+  mutate(dp = plogis(to) - plogis(from),
+         label = paste0(from, " to ", to))
+
+p_s <- ggplot(s_curve, aes(z, p)) +
+  geom_segment(data = steps, aes(x = z, xend = z, y = 0, yend = p), linetype = "dotted", color = "gray60") +
+  geom_segment(data = steps, aes(x = -5, xend = z, y = p, yend = p), linetype = "dotted", color = "gray60") +
+  geom_line(color = col_blue, linewidth = 1.2) +
+  geom_point(data = steps, color = col_orange, size = 2.5) +
+  scale_x_continuous(breaks = -5:5) +
+  scale_y_continuous(labels = percent) +
+  labs(title = "Equal steps on the log-odds scale",
+       subtitle = "Orange points are 1 log-odds unit apart",
+       x = "Log-odds", y = "Probability")
+
+p_bar <- ggplot(step_change, aes(factor(label, levels = label), dp)) +
+  geom_col(fill = col_orange) +
+  geom_text(aes(label = percent(dp, accuracy = 0.1)), vjust = -0.4, size = 3) +
+  scale_y_continuous(labels = percent, expand = expansion(mult = c(0, 0.12))) +
+  labs(title = "Change in probability for each +1 step",
+       subtitle = "Same odds ratio (x2.72), very different probability changes",
+       x = "Log-odds step", y = "Change in probability")
+
+p_s + p_bar
+```
+
+::: {.lang-en}
+Every bar in the right panel corresponds to the same odds ratio of $e \approx 2.72$. Yet moving from log-odds 0 to 1 raises the probability by about 23 percentage points, while moving from $-4$ to $-3$ raises it by only about 3 points. **An odds ratio has no single translation into a change in probability; the translation depends on the baseline.** We return to this point in Sections 5 and 7.
+
+### Scenario C: Two pitfalls of log transformation
+
+Logs are powerful, but two problems come up again and again in health data.
+
+#### Pitfall 1: Zeros
+
+The log of zero is undefined, and many health outcomes have zeros: people who had no doctor visits or no healthcare spending in a year. A common workaround is to analyze $\log(Y + 1)$. The trouble is that the result depends on the units of $Y$. Adding 1 *dollar* and adding 1 *cent* are very different changes when the rest of the data are measured in hundreds of dollars.
+
+To see this, we take our simulated spending data and set spending to zero for a random subset of people (30% of those without a chronic condition and 5% of those with one). We then estimate the spending gap between people with and without a chronic condition, measuring spending in cents, dollars, and thousands of dollars.
+:::
+
+::: {.lang-ko style="display: none;"}
+오른쪽 그림의 막대는 모두 같은 오즈비 $e \approx 2.72$에 해당합니다. 그런데 로그 오즈 0에서 1로 갈 때는 확률이 약 23%포인트 오르고, $-4$에서 $-3$으로 갈 때는 약 3%포인트밖에 오르지 않습니다. **오즈비를 확률의 변화로 옮기는 방법은 하나가 아니며, 기준이 되는 확률에 따라 달라집니다.** 이 문제는 5절과 7절에서 다시 다룹니다.
+
+### 장면 C: 로그 변환의 두 가지 함정
+
+로그는 강력한 도구이지만, 보건 자료에서는 두 가지 문제가 거듭 나타납니다.
+
+#### 함정 1: 0이 있는 자료
+
+0의 로그는 정의되지 않는데, 건강 결과변수에는 0이 많습니다. 1년 동안 병원에 한 번도 가지 않았거나 의료비를 한 푼도 쓰지 않은 사람들입니다. 흔히 쓰는 우회로는 $\log(Y + 1)$을 분석하는 것입니다. 문제는 결과가 $Y$의 단위에 따라 달라진다는 점입니다. 나머지 자료가 수백 달러 단위일 때 1*달러*를 더하는 것과 1*센트*를 더하는 것은 전혀 다른 변화입니다.
+
+이를 확인하기 위해 예제 의료비 자료에서 일부 사람의 의료비를 0으로 바꿉니다(만성질환이 없는 사람의 30%, 있는 사람의 5%). 그런 다음 만성질환 유무에 따른 의료비 차이를 센트, 달러, 천 달러 단위로 각각 추정해 봅니다.
+:::
+
+```{r zeros-units}
+set.seed(7)
+zero_df <- health_df %>%
+  mutate(
+    any_use = rbinom(n(), 1, prob = ifelse(has_chronic == 1, 0.95, 0.70)),
+    spend_z = annual_spending * any_use
+  )
+
+share_zero <- mean(zero_df$spend_z == 0)
+
+unit_results <- tibble(
+  unit  = c("Cents", "Dollars", "Thousands of dollars"),
+  scale = c(100, 1, 1 / 1000)
+) %>%
+  mutate(
+    log1p_coef = map_dbl(scale, ~ coef(lm(log(spend_z * .x + 1) ~ has_chronic, data = zero_df))[["has_chronic"]]),
+    glm_coef   = map_dbl(scale, ~ coef(glm(I(spend_z * .x) ~ has_chronic,
+                                           family = quasipoisson(link = "log"),
+                                           data = zero_df))[["has_chronic"]])
+  )
+
+unit_results %>%
+  transmute(
+    unit,
+    log1p_coef,
+    log1p_pct = (exp(log1p_coef) - 1) * 100,
+    glm_coef,
+    glm_ratio = exp(glm_coef)
+  ) %>%
+  kbl(digits = c(0, 3, 1, 3, 3),
+      col.names = c("Spending measured in", "OLS on log(y + 1): coefficient", "Implied % difference",
+                    "Log-link GLM: coefficient", "Ratio of means, exp(β)"),
+      caption = "Table 7. The chronic-disease spending gap estimated with log(y + 1) and with a log-link GLM, under three units of measurement") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), full_width = FALSE)
+```
+
+::: {.lang-en}
+About `r percent(share_zero, accuracy = 1)` of people now have zero spending. The $\log(Y + 1)$ estimates in Table 7 change dramatically with the unit of measurement, even though the data are the same. The model is not answering a stable question: with many zeros, its coefficient mixes the difference in *whether* people spend anything with the difference in *how much* they spend, and the weight on each depends on the arbitrary unit. By contrast, the log-link GLM gives the same answer in every unit, because it models $\log E[Y]$ rather than $E[\log(Y + 1)]$, and zeros pose no problem for a mean.
+
+Common alternatives when an outcome has many zeros:
+
+- **A GLM with a log link** (Poisson, quasi-Poisson, or gamma family). It models the log of the *mean*, so $\exp(\beta)$ is a ratio of means.
+- **A two-part model.** The first part models whether $Y > 0$ (for example, with logistic regression); the second part models the amount among those with $Y > 0$. This approach is widely used in health economics.
+- **Thinking about the question first.** If what matters is the share of people who use any care, model that directly.
+
+#### Pitfall 2: Retransformation bias
+
+Suppose we fit a log-linear model of spending, $\log(Y) = \beta_0 + \beta_1 \text{Age} + \beta_2 \text{Chronic} + \varepsilon$, and want to predict *average* spending in dollars. The natural move is to exponentiate the predicted log value. This gives the wrong answer, because
+
+$$\exp\big(E[\log Y]\big) \neq E[Y].$$
+
+The left side is the geometric mean from Section 3.1; the right side is the arithmetic mean. Since the geometric mean is always smaller, simply exponentiating predictions **systematically underestimates average spending**. (This is an instance of a general mathematical result called Jensen's inequality.)
+
+If the errors on the log scale are normal with variance $\sigma^2$, then $E[Y] = \exp(\mu + \sigma^2 / 2)$. A more general fix that does not assume normality is **Duan's smearing estimator** (1983): multiply each exponentiated prediction by the average of the exponentiated residuals,
+
+$$\hat{E}[Y \mid X] = \exp(X\hat\beta) \times \frac{1}{n}\sum_{i=1}^{n} \exp(\hat\varepsilon_i).$$
+:::
+
+::: {.lang-ko style="display: none;"}
+이제 약 `r percent(share_zero, accuracy = 1)`의 사람이 의료비가 0입니다. 표 7에서 $\log(Y + 1)$로 얻은 추정값은 자료가 똑같은데도 측정 단위에 따라 크게 달라집니다. 이 모형은 안정된 질문에 답하고 있지 않습니다. 0이 많으면 계수에 의료비를 *쓰는지 안 쓰는지*의 차이와 *얼마나 쓰는지*의 차이가 섞이고, 둘의 비중이 임의로 정한 단위에 좌우됩니다. 반면 로그 연결 GLM은 어느 단위에서나 같은 답을 냅니다. $E[\log(Y + 1)]$이 아니라 $\log E[Y]$를 모형화하기 때문이며, 평균을 구하는 데는 0이 아무 문제가 되지 않습니다.
+
+0이 많은 결과변수를 다룰 때 흔히 쓰는 대안은 다음과 같습니다.
+
+- **로그 연결함수를 쓰는 GLM**(포아송, 준포아송, 감마 분포족): *평균*의 로그를 모형화하므로 $\exp(\beta)$는 평균의 비입니다.
+- **이단계 모형(two-part model)**: 첫 단계에서 $Y > 0$인지를 (예를 들어 로지스틱 회귀로) 모형화하고, 둘째 단계에서 $Y > 0$인 사람들의 금액을 모형화합니다. 보건경제학에서 널리 쓰입니다.
+- **질문부터 다시 생각하기**: 의료 이용 여부 자체가 관심사라면 그것을 직접 모형화하면 됩니다.
+
+#### 함정 2: 재변환 편향
+
+의료비에 대해 로그-선형 모형 $\log(Y) = \beta_0 + \beta_1 \text{나이} + \beta_2 \text{만성질환} + \varepsilon$을 추정한 뒤, 달러 단위의 *평균* 의료비를 예측하고 싶다고 합시다. 예측된 로그 값에 exp를 씌우는 것이 자연스러워 보이지만, 그러면 틀린 답이 나옵니다.
+
+$$\exp\big(E[\log Y]\big) \neq E[Y]$$
+
+왼쪽은 3.1절의 기하평균이고 오른쪽은 산술평균입니다. 기하평균은 언제나 더 작으므로, 예측값에 exp만 씌우면 **평균 의료비를 체계적으로 과소추정**하게 됩니다. (젠센 부등식이라는 일반적인 수학 결과의 한 예입니다.)
+
+로그 척도의 오차가 분산 $\sigma^2$인 정규분포를 따른다면 $E[Y] = \exp(\mu + \sigma^2 / 2)$입니다. 정규성을 가정하지 않는 더 일반적인 보정 방법은 **두안(Duan)의 스미어링 추정량**(1983)입니다. exp를 씌운 예측값마다 exp를 씌운 잔차의 평균을 곱합니다.
+
+$$\hat{E}[Y \mid X] = \exp(X\hat\beta) \times \frac{1}{n}\sum_{i=1}^{n} \exp(\hat\varepsilon_i)$$
+:::
+
+```{r retransformation}
+spend_lm     <- lm(log(annual_spending) ~ age + has_chronic, data = health_df)
+smear_factor <- mean(exp(resid(spend_lm)))
+
+retrans_ind <- health_df %>%
+  mutate(
+    naive   = exp(fitted(spend_lm)),
+    smeared = naive * smear_factor,
+    age_group = cut(age, breaks = c(24, 34, 44, 54, 64, 80),
+                    labels = c("25-34", "35-44", "45-54", "55-64", "65-80"))
+  )
+
+mean_obs   <- mean(retrans_ind$annual_spending)
+mean_naive <- mean(retrans_ind$naive)
+mean_smear <- mean(retrans_ind$smeared)
+
+retrans_df <- retrans_ind %>%
+  group_by(age_group) %>%
+  summarise(
+    `Observed mean`            = mean(annual_spending),
+    `Naive: exp(prediction)`   = mean(naive),
+    `Smearing-corrected`       = mean(smeared),
+    .groups = "drop"
+  ) %>%
+  pivot_longer(-age_group, names_to = "estimate", values_to = "mean_spending") %>%
+  mutate(estimate = factor(estimate, levels = c("Observed mean", "Naive: exp(prediction)", "Smearing-corrected")))
+```
+
+```{r fig-retransformation, fig.width=9, fig.height=5.5, fig.cap="Figure 10. Mean annual spending by age group: observed, naively retransformed from a log model, and smearing-corrected."}
+ggplot(retrans_df, aes(age_group, mean_spending, color = estimate, group = estimate)) +
+  geom_line(linewidth = 1.1) +
+  geom_point(size = 3) +
+  scale_y_continuous(labels = dollar) +
+  scale_color_manual(values = c("Observed mean" = "gray20",
+                                "Naive: exp(prediction)" = col_orange,
+                                "Smearing-corrected" = col_blue)) +
+  labs(title = "Exponentiating log-scale predictions underestimates average spending",
+       subtitle = "Duan's smearing correction brings predictions back in line with observed means",
+       x = "Age group", y = "Mean annual spending", color = NULL) +
+  theme(legend.position = "bottom")
+```
+
+::: {.lang-en}
+Across the whole sample, observed mean spending is \$`r comma(round(mean_obs))`. Exponentiating the model's predictions gives an average of only \$`r comma(round(mean_naive))`, an underestimate of `r percent(1 - mean_naive / mean_obs, accuracy = 0.1)`. The smearing factor is `r round(smear_factor, 3)`, and the corrected average is \$`r comma(round(mean_smear))`.
+
+Smearing works well here because our simulated errors have the same variance for everyone. When the variance of the log-scale errors differs across groups (for example, if spending among people with chronic conditions is more variable), a single smearing factor is no longer enough, and a log-link GLM is usually the safer choice (Manning, 1998).
+
+Note that this problem concerns *predicting levels*. The *ratio* interpretation of the coefficients, $\exp(\beta)$, is not affected by retransformation bias when the errors have constant variance.
+:::
+
+::: {.lang-ko style="display: none;"}
+전체 표본의 실제 평균 의료비는 \$`r comma(round(mean_obs))`입니다. 모형의 예측값에 exp만 씌우면 평균이 \$`r comma(round(mean_naive))`에 그쳐 `r percent(1 - mean_naive / mean_obs, accuracy = 0.1)`만큼 과소추정됩니다. 스미어링 계수는 `r round(smear_factor, 3)`이고, 보정한 평균은 \$`r comma(round(mean_smear))`입니다.
+
+이 예에서 스미어링이 잘 맞는 것은 가상 자료의 오차 분산이 모든 사람에게 같도록 만들었기 때문입니다. 만성질환자의 의료비가 더 들쭉날쭉한 경우처럼 로그 척도 오차의 분산이 집단마다 다르면, 스미어링 계수 하나로는 부족하고 보통 로그 연결 GLM이 더 안전합니다(Manning, 1998).
+
+이 문제는 *수준을 예측할 때* 생기는 문제라는 점도 기억해 두세요. 오차 분산이 일정하다면, 계수를 비율로 읽는 해석 $\exp(\beta)$는 재변환 편향의 영향을 받지 않습니다.
 :::
 
 ---
 
+::: {.lang-en}
+# 5. Hands-on Modeling in R
+
+### 5.1 A logistic regression of chronic disease
+
+We now fit a logistic regression to the simulated survey, using the same predictors that generated the data. Because we simulated the data, we can compare each estimate with its true value.
+:::
+
+::: {.lang-ko style="display: none;"}
+# 5. R로 직접 모형 추정하기
+
+### 5.1 만성질환에 대한 로지스틱 회귀
+
+이제 가상 조사 자료에 로지스틱 회귀를 적용합니다. 자료를 만들 때 쓴 예측변수를 그대로 넣습니다. 직접 시뮬레이션한 자료이므로 추정값을 참값과 비교할 수 있습니다.
+:::
+
+```{r logistic-estimation}
+logit_model <- glm(has_chronic ~ age + log(income) + has_insurance,
+                   data = health_df, family = binomial(link = "logit"))
+
+# True values: the DGP used log(income / 1000) = log(income) - log(1000),
+# so only the intercept differs from the -4.2 written in the simulation code.
+true_vals <- c("(Intercept)"  = -4.2 + 0.45 * log(1000),
+               "age"          = 0.055,
+               "log(income)"  = -0.45,
+               "has_insurance" = -0.3)
+
+or_table <- tidy(logit_model) %>%
+  mutate(
+    true_beta  = true_vals[term],
+    odds_ratio = exp(estimate),
+    ci_lower   = exp(estimate - 1.96 * std.error),
+    ci_upper   = exp(estimate + 1.96 * std.error)
+  ) %>%
+  select(term, true_beta, estimate, std.error, odds_ratio, ci_lower, ci_upper, p.value)
+
+or_table %>%
+  kbl(digits = 4,
+      col.names = c("Term", "True β", "Estimated β (log-odds)", "SE", "Odds ratio exp(β)",
+                    "95% CI lower", "95% CI upper", "p-value"),
+      caption = "Table 8. Logistic regression of chronic disease: log-odds coefficients and odds ratios") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"))
+```
+
+```{r logistic-quantities}
+b_age   <- coef(logit_model)[["age"]]
+b_inc   <- coef(logit_model)[["log(income)"]]
+b_ins   <- coef(logit_model)[["has_insurance"]]
+
+or_age   <- exp(b_age)
+or_age10 <- exp(10 * b_age)
+or_inc10 <- exp(b_inc * log(1.1))
+or_inc2  <- exp(b_inc * log(2))
+or_ins   <- exp(b_ins)
+
+pp <- function(a) {
+  predict(logit_model,
+          newdata = tibble(age = a, income = median(health_df$income), has_insurance = 1),
+          type = "response")
+}
+p30 <- pp(30); p40 <- pp(40); p70 <- pp(70); p80 <- pp(80)
+
+# Does each true slope fall inside its 95% CI (on the log-odds scale)?
+coverage <- or_table %>%
+  filter(term != "(Intercept)") %>%
+  mutate(lo = log(ci_lower), hi = log(ci_upper),
+         covered = true_beta >= lo & true_beta <= hi)
+age_lo <- coverage$lo[coverage$term == "age"]
+age_hi <- coverage$hi[coverage$term == "age"]
+```
+
+::: {.lang-en}
+How well did the model recover the truth? The income and insurance estimates are near their true values, and both true values lie inside the 95% confidence intervals. The age estimate (`r round(b_age, 4)`) is lower than the true value of 0.055, and the true value falls just outside its 95% interval of [`r round(age_lo, 4)`, `r round(age_hi, 4)`]. This is not a coding error. A 95% interval is built so that, across many repeated samples, about 1 in 20 intervals will miss the true value, and with only `r sum(health_df$has_chronic)` cases of chronic disease in a sample of 2,000, an estimate this far from the truth is entirely possible. Rerun the simulation with a different seed and the age estimate will move around 0.055. Simulations like this are a good reminder that a single study gives an estimate, not the truth.
+
+A side note on the intercept: the simulation code wrote income as $\log(\text{income} / 1000)$, while the model uses $\log(\text{income})$. By the quotient rule, $\log(\text{income}/1000) = \log(\text{income}) - \log(1000)$, so rescaling income only shifts the intercept and leaves the slope unchanged. The "True β" column accounts for this.
+
+#### Reading each coefficient
+
+**Age.** The coefficient is `r round(b_age, 4)` on the log-odds scale, so the odds ratio is $\exp(`r round(b_age, 4)`) = `r round(or_age, 4)`$. Each additional year of age multiplies the odds of chronic disease by `r round(or_age, 3)`, which is a `r round((or_age - 1) * 100, 1)`% increase in the odds. For a 10-year difference, the power rule gives $\exp(10 \times `r round(b_age, 4)`) = `r round(or_age10, 3)`$: the odds are `r round(or_age10, 2)` times as high, or `r round((or_age10 - 1) * 100, 0)`% higher. Note that this is *not* $10 \times `r round((or_age - 1) * 100, 1)`\%$, because odds ratios multiply rather than add.
+
+**Income (logged).** Because income enters as $\log(\text{income})$, its coefficient describes the effect of a proportional change in income. A 10% increase in income multiplies the odds by $\exp(`r round(b_inc, 3)` \times \log 1.1) = `r round(or_inc10, 3)`$, a `r round((1 - or_inc10) * 100, 1)`% reduction in the odds. Doubling income multiplies the odds by $\exp(`r round(b_inc, 3)` \times \log 2) = `r round(or_inc2, 3)`$.
+
+**Insurance.** The odds ratio for insurance is `r round(or_ins, 3)`. Insured respondents have odds of chronic disease that are `r round(or_ins, 2)` times those of uninsured respondents with the same age and income. (In this simulation the effect is built in; in real data, an insurance coefficient like this would raise questions about reverse causation and selection, since sick people may seek out insurance.)
+
+#### From odds ratios to probabilities
+
+As Figure 9 showed, the same odds ratio implies different changes in probability depending on the baseline. For an insured person with median income, the model predicts:
+
+| Age change | Predicted probability | Change |
+|:---|:---|:---|
+| 30 to 40 | `r percent(p30, accuracy = 0.1)` to `r percent(p40, accuracy = 0.1)` | `r round((p40 - p30) * 100, 1)` percentage points |
+| 70 to 80 | `r percent(p70, accuracy = 0.1)` to `r percent(p80, accuracy = 0.1)` | `r round((p80 - p70) * 100, 1)` percentage points |
+
+Both rows correspond to the same odds ratio of `r round(or_age10, 2)`, yet the change in probability is several times larger at older ages, where the baseline probability is closer to 50%. When readers care about absolute risk, report predicted probabilities or average marginal effects alongside odds ratios.
+
+#### Why the confidence interval is not symmetric
+
+The confidence limits in Table 8 were computed on the log-odds scale, as $\hat\beta \pm 1.96 \times \text{SE}$, and then exponentiated. An interval that is symmetric on the log scale becomes asymmetric on the ratio scale: the upper limit is farther from the point estimate than the lower limit. Figure 11 shows both scales. To make the age effect visible next to the others, age is shown per 10 years.
+:::
+
+::: {.lang-ko style="display: none;"}
+모형은 참값을 얼마나 잘 찾아냈을까요? 소득과 보험의 추정값은 참값에 가깝고, 두 참값 모두 95% 신뢰구간 안에 있습니다. 나이의 추정값(`r round(b_age, 4)`)은 참값 0.055보다 작고, 참값이 95% 신뢰구간 [`r round(age_lo, 4)`, `r round(age_hi, 4)`]의 바로 바깥에 있습니다. 코드가 잘못된 것은 아닙니다. 95% 신뢰구간은 같은 조사를 여러 번 반복하면 20번 중 1번꼴로 참값을 놓치도록 만들어진 구간입니다. 2,000명 표본에서 만성질환자가 `r sum(health_df$has_chronic)`명뿐이니 이 정도로 참값에서 벗어난 추정값이 나오는 일은 충분히 있을 수 있습니다. seed를 바꿔 다시 시뮬레이션하면 나이의 추정값은 0.055 주변에서 오르내릴 것입니다. 연구 하나가 주는 것은 참값이 아니라 추정값이라는 점을 다시 일깨워 주는 예입니다.
+
+절편에 대해 한 가지 덧붙이면, 시뮬레이션 코드에서는 소득을 $\log(\text{소득} / 1000)$으로 썼는데 모형에서는 $\log(\text{소득})$을 썼습니다. 나눗셈 법칙에 따라 $\log(\text{소득}/1000) = \log(\text{소득}) - \log(1000)$이므로, 소득의 단위를 바꾸면 절편만 움직이고 기울기는 그대로입니다. "True β" 열은 이를 반영한 값입니다.
+
+#### 계수 하나씩 읽기
+
+**나이.** 로그 오즈 척도의 계수는 `r round(b_age, 4)`이므로 오즈비는 $\exp(`r round(b_age, 4)`) = `r round(or_age, 4)`$입니다. 나이가 한 살 많을 때마다 만성질환의 오즈가 `r round(or_age, 3)`배가 되며, 이는 오즈가 `r round((or_age - 1) * 100, 1)`% 늘어난다는 뜻입니다. 10세 차이는 거듭제곱 법칙에 따라 $\exp(10 \times `r round(b_age, 4)`) = `r round(or_age10, 3)`$입니다. 오즈가 `r round(or_age10, 2)`배, 곧 `r round((or_age10 - 1) * 100, 0)`% 높습니다. 오즈비는 더해지지 않고 곱해지므로 $10 \times `r round((or_age - 1) * 100, 1)`\%$가 *아니라는* 점에 주의하세요.
+
+**소득(로그).** 소득이 $\log(\text{소득})$으로 들어가 있으므로 계수는 소득이 일정 비율 변할 때의 효과를 나타냅니다. 소득이 10% 늘면 오즈는 $\exp(`r round(b_inc, 3)` \times \log 1.1) = `r round(or_inc10, 3)`$배가 되어 `r round((1 - or_inc10) * 100, 1)`% 줄어듭니다. 소득이 두 배가 되면 오즈는 $\exp(`r round(b_inc, 3)` \times \log 2) = `r round(or_inc2, 3)`$배가 됩니다.
+
+**건강보험.** 보험의 오즈비는 `r round(or_ins, 3)`입니다. 나이와 소득이 같을 때, 보험 가입자의 만성질환 오즈는 미가입자의 `r round(or_ins, 2)`배입니다. (이 시뮬레이션에서는 효과를 일부러 넣었지만, 실제 자료에서 이런 보험 계수가 나오면 역인과나 선택 문제를 의심해야 합니다. 아픈 사람이 보험을 더 찾을 수 있기 때문입니다.)
+
+#### 오즈비에서 확률로
+
+그림 9에서 보았듯이, 같은 오즈비라도 기준 확률에 따라 확률의 변화는 달라집니다. 소득이 중앙값이고 보험에 가입한 사람에 대해 모형은 다음과 같이 예측합니다.
+
+| 나이 변화 | 예측 확률 | 변화 |
+|:---|:---|:---|
+| 30세에서 40세로 | `r percent(p30, accuracy = 0.1)`에서 `r percent(p40, accuracy = 0.1)`로 | `r round((p40 - p30) * 100, 1)`%포인트 |
+| 70세에서 80세로 | `r percent(p70, accuracy = 0.1)`에서 `r percent(p80, accuracy = 0.1)`로 | `r round((p80 - p70) * 100, 1)`%포인트 |
+
+두 줄 모두 오즈비는 `r round(or_age10, 2)`로 같지만, 기준 확률이 50%에 더 가까운 고령층에서 확률 변화가 몇 배 큽니다. 독자가 절대 위험에 관심이 있다면 오즈비와 함께 예측 확률이나 평균 한계효과를 보고하는 것이 좋습니다.
+
+#### 신뢰구간이 대칭이 아닌 이유
+
+표 8의 신뢰구간은 로그 오즈 척도에서 $\hat\beta \pm 1.96 \times \text{SE}$로 구한 뒤 exp를 씌운 것입니다. 로그 척도에서 대칭인 구간은 비율 척도로 옮기면 비대칭이 됩니다. 상한이 하한보다 점추정값에서 더 멀리 떨어집니다. 그림 11은 두 척도를 나란히 보여 줍니다. 다른 변수와 함께 눈에 보이도록 나이는 10세 단위로 나타냈습니다.
+:::
+
+```{r fig-forest, fig.width=10, fig.height=4.5, fig.cap="Figure 11. Coefficients and 95% confidence intervals on the log-odds scale (symmetric) and the odds-ratio scale (asymmetric). Age is shown per 10 years."}
+forest_df <- tidy(logit_model) %>%
+  filter(term != "(Intercept)") %>%
+  mutate(
+    scale_k   = ifelse(term == "age", 10, 1),
+    label     = recode(term, age = "Age (per 10 years)", `log(income)` = "log(income)",
+                       has_insurance = "Has insurance"),
+    est       = estimate * scale_k,
+    se        = std.error * scale_k,
+    lo        = est - 1.96 * se,
+    hi        = est + 1.96 * se
+  )
+
+p_forest_log <- ggplot(forest_df, aes(est, label)) +
+  geom_vline(xintercept = 0, linetype = "dashed", color = col_gray) +
+  geom_errorbarh(aes(xmin = lo, xmax = hi), height = 0.15, color = col_blue, linewidth = 1) +
+  geom_point(size = 3, color = col_blue) +
+  labs(title = "Log-odds scale", subtitle = "Intervals are symmetric around the estimate; null = 0",
+       x = "Coefficient (log-odds)", y = NULL)
+
+p_forest_or <- ggplot(forest_df, aes(exp(est), label)) +
+  geom_vline(xintercept = 1, linetype = "dashed", color = col_gray) +
+  geom_errorbarh(aes(xmin = exp(lo), xmax = exp(hi)), height = 0.15, color = col_orange, linewidth = 1) +
+  geom_point(size = 3, color = col_orange) +
+  labs(title = "Odds-ratio scale", subtitle = "Upper arm is longer than lower arm; null = 1",
+       x = "Odds ratio", y = NULL)
+
+p_forest_log + p_forest_or
+```
+
+::: {.lang-en}
+A good habit: when plotting odds ratios, use a log axis (`scale_x_log10()`). The intervals then look symmetric again, and an odds ratio of 0.5 sits the same distance from 1 as an odds ratio of 2, which matches their meaning (halving vs. doubling the odds).
+
+### 5.2 A property of logistic regression that surprises many researchers
+
+In linear regression, leaving out a predictor that is unrelated to $X$ does not change the coefficient on $X$; it only makes the estimate less precise. In logistic regression, this is **not** true. Leaving out a predictor that affects the outcome changes the coefficient on $X$, *even if the omitted predictor is completely independent of $X$*. This property is called **non-collapsibility** of the odds ratio.
+
+The reason is that the logistic model has no separate error term to absorb the omitted variable. Its variance is fixed by the logistic distribution, so leaving out a predictor that explains part of the outcome effectively rescales all remaining coefficients toward zero. A large simulation makes the point clearly.
+:::
+
+::: {.lang-ko style="display: none;"}
+좋은 습관 하나를 권합니다. 오즈비를 그림으로 그릴 때는 로그 축(`scale_x_log10()`)을 쓰세요. 그러면 구간이 다시 대칭으로 보이고, 오즈비 0.5와 2가 1에서 같은 거리에 놓여서 각각의 뜻(오즈가 절반, 오즈가 두 배)과 맞아떨어집니다.
+
+### 5.2 많은 연구자가 놀라는 로지스틱 회귀의 성질
+
+선형 회귀에서는 $X$와 상관없는 예측변수를 모형에서 빼도 $X$의 계수가 바뀌지 않습니다. 추정이 덜 정밀해질 뿐입니다. 로지스틱 회귀에서는 그렇지 **않습니다**. 결과에 영향을 주는 예측변수를 빼면, *그 변수가 $X$와 완전히 독립이더라도* $X$의 계수가 달라집니다. 이를 오즈비의 **비붕괴성(non-collapsibility)**이라고 합니다.
+
+로지스틱 모형에는 빠진 변수를 흡수할 별도의 오차항이 없기 때문입니다. 오차의 분산이 로지스틱 분포로 고정되어 있어서, 결과를 일부 설명하던 변수를 빼면 남은 계수 전체가 0 쪽으로 줄어드는 셈이 됩니다. 표본이 큰 시뮬레이션으로 확인해 봅시다.
+:::
+
+```{r noncollapsibility-demo}
+set.seed(99)
+n_big <- 100000
+
+nc_df <- tibble(
+  x = rnorm(n_big),
+  z = rbinom(n_big, 1, 0.5)          # z is independent of x
+) %>%
+  mutate(
+    y_cont = 0.5 * x + 2 * z + rnorm(n_big),
+    y_bin  = rbinom(n_big, 1, plogis(-1 + 0.5 * x + 2 * z))
+  )
+
+tibble(
+  model = c("Linear: y ~ x + z", "Linear: y ~ x (z omitted)",
+            "Logistic: y ~ x + z", "Logistic: y ~ x (z omitted)"),
+  true_beta = 0.5,
+  estimate = c(
+    coef(lm(y_cont ~ x + z, data = nc_df))[["x"]],
+    coef(lm(y_cont ~ x, data = nc_df))[["x"]],
+    coef(glm(y_bin ~ x + z, family = binomial, data = nc_df))[["x"]],
+    coef(glm(y_bin ~ x, family = binomial, data = nc_df))[["x"]]
+  )
+) %>%
+  kbl(digits = 3,
+      col.names = c("Model", "True coefficient on x", "Estimated coefficient on x"),
+      caption = "Table 9. Omitting an independent predictor: linear vs. logistic regression (n = 100,000)") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), full_width = FALSE)
+```
+
+::: {.lang-en}
+In the linear model, dropping $z$ leaves the coefficient on $x$ at about 0.5. In the logistic model, dropping $z$ shrinks it noticeably, even though $z$ is unrelated to $x$. This has practical consequences (Mood, 2010):
+
+- Odds ratios from models with different sets of control variables are not directly comparable, even when the added controls are not confounders.
+- Comparing odds ratios across groups (for example, men and women) can be misleading if the amount of unexplained variation differs between groups.
+- Predicted probabilities and average marginal effects are much less affected, which is one more reason to report them.
+
+### 5.3 A log-linear model of healthcare spending
+
+Finally, we fit the spending model from Section 4 and translate its coefficients.
+:::
+
+::: {.lang-ko style="display: none;"}
+선형 모형에서는 $z$를 빼도 $x$의 계수가 약 0.5로 유지됩니다. 로지스틱 모형에서는 $z$가 $x$와 아무 관련이 없는데도 $z$를 빼면 계수가 눈에 띄게 줄어듭니다. 이 성질은 실제 연구에도 영향을 미칩니다(Mood, 2010).
+
+- 통제변수 구성이 다른 모형의 오즈비는, 추가한 통제변수가 교란변수가 아니더라도 직접 비교할 수 없습니다.
+- 집단(예를 들어 남성과 여성) 사이에 설명되지 않는 변동의 크기가 다르면, 집단 간 오즈비 비교가 잘못된 결론으로 이어질 수 있습니다.
+- 예측 확률과 평균 한계효과는 이 문제의 영향을 훨씬 덜 받습니다. 이것들을 함께 보고해야 하는 또 하나의 이유입니다.
+
+### 5.3 의료비에 대한 로그-선형 모형
+
+마지막으로 4절에서 추정한 의료비 모형의 계수를 해석해 봅시다.
+:::
+
+```{r spending-model}
+spend_tbl <- tidy(spend_lm) %>%
+  filter(term != "(Intercept)") %>%
+  mutate(
+    approx_pct  = estimate * 100,
+    exact_ratio = exp(estimate),
+    exact_pct   = (exp(estimate) - 1) * 100
+  )
+
+b_sp_age <- spend_tbl$estimate[spend_tbl$term == "age"]
+b_sp_chr <- spend_tbl$estimate[spend_tbl$term == "has_chronic"]
+
+spend_tbl %>%
+  select(term, estimate, std.error, approx_pct, exact_ratio, exact_pct) %>%
+  kbl(digits = c(0, 4, 4, 1, 3, 1),
+      col.names = c("Term", "β (log scale)", "SE", "Shortcut: β × 100 (%)",
+                    "Ratio exp(β)", "Exact: [exp(β) - 1] × 100 (%)"),
+      caption = "Table 10. Log-linear model of annual spending: shortcut vs. exact interpretation") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"), full_width = FALSE)
+```
+
+::: {.lang-en}
+Table 10 puts the lesson of Section 3.2 into practice:
+
+- **Age** has a small coefficient (`r round(b_sp_age, 4)`), so the shortcut and the exact calculation agree: each additional year of age goes with about `r round((exp(b_sp_age) - 1) * 100, 1)`% higher spending. Over 10 years, spending is multiplied by $\exp(10 \times `r round(b_sp_age, 4)`) = `r round(exp(10 * b_sp_age), 2)`$.
+- **Chronic disease** has a large coefficient (`r round(b_sp_chr, 3)`). The shortcut would say spending is `r round(b_sp_chr * 100, 0)`% higher, but the exact figure is `r round((exp(b_sp_chr) - 1) * 100, 0)`% higher: people with a chronic condition spend `r round(exp(b_sp_chr), 2)` times as much, holding age constant. Using the shortcut here would understate the gap substantially.
+
+Strictly speaking, $\exp(\beta)$ in a log-linear model is a ratio of *geometric* means (or medians, if the errors are symmetric). When the error variance is constant, it is also the ratio of arithmetic means.
+:::
+
+::: {.lang-ko style="display: none;"}
+표 10은 3.2절의 내용을 실제로 적용한 결과입니다.
+
+- **나이**는 계수가 작아서(`r round(b_sp_age, 4)`) 근사값과 정확한 값이 거의 같습니다. 나이가 한 살 많을 때마다 의료비가 약 `r round((exp(b_sp_age) - 1) * 100, 1)`% 많습니다. 10세 차이라면 의료비가 $\exp(10 \times `r round(b_sp_age, 4)`) = `r round(exp(10 * b_sp_age), 2)`$배입니다.
+- **만성질환**은 계수가 큽니다(`r round(b_sp_chr, 3)`). 근사로 읽으면 의료비가 `r round(b_sp_chr * 100, 0)`% 많다고 하겠지만, 정확한 값은 `r round((exp(b_sp_chr) - 1) * 100, 0)`%입니다. 나이가 같을 때 만성질환자는 의료비를 `r round(exp(b_sp_chr), 2)`배 씁니다. 여기서 근사를 쓰면 차이를 크게 과소평가하게 됩니다.
+
+엄밀히 말하면 로그-선형 모형의 $\exp(\beta)$는 *기하*평균의 비(오차가 대칭이면 중앙값의 비)입니다. 오차 분산이 일정하다면 산술평균의 비이기도 합니다.
+:::
+
+---
+
+::: {.lang-en}
 # 6. Visualizing the Transformation Journey
 
-```{r multi-panel-viz, fig.width=10, fig.height=8, fig.cap="Figure 4. Four complementary perspectives of biological aging and health economics."}
+Figure 12 follows a single model through all of its scales. Panels 1 to 3 show the predicted risk of chronic disease by age for an insured person with median income, expressed as a probability, as odds, and as log-odds. Panel 4 shows the raw spending data on a log axis.
+:::
+
+::: {.lang-ko style="display: none;"}
+# 6. 변환의 여정을 한 장에 담기
+
+그림 12는 하나의 모형을 여러 척도로 따라가 봅니다. 1~3번 패널은 소득이 중앙값이고 보험에 가입한 사람의 나이별 만성질환 예측 위험을 확률, 오즈, 로그 오즈로 나타낸 것입니다. 4번 패널은 의료비 원자료를 로그 축에 그린 것입니다.
+:::
+
+```{r multi-panel-viz, fig.width=10, fig.height=8, fig.cap="Figure 12. One logistic model seen on three scales (panels 1-3), and healthcare spending on a log axis (panel 4)."}
 pred_grid <- tibble(
-  age = 25:80,
-  income = median(health_df$income)
+  age           = 25:80,
+  income        = median(health_df$income),
+  has_insurance = 1
 )
 
-pred_grid <- pred_grid %>% 
+pred_grid <- pred_grid %>%
   mutate(
     log_odds = predict(logit_model, newdata = pred_grid, type = "link"),
-    odds = exp(log_odds),
-    prob = predict(logit_model, newdata = pred_grid, type = "response")
+    odds     = exp(log_odds),
+    prob     = predict(logit_model, newdata = pred_grid, type = "response")
   )
 
 p_prob <- ggplot(pred_grid, aes(x = age, y = prob)) +
-  geom_line(color = "#2563eb", linewidth = 1.2) +
+  geom_line(color = col_blue, linewidth = 1.2) +
   scale_y_continuous(labels = percent_format()) +
-  labs(title = "1. Probability Space [0, 1]", subtitle = "Sigmoidal S-curve; strictly bounded", x = "Age", y = "Probability of Disease") +
-  theme_minimal()
+  labs(title = "1. Probability scale [0, 1]", subtitle = "Lower part of an S-curve; bounded by 0 and 1",
+       x = "Age", y = "Probability of chronic disease")
 
 p_odds <- ggplot(pred_grid, aes(x = age, y = odds)) +
-  geom_line(color = "#ea580c", linewidth = 1.2) +
-  labs(title = "2. Odds Space [0, Inf)", subtitle = "Exponential acceleration with aging", x = "Age", y = "Odds [p / (1-p)]") +
-  theme_minimal()
+  geom_line(color = col_orange, linewidth = 1.2) +
+  labs(title = "2. Odds scale [0, Inf)", subtitle = "Exponential growth with age",
+       x = "Age", y = "Odds, p / (1 - p)")
 
 p_log_odds <- ggplot(pred_grid, aes(x = age, y = log_odds)) +
-  geom_line(color = "#059669", linewidth = 1.2) +
-  labs(title = "3. Log-Odds Space (-Inf, +Inf)", subtitle = "Strictly linear; OLS-style regression holds", x = "Age", y = "Log-Odds (Logit)") +
-  theme_minimal()
+  geom_line(color = col_green, linewidth = 1.2) +
+  labs(title = "3. Log-odds scale (-Inf, Inf)", subtitle = "A straight line: the linear predictor",
+       x = "Age", y = "Log-odds (logit)")
 
 p_spending <- ggplot(health_df, aes(x = age, y = annual_spending, color = factor(has_chronic))) +
   geom_point(alpha = 0.2) +
+  geom_smooth(method = "lm", se = FALSE, linewidth = 1.1) +
   scale_y_log10(labels = dollar_format()) +
-  scale_color_manual(values = c("0" = "#2563eb", "1" = "#ea580c"), labels = c("No", "Yes")) +
-  labs(title = "4. Healthcare Spending (Log Scale)", subtitle = "Constant multiplicative cost gap between groups", x = "Age", y = "Spending (Log10 scale)", color = "Chronic Condition") +
-  theme_minimal() +
+  scale_color_manual(values = c("0" = col_blue, "1" = col_orange), labels = c("No", "Yes")) +
+  labs(title = "4. Healthcare spending (log axis)", subtitle = "Parallel lines: a constant multiplicative gap",
+       x = "Age", y = "Annual spending (log scale)", color = "Chronic condition") +
   theme(legend.position = "bottom")
 
 (p_prob + p_odds) / (p_log_odds + p_spending)
 ```
 
 ::: {.lang-en}
-Figure 4 presents the four stages of translation:
-1. **Probability Space**: S-shaped bounded curve.
-2. **Odds Space**: Exponentiated acceleration.
-3. **Log-Odds Space**: Straight linear regression.
-4. **Log-Spending Space**: Proportional spending shifts between healthy and chronically ill adults.
+How to read Figure 12:
+
+1. **Probability scale.** The predicted probability rises with age along the lower part of an S-curve. It can approach but never cross 0 or 1. Because the slope changes with age, there is no single number that summarizes "the effect of age" on this scale.
+2. **Odds scale.** The same predictions expressed as odds grow exponentially with age. Each year multiplies the odds by the same factor, `r round(or_age, 3)`, so the curve bends upward. Panels 1 and 2 look almost identical here because the predicted probability stays below about `r percent(max(pred_grid$prob), accuracy = 1)`. When an outcome is this rare, odds and probabilities are nearly equal, a point that matters for interpreting odds ratios (Section 7).
+3. **Log-odds scale.** Taking the log of panel 2 straightens the curve. This is the scale on which the model is linear and on which the coefficient `r round(b_age, 4)` is the constant slope. Note that the model is estimated by maximum likelihood, not by ordinary least squares; the straight line is the linear predictor, not an OLS fit.
+4. **Spending on a log axis.** The two groups form parallel bands. On a log axis, parallel means the vertical distance between them is constant, which means the *ratio* of spending between groups is constant across ages: about `r round(exp(b_sp_chr), 2)` at every age.
+
+Panels 2 and 3 are the same relationship seen through the two lenses of this post: $\exp$ takes panel 3 to panel 2, and $\log$ takes panel 2 back to panel 3.
 :::
 
 ::: {.lang-ko style="display: none;"}
-Figure 4는 우리가 수학 도구를 통해 바라본 인간의 건강 변화 과정입니다:
-1. **1번 그래프 (확률)**: 나이가 들수록 질병 확률이 S자 모양으로 0%에서 100%를 향해 완곡하게 올라갑니다.
-2. **2번 그래프 (찬스 / Odds)**: 확률을 찬스로 바꾸면 지수함수($\exp$)를 탄 것처럼 가파르게 치솟습니다.
-3. **3번 그래프 (로그-찬스 / Logit)**: 여기에 로그($\log$)를 씌우니 컴퓨터가 분석하기 가장 좋아하는 반듯한 직선이 되었습니다!
-4. **4번 그래프 (의료비)**: 만성질환이 있는 사람(주황색)은 없는 사람(파란색)보다 나이에 상관없이 일정하게 '몇 배' 더 많은 의료비를 지출합니다.
+그림 12를 읽는 방법은 다음과 같습니다.
+
+1. **확률 척도.** 예측 확률은 나이에 따라 S자 곡선의 아래쪽을 따라 올라갑니다. 0이나 1에 가까워질 수는 있어도 넘지는 못합니다. 나이에 따라 기울기가 달라지므로, 이 척도에서는 "나이의 효과"를 숫자 하나로 요약할 수 없습니다.
+2. **오즈 척도.** 같은 예측값을 오즈로 나타내면 나이에 따라 지수적으로 커집니다. 한 살마다 오즈가 같은 배수(`r round(or_age, 3)`배)로 곱해지므로 곡선이 위로 휩니다. 이 예에서 1번과 2번 패널이 거의 똑같아 보이는 것은 예측 확률이 약 `r percent(max(pred_grid$prob), accuracy = 1)`를 넘지 않기 때문입니다. 이렇게 드문 결과에서는 오즈와 확률이 거의 같습니다. 오즈비를 해석할 때 중요한 점이므로 7절에서 다시 다룹니다.
+3. **로그 오즈 척도.** 2번 패널에 로그를 씌우면 곡선이 곧게 펴집니다. 모형이 선형인 척도이며, 계수 `r round(b_age, 4)`가 일정한 기울기로 나타나는 척도입니다. 이 모형은 최소제곱법이 아니라 최대우도법으로 추정한다는 점에 유의하세요. 이 직선은 OLS 적합선이 아니라 선형 예측식입니다.
+4. **로그 축에 그린 의료비.** 두 집단이 평행한 띠를 이룹니다. 로그 축에서 평행하다는 것은 세로 간격이 일정하다는 뜻이고, 이는 두 집단의 의료비 *비율*이 나이와 상관없이 일정하다는 뜻입니다. 어느 나이에서든 약 `r round(exp(b_sp_chr), 2)`배입니다.
+
+2번과 3번 패널은 같은 관계를 이 글의 두 렌즈로 본 것입니다. $\exp$는 3번 패널을 2번 패널로, $\log$는 2번 패널을 다시 3번 패널로 옮깁니다.
 :::
 
 ---
 
+::: {.lang-en}
 # 7. Applied Social Scientist's Cheat Sheet
 
-::: {.lang-en}
-| Model Specification | Regression Formula | Mathematical Interpretation of $\beta_1$ | Plain English Reporting Template |
-|:---|:---|:---|:---|
-| **Linear-Linear** | $Y = \beta_0 + \beta_1 X$ | 1-unit increase in $X \to \beta_1$ unit change in $Y$ | *"Each additional year of schooling is associated with a $\beta_1$-point increase in self-rated health."* |
-| **Log-Linear** | $\log(Y) = \beta_0 + \beta_1 X$ | 1-unit increase in $X \to (\exp(\beta_1) - 1) \times 100\%$ change in $Y$ | *"Each additional year of age multiplies medical expenditures by $\exp(\beta_1)$, representing a $[(\exp(\beta_1) - 1) \times 100]\%$ increase."* |
-| **Linear-Log** | $Y = \beta_0 + \beta_1 \log(X)$ | 1% change in $X \to (\beta_1 / 100)$ unit change in $Y$ | *"A 10% increase in county median income is associated with an increase of $(\beta_1 \times \log(1.10))$ years in life expectancy."* |
-| **Log-Log** | $\log(Y) = \beta_0 + \beta_1 \log(X)$ | 1% change in $X \to \beta_1\%$ change in $Y$ (Elasticity) | *"A 1% increase in tobacco excise tax reduces cigarette consumption by $\beta_1\%$."* |
-| **Logistic (Logit)** | $\log\left(\frac{p}{1-p}\right) = \beta_0 + \beta_1 X$ | 1-unit increase in $X \to \exp(\beta_1)$ multiplicative factor in **Odds** | *"Individuals with health insurance have $\exp(\beta_1)$ times the odds of receiving annual cancer screenings compared to uninsured peers."* |
+| Model | Formula | Meaning of $\beta_1$ | Reporting template | Common mistake |
+|:---|:---|:---|:---|:---|
+| **Linear-linear** | $Y = \beta_0 + \beta_1 X$ | A 1-unit increase in $X$ goes with a $\beta_1$-unit change in $Y$. | *"Each additional year of schooling is associated with a $\beta_1$-point higher self-rated health score."* | Few; but check whether the relationship is really linear. |
+| **Log-linear** | $\log Y = \beta_0 + \beta_1 X$ | A 1-unit increase in $X$ multiplies $Y$ by $\exp(\beta_1)$, a $(\exp(\beta_1) - 1) \times 100\%$ change. | *"Each additional year of age is associated with $[(\exp(\beta_1) - 1) \times 100]\%$ higher medical spending."* | Reading $\beta_1 \times 100\%$ when $\lvert\beta_1\rvert > 0.1$; exponentiating predictions without a retransformation correction. |
+| **Linear-log** | $Y = \beta_0 + \beta_1 \log X$ | A 1% increase in $X$ goes with about a $\beta_1 / 100$-unit change in $Y$. Exactly, multiplying $X$ by $k$ changes $Y$ by $\beta_1 \log k$. | *"A 10% increase in county median income is associated with $\beta_1 \times \log(1.10) \approx 0.095\beta_1$ more years of life expectancy."* | Reading $\beta_1$ as the effect of a 1% (rather than a 1-log-unit) change. |
+| **Log-log** | $\log Y = \beta_0 + \beta_1 \log X$ | A 1% increase in $X$ goes with about a $\beta_1\%$ change in $Y$ (an elasticity). | *"A 1% increase in cigarette prices is associated with a $\lvert\beta_1\rvert\%$ decrease in consumption."* | Confusing percent change with percentage-point change. |
+| **Logistic** | $\log\frac{p}{1-p} = \beta_0 + \beta_1 X$ | A 1-unit increase in $X$ multiplies the *odds* by $\exp(\beta_1)$. | *"Insured respondents had $\exp(\beta_1)$ times the odds of receiving a cancer screening compared with uninsured respondents."* | Reading the OR as a risk ratio; comparing ORs across models with different controls. |
+| **Poisson / Cox (log link)** | $\log \lambda = \beta_0 + \beta_1 X$ | A 1-unit increase in $X$ multiplies the *rate* or *hazard* by $\exp(\beta_1)$. | *"Each additional year of age is associated with a $[(\exp(\beta_1) - 1) \times 100]\%$ higher mortality rate."* | Forgetting the exposure (offset) term in rate models. |
 
-::: {.callout-important}
-## Critical Pitfall: Odds Ratio $\neq$ Relative Risk!
-In public health, researchers frequently mistake the **Odds Ratio (OR)** for the **Relative Risk (RR)**.
-- If an outcome is **rare** (e.g., incidence $< 5\%$), the Odds Ratio closely approximates the Relative Risk ($\text{Odds} \approx p$).
-- If an outcome is **common** (e.g., adult obesity at 40%), an Odds Ratio of $2.0$ does **not** mean you have twice the probability of being obese. It substantially overstates the risk multiplier!
+::: {.callout-tip}
+## Percent change vs. percentage-point change
+If a smoking rate falls from 20% to 15%, it has fallen by **5 percentage points**, which is a **25% decrease** relative to the starting value. Log models describe percent (relative) changes; linear probability models describe percentage-point (absolute) changes. Always say which one you mean.
 :::
+
+### The odds ratio is not the risk ratio
+
+The **risk ratio (RR)**, also called the relative risk, compares probabilities: $\text{RR} = p_1 / p_0$. The **odds ratio** compares odds. When the outcome is rare, odds and probabilities are nearly the same ($p / (1 - p) \approx p$ when $p$ is small), so OR $\approx$ RR. When the outcome is common, the OR is farther from 1 than the RR, and reading an OR as "times the risk" exaggerates the effect.
+
+If the baseline probability in the reference group is $p_0$, the RR implied by a given OR is (Zhang & Yu, 1998)
+
+$$\text{RR} = \frac{\text{OR}}{1 - p_0 + p_0 \times \text{OR}}.$$
+
+For example, with $p_0 = 0.4$ (roughly the prevalence of adult obesity in the United States) and OR $= 2$, the risk ratio is only $2 / 1.4 \approx 1.43$. Figure 13 shows the pattern across baseline probabilities. (This formula is a useful guide for interpretation; for formal estimation of risk ratios with covariates, methods such as log-binomial or modified Poisson regression are preferred.)
 :::
 
 ::: {.lang-ko style="display: none;"}
-### 논문 쓸 때 바로 써먹는 문장 족보 (치트시트)
+# 7. 연구자를 위한 요약표
 
-| 모형 이름 | 회귀 공식 형태 | 계수 $\beta_1$의 쉬운 의미 | 실제 보고서 작성 문장 템플릿 |
-|:---|:---|:---|:---|
-| **일반 선형** | $Y = \beta_0 + \beta_1 X$ | X가 1단위 늘면 Y가 $\beta_1$만큼 정직하게 더해짐 | *"교육을 1년 더 받을 때마다 건강 점수가 $\beta_1$점 오른다."* |
-| **로그-선형** | $\log(Y) = \beta_0 + \beta_1 X$ | X가 1단위 늘면 Y가 대략 $\beta_1 \times 100\%$ 늘어남 | *"나이가 1살 들 때마다 병원비는 대략 $[(\exp(\beta_1) - 1) \times 100]\%$ 증가한다."* |
-| **선형-로그** | $Y = \beta_0 + \beta_1 \log(X)$ | X가 1% 늘면 Y는 $(\beta_1 / 100)$점 바뀜 | *"소득이 10% 증가하면 기대수명은 약 $(\beta_1 \times 0.1)$년 늘어난다."* |
-| **로그-로그** | $\log(Y) = \beta_0 + \beta_1 \log(X)$ | X가 1% 늘면 Y도 $\beta_1\%$ 바뀜 (탄력성) | *"담배 세금이 1% 오르면 흡연율은 $\beta_1\%$ 줄어든다."* |
-| **로지스틱** | $\log(\text{Odds}) = \beta_0 + \beta_1 X$ | X가 1단위 늘면 찬스(Odds)가 $\exp(\beta_1)$배로 곱해짐 | *"건강보험이 있는 사람은 없는 사람에 비해 암 검진을 받을 찬스가 $\exp(\beta_1)$배 높다."* |
+| 모형 | 식 | $\beta_1$의 의미 | 보고 문장 예시 | 흔한 실수 |
+|:---|:---|:---|:---|:---|
+| **선형-선형** | $Y = \beta_0 + \beta_1 X$ | $X$가 1단위 늘면 $Y$가 $\beta_1$단위 변합니다. | *"교육 연수가 1년 많을수록 주관적 건강 점수가 $\beta_1$점 높았다."* | 실수는 적지만, 관계가 정말 직선인지 확인해야 합니다. |
+| **로그-선형** | $\log Y = \beta_0 + \beta_1 X$ | $X$가 1단위 늘면 $Y$가 $\exp(\beta_1)$배, 곧 $(\exp(\beta_1) - 1) \times 100\%$ 변합니다. | *"나이가 1세 많을수록 의료비가 $[(\exp(\beta_1) - 1) \times 100]\%$ 많았다."* | $\lvert\beta_1\rvert > 0.1$인데 $\beta_1 \times 100\%$로 읽기, 재변환 보정 없이 예측값에 exp만 씌우기 |
+| **선형-로그** | $Y = \beta_0 + \beta_1 \log X$ | $X$가 1% 늘면 $Y$가 약 $\beta_1 / 100$단위 변합니다. 정확히는 $X$가 $k$배가 되면 $Y$가 $\beta_1 \log k$만큼 변합니다. | *"카운티 중위소득이 10% 높으면 기대수명이 $\beta_1 \times \log(1.10) \approx 0.095\beta_1$년 길었다."* | $\beta_1$을 로그 1단위가 아니라 1% 변화의 효과로 읽기 |
+| **로그-로그** | $\log Y = \beta_0 + \beta_1 \log X$ | $X$가 1% 늘면 $Y$가 약 $\beta_1\%$ 변합니다(탄력성). | *"담배 가격이 1% 오르면 소비량이 $\lvert\beta_1\rvert\%$ 줄었다."* | 퍼센트 변화와 퍼센트포인트 변화를 혼동하기 |
+| **로지스틱** | $\log\frac{p}{1-p} = \beta_0 + \beta_1 X$ | $X$가 1단위 늘면 *오즈*가 $\exp(\beta_1)$배가 됩니다. | *"보험 가입자는 미가입자에 비해 암 검진을 받을 오즈가 $\exp(\beta_1)$배였다."* | 오즈비를 위험비로 읽기, 통제변수가 다른 모형끼리 오즈비 비교하기 |
+| **포아송 / 콕스 (로그 연결)** | $\log \lambda = \beta_0 + \beta_1 X$ | $X$가 1단위 늘면 *발생률*이나 *위험률*이 $\exp(\beta_1)$배가 됩니다. | *"나이가 1세 많을수록 사망률이 $[(\exp(\beta_1) - 1) \times 100]\%$ 높았다."* | 발생률 모형에서 노출량(offset) 항 빠뜨리기 |
 
-::: {.callout-important}
-## 주의! 승산비(OR)와 상대위험도(RR)를 헷갈리지 마세요!
-- 감기나 희귀 암처럼 **발생 확률이 아주 낮은 질환($5\%$ 미만)**에서는 "찬스가 2배"라는 말이나 "걸릴 확률이 2배"라는 말이 거의 똑같습니다.
-- 하지만 성인 비만율(40%)처럼 **흔한 질환**에서는 승산비가 2.0이라고 해서 확률이 2배가 되는 것이 아닙니다! 실제 확률 증가는 그보다 훨씬 작으므로 과장해서 해석하면 안 됩니다.
+::: {.callout-tip}
+## 퍼센트 변화와 퍼센트포인트 변화
+흡연율이 20%에서 15%로 떨어졌다면 **5%포인트** 떨어진 것이고, 처음 값에 비하면 **25% 감소**한 것입니다. 로그 모형은 퍼센트(상대적) 변화를, 선형 확률 모형은 퍼센트포인트(절대적) 변화를 나타냅니다. 어느 쪽을 말하는지 늘 분명히 밝히세요.
 :::
+
+### 오즈비는 위험비가 아닙니다
+
+**위험비(risk ratio, RR)**, 곧 상대위험도는 확률을 비교합니다($\text{RR} = p_1 / p_0$). **오즈비**는 오즈를 비교합니다. 드문 결과라면 오즈와 확률이 거의 같으므로($p$가 작으면 $p / (1 - p) \approx p$) 오즈비와 위험비도 비슷합니다. 흔한 결과라면 오즈비가 위험비보다 1에서 더 멀어지므로, 오즈비를 "위험이 몇 배"로 읽으면 효과를 부풀리게 됩니다.
+
+기준 집단의 확률이 $p_0$일 때, 주어진 오즈비에 해당하는 위험비는 다음과 같습니다(Zhang & Yu, 1998).
+
+$$\text{RR} = \frac{\text{OR}}{1 - p_0 + p_0 \times \text{OR}}$$
+
+예를 들어 $p_0 = 0.4$(미국 성인 비만율과 비슷한 수준)이고 오즈비가 2라면, 위험비는 $2 / 1.4 \approx 1.43$에 불과합니다. 그림 13은 기준 확률에 따라 이 관계가 어떻게 달라지는지 보여 줍니다. (이 식은 해석의 길잡이로 유용합니다. 공변량을 통제한 위험비를 정식으로 추정하려면 로그-이항 회귀나 수정 포아송 회귀 같은 방법이 더 적절합니다.)
+:::
+
+```{r fig-or-rr, fig.width=9, fig.height=5.5, fig.cap="Figure 13. The risk ratio implied by a fixed odds ratio, as a function of the baseline probability in the reference group."}
+orrr_df <- expand_grid(p0 = seq(0.005, 0.6, by = 0.005), OR = c(1.5, 2, 3)) %>%
+  mutate(RR = OR / (1 - p0 + p0 * OR),
+         OR_label = paste0("OR = ", OR))
+
+or_ref <- tibble(OR = c(1.5, 2, 3), OR_label = paste0("OR = ", c(1.5, 2, 3)))
+
+ggplot(orrr_df, aes(p0, RR, color = OR_label)) +
+  geom_hline(data = or_ref, aes(yintercept = OR, color = OR_label), linetype = "dashed", alpha = 0.6) +
+  geom_line(linewidth = 1.2) +
+  geom_vline(xintercept = 0.05, linetype = "dotted", color = col_gray) +
+  annotate("text", x = 0.06, y = 3.1, label = "Rare outcome\n(< 5%)", hjust = 0, size = 3.2, color = col_gray) +
+  scale_x_continuous(labels = percent) +
+  scale_color_manual(values = c("OR = 1.5" = col_green, "OR = 2" = col_blue, "OR = 3" = col_orange)) +
+  labs(title = "Odds ratios overstate risk ratios when outcomes are common",
+       subtitle = "Dashed lines: the OR. Solid lines: the RR it implies at each baseline probability",
+       x = "Baseline probability in the reference group (p0)", y = "Risk ratio",
+       color = NULL) +
+  theme(legend.position = "bottom")
+```
+
+::: {.lang-en}
+When the baseline probability is below about 5%, each solid line stays close to its dashed line, and the OR is a reasonable stand-in for the RR. As the baseline probability rises, the gap widens quickly.
+
+### R and Stata equivalents
+
+| Task | R | Stata |
+|:---|:---|:---|
+| Natural log / base-10 log | `log(x)` / `log10(x)` | `ln(x)` or `log(x)` / `log10(x)` |
+| Exponential | `exp(x)` | `exp(x)` |
+| Geometric mean | `exp(mean(log(x)))` | `ameans x` |
+| Odds ratios with 95% CI | `broom::tidy(m, exponentiate = TRUE, conf.int = TRUE)` | `logit y x, or` or `logistic y x` |
+| Predicted probabilities | `predict(m, type = "response")` | `predict p, pr` or `margins` |
+| Average marginal effects | `marginaleffects::avg_slopes(m)` | `margins, dydx(*)` |
+| Log-link GLM for spending | `glm(y ~ x, family = Gamma(link = "log"))` | `glm y x, family(gamma) link(log)` |
+| Rate ratios with exposure | `glm(y ~ x + offset(log(pop)), family = poisson)`, then `exp(coef(m))` | `poisson y x, exposure(pop) irr` |
+:::
+
+::: {.lang-ko style="display: none;"}
+기준 확률이 약 5%보다 낮을 때는 실선이 점선에서 크게 벗어나지 않으므로 오즈비를 위험비 대신 써도 무리가 없습니다. 기준 확률이 높아질수록 차이가 빠르게 벌어집니다.
+
+### R과 Stata 명령어 대응표
+
+| 작업 | R | Stata |
+|:---|:---|:---|
+| 자연로그 / 상용로그 | `log(x)` / `log10(x)` | `ln(x)` 또는 `log(x)` / `log10(x)` |
+| 지수함수 | `exp(x)` | `exp(x)` |
+| 기하평균 | `exp(mean(log(x)))` | `ameans x` |
+| 오즈비와 95% 신뢰구간 | `broom::tidy(m, exponentiate = TRUE, conf.int = TRUE)` | `logit y x, or` 또는 `logistic y x` |
+| 예측 확률 | `predict(m, type = "response")` | `predict p, pr` 또는 `margins` |
+| 평균 한계효과 | `marginaleffects::avg_slopes(m)` | `margins, dydx(*)` |
+| 의료비에 대한 로그 연결 GLM | `glm(y ~ x, family = Gamma(link = "log"))` | `glm y x, family(gamma) link(log)` |
+| 노출량을 고려한 발생률비 | `glm(y ~ x + offset(log(pop)), family = poisson)` 후 `exp(coef(m))` | `poisson y x, exposure(pop) irr` |
 :::
 
 ---
 
+::: {.lang-en}
 # 8. Conclusion
 
-::: {.lang-en}
-The mathematical constants and operators $e$, $\log$, and $\exp$ are neither arbitrary academic hurdles nor computational trivia. They are the essential conceptual toolkit that allows social scientists to bridge the gap between our **linear statistical models** and the **inherently compounding, multiplicative reality of human health**.
+The constant $e$ and the functions $\log$ and $\exp$ are not arbitrary hurdles. They are the tools that let **additive statistical models** describe a **multiplicative world**: compounding infections, mortality that doubles every few years of adult age, and income whose effects depend on proportions rather than dollars.
 
-Whenever you encounter an exponential or logarithmic term in your research, remember:
-1. $e$ embodies continuous real-world compounding.
-2. $\log$ brings runaway multiplicative variance into linear order.
-3. $\exp$ translates abstract regression coefficients back into real-world ratios of risk and likelihood.
-4. Companion concepts like the **Geometric Mean** and the linear approximation $\log(1+x) \approx x$ make handling skewed distributions and interpreting rate changes intuitive and mathematically rigorous.
+```
+      MULTIPLICATIVE WORLD                        ADDITIVE WORLD
+  (ratios, growth, odds, rates)              (differences, straight lines)
+
+    Y grows by a constant ratio   --- log --->   log Y grows by a constant amount
+    Odds are multiplied by OR     --- log --->   log-odds increase by beta
+    Geometric mean                <--- exp ---   Arithmetic mean of logs
+    Odds ratio = exp(beta)        <--- exp ---   Coefficient beta
+```
+
+Whenever you meet a log or an exponential in your research, ask four questions:
+
+1. **Which world am I in?** Is this number a difference (additive world) or a ratio (multiplicative world)?
+2. **Is the shortcut safe?** Read $\beta \times 100\%$ only when $|\beta| < 0.1$; otherwise compute $\exp(\beta) - 1$.
+3. **Ratio of what?** An odds ratio is not a risk ratio, and neither is a change in probability. A ratio of geometric means is not a ratio of totals.
+4. **What could go wrong?** Zeros in the outcome, retransformation bias when predicting levels, and non-collapsibility when comparing odds ratios across models.
+
+With these questions in hand, logistic regression coefficients, log-income models, and Gompertz mortality curves become variations on a single idea: logs turn multiplication into addition, and exp turns it back.
 :::
 
 ::: {.lang-ko style="display: none;"}
-자연상수 $e$, 로그 $\log$, 지수함수 $\exp$는 우리를 괴롭히려고 만든 복잡한 수학 공식이 아닙니다.  
-**"더하기밖에 모르는 우리의 단순한 통계 모델"**과 **"곱하기로 증식하고 늙어가는 생명과 사회의 현실"** 사이를 이어주는 **가장 친절한 통역사**입니다.
+# 8. 마치며
 
-앞으로 논문이나 데이터에서 이 기호들을 만나면 이것만 기억하세요:
-1. **$e$**: 멈추지 않고 연속해서 자라나는 자연의 한계 속도
-2. **$\log$**: 걷잡을 수 없이 커진 곱하기 세상을 얌전한 더하기 세상으로 줄여주는 돋보기
-3. **$\exp$**: 분석이 끝난 더하기 숫자를 다시 원래 현실의 '몇 배 위험한가'로 되돌려주는 뻥튀기 기계
+자연상수 $e$와 $\log$, $\exp$는 괜히 어렵게 만든 장애물이 아닙니다. **덧셈으로 만들어진 통계 모형**이 **곱셈으로 움직이는 세상**을 설명할 수 있게 해 주는 도구입니다. 복리처럼 불어나는 감염, 성인기에 몇 년마다 두 배가 되는 사망률, 금액보다 비율이 중요한 소득의 효과가 모두 그런 세상의 모습입니다.
 
-이 세 친구의 원리만 알면, 복잡해 보이던 로지스틱 회귀분석도, 소득-건강 곡선도 중학생처럼 쉽고 직관적으로 꿰뚫어 볼 수 있습니다!
+```
+        곱하기의 세계                              더하기의 세계
+  (비율, 성장, 오즈, 발생률)                    (차이, 직선)
+
+    Y가 일정한 비율로 커짐        --- log --->   log Y가 일정한 양만큼 커짐
+    오즈가 OR배로 곱해짐          --- log --->   로그 오즈가 beta만큼 늘어남
+    기하평균                      <--- exp ---   로그 값의 산술평균
+    오즈비 = exp(beta)            <--- exp ---   계수 beta
+```
+
+연구에서 로그나 지수를 만나면 네 가지를 물어보세요.
+
+1. **지금 어느 세계에 있는가?** 이 숫자는 차이(더하기의 세계)인가, 비율(곱하기의 세계)인가?
+2. **근사를 써도 되는가?** $|\beta| < 0.1$일 때만 $\beta \times 100\%$로 읽고, 그렇지 않으면 $\exp(\beta) - 1$을 계산합니다.
+3. **무엇의 비율인가?** 오즈비는 위험비가 아니고, 둘 다 확률의 변화도 아닙니다. 기하평균의 비는 합계의 비가 아닙니다.
+4. **무엇이 잘못될 수 있는가?** 결과변수의 0, 수준을 예측할 때의 재변환 편향, 모형 간 오즈비를 비교할 때의 비붕괴성을 점검합니다.
+
+이 질문들을 갖고 보면 로지스틱 회귀 계수, 로그 소득 모형, 곰페르츠 사망률 곡선은 모두 하나의 생각을 변주한 것입니다. 로그는 곱셈을 덧셈으로 바꾸고, exp는 그것을 다시 곱셈으로 되돌립니다.
 :::
+
+---
+
+::: {.lang-en}
+# References
+:::
+
+::: {.lang-ko style="display: none;"}
+# 참고문헌
+:::
+
+- Duan, N. (1983). Smearing estimate: A nonparametric retransformation method. *Journal of the American Statistical Association*, 78(383), 605-610.
+- Gompertz, B. (1825). On the nature of the function expressive of the law of human mortality, and on a new mode of determining the value of life contingencies. *Philosophical Transactions of the Royal Society of London*, 115, 513-583.
+- Manning, W. G. (1998). The logged dependent variable, heteroscedasticity, and the retransformation problem. *Journal of Health Economics*, 17(3), 283-295.
+- Maor, E. (1994). *e: The Story of a Number*. Princeton University Press.
+- Mood, C. (2010). Logistic regression: Why we cannot do what we think we can do, and what we can do about it. *European Sociological Review*, 26(1), 67-82.
+- Preston, S. H. (1975). The changing relation between mortality and level of economic development. *Population Studies*, 29(2), 231-248.
+- Zhang, J., & Yu, K. F. (1998). What's the relative risk? A method of correcting the odds ratio in cohort studies of common outcomes. *JAMA*, 280(19), 1690-1691.
