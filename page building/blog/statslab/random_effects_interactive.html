@@ -189,6 +189,7 @@
       height: auto;
       display: block;
       cursor: grab;
+      -webkit-user-select: none;
       user-select: none;
       touch-action: none;
     }
@@ -366,7 +367,9 @@
       height: auto;
       display: block;
       cursor: ew-resize;
+      -webkit-user-select: none;
       user-select: none;
+      touch-action: none;
     }
 
     /* Inline formula & clean bars */
@@ -517,7 +520,7 @@
         <div class="eq-line num" id="eqGLS">
           <span class="m">&theta;<sub>GLS</sub></span> = 1 &minus; &radic;[ 2.0 / (2.0 + 6&times;4.0) ] = 0.723
         </div>
-        <input type="range" id="inTheta" min="0" max="1" step="0.005" value="0.723" />
+        <input type="range" id="inTheta" min="0" max="1" step="0.001" value="0.723" />
         <div class="quick-theta">
           <button class="link-btn" id="btnTh0">0 (Pooled)</button>
           <button class="link-btn active" id="btnThGLS"><span class="m">&theta;<sub>GLS</sub></span></button>
@@ -531,7 +534,7 @@
             <span class="param-name">Between variance <span class="m">&sigma;<sub>u</sub>&sup2;</span></span>
             <span class="param-val num" id="outSigU">4.0</span>
           </div>
-          <input type="range" id="inSigU" min="0" max="25" step="0.2" value="4.0" />
+          <input type="range" id="inSigU" min="0" max="25" step="0.1" value="4.0" />
         </div>
 
         <div class="param-row">
@@ -539,7 +542,7 @@
             <span class="param-name">Within noise <span class="m">&sigma;<sub>&epsilon;</sub>&sup2;</span></span>
             <span class="param-val num" id="outSigE">2.0</span>
           </div>
-          <input type="range" id="inSigE" min="0.2" max="12" step="0.2" value="2.0" />
+          <input type="range" id="inSigE" min="0.2" max="12" step="0.1" value="2.0" />
         </div>
 
         <div class="param-row">
@@ -1051,8 +1054,8 @@
         const padL = 42, padR = 16, padT = 16, padB = 30;
         const pw = W - padL - padR, ph = H - padT - padB;
 
-        const minB = Math.min(-1.55, state.betaW - 0.25, state.betaB - 0.25);
-        const maxB = Math.max( 1.55, state.betaW + 0.25, state.betaB + 0.25);
+        const minB = Math.min(-1.65, state.betaW - 0.35, state.betaB - 0.35);
+        const maxB = Math.max( 1.65, state.betaW + 0.35, state.betaB + 0.35);
         const xOf = (th) => padL + th * pw;
         const yOf = (b)  => padT + (1 - (b - minB) / (maxB - minB)) * ph;
 
@@ -1083,18 +1086,19 @@
           }, th === 0 ? '0 (Pooled)' : (th === 1 ? '1 (FE)' : '0.5'));
         }
 
-        // Reference dashed horizontals (place labels on outer sides so curve doesn't cross them)
+        // Reference dashed horizontals (place labels on outer sides safely inside plot bounds)
         const wAbove = state.betaW >= state.betaB;
+        const clampLabelY = (y) => Math.max(padT + 11, Math.min(padT + ph - 6, y));
         const yB = yOf(state.betaB);
         svgEl(slopeSvg, 'line', { x1: padL, x2: W - padR, y1: yB, y2: yB, stroke: '#c85a17', 'stroke-width': 1.3, 'stroke-dasharray': '4 3', opacity: 0.8 });
         svgEl(slopeSvg, 'text', {
-          x: padL + 6, y: wAbove ? yB + 12 : yB - 5, 'text-anchor': 'start', 'font-size': 10.5, fill: '#c85a17', 'font-family': 'Georgia, serif', 'font-style': 'italic'
+          x: padL + 6, y: clampLabelY(wAbove ? yB + 12 : yB - 5), 'text-anchor': 'start', 'font-size': 10.5, fill: '#c85a17', 'font-family': 'Georgia, serif', 'font-style': 'italic'
         }, `\u03B2_B = ${fmtS(state.betaB)}`);
 
         const yW = yOf(state.betaW);
         svgEl(slopeSvg, 'line', { x1: padL, x2: W - padR, y1: yW, y2: yW, stroke: '#236b52', 'stroke-width': 1.3, 'stroke-dasharray': '3 3', opacity: 0.85 });
         svgEl(slopeSvg, 'text', {
-          x: padL + 6, y: wAbove ? yW - 5 : yW + 12,
+          x: padL + 6, y: clampLabelY(wAbove ? yW - 5 : yW + 12),
           'text-anchor': 'start', 'font-size': 10.5, fill: '#236b52', 'font-family': 'Georgia, serif', 'font-style': 'italic'
         }, `\u03B2_W = ${fmtS(state.betaW)}`);
 
@@ -1212,9 +1216,16 @@
         els.tblSEB.textContent   = st.seB.toFixed(2);
 
         // Plain-text scholarly reading note (zero boxes)
+        const glsStats = computeStats(glsTheta);
         const gap = Math.abs(state.betaB - state.betaW);
         let note = '';
-        if (activeTheta >= 0.85) {
+        if (state.showRaw) {
+          note = `<strong>Raw panel view (<span class="m">&theta;</span> = 0):</strong> Displaying un-demeaned observations (Pooled OLS slope <span class="num">${fmtS(st.betaRE)}</span>; GLS optimal <span class="m">&theta;<sub>GLS</sub></span> = ${glsTheta.toFixed(2)}).`;
+        } else if (state.manualTheta) {
+          note = `<strong>Manual <span class="m">&theta;</span> = ${activeTheta.toFixed(2)} (GLS optimal is ${glsTheta.toFixed(2)}):</strong> Assigning ${wPct}% Within and ${bPct}% Between weight; standard error is <span class="num">${st.seRE.toFixed(2)}</span> vs. GLS minimum <span class="num">${glsStats.seRE.toFixed(2)}</span>.`;
+        } else if (state.sigU === 0) {
+          note = `<strong>Zero between-unit variance (<span class="m">&sigma;<sub>u</sub>&sup2;</span> = 0):</strong> <span class="m">&theta;<sub>GLS</sub></span> = 0, so Random Effects reduces to Pooled OLS (${wPct}% Within, ${bPct}% Between).`;
+        } else if (activeTheta >= 0.85) {
           note = `<strong>Near Fixed Effects (<span class="m">&theta;</span> = ${activeTheta.toFixed(2)}):</strong> Large <span class="m">&sigma;<sub>u</sub>&sup2;</span> or <span class="m">T</span> makes cross-unit differences noisy, so ${wPct}% of <span class="m">&beta;<sub>RE</sub></span> comes from within-unit variation (${fmtS(state.betaW)}).`;
         } else if (activeTheta <= 0.25) {
           note = `<strong>Near Pooled OLS (<span class="m">&theta;</span> = ${activeTheta.toFixed(2)}):</strong> Minimal demeaning leaves ${Math.round((1 - activeTheta) * 100)}% of unit separation intact, giving between-unit variation ${bPct}% weight.`;
@@ -1222,7 +1233,9 @@
           note = `<strong>Partial compromise (<span class="m">&theta;</span> = ${activeTheta.toFixed(2)}):</strong> Unit centroids move ${Math.round(activeTheta * 100)}% toward zero, blending ${wPct}% Within and ${bPct}% Between variation.`;
         }
         if (gap < 0.08) {
-          note += ` Because <span class="m">&beta;<sub>W</sub> &approx; &beta;<sub>B</sub></span>, Random Effects is unbiased and attains the lowest standard error (${st.seRE.toFixed(2)}).`;
+          note += state.manualTheta || state.showRaw
+            ? ` Because <span class="m">&beta;<sub>W</sub> &approx; &beta;<sub>B</sub></span>, <span class="m">&theta;<sub>GLS</sub></span> minimizes the standard error.`
+            : ` Because <span class="m">&beta;<sub>W</sub> &approx; &beta;<sub>B</sub></span>, Random Effects is unbiased and attains the lowest standard error (${st.seRE.toFixed(2)}).`;
         } else if (state.betaW * state.betaB < 0 && state.betaRE * state.betaW < 0) {
           note += ` Because <span class="m">&beta;<sub>B</sub> = ${fmtS(state.betaB)}</span> opposes <span class="m">&beta;<sub>W</sub></span>, between-unit confounding flips <span class="m">&beta;<sub>RE</sub></span> to ${fmtS(st.betaRE)}.`;
         } else {
@@ -1234,22 +1247,25 @@
         renderSlopeChart(activeTheta, glsTheta);
       }
 
-      // Smooth 2D <-> 3D View Transition
+      // Smooth 380ms 2D <-> 3D View Transition
       let animId = null;
-      function animateView() {
-        const dy = state.targetYaw - state.yaw;
-        const dp = state.targetPitch - state.pitch;
-        if (Math.hypot(dy, dp) < 0.002) {
+      let animStart = 0, animFromYaw = 0, animFromPitch = 0;
+      const ANIM_MS = 380;
+
+      function animateView(now) {
+        const u = Math.min(1, (now - animStart) / ANIM_MS);
+        const ease = u < 0.5 ? 4 * u * u * u : 1 - Math.pow(-2 * u + 2, 3) / 2;
+        state.yaw = animFromYaw + (state.targetYaw - animFromYaw) * ease;
+        state.pitch = animFromPitch + (state.targetPitch - animFromPitch) * ease;
+        updateAll();
+        if (u < 1) {
+          animId = requestAnimationFrame(animateView);
+        } else {
           state.yaw = state.targetYaw;
           state.pitch = state.targetPitch;
-          updateAll();
           animId = null;
-          return;
+          updateAll();
         }
-        state.yaw += dy * 0.22;
-        state.pitch += dp * 0.22;
-        updateAll();
-        animId = requestAnimationFrame(animateView);
       }
 
       function setView(mode) {
@@ -1262,7 +1278,11 @@
           state.targetYaw = 0.0;
           state.targetPitch = 0.0;
         }
-        if (!animId) animId = requestAnimationFrame(animateView);
+        if (animId) cancelAnimationFrame(animId);
+        animStart = performance.now();
+        animFromYaw = state.yaw;
+        animFromPitch = state.pitch;
+        animId = requestAnimationFrame(animateView);
       }
 
       els.btnViewXY.addEventListener('click', () => setView('xy'));
@@ -1271,11 +1291,14 @@
       // Drag on mainPlot to rotate seamlessly into 3D
       let draggingPlot = false, lastPX = 0, lastPY = 0;
       mainPlot.addEventListener('pointerdown', (e) => {
+        e.preventDefault();
+        if (animId) { cancelAnimationFrame(animId); animId = null; }
         draggingPlot = true; lastPX = e.clientX; lastPY = e.clientY;
         mainPlot.setPointerCapture(e.pointerId);
       });
       mainPlot.addEventListener('pointermove', (e) => {
         if (!draggingPlot) return;
+        e.preventDefault();
         const dx = e.clientX - lastPX, dy = e.clientY - lastPY;
         lastPX = e.clientX; lastPY = e.clientY;
         state.targetYaw = Math.max(-1.25, Math.min(1.25, state.yaw + dx * 0.008));
@@ -1287,6 +1310,7 @@
         updateAll();
       });
       mainPlot.addEventListener('pointerup', () => { draggingPlot = false; });
+      mainPlot.addEventListener('pointercancel', () => { draggingPlot = false; });
 
       // Presets
       function clearTabs() {
@@ -1310,18 +1334,23 @@
       });
 
       // Parameter Sliders
-      const bindP = (el, key, fn) => {
+      const bindP = (el, key, fn, restoreGLS) => {
         el.addEventListener('input', () => {
           state[key] = fn(el.value);
+          if (restoreGLS) {
+            state.manualTheta = false;
+            state.showRaw = false;
+            els.chkRaw.checked = false;
+          }
           clearTabs();
           updateAll();
         });
       };
-      bindP(els.inSigU, 'sigU', parseFloat);
-      bindP(els.inSigE, 'sigE', parseFloat);
-      bindP(els.inT, 'T', (v) => parseInt(v, 10));
-      bindP(els.inBetaW, 'betaW', parseFloat);
-      bindP(els.inBetaB, 'betaB', parseFloat);
+      bindP(els.inSigU, 'sigU', parseFloat, true);
+      bindP(els.inSigE, 'sigE', parseFloat, true);
+      bindP(els.inT, 'T', (v) => parseInt(v, 10), true);
+      bindP(els.inBetaW, 'betaW', parseFloat, false);
+      bindP(els.inBetaB, 'betaB', parseFloat, false);
 
       // Theta controls
       els.inTheta.addEventListener('input', () => {
@@ -1358,10 +1387,16 @@
         updateAll();
       }
       slopeSvg.addEventListener('pointerdown', (e) => {
+        e.preventDefault();
         scrubbing = true; slopeSvg.setPointerCapture(e.pointerId); scrubSlope(e);
       });
-      slopeSvg.addEventListener('pointermove', (e) => { if (scrubbing) scrubSlope(e); });
+      slopeSvg.addEventListener('pointermove', (e) => {
+        if (!scrubbing) return;
+        e.preventDefault();
+        scrubSlope(e);
+      });
       slopeSvg.addEventListener('pointerup', () => { scrubbing = false; });
+      slopeSvg.addEventListener('pointercancel', () => { scrubbing = false; });
 
       applyPreset('conflict');
       window.__APP_READY__ = true;
