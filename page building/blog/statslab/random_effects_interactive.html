@@ -1,0 +1,1371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Partial Demeaning &amp; the Random Effects Weight θ</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Outfit:wght@500;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #ffffff;
+      --ink: #18181b;
+      --ink-2: #52525b;
+      --muted: #8a8a8a;
+      --rule: #ecebe6;
+      --rule-strong: #d4d4d8;
+      --slate: #334155;
+      --terracotta: #c85a17;
+      --pine: #236b52;
+      --cobalt: #2452a8;
+      --sans: 'Inter', 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+      --math: Georgia, 'Times New Roman', serif;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--ink);
+      font-family: var(--sans);
+      line-height: 1.55;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .page {
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 16px 28px 48px;
+    }
+
+    /* Typography helpers */
+    .m {
+      font-family: var(--math);
+      font-style: italic;
+    }
+    .num {
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* Header — pure whitespace, zero boxes */
+    header {
+      margin-bottom: 24px;
+    }
+
+    .kicker {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+
+    h1 {
+      font-family: 'Outfit', var(--sans);
+      font-size: 26px;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      color: var(--ink);
+      line-height: 1.2;
+    }
+
+    .subtitle {
+      margin-top: 6px;
+      font-size: 14px;
+      color: var(--ink-2);
+      max-width: 740px;
+    }
+
+    /* Understated text-tab scenario selector */
+    .tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 24px;
+      margin-top: 18px;
+      border-bottom: 1px solid var(--rule);
+    }
+
+    .tab-btn {
+      appearance: none;
+      background: none;
+      border: none;
+      border-bottom: 1.5px solid transparent;
+      padding: 6px 0 8px;
+      margin-bottom: -1px;
+      font-family: var(--sans);
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--muted);
+      cursor: pointer;
+    }
+
+    .tab-btn:hover {
+      color: var(--ink);
+    }
+
+    .tab-btn.active {
+      color: var(--ink);
+      font-weight: 600;
+      border-bottom-color: var(--ink);
+    }
+
+    /* Main 2-Column Editorial Row */
+    .main-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 300px;
+      gap: 44px;
+      align-items: start;
+      margin-top: 22px;
+    }
+
+    @media (max-width: 920px) {
+      .main-grid { grid-template-columns: 1fr; gap: 28px; }
+    }
+
+    /* Minimal borderless toolbar above main figure */
+    .fig-controls {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 6px;
+    }
+
+    .view-tabs {
+      display: flex;
+      gap: 16px;
+    }
+
+    .link-btn {
+      appearance: none;
+      background: none;
+      border: none;
+      border-bottom: 1.5px solid transparent;
+      padding: 2px 0;
+      font-family: var(--sans);
+      font-size: 12.5px;
+      font-weight: 500;
+      color: var(--muted);
+      cursor: pointer;
+    }
+
+    .link-btn:hover { color: var(--ink); }
+    .link-btn.active {
+      color: var(--ink);
+      font-weight: 600;
+      border-bottom-color: var(--ink);
+    }
+
+    .fig-toggles {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      font-size: 12px;
+      color: var(--ink-2);
+    }
+
+    .fig-toggles label {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      cursor: pointer;
+    }
+
+    .fig-toggles input {
+      accent-color: var(--ink);
+      cursor: pointer;
+    }
+
+    .drag-hint {
+      color: var(--muted);
+      font-size: 11.5px;
+    }
+
+    #mainPlot {
+      width: 100%;
+      height: auto;
+      display: block;
+      cursor: grab;
+      user-select: none;
+      touch-action: none;
+    }
+
+    #mainPlot:active { cursor: grabbing; }
+
+    /* Right Margin Controls — zero boxes, hairline dividers */
+    .margin-col {
+      padding-top: 4px;
+    }
+
+    .theta-hero {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 4px;
+    }
+
+    .theta-big {
+      font-size: 26px;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      color: var(--cobalt);
+    }
+
+    .theta-status {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .reset-link {
+      appearance: none;
+      background: none;
+      border: none;
+      padding: 0;
+      margin-left: 6px;
+      font-family: var(--sans);
+      font-size: 12px;
+      color: var(--cobalt);
+      text-decoration: underline;
+      text-underline-offset: 2px;
+      cursor: pointer;
+    }
+
+    .eq-line {
+      font-size: 12.5px;
+      color: var(--ink-2);
+      margin-bottom: 12px;
+    }
+
+    .quick-theta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 6px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .quick-theta .link-btn {
+      font-size: 12px;
+    }
+
+    .divider {
+      border: none;
+      border-top: 1px solid var(--rule);
+      margin: 18px 0;
+    }
+
+    .param-row {
+      margin-bottom: 13px;
+    }
+
+    .param-row:last-child { margin-bottom: 0; }
+
+    .param-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      font-size: 13px;
+      margin-bottom: 4px;
+    }
+
+    .param-name {
+      color: var(--ink-2);
+      font-weight: 500;
+    }
+
+    .param-val {
+      color: var(--ink);
+      font-weight: 600;
+      font-size: 13px;
+    }
+
+    /* Ultra-thin hairline range sliders */
+    input[type="range"] {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 100%;
+      height: 1.5px;
+      background: var(--rule-strong);
+      outline: none;
+      cursor: pointer;
+      display: block;
+      margin: 7px 0 2px;
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--ink);
+      cursor: pointer;
+      border: none;
+    }
+
+    input[type="range"]::-moz-range-thumb {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--ink);
+      border: none;
+      cursor: pointer;
+    }
+
+    /* Plain-text reading note — NO box, NO left border */
+    .reading-note {
+      font-size: 12.5px;
+      color: var(--ink-2);
+      line-height: 1.58;
+    }
+
+    .reading-note strong {
+      color: var(--ink);
+      font-weight: 600;
+    }
+
+    /* Lower Analytical Row */
+    .lower-grid {
+      margin-top: 30px;
+      padding-top: 24px;
+      border-top: 1px solid var(--rule);
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 48px;
+      align-items: start;
+    }
+
+    @media (max-width: 820px) {
+      .lower-grid { grid-template-columns: 1fr; gap: 32px; }
+    }
+
+    .sub-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 8px;
+    }
+
+    .sub-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--ink);
+    }
+
+    .sub-hint {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    #slopeSvg {
+      width: 100%;
+      height: auto;
+      display: block;
+      cursor: ew-resize;
+      user-select: none;
+    }
+
+    /* Inline formula & clean bars */
+    .blend-eq {
+      font-size: 13px;
+      color: var(--ink-2);
+      margin-bottom: 14px;
+    }
+
+    .bar-head {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      margin-bottom: 5px;
+    }
+
+    .bar-split {
+      display: flex;
+      height: 5px;
+      background: var(--rule);
+      overflow: hidden;
+      margin-bottom: 14px;
+    }
+
+    .bar-w { background: var(--pine); height: 100%; }
+    .bar-b { background: var(--terracotta); height: 100%; }
+
+    .bar-single {
+      height: 4px;
+      background: var(--rule);
+      overflow: hidden;
+      margin-bottom: 18px;
+    }
+
+    .bar-icc {
+      height: 100%;
+      background: var(--slate);
+    }
+
+    /* Classic Academic Booktabs Table */
+    table.booktabs {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12.5px;
+      border-top: 1.2px solid var(--ink);
+      border-bottom: 1.2px solid var(--ink);
+    }
+
+    table.booktabs thead th {
+      text-align: left;
+      font-weight: 600;
+      font-size: 11.5px;
+      color: var(--ink-2);
+      padding: 6px 4px;
+      border-bottom: 0.8px solid var(--rule-strong);
+    }
+
+    table.booktabs th.r, table.booktabs td.r {
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+    }
+
+    table.booktabs tbody td {
+      padding: 6px 4px;
+      color: var(--ink-2);
+    }
+
+    table.booktabs tbody tr.re-row td {
+      color: var(--ink);
+      font-weight: 600;
+    }
+
+    .swatch-dot {
+      display: inline-block;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      margin-right: 7px;
+      vertical-align: middle;
+    }
+
+    /* Footer notes — quiet 3-column text */
+    .footer-notes {
+      margin-top: 32px;
+      padding-top: 18px;
+      border-top: 1px solid var(--rule);
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 32px;
+      font-size: 12.5px;
+      color: var(--ink-2);
+    }
+
+    @media (max-width: 820px) {
+      .footer-notes { grid-template-columns: 1fr; gap: 18px; }
+    }
+
+    .footer-notes h3 {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--ink);
+      margin-bottom: 4px;
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header>
+      <div class="kicker">Panel Data Models &middot; Random Effects</div>
+      <h1>Partial demeaning and the random effects weight <span class="m">&theta;</span></h1>
+      <p class="subtitle">
+        How between-unit variance (<span class="m">&sigma;<sub>u</sub>&sup2;</span>), within noise (<span class="m">&sigma;<sub>&epsilon;</sub>&sup2;</span>), and panel length (<span class="m">T</span>) determine <span class="m">&theta;</span>, reweight Within vs. Between variation, and steer the slope <span class="m">&beta;<sub>RE</sub></span>.
+      </p>
+      <div class="tabs" id="presetTabs">
+        <button class="tab-btn active" data-preset="conflict">Conflicting slopes</button>
+        <button class="tab-btn" data-preset="high_icc">High ICC (&approx; FE)</button>
+        <button class="tab-btn" data-preset="short_low">Short panel (&approx; Pooled)</button>
+        <button class="tab-btn" data-preset="re_holds">Unconfounded (<span class="m">&beta;<sub>W</sub> = &beta;<sub>B</sub></span>)</button>
+      </div>
+    </header>
+
+    <div class="main-grid">
+      <!-- LEFT: Vector SVG Plot -->
+      <div>
+        <div class="fig-controls">
+          <div class="view-tabs">
+            <button class="link-btn active" id="btnViewXY"><span class="m">X&ndash;Y</span> plane</button>
+            <button class="link-btn" id="btnView3D">3D panel</button>
+          </div>
+          <div class="fig-toggles">
+            <label><input type="checkbox" id="chkPaths" checked /> Demeaning paths</label>
+            <label><input type="checkbox" id="chkRaw" /> Raw (<span class="m">&theta; = 0</span>)</label>
+            <span class="drag-hint">Drag to rotate 3D</span>
+          </div>
+        </div>
+        <svg id="mainPlot" viewBox="0 0 680 430"></svg>
+      </div>
+
+      <!-- RIGHT: Borderless Controls -->
+      <div class="margin-col">
+        <div class="theta-hero">
+          <div class="theta-big num"><span class="m">&theta;</span> = <span id="outThetaVal">0.723</span></div>
+          <div class="theta-status">
+            <span id="outThetaMode">GLS optimal</span>
+            <button class="reset-link" id="btnResetGLS" style="display:none;">reset</button>
+          </div>
+        </div>
+        <div class="eq-line num" id="eqGLS">
+          <span class="m">&theta;<sub>GLS</sub></span> = 1 &minus; &radic;[ 2.0 / (2.0 + 6&times;4.0) ] = 0.723
+        </div>
+        <input type="range" id="inTheta" min="0" max="1" step="0.005" value="0.723" />
+        <div class="quick-theta">
+          <button class="link-btn" id="btnTh0">0 (Pooled)</button>
+          <button class="link-btn active" id="btnThGLS"><span class="m">&theta;<sub>GLS</sub></span></button>
+          <button class="link-btn" id="btnTh1">1 (FE)</button>
+        </div>
+
+        <hr class="divider" />
+
+        <div class="param-row">
+          <div class="param-head">
+            <span class="param-name">Between variance <span class="m">&sigma;<sub>u</sub>&sup2;</span></span>
+            <span class="param-val num" id="outSigU">4.0</span>
+          </div>
+          <input type="range" id="inSigU" min="0" max="25" step="0.2" value="4.0" />
+        </div>
+
+        <div class="param-row">
+          <div class="param-head">
+            <span class="param-name">Within noise <span class="m">&sigma;<sub>&epsilon;</sub>&sup2;</span></span>
+            <span class="param-val num" id="outSigE">2.0</span>
+          </div>
+          <input type="range" id="inSigE" min="0.2" max="12" step="0.2" value="2.0" />
+        </div>
+
+        <div class="param-row">
+          <div class="param-head">
+            <span class="param-name">Time periods <span class="m">T</span></span>
+            <span class="param-val num" id="outT">6</span>
+          </div>
+          <input type="range" id="inT" min="2" max="12" step="1" value="6" />
+        </div>
+
+        <div class="param-row">
+          <div class="param-head">
+            <span class="param-name" style="color:var(--pine);">Within slope <span class="m">&beta;<sub>W</sub></span></span>
+            <span class="param-val num" id="outBetaW">+0.90</span>
+          </div>
+          <input type="range" id="inBetaW" min="-1.5" max="1.5" step="0.05" value="0.90" />
+        </div>
+
+        <div class="param-row">
+          <div class="param-head">
+            <span class="param-name" style="color:var(--terracotta);">Between slope <span class="m">&beta;<sub>B</sub></span></span>
+            <span class="param-val num" id="outBetaB">&minus;0.65</span>
+          </div>
+          <input type="range" id="inBetaB" min="-1.5" max="1.5" step="0.05" value="-0.65" />
+        </div>
+
+        <hr class="divider" />
+
+        <p class="reading-note" id="liveNote"></p>
+      </div>
+    </div>
+
+    <!-- LOWER ANALYTICAL ROW -->
+    <div class="lower-grid">
+      <div>
+        <div class="sub-head">
+          <span class="sub-title">Sensitivity of <span class="m">&beta;<sub>RE</sub></span> across <span class="m">&theta; &isin; [0, 1]</span></span>
+          <span class="sub-hint">Click or drag curve to scrub <span class="m">&theta;</span></span>
+        </div>
+        <svg id="slopeSvg" viewBox="0 0 460 205"></svg>
+      </div>
+
+      <div>
+        <div class="sub-head">
+          <span class="sub-title">Within / Between mix &amp; precision</span>
+          <span class="sub-hint num" id="iccInline">ICC = 0.67</span>
+        </div>
+        <p class="blend-eq num" id="blendEq"></p>
+
+        <div class="bar-head">
+          <span style="color:var(--pine); font-weight:600;">Within share <span class="num" id="pctW">62%</span></span>
+          <span style="color:var(--terracotta); font-weight:600;">Between share <span class="num" id="pctB">38%</span></span>
+        </div>
+        <div class="bar-split">
+          <div class="bar-w" id="barW" style="width:62%;"></div>
+          <div class="bar-b" id="barB" style="width:38%;"></div>
+        </div>
+
+        <div class="bar-head" style="color:var(--ink-2);">
+          <span>Between-unit variance share (<span class="m">ICC</span>)</span>
+          <span class="num" id="iccVal">0.67</span>
+        </div>
+        <div class="bar-single">
+          <div class="bar-icc" id="barICC" style="width:67%;"></div>
+        </div>
+
+        <table class="booktabs">
+          <thead>
+            <tr>
+              <th>Estimator</th>
+              <th class="r">Slope</th>
+              <th class="r">Std. Error</th>
+              <th class="r">Share</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="swatch-dot" style="background:var(--pine);"></span>Fixed Effects (Within)</td>
+              <td class="r" id="tblBW">+0.90</td>
+              <td class="r" id="tblSEW">0.43</td>
+              <td class="r">100% W</td>
+            </tr>
+            <tr class="re-row">
+              <td><span class="swatch-dot" style="background:var(--cobalt);"></span>Random Effects (<span class="m">&theta;</span> = <span id="tblTh">0.72</span>)</td>
+              <td class="r" id="tblBRE">+0.31</td>
+              <td class="r" id="tblSERE">0.34</td>
+              <td class="r" id="tblShare">62% W</td>
+            </tr>
+            <tr>
+              <td><span class="swatch-dot" style="background:var(--terracotta);"></span>Between Effects</td>
+              <td class="r" id="tblBB">&minus;0.65</td>
+              <td class="r" id="tblSEB">0.55</td>
+              <td class="r">100% B</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <section class="footer-notes">
+      <div>
+        <h3>1. Partial demeaning</h3>
+        <p>Each observation is transformed by <span class="m">X*<sub>it</sub> = X<sub>it</sub> &minus; &theta; X&#772;<sub>i</sub></span> and <span class="m">Y*<sub>it</sub> = Y<sub>it</sub> &minus; &theta; Y&#772;<sub>i</sub></span>. Unit centroids slide fraction <span class="m">&theta;</span> toward <span class="m">(0, 0)</span> while within-unit slopes remain unchanged.</p>
+      </div>
+      <div>
+        <h3>2. What sets <span class="m">&theta;</span></h3>
+        <p>When persistent unit heterogeneity <span class="m">&sigma;<sub>u</sub>&sup2;</span> or panel length <span class="m">T</span> grows large, cross-unit levels are noisy relative to within changes, pushing <span class="m">&theta; &rarr; 1</span>. Higher <span class="m">&sigma;<sub>&epsilon;</sub>&sup2;</span> pulls <span class="m">&theta; &rarr; 0</span>.</p>
+      </div>
+      <div>
+        <h3>3. Why <span class="m">&theta;</span> matters</h3>
+        <p>Because <span class="m">w<sub>B</sub> &prop; (1 &minus; &theta;)&sup2;</span>, <span class="m">&theta;<sub>GLS</sub></span> minimizes the standard error when <span class="m">&beta;<sub>W</sub> = &beta;<sub>B</sub></span>, but pulls <span class="m">&beta;<sub>RE</sub></span> toward <span class="m">&beta;<sub>B</sub></span> (even flipping its sign) whenever unit effects correlate with <span class="m">X</span>.</p>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    (function () {
+      'use strict';
+
+      const SVG_NS = 'http://www.w3.org/2000/svg';
+      const N_UNITS = 5;
+      const X_BAR = [-2.4, -1.2, 0.0, 1.2, 2.4]; // sum = 0, sum(x^2) = 14.40
+      const SUM_XBAR_SQ = X_BAR.reduce((a, v) => a + v * v, 0);
+
+      const PRESETS = {
+        conflict:  { sigU: 4.0,  sigE: 2.0, T: 6,  betaW: 0.90, betaB: -0.65 },
+        high_icc:  { sigU: 20.0, sigE: 1.5, T: 10, betaW: 0.90, betaB: -0.65 },
+        short_low: { sigU: 0.6,  sigE: 4.0, T: 2,  betaW: 0.90, betaB: -0.65 },
+        re_holds:  { sigU: 4.0,  sigE: 2.0, T: 6,  betaW: 0.65, betaB:  0.65 }
+      };
+
+      const state = {
+        sigU: 4.0,
+        sigE: 2.0,
+        T: 6,
+        betaW: 0.90,
+        betaB: -0.65,
+        manualTheta: false,
+        thetaVal: 0.723,
+        showPaths: true,
+        showRaw: false,
+        yaw: 0.0,
+        pitch: 0.0,
+        targetYaw: 0.0,
+        targetPitch: 0.0
+      };
+
+      // Gram-Schmidt orthogonalization so shocks preserve exact sample beta_B and beta_W
+      function orthogonalize(arr, bases) {
+        const out = arr.slice();
+        for (const b of bases) {
+          let num = 0, den = 0;
+          for (let i = 0; i < out.length; i++) { num += out[i] * b[i]; den += b[i] * b[i]; }
+          const k = den > 1e-12 ? num / den : 0;
+          for (let i = 0; i < out.length; i++) out[i] -= k * b[i];
+        }
+        return out;
+      }
+
+      const ONES_U = [1, 1, 1, 1, 1];
+      let zU = orthogonalize([0.65, -1.1, 0.85, -0.75, 0.35], [ONES_U, X_BAR]);
+      const zUN = Math.sqrt(zU.reduce((a, v) => a + v * v, 0));
+      zU = zU.map((v) => (v / (zUN || 1)) * 2.2);
+
+      function buildWithinData(T) {
+        const dx = [];
+        for (let t = 0; t < T; t++) {
+          dx.push(T === 1 ? 0 : -0.85 + (1.70 * t) / (T - 1));
+        }
+        const ssDx = dx.reduce((a, v) => a + v * v, 0);
+        const sc = Math.sqrt((0.36 * T) / ssDx);
+        for (let t = 0; t < T; t++) dx[t] *= sc;
+
+        const onesT = new Array(T).fill(1);
+        const zE = [];
+        for (let i = 0; i < N_UNITS; i++) {
+          const raw = [];
+          for (let t = 0; t < T; t++) {
+            raw.push(Math.sin((i + 1) * 1.85 + (t + 1) * 2.15) + 0.4 * Math.cos((t + 2) * (i + 1.3)));
+          }
+          let orth = orthogonalize(raw, [onesT, dx]);
+          const ss = orth.reduce((a, v) => a + v * v, 0);
+          if (ss > 1e-8) {
+            const norm = Math.sqrt(T / ss);
+            orth = orth.map((v) => v * norm);
+          }
+          zE.push(orth);
+        }
+        return { dx, zE };
+      }
+
+      function computeGLS(sigU, sigE, T) {
+        return 1 - Math.sqrt(sigE / (sigE + T * sigU));
+      }
+
+      function computeStats(theta) {
+        const S_W = N_UNITS * 0.36 * state.T;
+        const S_B = state.T * SUM_XBAR_SQ;
+        const k = 1 - theta;
+        const wW_num = S_W;
+        const wB_num = k * k * S_B;
+        const denom = wW_num + wB_num;
+        const wW = wW_num / denom;
+        const wB = wB_num / denom;
+        const betaRE = wW * state.betaW + wB * state.betaB;
+        const varW = state.sigE / S_W;
+        const varB = (state.sigE + state.T * state.sigU) / S_B;
+        const varRE = wW * wW * varW + wB * wB * varB;
+        const icc = (state.sigU + state.sigE) > 0 ? state.sigU / (state.sigU + state.sigE) : 0;
+        return { wW, wB, betaRE, seW: Math.sqrt(varW), seB: Math.sqrt(varB), seRE: Math.sqrt(varRE), icc };
+      }
+
+      function fmtS(v, d = 2) {
+        if (Math.abs(v) < 0.5 * Math.pow(10, -d)) return (0).toFixed(d);
+        return (v >= 0 ? '+' : '\u2212') + Math.abs(v).toFixed(d);
+      }
+
+      function svgEl(parent, tag, attrs, text) {
+        const el = document.createElementNS(SVG_NS, tag);
+        for (const k in attrs) el.setAttribute(k, attrs[k]);
+        if (text !== undefined) el.textContent = text;
+        parent.appendChild(el);
+        return el;
+      }
+
+      // ========================
+      // Vector 2D / 3D Main Plot
+      // ========================
+      const mainPlot = document.getElementById('mainPlot');
+
+      function projectPt(x, y, z, yaw, pitch, cx, cy, scale) {
+        // Rotate around Y (yaw), then around X (pitch)
+        const cyaw = Math.cos(yaw), syaw = Math.sin(yaw);
+        const x1 = x * cyaw + z * syaw;
+        const z1 = -x * syaw + z * cyaw;
+        const cp = Math.cos(pitch), sp = Math.sin(pitch);
+        const y2 = y * cp - z1 * sp;
+        const z2 = y * sp + z1 * cp;
+        return {
+          sx: cx + x1 * scale,
+          sy: cy - y2 * scale,
+          depth: z2
+        };
+      }
+
+      function renderMainPlot(activeTheta, stats) {
+        while (mainPlot.firstChild) mainPlot.removeChild(mainPlot.firstChild);
+
+        const W = 680, H = 430;
+        const yaw = state.yaw;
+        const pitch = state.pitch;
+        const is3D = Math.hypot(yaw, pitch) > 0.04;
+        const cx = is3D ? 335 : 345;
+        const cy = is3D ? 222 : 210;
+        const scale = is3D ? 44 : 52;
+
+        const P = (x, y, z = 0) => projectPt(x, y, z, yaw, pitch, cx, cy, scale);
+        const X_LIM = 4.2, Y_LIM = 3.4, Z_LIM = 1.65;
+
+        // 1. Grids & Axes
+        if (!is3D) {
+          // Pure 2D gallery plot matching frames 2-6 of between_within_re_3d.gif
+          const pMin = P(-X_LIM, -Y_LIM, 0);
+          const pMax = P( X_LIM,  Y_LIM, 0);
+
+          // Subtle gridlines
+          for (const gx of [-4, -2, 0, 2, 4]) {
+            const a = P(gx, -Y_LIM, 0), b = P(gx, Y_LIM, 0);
+            svgEl(mainPlot, 'line', {
+              x1: a.sx, y1: a.sy, x2: b.sx, y2: b.sy,
+              stroke: gx === 0 ? '#cbd5e1' : '#f1f3f5',
+              'stroke-width': gx === 0 ? 1 : 0.85,
+              'stroke-dasharray': gx === 0 ? '3 3' : 'none'
+            });
+            // Bottom ticks
+            svgEl(mainPlot, 'line', { x1: a.sx, y1: pMin.sy, x2: a.sx, y2: pMin.sy + 4, stroke: '#64748b', 'stroke-width': 1 });
+            svgEl(mainPlot, 'text', {
+              x: a.sx, y: pMin.sy + 16, 'text-anchor': 'middle',
+              'font-size': 10.5, fill: '#71717a', class: 'num'
+            }, gx > 0 ? `+${gx}` : (gx < 0 ? `\u2212${Math.abs(gx)}` : '0'));
+          }
+
+          for (const gy of [-3, -2, -1, 0, 1, 2, 3]) {
+            const a = P(-X_LIM, gy, 0), b = P(X_LIM, gy, 0);
+            svgEl(mainPlot, 'line', {
+              x1: a.sx, y1: a.sy, x2: b.sx, y2: b.sy,
+              stroke: gy === 0 ? '#cbd5e1' : '#f1f3f5',
+              'stroke-width': gy === 0 ? 1 : 0.85,
+              'stroke-dasharray': gy === 0 ? '3 3' : 'none'
+            });
+            if (gy % 2 === 0 || gy === -3 || gy === 3) {
+              svgEl(mainPlot, 'line', { x1: pMin.sx - 4, y1: a.sy, x2: pMin.sx, y2: a.sy, stroke: '#64748b', 'stroke-width': 1 });
+              svgEl(mainPlot, 'text', {
+                x: pMin.sx - 8, y: a.sy + 3.5, 'text-anchor': 'end',
+                'font-size': 10.5, fill: '#71717a', class: 'num'
+              }, gy > 0 ? `+${gy}` : (gy < 0 ? `\u2212${Math.abs(gy)}` : '0'));
+            }
+          }
+
+          // Clean L-spines
+          svgEl(mainPlot, 'line', { x1: pMin.sx, y1: pMin.sy, x2: pMax.sx, y2: pMin.sy, stroke: '#64748b', 'stroke-width': 1.1 });
+          svgEl(mainPlot, 'line', { x1: pMin.sx, y1: pMin.sy, x2: pMin.sx, y2: pMax.sy, stroke: '#64748b', 'stroke-width': 1.1 });
+
+          // Quiet zero crosshair micro-labels (like frame 4 of between_within_re_3d.gif)
+          const thStr = activeTheta.toFixed(2);
+          svgEl(mainPlot, 'text', {
+            x: P(0, Y_LIM - 0.15).sx + 6, y: P(0, Y_LIM - 0.15).sy + 4,
+            'font-size': 10.5, fill: '#94a3b8', 'font-family': 'Georgia, serif', 'font-style': 'italic'
+          }, activeTheta > 0.01 ? `X \u2212 ${thStr}X\u0304 = 0` : 'X = 0');
+          svgEl(mainPlot, 'text', {
+            x: P(X_LIM - 0.08, 0).sx, y: P(X_LIM - 0.08, 0).sy - 6, 'text-anchor': 'end',
+            'font-size': 10.5, fill: '#94a3b8', 'font-family': 'Georgia, serif', 'font-style': 'italic'
+          }, activeTheta > 0.01 ? `Y \u2212 ${thStr}Y\u0304 = 0` : 'Y = 0');
+
+          // Axis labels
+          svgEl(mainPlot, 'text', {
+            x: (pMin.sx + pMax.sx) / 2, y: pMin.sy + 34, 'text-anchor': 'middle',
+            'font-size': 12.5, fill: '#3f3f46', 'font-family': 'Georgia, serif', 'font-style': 'italic'
+          }, activeTheta > 0.01 ? `X\u1D62\u209C \u2212 \u03B8 X\u0304\u1D62` : 'Predictor X');
+          svgEl(mainPlot, 'text', {
+            x: pMin.sx - 34, y: (pMin.sy + pMax.sy) / 2, 'text-anchor': 'middle',
+            'font-size': 12.5, fill: '#3f3f46', 'font-family': 'Georgia, serif', 'font-style': 'italic',
+            transform: `rotate(-90 ${pMin.sx - 34} ${(pMin.sy + pMax.sy) / 2})`
+          }, activeTheta > 0.01 ? `Y\u1D62\u209C \u2212 \u03B8 Y\u0304\u1D62` : 'Outcome Y');
+        } else {
+          // 3D wireframe box matching frame 1 of between_within_re_3d.gif
+          const xSign = yaw >= 0 ? -1 : 1; // put vertical Y spine on outer back edge
+          const zBack = pitch >= 0 ? -Z_LIM : Z_LIM;
+          const zFront = -zBack;
+          const xBack = -xSign * X_LIM;
+          const xFront = xSign * X_LIM;
+
+          // Floor grid (y = -Y_LIM)
+          for (const gx of [-4, -2, 0, 2, 4]) {
+            const a = P(gx, -Y_LIM, -Z_LIM), b = P(gx, -Y_LIM, Z_LIM);
+            svgEl(mainPlot, 'line', { x1: a.sx, y1: a.sy, x2: b.sx, y2: b.sy, stroke: '#eef0f3', 'stroke-width': 0.85 });
+          }
+          for (const gz of [-1.5, 0, 1.5]) {
+            const a = P(-X_LIM, -Y_LIM, gz), b = P(X_LIM, -Y_LIM, gz);
+            svgEl(mainPlot, 'line', { x1: a.sx, y1: a.sy, x2: b.sx, y2: b.sy, stroke: '#eef0f3', 'stroke-width': 0.85 });
+          }
+          // Back X-Y grid (z = zBack)
+          for (const gx of [-4, -2, 0, 2, 4]) {
+            const a = P(gx, -Y_LIM, zBack), b = P(gx, Y_LIM, zBack);
+            svgEl(mainPlot, 'line', { x1: a.sx, y1: a.sy, x2: b.sx, y2: b.sy, stroke: '#f1f3f5', 'stroke-width': 0.85 });
+          }
+          for (const gy of [-2, 0, 2]) {
+            const a = P(-X_LIM, gy, zBack), b = P(X_LIM, gy, zBack);
+            svgEl(mainPlot, 'line', { x1: a.sx, y1: a.sy, x2: b.sx, y2: b.sy, stroke: '#f1f3f5', 'stroke-width': 0.85 });
+          }
+
+          // 3 Crisp Axis Spines: X (bottom front), Time (bottom side), Y (vertical side)
+          const axX0 = P(-X_LIM, -Y_LIM, zFront), axX1 = P(X_LIM, -Y_LIM, zFront);
+          const axT0 = P(xFront, -Y_LIM, -Z_LIM), axT1 = P(xFront, -Y_LIM, Z_LIM);
+          const axY0 = P(xFront, -Y_LIM, zBack),  axY1 = P(xFront,  Y_LIM, zBack);
+          svgEl(mainPlot, 'line', { x1: axX0.sx, y1: axX0.sy, x2: axX1.sx, y2: axX1.sy, stroke: '#64748b', 'stroke-width': 1.05 });
+          svgEl(mainPlot, 'line', { x1: axT0.sx, y1: axT0.sy, x2: axT1.sx, y2: axT1.sy, stroke: '#64748b', 'stroke-width': 1.05 });
+          svgEl(mainPlot, 'line', { x1: axY0.sx, y1: axY0.sy, x2: axY1.sx, y2: axY1.sy, stroke: '#64748b', 'stroke-width': 1.05 });
+
+          // Axis titles in 3D
+          const xMid = P(0, -Y_LIM, zFront);
+          svgEl(mainPlot, 'text', { x: xMid.sx, y: xMid.sy + 26, 'text-anchor': 'middle', 'font-size': 12, fill: '#3f3f46', 'font-family': 'Georgia, serif', 'font-style': 'italic' }, 'X');
+          const tMid = P(xFront, -Y_LIM, 0);
+          svgEl(mainPlot, 'text', { x: tMid.sx + (xSign * 28), y: tMid.sy + 18, 'text-anchor': 'middle', 'font-size': 11.5, fill: '#3f3f46' }, 'Time');
+          const yMid = P(xFront, 0, zBack);
+          svgEl(mainPlot, 'text', { x: yMid.sx + (xSign * 24), y: yMid.sy + 4, 'text-anchor': 'middle', 'font-size': 12, fill: '#3f3f46', 'font-family': 'Georgia, serif', 'font-style': 'italic' }, 'Y');
+
+          // X ticks
+          for (const gx of [-4, -2, 0, 2, 4]) {
+            const tp = P(gx, -Y_LIM, zFront);
+            svgEl(mainPlot, 'text', { x: tp.sx, y: tp.sy + 13, 'text-anchor': 'middle', 'font-size': 9.5, fill: '#71717a', class: 'num' }, gx);
+          }
+          // Y ticks
+          for (const gy of [-2, 0, 2]) {
+            const tp = P(xFront, gy, zBack);
+            svgEl(mainPlot, 'text', { x: tp.sx + (xSign * 10), y: tp.sy + 3, 'text-anchor': xSign > 0 ? 'start' : 'end', 'font-size': 9.5, fill: '#71717a', class: 'num' }, gy);
+          }
+        }
+
+        // 2. Build Unit Points & Centroids
+        const { dx, zE } = buildWithinData(state.T);
+        const ampU = 0.14 * Math.sqrt(state.sigU);
+        const ampE = 0.11 * Math.sqrt(state.sigE);
+        const keep = 1 - activeTheta;
+
+        const unitsData = [];
+        for (let i = 0; i < N_UNITS; i++) {
+          const rawX = X_BAR[i];
+          const rawY = state.betaB * rawX + ampU * zU[i];
+          const cxBar = keep * rawX;
+          const cyBar = keep * rawY;
+
+          const pts = [];
+          for (let t = 0; t < state.T; t++) {
+            const zPos = state.T === 1 ? 0 : -1.35 + (2.70 * t) / (state.T - 1);
+            const px = cxBar + dx[t];
+            const py = cyBar + state.betaW * dx[t] + ampE * zE[i][t];
+            pts.push({ x: px, y: py, z: zPos, proj: P(px, py, zPos) });
+          }
+          const avgDepth = pts.reduce((a, p) => a + p.proj.depth, 0) / pts.length;
+          unitsData.push({
+            i,
+            rawX, rawY,
+            cxBar, cyBar,
+            rawProj: P(rawX, rawY, 0),
+            centProj: P(cxBar, cyBar, 0),
+            pts,
+            avgDepth
+          });
+        }
+
+        // 3. Demeaning Paths (dotted terracotta lines from ghost raw centroid to current centroid)
+        if (state.showPaths && activeTheta > 0.015) {
+          for (const u of unitsData) {
+            svgEl(mainPlot, 'line', {
+              x1: u.rawProj.sx, y1: u.rawProj.sy,
+              x2: u.centProj.sx, y2: u.centProj.sy,
+              stroke: '#c85a17', 'stroke-width': 1.0, 'stroke-dasharray': '2 2.5', opacity: 0.45
+            });
+            svgEl(mainPlot, 'circle', {
+              cx: u.rawProj.sx, cy: u.rawProj.sy, r: 3.1,
+              fill: '#c85a17', opacity: 0.25
+            });
+          }
+        }
+
+        // 4. Fitted & Reference Regression Lines clipped cleanly inside [-X_LIM, X_LIM] x [-Y_LIM, Y_LIM]
+        function drawClippedLine(slope, color, width, dash, opacity) {
+          const xs = [];
+          for (const xCand of [-3.6, 3.6]) xs.push(xCand);
+          let x0 = xs[0], x1 = xs[1];
+          if (Math.abs(slope) > 0.01) {
+            const xAtYMin = -3.1 / slope;
+            const xAtYMax =  3.1 / slope;
+            const lo = Math.max(-3.6, Math.min(xAtYMin, xAtYMax));
+            const hi = Math.min( 3.6, Math.max(xAtYMin, xAtYMax));
+            x0 = lo; x1 = hi;
+          }
+          const a = P(x0, slope * x0, 0);
+          const b = P(x1, slope * x1, 0);
+          svgEl(mainPlot, 'line', {
+            x1: a.sx, y1: a.sy, x2: b.sx, y2: b.sy,
+            stroke: color, 'stroke-width': width,
+            'stroke-dasharray': dash || 'none',
+            opacity
+          });
+        }
+
+        drawClippedLine(state.betaB, '#c85a17', 1.5, '5 4', 0.78);
+        drawClippedLine(state.betaW, '#236b52', 1.4, '3 3', 0.78);
+        drawClippedLine(stats.betaRE, '#2452a8', 2.4, null, 0.95);
+
+        // 5. Sort units back-to-front in 3D and draw trajectories + dots + centroids
+        const sortedUnits = unitsData.slice().sort((a, b) => a.avgDepth - b.avgDepth);
+        for (const u of sortedUnits) {
+          const d = u.pts.map((p, idx) => `${idx === 0 ? 'M' : 'L'}${p.proj.sx.toFixed(1)},${p.proj.sy.toFixed(1)}`).join(' ');
+          svgEl(mainPlot, 'path', { d, fill: 'none', stroke: '#334155', 'stroke-width': 1.25, opacity: 0.9 });
+
+          for (const p of u.pts) {
+            svgEl(mainPlot, 'circle', {
+              cx: p.proj.sx, cy: p.proj.sy, r: 2.5,
+              fill: '#334155', stroke: '#ffffff', 'stroke-width': 0.65
+            });
+          }
+
+          // Centroid terracotta dot with crisp white halo
+          svgEl(mainPlot, 'circle', {
+            cx: u.centProj.sx, cy: u.centProj.sy, r: 4.1,
+            fill: '#c85a17', stroke: '#ffffff', 'stroke-width': 1.3
+          });
+
+          // Quiet unit labels when spread enough not to collide
+          if (activeTheta < 0.65) {
+            const last = u.pts[u.pts.length - 1].proj;
+            svgEl(mainPlot, 'text', {
+              x: last.sx + 6, y: last.sy + 3,
+              'font-size': 9.5, fill: '#94a3b8'
+            }, `Unit ${u.i + 1}`);
+          }
+        }
+
+        // 6. Borderless inline legend in upper-right corner
+        const legX = W - 155, legY = 16;
+        const items = [
+          { label: `RE (\u03B2 = ${fmtS(stats.betaRE)})`, col: '#2452a8', w: 2.4, dash: null },
+          { label: `Between (${fmtS(state.betaB)})`,       col: '#c85a17', w: 1.5, dash: '4 3' },
+          { label: `Within (${fmtS(state.betaW)})`,        col: '#236b52', w: 1.5, dash: '3 2.5' }
+        ];
+        items.forEach((it, idx) => {
+          const yy = legY + idx * 17;
+          svgEl(mainPlot, 'line', {
+            x1: legX, y1: yy, x2: legX + 18, y2: yy,
+            stroke: it.col, 'stroke-width': it.w, 'stroke-dasharray': it.dash || 'none'
+          });
+          svgEl(mainPlot, 'text', {
+            x: legX + 24, y: yy + 3.5, 'font-size': 11, fill: '#52525b', class: 'num'
+          }, it.label);
+        });
+      }
+
+      // ========================
+      // Lower Sensitivity SVG
+      // ========================
+      const slopeSvg = document.getElementById('slopeSvg');
+
+      function renderSlopeChart(activeTheta, glsTheta) {
+        while (slopeSvg.firstChild) slopeSvg.removeChild(slopeSvg.firstChild);
+        const W = 460, H = 205;
+        const padL = 42, padR = 16, padT = 16, padB = 30;
+        const pw = W - padL - padR, ph = H - padT - padB;
+
+        const minB = Math.min(-1.55, state.betaW - 0.25, state.betaB - 0.25);
+        const maxB = Math.max( 1.55, state.betaW + 0.25, state.betaB + 0.25);
+        const xOf = (th) => padL + th * pw;
+        const yOf = (b)  => padT + (1 - (b - minB) / (maxB - minB)) * ph;
+
+        // Zero hairline
+        if (minB < 0 && maxB > 0) {
+          svgEl(slopeSvg, 'line', { x1: padL, x2: W - padR, y1: yOf(0), y2: yOf(0), stroke: '#ecebe6', 'stroke-width': 1 });
+        }
+
+        // L-spines (no box!)
+        svgEl(slopeSvg, 'line', { x1: padL, y1: padT, x2: padL, y2: padT + ph, stroke: '#64748b', 'stroke-width': 1 });
+        svgEl(slopeSvg, 'line', { x1: padL, y1: padT + ph, x2: W - padR, y2: padT + ph, stroke: '#64748b', 'stroke-width': 1 });
+
+        for (const tick of [-1, 0, 1]) {
+          const yy = yOf(tick);
+          svgEl(slopeSvg, 'line', { x1: padL - 4, x2: padL, y1: yy, y2: yy, stroke: '#64748b', 'stroke-width': 1 });
+          svgEl(slopeSvg, 'text', {
+            x: padL - 7, y: yy + 3.5, 'text-anchor': 'end', 'font-size': 10.5, fill: '#71717a', class: 'num'
+          }, tick > 0 ? `+${tick}` : (tick < 0 ? `\u2212${Math.abs(tick)}` : '0'));
+        }
+
+        for (const th of [0, 0.5, 1]) {
+          const xx = xOf(th);
+          svgEl(slopeSvg, 'line', { x1: xx, x2: xx, y1: padT + ph, y2: padT + ph + 4, stroke: '#64748b', 'stroke-width': 1 });
+          svgEl(slopeSvg, 'text', {
+            x: xx, y: padT + ph + 16,
+            'text-anchor': th === 0 ? 'start' : (th === 1 ? 'end' : 'middle'),
+            'font-size': 10.5, fill: '#71717a', class: 'num'
+          }, th === 0 ? '0 (Pooled)' : (th === 1 ? '1 (FE)' : '0.5'));
+        }
+
+        // Reference dashed horizontals (place labels on outer sides so curve doesn't cross them)
+        const wAbove = state.betaW >= state.betaB;
+        const yB = yOf(state.betaB);
+        svgEl(slopeSvg, 'line', { x1: padL, x2: W - padR, y1: yB, y2: yB, stroke: '#c85a17', 'stroke-width': 1.3, 'stroke-dasharray': '4 3', opacity: 0.8 });
+        svgEl(slopeSvg, 'text', {
+          x: padL + 6, y: wAbove ? yB + 12 : yB - 5, 'text-anchor': 'start', 'font-size': 10.5, fill: '#c85a17', 'font-family': 'Georgia, serif', 'font-style': 'italic'
+        }, `\u03B2_B = ${fmtS(state.betaB)}`);
+
+        const yW = yOf(state.betaW);
+        svgEl(slopeSvg, 'line', { x1: padL, x2: W - padR, y1: yW, y2: yW, stroke: '#236b52', 'stroke-width': 1.3, 'stroke-dasharray': '3 3', opacity: 0.85 });
+        svgEl(slopeSvg, 'text', {
+          x: padL + 6, y: wAbove ? yW - 5 : yW + 12,
+          'text-anchor': 'start', 'font-size': 10.5, fill: '#236b52', 'font-family': 'Georgia, serif', 'font-style': 'italic'
+        }, `\u03B2_W = ${fmtS(state.betaW)}`);
+
+        // Curve
+        let d = '';
+        for (let i = 0; i <= 100; i++) {
+          const th = i / 100;
+          const b = computeStats(th).betaRE;
+          d += (i === 0 ? 'M' : 'L') + xOf(th).toFixed(1) + ',' + yOf(b).toFixed(1);
+        }
+        svgEl(slopeSvg, 'path', { d, fill: 'none', stroke: '#2452a8', 'stroke-width': 2.2 });
+
+        // Hollow GLS marker when overridden
+        if (state.manualTheta || state.showRaw) {
+          const g = computeStats(glsTheta);
+          svgEl(slopeSvg, 'circle', {
+            cx: xOf(glsTheta), cy: yOf(g.betaRE), r: 4.2,
+            fill: '#ffffff', stroke: '#52525b', 'stroke-width': 1.5
+          });
+        }
+
+        // Active marker
+        const cur = computeStats(activeTheta);
+        const cx = xOf(activeTheta), cy = yOf(cur.betaRE);
+        svgEl(slopeSvg, 'line', { x1: cx, x2: cx, y1: padT, y2: padT + ph, stroke: '#2452a8', 'stroke-width': 1, 'stroke-dasharray': '2 2', opacity: 0.7 });
+        svgEl(slopeSvg, 'circle', { cx, cy, r: 4.8, fill: '#2452a8', stroke: '#ffffff', 'stroke-width': 1.6 });
+      }
+
+      // ========================
+      // DOM Bindings & Master Update
+      // ========================
+      const els = {
+        outThetaVal: document.getElementById('outThetaVal'),
+        outThetaMode: document.getElementById('outThetaMode'),
+        btnResetGLS: document.getElementById('btnResetGLS'),
+        eqGLS: document.getElementById('eqGLS'),
+        inTheta: document.getElementById('inTheta'),
+        btnTh0: document.getElementById('btnTh0'),
+        btnThGLS: document.getElementById('btnThGLS'),
+        btnTh1: document.getElementById('btnTh1'),
+        inSigU: document.getElementById('inSigU'),
+        inSigE: document.getElementById('inSigE'),
+        inT: document.getElementById('inT'),
+        inBetaW: document.getElementById('inBetaW'),
+        inBetaB: document.getElementById('inBetaB'),
+        outSigU: document.getElementById('outSigU'),
+        outSigE: document.getElementById('outSigE'),
+        outT: document.getElementById('outT'),
+        outBetaW: document.getElementById('outBetaW'),
+        outBetaB: document.getElementById('outBetaB'),
+        liveNote: document.getElementById('liveNote'),
+        iccInline: document.getElementById('iccInline'),
+        blendEq: document.getElementById('blendEq'),
+        pctW: document.getElementById('pctW'),
+        pctB: document.getElementById('pctB'),
+        barW: document.getElementById('barW'),
+        barB: document.getElementById('barB'),
+        iccVal: document.getElementById('iccVal'),
+        barICC: document.getElementById('barICC'),
+        tblBW: document.getElementById('tblBW'),
+        tblSEW: document.getElementById('tblSEW'),
+        tblTh: document.getElementById('tblTh'),
+        tblBRE: document.getElementById('tblBRE'),
+        tblSERE: document.getElementById('tblSERE'),
+        tblShare: document.getElementById('tblShare'),
+        tblBB: document.getElementById('tblBB'),
+        tblSEB: document.getElementById('tblSEB'),
+        btnViewXY: document.getElementById('btnViewXY'),
+        btnView3D: document.getElementById('btnView3D'),
+        chkPaths: document.getElementById('chkPaths'),
+        chkRaw: document.getElementById('chkRaw')
+      };
+
+      function updateAll() {
+        const glsTheta = computeGLS(state.sigU, state.sigE, state.T);
+        if (!state.manualTheta) state.thetaVal = glsTheta;
+        const activeTheta = state.showRaw ? 0 : state.thetaVal;
+        const st = computeStats(activeTheta);
+
+        els.outSigU.textContent  = state.sigU.toFixed(1);
+        els.outSigE.textContent  = state.sigE.toFixed(1);
+        els.outT.textContent     = String(state.T);
+        els.outBetaW.textContent = fmtS(state.betaW);
+        els.outBetaB.textContent = fmtS(state.betaB);
+
+        els.outThetaVal.textContent = activeTheta.toFixed(3);
+        els.inTheta.value = activeTheta.toFixed(3);
+        els.outThetaMode.textContent = state.showRaw ? 'Raw view (\u03B8 = 0)' : (state.manualTheta ? 'Manual override' : 'GLS optimal');
+        els.btnResetGLS.style.display = (state.manualTheta || state.showRaw) ? 'inline' : 'none';
+
+        els.btnTh0.classList.toggle('active', !state.showRaw && state.manualTheta && Math.abs(activeTheta) < 0.005);
+        els.btnThGLS.classList.toggle('active', !state.showRaw && !state.manualTheta);
+        els.btnTh1.classList.toggle('active', !state.showRaw && state.manualTheta && Math.abs(activeTheta - 1) < 0.005);
+
+        els.eqGLS.innerHTML = `<span class="m">&theta;<sub>GLS</sub></span> = 1 &minus; &radic;[ ${state.sigE.toFixed(1)} / (${state.sigE.toFixed(1)} + ${state.T}&times;${state.sigU.toFixed(1)}) ] = ${glsTheta.toFixed(3)}`;
+
+        const wPct = Math.round(st.wW * 100);
+        const bPct = 100 - wPct;
+        els.blendEq.innerHTML = `<span class="m">&beta;<sub>RE</sub></span> = ${st.wW.toFixed(2)}(${fmtS(state.betaW)}) + ${st.wB.toFixed(2)}(${fmtS(state.betaB)}) = <strong>${fmtS(st.betaRE)}</strong>`;
+        els.pctW.textContent = wPct + '%';
+        els.pctB.textContent = bPct + '%';
+        els.barW.style.width = wPct + '%';
+        els.barB.style.width = bPct + '%';
+        els.iccInline.textContent = `ICC = ${st.icc.toFixed(2)}`;
+        els.iccVal.textContent = st.icc.toFixed(2);
+        els.barICC.style.width = Math.round(st.icc * 100) + '%';
+
+        els.tblBW.textContent    = fmtS(state.betaW);
+        els.tblSEW.textContent   = st.seW.toFixed(2);
+        els.tblTh.textContent    = activeTheta.toFixed(2);
+        els.tblBRE.textContent   = fmtS(st.betaRE);
+        els.tblSERE.textContent  = st.seRE.toFixed(2);
+        els.tblShare.textContent = `${wPct}% W`;
+        els.tblBB.textContent    = fmtS(state.betaB);
+        els.tblSEB.textContent   = st.seB.toFixed(2);
+
+        // Plain-text scholarly reading note (zero boxes)
+        const gap = Math.abs(state.betaB - state.betaW);
+        let note = '';
+        if (activeTheta >= 0.85) {
+          note = `<strong>Near Fixed Effects (<span class="m">&theta;</span> = ${activeTheta.toFixed(2)}):</strong> Large <span class="m">&sigma;<sub>u</sub>&sup2;</span> or <span class="m">T</span> makes cross-unit differences noisy, so ${wPct}% of <span class="m">&beta;<sub>RE</sub></span> comes from within-unit variation (${fmtS(state.betaW)}).`;
+        } else if (activeTheta <= 0.25) {
+          note = `<strong>Near Pooled OLS (<span class="m">&theta;</span> = ${activeTheta.toFixed(2)}):</strong> Minimal demeaning leaves ${Math.round((1 - activeTheta) * 100)}% of unit separation intact, giving between-unit variation ${bPct}% weight.`;
+        } else {
+          note = `<strong>Partial compromise (<span class="m">&theta;</span> = ${activeTheta.toFixed(2)}):</strong> Unit centroids move ${Math.round(activeTheta * 100)}% toward zero, blending ${wPct}% Within and ${bPct}% Between variation.`;
+        }
+        if (gap < 0.08) {
+          note += ` Because <span class="m">&beta;<sub>W</sub> &approx; &beta;<sub>B</sub></span>, Random Effects is unbiased and attains the lowest standard error (${st.seRE.toFixed(2)}).`;
+        } else if (state.betaW * state.betaB < 0 && state.betaRE * state.betaW < 0) {
+          note += ` Because <span class="m">&beta;<sub>B</sub> = ${fmtS(state.betaB)}</span> opposes <span class="m">&beta;<sub>W</sub></span>, between-unit confounding flips <span class="m">&beta;<sub>RE</sub></span> to ${fmtS(st.betaRE)}.`;
+        } else {
+          note += ` When <span class="m">&beta;<sub>W</sub> &ne; &beta;<sub>B</sub></span>, lowering <span class="m">&theta;</span> pulls <span class="m">&beta;<sub>RE</sub></span> toward <span class="m">&beta;<sub>B</sub></span>.`;
+        }
+        els.liveNote.innerHTML = note;
+
+        renderMainPlot(activeTheta, st);
+        renderSlopeChart(activeTheta, glsTheta);
+      }
+
+      // Smooth 2D <-> 3D View Transition
+      let animId = null;
+      function animateView() {
+        const dy = state.targetYaw - state.yaw;
+        const dp = state.targetPitch - state.pitch;
+        if (Math.hypot(dy, dp) < 0.002) {
+          state.yaw = state.targetYaw;
+          state.pitch = state.targetPitch;
+          updateAll();
+          animId = null;
+          return;
+        }
+        state.yaw += dy * 0.22;
+        state.pitch += dp * 0.22;
+        updateAll();
+        animId = requestAnimationFrame(animateView);
+      }
+
+      function setView(mode) {
+        els.btnViewXY.classList.toggle('active', mode === 'xy');
+        els.btnView3D.classList.toggle('active', mode === '3d');
+        if (mode === '3d') {
+          state.targetYaw = -0.56;
+          state.targetPitch = 0.36;
+        } else {
+          state.targetYaw = 0.0;
+          state.targetPitch = 0.0;
+        }
+        if (!animId) animId = requestAnimationFrame(animateView);
+      }
+
+      els.btnViewXY.addEventListener('click', () => setView('xy'));
+      els.btnView3D.addEventListener('click', () => setView('3d'));
+
+      // Drag on mainPlot to rotate seamlessly into 3D
+      let draggingPlot = false, lastPX = 0, lastPY = 0;
+      mainPlot.addEventListener('pointerdown', (e) => {
+        draggingPlot = true; lastPX = e.clientX; lastPY = e.clientY;
+        mainPlot.setPointerCapture(e.pointerId);
+      });
+      mainPlot.addEventListener('pointermove', (e) => {
+        if (!draggingPlot) return;
+        const dx = e.clientX - lastPX, dy = e.clientY - lastPY;
+        lastPX = e.clientX; lastPY = e.clientY;
+        state.targetYaw = Math.max(-1.25, Math.min(1.25, state.yaw + dx * 0.008));
+        state.targetPitch = Math.max(-0.65, Math.min(0.95, state.pitch + dy * 0.007));
+        state.yaw = state.targetYaw;
+        state.pitch = state.targetPitch;
+        els.btnViewXY.classList.toggle('active', Math.hypot(state.yaw, state.pitch) < 0.04);
+        els.btnView3D.classList.toggle('active', Math.hypot(state.yaw, state.pitch) >= 0.04);
+        updateAll();
+      });
+      mainPlot.addEventListener('pointerup', () => { draggingPlot = false; });
+
+      // Presets
+      function clearTabs() {
+        document.querySelectorAll('.tab-btn').forEach((b) => b.classList.remove('active'));
+      }
+      function applyPreset(name) {
+        const p = PRESETS[name];
+        if (!p) return;
+        state.sigU = p.sigU; state.sigE = p.sigE; state.T = p.T;
+        state.betaW = p.betaW; state.betaB = p.betaB;
+        state.manualTheta = false; state.showRaw = false;
+        els.inSigU.value = p.sigU; els.inSigE.value = p.sigE; els.inT.value = p.T;
+        els.inBetaW.value = p.betaW; els.inBetaB.value = p.betaB;
+        els.chkRaw.checked = false;
+        document.querySelectorAll('.tab-btn').forEach((b) => b.classList.toggle('active', b.dataset.preset === name));
+        updateAll();
+      }
+      document.getElementById('presetTabs').addEventListener('click', (e) => {
+        const btn = e.target.closest('.tab-btn');
+        if (btn) applyPreset(btn.dataset.preset);
+      });
+
+      // Parameter Sliders
+      const bindP = (el, key, fn) => {
+        el.addEventListener('input', () => {
+          state[key] = fn(el.value);
+          clearTabs();
+          updateAll();
+        });
+      };
+      bindP(els.inSigU, 'sigU', parseFloat);
+      bindP(els.inSigE, 'sigE', parseFloat);
+      bindP(els.inT, 'T', (v) => parseInt(v, 10));
+      bindP(els.inBetaW, 'betaW', parseFloat);
+      bindP(els.inBetaB, 'betaB', parseFloat);
+
+      // Theta controls
+      els.inTheta.addEventListener('input', () => {
+        state.manualTheta = true; state.showRaw = false; els.chkRaw.checked = false;
+        state.thetaVal = parseFloat(els.inTheta.value);
+        updateAll();
+      });
+      const resetToGLS = () => {
+        state.manualTheta = false; state.showRaw = false; els.chkRaw.checked = false;
+        updateAll();
+      };
+      els.btnResetGLS.addEventListener('click', resetToGLS);
+      els.btnThGLS.addEventListener('click', resetToGLS);
+      els.btnTh0.addEventListener('click', () => {
+        state.manualTheta = true; state.showRaw = false; els.chkRaw.checked = false;
+        state.thetaVal = 0; updateAll();
+      });
+      els.btnTh1.addEventListener('click', () => {
+        state.manualTheta = true; state.showRaw = false; els.chkRaw.checked = false;
+        state.thetaVal = 1; updateAll();
+      });
+
+      els.chkPaths.addEventListener('change', () => { state.showPaths = els.chkPaths.checked; updateAll(); });
+      els.chkRaw.addEventListener('change', () => { state.showRaw = els.chkRaw.checked; updateAll(); });
+
+      // Scrubbing on Sensitivity Curve
+      let scrubbing = false;
+      function scrubSlope(e) {
+        const r = slopeSvg.getBoundingClientRect();
+        const x = ((e.clientX - r.left) / r.width) * 460;
+        const th = Math.max(0, Math.min(1, (x - 42) / (460 - 42 - 16)));
+        state.manualTheta = true; state.showRaw = false; els.chkRaw.checked = false;
+        state.thetaVal = th;
+        updateAll();
+      }
+      slopeSvg.addEventListener('pointerdown', (e) => {
+        scrubbing = true; slopeSvg.setPointerCapture(e.pointerId); scrubSlope(e);
+      });
+      slopeSvg.addEventListener('pointermove', (e) => { if (scrubbing) scrubSlope(e); });
+      slopeSvg.addEventListener('pointerup', () => { scrubbing = false; });
+
+      applyPreset('conflict');
+      window.__APP_READY__ = true;
+    })();
+  </script>
+</body>
+</html>
