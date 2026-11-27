@@ -172,6 +172,7 @@
       align-items: center;
       gap: 5px;
       cursor: pointer;
+      white-space: nowrap;
     }
 
     .fig-toggles input {
@@ -430,6 +431,7 @@
     table.booktabs th.r, table.booktabs td.r {
       text-align: right;
       font-variant-numeric: tabular-nums;
+      white-space: nowrap;
     }
 
     table.booktabs tbody td {
@@ -473,6 +475,43 @@
       color: var(--ink);
       margin-bottom: 4px;
     }
+
+    /* Mobile Responsive Optimizations (<= 640px) */
+    @media (max-width: 640px) {
+      .page { padding: 6px 12px 32px; }
+      header { margin-bottom: 12px; }
+      h1 { font-size: 20px; }
+      .subtitle { font-size: 12.5px; margin-top: 4px; }
+      .tabs { gap: 4px 14px; margin-top: 10px; }
+      .tab-btn { font-size: 12px; padding: 4px 0 6px; white-space: nowrap; }
+      .main-grid { margin-top: 12px; gap: 16px; }
+      .fig-col {
+        position: sticky;
+        top: 0;
+        z-index: 20;
+        background: #ffffff;
+        padding-top: 4px;
+        padding-bottom: 6px;
+        border-bottom: 1px solid var(--rule);
+      }
+      .fig-controls { gap: 6px 10px; margin-bottom: 2px; }
+      .view-tabs { gap: 12px; }
+      .fig-toggles { gap: 10px; font-size: 11.5px; flex-wrap: wrap; }
+      .drag-hint { display: none; }
+      .theta-big { font-size: 22px; }
+      .eq-line { font-size: 11.5px; margin-bottom: 8px; }
+      .divider { margin: 14px 0; }
+      .param-row { margin-bottom: 14px; }
+      .sub-head { flex-wrap: wrap; gap: 4px; }
+      table.booktabs { font-size: 11.5px; }
+      table.booktabs th, table.booktabs td { padding: 6px 2px; }
+    }
+
+    @media (max-width: 640px), (pointer: coarse) {
+      input[type="range"] { height: 2px; margin: 11px 0 6px; }
+      input[type="range"]::-webkit-slider-thumb { width: 18px; height: 18px; }
+      input[type="range"]::-moz-range-thumb { width: 18px; height: 18px; }
+    }
   </style>
 </head>
 <body>
@@ -493,7 +532,7 @@
 
     <div class="main-grid">
       <!-- LEFT: Vector SVG Plot -->
-      <div>
+      <div class="fig-col">
         <div class="fig-controls">
           <div class="view-tabs">
             <button class="link-btn active" id="btnViewXY"><span class="m">X&ndash;Y</span> plane</button>
@@ -791,13 +830,23 @@
       function renderMainPlot(activeTheta, stats) {
         while (mainPlot.firstChild) mainPlot.removeChild(mainPlot.firstChild);
 
-        const W = 680, H = 430;
+        const compact = (mainPlot.clientWidth > 0 ? mainPlot.clientWidth : window.innerWidth) < 460;
+        const W = compact ? 460 : 680;
+        const H = compact ? 325 : 430;
+        mainPlot.setAttribute('viewBox', `0 0 ${W} ${H}`);
+
         const yaw = state.yaw;
         const pitch = state.pitch;
         const is3D = Math.hypot(yaw, pitch) > 0.04;
-        const cx = is3D ? 335 : 345;
-        const cy = is3D ? 222 : 210;
-        const scale = is3D ? 44 : 52;
+        const cx = compact ? (is3D ? 222 : 236) : (is3D ? 335 : 345);
+        const cy = compact ? (is3D ? 164 : 148) : (is3D ? 222 : 210);
+        const scale = compact ? (is3D ? 34 : 40) : (is3D ? 44 : 52);
+        const tickFs = compact ? 11.5 : 10.5;
+        const axisFs = compact ? 13 : 12.5;
+        const zeroFs = compact ? 11 : 10.5;
+        const legFs  = compact ? 11.5 : 11;
+        const dotR   = compact ? 3.0 : 2.5;
+        const centR  = compact ? 4.8 : 4.1;
 
         const P = (x, y, z = 0) => projectPt(x, y, z, yaw, pitch, cx, cy, scale);
         const X_LIM = 4.2, Y_LIM = 3.4, Z_LIM = 1.65;
@@ -821,7 +870,7 @@
             svgEl(mainPlot, 'line', { x1: a.sx, y1: pMin.sy, x2: a.sx, y2: pMin.sy + 4, stroke: '#64748b', 'stroke-width': 1 });
             svgEl(mainPlot, 'text', {
               x: a.sx, y: pMin.sy + 16, 'text-anchor': 'middle',
-              'font-size': 10.5, fill: '#71717a', class: 'num'
+              'font-size': tickFs, fill: '#71717a', class: 'num'
             }, gx > 0 ? `+${gx}` : (gx < 0 ? `\u2212${Math.abs(gx)}` : '0'));
           }
 
@@ -836,8 +885,8 @@
             if (gy % 2 === 0 || gy === -3 || gy === 3) {
               svgEl(mainPlot, 'line', { x1: pMin.sx - 4, y1: a.sy, x2: pMin.sx, y2: a.sy, stroke: '#64748b', 'stroke-width': 1 });
               svgEl(mainPlot, 'text', {
-                x: pMin.sx - 8, y: a.sy + 3.5, 'text-anchor': 'end',
-                'font-size': 10.5, fill: '#71717a', class: 'num'
+                x: pMin.sx - 7, y: a.sy + 3.5, 'text-anchor': 'end',
+                'font-size': tickFs, fill: '#71717a', class: 'num'
               }, gy > 0 ? `+${gy}` : (gy < 0 ? `\u2212${Math.abs(gy)}` : '0'));
             }
           }
@@ -850,22 +899,24 @@
           const thStr = activeTheta.toFixed(2);
           svgEl(mainPlot, 'text', {
             x: P(0, Y_LIM - 0.15).sx + 6, y: P(0, Y_LIM - 0.15).sy + 4,
-            'font-size': 10.5, fill: '#94a3b8', 'font-family': 'Georgia, serif', 'font-style': 'italic'
+            'font-size': zeroFs, fill: '#94a3b8', 'font-family': 'Georgia, serif', 'font-style': 'italic'
           }, activeTheta > 0.01 ? `X \u2212 ${thStr}X\u0304 = 0` : 'X = 0');
           svgEl(mainPlot, 'text', {
             x: P(X_LIM - 0.08, 0).sx, y: P(X_LIM - 0.08, 0).sy - 6, 'text-anchor': 'end',
-            'font-size': 10.5, fill: '#94a3b8', 'font-family': 'Georgia, serif', 'font-style': 'italic'
+            'font-size': zeroFs, fill: '#94a3b8', 'font-family': 'Georgia, serif', 'font-style': 'italic'
           }, activeTheta > 0.01 ? `Y \u2212 ${thStr}Y\u0304 = 0` : 'Y = 0');
 
           // Axis labels
+          const xLblY = pMin.sy + (compact ? 31 : 34);
+          const yLblX = pMin.sx - (compact ? 30 : 34);
           svgEl(mainPlot, 'text', {
-            x: (pMin.sx + pMax.sx) / 2, y: pMin.sy + 34, 'text-anchor': 'middle',
-            'font-size': 12.5, fill: '#3f3f46', 'font-family': 'Georgia, serif', 'font-style': 'italic'
+            x: (pMin.sx + pMax.sx) / 2, y: xLblY, 'text-anchor': 'middle',
+            'font-size': axisFs, fill: '#3f3f46', 'font-family': 'Georgia, serif', 'font-style': 'italic'
           }, activeTheta > 0.01 ? `X\u1D62\u209C \u2212 \u03B8 X\u0304\u1D62` : 'Predictor X');
           svgEl(mainPlot, 'text', {
-            x: pMin.sx - 34, y: (pMin.sy + pMax.sy) / 2, 'text-anchor': 'middle',
-            'font-size': 12.5, fill: '#3f3f46', 'font-family': 'Georgia, serif', 'font-style': 'italic',
-            transform: `rotate(-90 ${pMin.sx - 34} ${(pMin.sy + pMax.sy) / 2})`
+            x: yLblX, y: (pMin.sy + pMax.sy) / 2, 'text-anchor': 'middle',
+            'font-size': axisFs, fill: '#3f3f46', 'font-family': 'Georgia, serif', 'font-style': 'italic',
+            transform: `rotate(-90 ${yLblX} ${(pMin.sy + pMax.sy) / 2})`
           }, activeTheta > 0.01 ? `Y\u1D62\u209C \u2212 \u03B8 Y\u0304\u1D62` : 'Outcome Y');
         } else {
           // 3D wireframe box matching frame 1 of between_within_re_3d.gif
@@ -904,21 +955,21 @@
 
           // Axis titles in 3D
           const xMid = P(0, -Y_LIM, zFront);
-          svgEl(mainPlot, 'text', { x: xMid.sx, y: xMid.sy + 26, 'text-anchor': 'middle', 'font-size': 12, fill: '#3f3f46', 'font-family': 'Georgia, serif', 'font-style': 'italic' }, 'X');
+          svgEl(mainPlot, 'text', { x: xMid.sx, y: xMid.sy + 26, 'text-anchor': 'middle', 'font-size': axisFs, fill: '#3f3f46', 'font-family': 'Georgia, serif', 'font-style': 'italic' }, 'X');
           const tMid = P(xFront, -Y_LIM, 0);
-          svgEl(mainPlot, 'text', { x: tMid.sx + (xSign * 28), y: tMid.sy + 18, 'text-anchor': 'middle', 'font-size': 11.5, fill: '#3f3f46' }, 'Time');
+          svgEl(mainPlot, 'text', { x: tMid.sx + (xSign * 26), y: tMid.sy + 18, 'text-anchor': 'middle', 'font-size': tickFs, fill: '#3f3f46' }, 'Time');
           const yMid = P(xFront, 0, zBack);
-          svgEl(mainPlot, 'text', { x: yMid.sx + (xSign * 24), y: yMid.sy + 4, 'text-anchor': 'middle', 'font-size': 12, fill: '#3f3f46', 'font-family': 'Georgia, serif', 'font-style': 'italic' }, 'Y');
+          svgEl(mainPlot, 'text', { x: yMid.sx + (xSign * 24), y: yMid.sy + 4, 'text-anchor': 'middle', 'font-size': axisFs, fill: '#3f3f46', 'font-family': 'Georgia, serif', 'font-style': 'italic' }, 'Y');
 
           // X ticks
           for (const gx of [-4, -2, 0, 2, 4]) {
             const tp = P(gx, -Y_LIM, zFront);
-            svgEl(mainPlot, 'text', { x: tp.sx, y: tp.sy + 13, 'text-anchor': 'middle', 'font-size': 9.5, fill: '#71717a', class: 'num' }, gx);
+            svgEl(mainPlot, 'text', { x: tp.sx, y: tp.sy + 13, 'text-anchor': 'middle', 'font-size': compact ? 10 : 9.5, fill: '#71717a', class: 'num' }, gx);
           }
           // Y ticks
           for (const gy of [-2, 0, 2]) {
             const tp = P(xFront, gy, zBack);
-            svgEl(mainPlot, 'text', { x: tp.sx + (xSign * 10), y: tp.sy + 3, 'text-anchor': xSign > 0 ? 'start' : 'end', 'font-size': 9.5, fill: '#71717a', class: 'num' }, gy);
+            svgEl(mainPlot, 'text', { x: tp.sx + (xSign * 10), y: tp.sy + 3, 'text-anchor': xSign > 0 ? 'start' : 'end', 'font-size': compact ? 10 : 9.5, fill: '#71717a', class: 'num' }, gy);
           }
         }
 
@@ -1003,14 +1054,14 @@
 
           for (const p of u.pts) {
             svgEl(mainPlot, 'circle', {
-              cx: p.proj.sx, cy: p.proj.sy, r: 2.5,
+              cx: p.proj.sx, cy: p.proj.sy, r: dotR,
               fill: '#334155', stroke: '#ffffff', 'stroke-width': 0.65
             });
           }
 
           // Centroid terracotta dot with crisp white halo
           svgEl(mainPlot, 'circle', {
-            cx: u.centProj.sx, cy: u.centProj.sy, r: 4.1,
+            cx: u.centProj.sx, cy: u.centProj.sy, r: centR,
             fill: '#c85a17', stroke: '#ffffff', 'stroke-width': 1.3
           });
 
@@ -1019,26 +1070,26 @@
             const last = u.pts[u.pts.length - 1].proj;
             svgEl(mainPlot, 'text', {
               x: last.sx + 6, y: last.sy + 3,
-              'font-size': 9.5, fill: '#94a3b8'
+              'font-size': compact ? 10.5 : 9.5, fill: '#94a3b8'
             }, `Unit ${u.i + 1}`);
           }
         }
 
         // 6. Borderless inline legend in upper-right corner
-        const legX = W - 155, legY = 16;
+        const legX = W - (compact ? 134 : 155), legY = compact ? 14 : 16;
         const items = [
           { label: `RE (\u03B2 = ${fmtS(stats.betaRE)})`, col: '#2452a8', w: 2.4, dash: null },
           { label: `Between (${fmtS(state.betaB)})`,       col: '#c85a17', w: 1.5, dash: '4 3' },
           { label: `Within (${fmtS(state.betaW)})`,        col: '#236b52', w: 1.5, dash: '3 2.5' }
         ];
         items.forEach((it, idx) => {
-          const yy = legY + idx * 17;
+          const yy = legY + idx * (compact ? 16 : 17);
           svgEl(mainPlot, 'line', {
             x1: legX, y1: yy, x2: legX + 18, y2: yy,
             stroke: it.col, 'stroke-width': it.w, 'stroke-dasharray': it.dash || 'none'
           });
           svgEl(mainPlot, 'text', {
-            x: legX + 24, y: yy + 3.5, 'font-size': 11, fill: '#52525b', class: 'num'
+            x: legX + 24, y: yy + 3.5, 'font-size': legFs, fill: '#52525b', class: 'num'
           }, it.label);
         });
       }
@@ -1268,6 +1319,11 @@
         }
       }
 
+      function syncPlotTouchAction() {
+        const is3DTarget = Math.hypot(state.targetYaw, state.targetPitch) >= 0.04;
+        mainPlot.style.touchAction = is3DTarget ? 'none' : 'pan-y';
+      }
+
       function setView(mode) {
         els.btnViewXY.classList.toggle('active', mode === 'xy');
         els.btnView3D.classList.toggle('active', mode === '3d');
@@ -1278,6 +1334,7 @@
           state.targetYaw = 0.0;
           state.targetPitch = 0.0;
         }
+        syncPlotTouchAction();
         if (animId) cancelAnimationFrame(animId);
         animStart = performance.now();
         animFromYaw = state.yaw;
@@ -1288,9 +1345,10 @@
       els.btnViewXY.addEventListener('click', () => setView('xy'));
       els.btnView3D.addEventListener('click', () => setView('3d'));
 
-      // Drag on mainPlot to rotate seamlessly into 3D
+      // Drag on mainPlot to rotate seamlessly into 3D (allow vertical touch scroll in X-Y plane mode)
       let draggingPlot = false, lastPX = 0, lastPY = 0;
       mainPlot.addEventListener('pointerdown', (e) => {
+        if (e.pointerType === 'touch' && Math.hypot(state.yaw, state.pitch) < 0.04) return;
         e.preventDefault();
         if (animId) { cancelAnimationFrame(animId); animId = null; }
         draggingPlot = true; lastPX = e.clientX; lastPY = e.clientY;
@@ -1307,6 +1365,7 @@
         state.pitch = state.targetPitch;
         els.btnViewXY.classList.toggle('active', Math.hypot(state.yaw, state.pitch) < 0.04);
         els.btnView3D.classList.toggle('active', Math.hypot(state.yaw, state.pitch) >= 0.04);
+        syncPlotTouchAction();
         updateAll();
       });
       mainPlot.addEventListener('pointerup', () => { draggingPlot = false; });
@@ -1398,6 +1457,13 @@
       slopeSvg.addEventListener('pointerup', () => { scrubbing = false; });
       slopeSvg.addEventListener('pointercancel', () => { scrubbing = false; });
 
+      let resizeRaf = null;
+      window.addEventListener('resize', () => {
+        if (resizeRaf) cancelAnimationFrame(resizeRaf);
+        resizeRaf = requestAnimationFrame(() => { resizeRaf = null; updateAll(); });
+      });
+
+      syncPlotTouchAction();
       applyPreset('conflict');
       window.__APP_READY__ = true;
     })();
